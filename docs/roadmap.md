@@ -175,6 +175,9 @@ Critérios de saída (**M4**): instalação limpa via `npx` nos 3 SOs; zero vuln
 
 Meta inicial de cobertura do núcleo: ≥ 80% de linhas, 100% em policies e verificação de integridade.
 
+### Execução por agentes
+Cada entrega passa pelo [time de agentes](guias/time-de-agentes.md) e seus gates ([ADR-0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md), `Proposto`); a escolha de agentes por fase está no [guia §3](guias/time-de-agentes.md#3-escolha-por-fase).
+
 ### Documentação
 Cada fase entrega seus ADRs/specs via agente `doc-writer`; o [contexto](contexto.md) é atualizado quando princípios ou escopo mudam.
 

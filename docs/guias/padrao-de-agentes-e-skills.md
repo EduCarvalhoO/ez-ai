@@ -20,6 +20,8 @@
 | Agente | `.claude/agents/<nome>.md` | `.github/agents/<nome>.agent.md` |
 | Rule | `.claude/rules/<nome>.md` (frontmatter `paths`) | `.github/instructions/<nome>.instructions.md` (frontmatter `applyTo`) |
 | Skill | `.claude/skills/<nome>/SKILL.md` | Mesma pasta `.claude/skills/`. `Hipótese` a verificar no spike da F3; se o Copilot não ler, espelhar em `.github/skills/<nome>/` |
+| Encadeamento entre agentes | Sessão principal aciona cada subagente | `handoffs` no frontmatter do agente. `Hipótese` a verificar no spike da F3 |
+| Modelo por agente | `model` no frontmatter (`inherit`, `sonnet`...) | Não usado; vale o modelo escolhido na sessão |
 
 ## 3. Regras comuns
 
@@ -69,3 +71,13 @@
 | `localizar-documento` | Skill | `.claude/skills/localizar-documento/` | [padrão de documentação §5](padrao-de-documentacao.md#5-fluxo-para-criar-ou-alterar-um-documento) |
 | `novo-documento` | Skill | `.claude/skills/novo-documento/` | [padrão de documentação §3 e §5](padrao-de-documentacao.md#3-tipos-de-documento) |
 | `validar-docs` | Skill | `.claude/skills/validar-docs/` | [padrão de documentação §6](padrao-de-documentacao.md#6-checklist-de-revisão) |
+| `arquiteto` | Agente | `.claude/agents/arquiteto.md`, `.github/agents/arquiteto.agent.md` | [time de agentes](time-de-agentes.md) |
+| `pesquisador` | Agente | `.claude/agents/pesquisador.md`, `.github/agents/pesquisador.agent.md` | [time de agentes](time-de-agentes.md) |
+| `implementador` | Agente | `.claude/agents/implementador.md`, `.github/agents/implementador.agent.md` | [time de agentes](time-de-agentes.md), [padrão de código e testes](padrao-de-codigo-e-testes.md) |
+| `revisor` | Agente | `.claude/agents/revisor.md`, `.github/agents/revisor.agent.md` | [time de agentes §5](time-de-agentes.md#5-formato-dos-relatórios) |
+| `seguranca` | Agente | `.claude/agents/seguranca.md`, `.github/agents/seguranca.agent.md` | [revisão de segurança](revisao-de-seguranca.md) |
+| `codigo` | Rule | `.claude/rules/codigo.md`, `.github/instructions/codigo.instructions.md` | [padrão de código e testes](padrao-de-codigo-e-testes.md) |
+| `ci-e-dependencias` | Rule | `.claude/rules/ci-e-dependencias.md`, `.github/instructions/ci-e-dependencias.instructions.md` | [revisão de segurança](revisao-de-seguranca.md) |
+| `ficha-de-tarefa` | Skill | `.claude/skills/ficha-de-tarefa/` | [time de agentes §4](time-de-agentes.md#4-handoffs) |
+| `escopo-da-mudanca` | Skill | `.claude/skills/escopo-da-mudanca/` | [time de agentes §2](time-de-agentes.md#2-fluxo-com-gates) |
+| `verificar` | Skill | `.claude/skills/verificar/` | [time de agentes §2](time-de-agentes.md#2-fluxo-com-gates), [padrão de código e testes §4](padrao-de-codigo-e-testes.md#4-commits) |

@@ -43,6 +43,7 @@ Justificativas em [ADRs](docs/adr/README.md).
 | [docs/adr/](docs/adr/README.md) | Decisões arquiteturais |
 | [docs/guias/padrao-de-documentacao.md](docs/guias/padrao-de-documentacao.md) | Como documentar neste repositório |
 | [docs/guias/padrao-de-agentes-e-skills.md](docs/guias/padrao-de-agentes-e-skills.md) | Como criar agentes, skills e rules |
+| [docs/guias/time-de-agentes.md](docs/guias/time-de-agentes.md) | Como o time de agentes executa o roadmap |
 
 ## Contribuindo
 
