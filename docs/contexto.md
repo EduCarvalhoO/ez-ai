@@ -192,6 +192,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 ## 15. Convenções de trabalho
 
 - Documentação segue o [padrão de documentação](guias/padrao-de-documentacao.md) e é criada pelo agente `doc-writer` (`.claude/agents/doc-writer.md` e `.github/agents/doc-writer.agent.md`, ver [ADR-0008](adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md)).
+- Agentes, skills e rules seguem o [padrão de agentes e skills](guias/padrao-de-agentes-e-skills.md).
 - Arquivos temporários, testes manuais e scripts auxiliares ficam em `.tmp/` (ignorado pelo Git).
 
 ---

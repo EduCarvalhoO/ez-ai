@@ -10,4 +10,5 @@
 | [roadmap.md](roadmap.md) | Fases F0–F8, marcos, métricas e riscos até a v1.0 |
 | [adr/](adr/README.md) | Decisões arquiteturais e decisões em aberto |
 | [guias/padrao-de-documentacao.md](guias/padrao-de-documentacao.md) | Caminhos, estrutura e fluxo de documentação |
+| [guias/padrao-de-agentes-e-skills.md](guias/padrao-de-agentes-e-skills.md) | Onde e como criar agentes, skills e rules; inventário |
 | [_templates/](_templates/) | Modelos: ADR, spec, guia |

@@ -42,6 +42,7 @@ Justificativas em [ADRs](docs/adr/README.md).
 | [docs/roadmap.md](docs/roadmap.md) | Fases até a v1.0, marcos, métricas e riscos |
 | [docs/adr/](docs/adr/README.md) | Decisões arquiteturais |
 | [docs/guias/padrao-de-documentacao.md](docs/guias/padrao-de-documentacao.md) | Como documentar neste repositório |
+| [docs/guias/padrao-de-agentes-e-skills.md](docs/guias/padrao-de-agentes-e-skills.md) | Como criar agentes, skills e rules |
 
 ## Contribuindo
 
