@@ -1,7 +1,7 @@
 ---
 name: doc-writer
 description: Cria e atualiza a documentação do projeto (ADRs, specs, guias, runbooks, roadmap) seguindo o padrão do repositório. Use sempre que for preciso documentar uma decisão, contrato ou procedimento, ou atualizar o índice de docs.
-tools: ['read', 'search', 'edit', 'runCommands']
+tools: ['read', 'search', 'edit', 'execute']
 ---
 
 <!-- Corpo idêntico a .claude/agents/doc-writer.md. Ver docs/adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md -->
