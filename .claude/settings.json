@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node .claude/skills/localizar-documento/buscar.mjs:*)",
+      "Bash(node .claude/skills/novo-documento/novo.mjs:*)",
+      "Bash(node .claude/skills/validar-docs/validar.mjs:*)"
+    ]
+  }
+}

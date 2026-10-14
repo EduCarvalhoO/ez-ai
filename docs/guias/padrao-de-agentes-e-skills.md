@@ -66,5 +66,6 @@
 | `doc-writer` | Agente | `.claude/agents/doc-writer.md`, `.github/agents/doc-writer.agent.md` | [padrão de documentação](padrao-de-documentacao.md) |
 | `documentacao` | Rule | `.claude/rules/documentacao.md`, `.github/instructions/documentacao.instructions.md` | [padrão de documentação](padrao-de-documentacao.md) |
 | `agentes-e-skills` | Rule | `.claude/rules/agentes-e-skills.md`, `.github/instructions/agentes-e-skills.instructions.md` | este guia |
-
-Nenhuma skill criada ainda.
+| `localizar-documento` | Skill | `.claude/skills/localizar-documento/` | [padrão de documentação §5](padrao-de-documentacao.md#5-fluxo-para-criar-ou-alterar-um-documento) |
+| `novo-documento` | Skill | `.claude/skills/novo-documento/` | [padrão de documentação §3 e §5](padrao-de-documentacao.md#3-tipos-de-documento) |
+| `validar-docs` | Skill | `.claude/skills/validar-docs/` | [padrão de documentação §6](padrao-de-documentacao.md#6-checklist-de-revisão) |

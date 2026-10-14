@@ -59,6 +59,8 @@ Crie uma pasta só quando o primeiro documento dela existir (princípio de evolu
 5. Atualizar o índice em `docs/README.md` e, se for ADR, a tabela em [adr/README.md](../adr/README.md).
 6. Se a mudança afetar visão/princípios, atualizar também `docs/contexto.md`.
 
+Automação: as skills `localizar-documento` (passo 1), `novo-documento` (passo 3 e índices) e `validar-docs` (checklist da seção 6) executam esses passos. Ver o [inventário](padrao-de-agentes-e-skills.md#7-inventário).
+
 ## 6. Checklist de revisão
 
 - [ ] Nenhum parágrafo duplicado de outro documento
