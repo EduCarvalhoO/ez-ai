@@ -14,7 +14,7 @@
 | [0006](0006-workflow-mvp-feature-com-gates.md) | Workflow do MVP: feature com gates | Aceito |
 | [0007](0007-suporte-multiplataforma.md) | Suporte a Windows, macOS e Linux | Aceito |
 | [0008](0008-agentes-por-ambiente-com-regras-em-fonte-unica.md) | Agentes: um arquivo por ambiente, regras em fonte única | Aceito |
-| [0009](0009-time-de-agentes-para-executar-o-roadmap.md) | Time de agentes para executar o roadmap | Proposto |
+| [0009](0009-time-de-agentes-para-executar-o-roadmap.md) | Time de agentes para executar o roadmap | Aceito |
 
 ## Decisões em aberto
 

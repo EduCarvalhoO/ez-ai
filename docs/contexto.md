@@ -186,7 +186,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Workflow MVP | Feature com gates (spec → plano → impl → testes → review) | [0006](adr/0006-workflow-mvp-feature-com-gates.md) |
 | Plataformas | Windows, macOS e Linux | [0007](adr/0007-suporte-multiplataforma.md) |
 | Agentes do repositório | Um arquivo por ambiente (`.claude/agents/`, `.github/agents/`), regras em fonte única em `docs/` | [0008](adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md) |
-| Time de agentes do repositório | `Proposto`: arquiteto, pesquisador, implementador, revisor, seguranca e doc-writer, no fluxo com gates do ADR-0006 | [0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md) |
+| Time de agentes do repositório | Arquiteto, pesquisador, implementador, revisor, seguranca e doc-writer, no fluxo com gates do ADR-0006 | [0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md) |
 | Capacidade/horizonte | 1 pessoa + agentes, ~6 meses até a v1.0 | [roadmap](roadmap.md) |
 | Métricas | Qualidade, custo/eficiência, conformidade, adoção | [roadmap](roadmap.md#métricas-de-sucesso) |
 
@@ -194,7 +194,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 
 - Documentação segue o [padrão de documentação](guias/padrao-de-documentacao.md) e é criada pelo agente `doc-writer` (`.claude/agents/doc-writer.md` e `.github/agents/doc-writer.agent.md`, ver [ADR-0008](adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md)).
 - Agentes, skills e rules seguem o [padrão de agentes e skills](guias/padrao-de-agentes-e-skills.md).
-- Itens do roadmap são executados pelo [time de agentes](guias/time-de-agentes.md) ([ADR-0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md), `Proposto`); código segue o [padrão de código e testes](guias/padrao-de-codigo-e-testes.md).
+- Itens do roadmap são executados pelo [time de agentes](guias/time-de-agentes.md) ([ADR-0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md)); código segue o [padrão de código e testes](guias/padrao-de-codigo-e-testes.md).
 - Arquivos temporários, testes manuais e scripts auxiliares ficam em `.tmp/` (ignorado pelo Git).
 
 ---

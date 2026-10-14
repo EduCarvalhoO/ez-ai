@@ -1,6 +1,6 @@
 # ADR-0009: Time de agentes para executar o roadmap
 
-> Status: Proposto · Data: 2026-10-14 · Relacionados: [time de agentes](../guias/time-de-agentes.md), [ADR-0006](0006-workflow-mvp-feature-com-gates.md), [ADR-0008](0008-agentes-por-ambiente-com-regras-em-fonte-unica.md), [roadmap](../roadmap.md)
+> Status: Aceito · Data: 2026-10-14 · Relacionados: [time de agentes](../guias/time-de-agentes.md), [ADR-0006](0006-workflow-mvp-feature-com-gates.md), [ADR-0008](0008-agentes-por-ambiente-com-regras-em-fonte-unica.md), [roadmap](../roadmap.md)
 
 ## Contexto
 O roadmap é executado por 1 pessoa + agentes ([roadmap, premissas](../roadmap.md#premissas)). Hoje só existe o `doc-writer`. Faltam papéis para planejar, pesquisar, implementar, revisar e avaliar segurança com qualidade verificável e custo controlado de tokens, nos dois ambientes do [ADR-0001](0001-alvos-iniciais-claude-code-e-copilot.md).
