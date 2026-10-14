@@ -73,7 +73,8 @@ for (const p of docs) {
     if (/\|/.test(cab.split('·')[0])) add('erro', p, iCab + 1, 'status ainda com as opções do template');
   }
   ls.forEach((l, i) => {
-    if (/AAAA-MM-DD|PREENCHER|\[links\]|ADR-NNNN|ADR-MMMM/.test(l) && !/`[^`]*(AAAA-MM-DD|ADR-NNNN|ADR-MMMM)[^`]*`/.test(l))
+    // Marcadores citados entre crases são texto explicativo, não pendência.
+    if (/AAAA-MM-DD|PREENCHER|\[links\]|ADR-NNNN|ADR-MMMM/.test(l.replace(/`[^`]*`/g, '')))
       add('erro', p, i + 1, 'marcador de template não preenchido');
   });
   const tpl = join(DOCS, '_templates', ehAdr ? 'adr.md' : /^docs\/(specs|arquitetura)\//.test(r) ? 'spec.md' : /^docs\/(guias|runbooks)\//.test(r) ? 'guia.md' : '');

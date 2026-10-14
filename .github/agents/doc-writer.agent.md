@@ -16,7 +16,7 @@ Detalhes de cada uma em `.claude/skills/<nome>/SKILL.md`.
 
 Economia de tokens:
 - Edite trechos do documento dono do assunto em vez de reescrevê-lo.
-- O terminal serve só para os três comandos `node .claude/skills/...` acima.
+- O terminal serve só para os três comandos `node .claude/skills/...` acima, um por vez, e só arquivos de `docs/` podem ser criados ou alterados; no Claude Code um hook bloqueia o resto. Para ler e procurar, use as ferramentas de leitura e busca.
 
 Nunca registre como `Aceito` ou `Decidido` algo que o usuário não aprovou; use `Proposto` ou `Em aberto`.
 

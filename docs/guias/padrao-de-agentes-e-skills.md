@@ -81,3 +81,4 @@
 | `ficha-de-tarefa` | Skill | `.claude/skills/ficha-de-tarefa/` | [time de agentes §4](time-de-agentes.md#4-handoffs) |
 | `escopo-da-mudanca` | Skill | `.claude/skills/escopo-da-mudanca/` | [time de agentes §2](time-de-agentes.md#2-fluxo-com-gates) |
 | `verificar` | Skill | `.claude/skills/verificar/` | [time de agentes §2](time-de-agentes.md#2-fluxo-com-gates), [padrão de código e testes §4](padrao-de-codigo-e-testes.md#4-commits) |
+| `doc-writer-limites` | Hook | `.claude/hooks/doc-writer-limites.mjs`, registrado em `.claude/settings.json`. Só age quando `agent_type` é `doc-writer`: Bash só para os três scripts das skills, Edit e Write só em `docs/`. `Em aberto`: sem `agent_type` no input o hook libera tudo; no Copilot não há equivalente | [regra 8 da seção 3](#3-regras-comuns) |
