@@ -1,6 +1,6 @@
 # Contexto do Projeto — AI Harness Extensível
 
-> Status: Vivo · Atualizado: 2026-10-14 · Relacionados: [roadmap](roadmap.md), [ADRs](adr/README.md)
+> Status: Vivo · Atualizado: 2026-10-15 · Relacionados: [roadmap](roadmap.md), [ADRs](adr/README.md)
 >
 > Este arquivo espelha o documento `AI_Harness_Contexto_Inicial.md` do Project no claude.ai. Ao alterar um, atualize o outro.
 
@@ -187,6 +187,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Plataformas | Windows, macOS e Linux | [0007](adr/0007-suporte-multiplataforma.md) |
 | Agentes do repositório | Um arquivo por ambiente (`.claude/agents/`, `.github/agents/`), regras em fonte única em `docs/` | [0008](adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md) |
 | Time de agentes do repositório | Arquiteto, pesquisador, implementador, revisor, seguranca e doc-writer, no fluxo com gates do ADR-0006 | [0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md) |
+| Estrutura do código | Pacote único com fronteiras internas (núcleo ← adapters ← CLI), npm, Node 22.12+ ou 24 | [0010](adr/0010-pacote-unico-com-fronteiras-internas.md) |
 | Capacidade/horizonte | 1 pessoa + agentes, ~6 meses até a v1.0 | [roadmap](roadmap.md) |
 | Métricas | Qualidade, custo/eficiência, conformidade, adoção | [roadmap](roadmap.md#métricas-de-sucesso) |
 

@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-> Status: Vivo · Atualizado: 2026-10-14 · Relacionados: [índice](../README.md)
+> Status: Vivo · Atualizado: 2026-10-15 · Relacionados: [índice](../README.md)
 >
 > Formato e regras: [padrão de documentação](../guias/padrao-de-documentacao.md#4-convenções). Template: [adr.md](../_templates/adr.md).
 
@@ -15,6 +15,7 @@
 | [0007](0007-suporte-multiplataforma.md) | Suporte a Windows, macOS e Linux | Aceito |
 | [0008](0008-agentes-por-ambiente-com-regras-em-fonte-unica.md) | Agentes: um arquivo por ambiente, regras em fonte única | Aceito |
 | [0009](0009-time-de-agentes-para-executar-o-roadmap.md) | Time de agentes para executar o roadmap | Aceito |
+| [0010](0010-pacote-unico-com-fronteiras-internas.md) | Pacote único com fronteiras internas | Aceito |
 
 ## Decisões em aberto
 
@@ -22,5 +23,4 @@
 |---|---|---|
 | Licença | Antes da F8 | Opções: Apache-2.0, MIT, open core |
 | Nome do produto/CLI | Antes da F8 | Codinome `harness-ai`; checar npm, marca e domínio (colisão com Harness.io) |
-| Monorepo vs. pacote único | F0 | Ver [ADR-0002](0002-stack-typescript-node.md) |
 | Formato de policy (DSL própria, JSON/YAML, Rego/Cedar) | F1 | |

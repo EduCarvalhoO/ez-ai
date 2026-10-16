@@ -17,7 +17,8 @@ TypeScript estrito sobre Node LTS. Distribuição primária via npm com provenan
 
 ## Consequências
 - Baseline de segurança de dependências obrigatória desde F0 (lockfile, auditoria, Renovate/Dependabot, SBOM).
-- **Em aberto:** monorepo (pnpm workspaces) vs. pacote único; binário standalone (bun/SEA) para a v1.x.
+- Pacote único, npm e versão do Node em `engines.node`: decididos no [ADR-0010](0010-pacote-unico-com-fronteiras-internas.md).
+- **Em aberto:** binário standalone (bun/SEA) para a v1.x.
 
 ## Gatilhos de revisão
 Requisitos de performance/isolamento que Node não atenda.
