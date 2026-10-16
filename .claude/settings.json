@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node .claude/skills/localizar-documento/buscar.mjs:*)",
+      "Bash(node .claude/skills/novo-documento/novo.mjs:*)",
+      "Bash(node .claude/skills/validar-docs/validar.mjs:*)",
+      "Bash(node .claude/skills/ficha-de-tarefa/ficha.mjs:*)",
+      "Bash(node .claude/skills/escopo-da-mudanca/escopo.mjs:*)",
+      "Bash(node .claude/skills/verificar/verificar.mjs:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/doc-writer-limites.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

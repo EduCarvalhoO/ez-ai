@@ -1,0 +1,23 @@
+# Arquivos temporários e auxiliares (não fazem parte do projeto)
+.tmp/
+
+# Node
+node_modules/
+dist/
+coverage/
+*.log
+
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# SO / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Configurações locais do Claude Code
+.claude/settings.local.json
