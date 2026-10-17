@@ -1,0 +1,3 @@
+# Fim de linha LF no repositório e na árvore de trabalho, em todos os SOs (ADR-0007).
+# O formatter (biome.json) exige LF; sem isto, core.autocrlf=true no Windows gera CRLF.
+* text=auto eol=lf

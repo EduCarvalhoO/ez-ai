@@ -25,3 +25,7 @@ O [ADR-0002](0002-stack-typescript-node.md) deixou pendentes monorepo vs. pacote
 
 ## Gatilhos de revisão
 Primeiro consumidor externo que precise só do núcleo (ex.: adapter de terceiros, uso programático sem CLI). Pacote "starter" não conta: é distribuído via Git ([ADR-0005](0005-distribuicao-git-lockfile.md)).
+
+## Notas de implementação
+Registro de estado; a decisão acima não muda.
+- 2026-10-17: a fronteira deixou de ser convenção. A regra `noRestrictedImports` do Biome (`biome.json`) faz `npm run lint` falhar quando `src/core` importa `src/adapters/` ou `src/cli`, citando este ADR, e o teste `test/ferramental/fronteiras.test.ts` cobre a regra. A conferência manual pelo `revisor` prevista nas consequências não é mais necessária. Ver [padrão de código §1](../guias/padrao-de-codigo-e-testes.md#1-código).

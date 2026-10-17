@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+// Hook commit-msg: valida a mensagem no padrão Conventional Commits com scripts/validar-commits.mjs.
+// Ativação (uma vez por clone): git config core.hooksPath .githooks
+// Sem dependências e sem shell; só usa import() para funcionar como ESM ou CommonJS.
+import('node:path')
+  .then(async ({ dirname, join }) => {
+    const { pathToFileURL } = await import('node:url');
+    const script = join(dirname(process.argv[1] ?? ''), '..', 'scripts', 'validar-commits.mjs');
+    const { executar } = await import(pathToFileURL(script).href);
+    process.exitCode = await executar(['--arquivo', process.argv[2] ?? '']);
+  })
+  .catch((erro) => {
+    process.stderr.write(`commit-msg: falha ao validar a mensagem: ${erro instanceof Error ? erro.message : erro}\n`);
+    process.exitCode = 1;
+  });
