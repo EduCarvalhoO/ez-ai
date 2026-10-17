@@ -1,0 +1,36 @@
+# Atualizações de dependências (docs/guias/padrao-de-codigo-e-testes.md §1 e §5). Conferido por
+# test/ferramental/seguranca.test.ts. O cooldown espera 7 dias depois da publicação, a mesma
+# idade mínima do .npmrc; o prefixo gera mensagens aceitas pelo commits:check.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+      include: scope
+
+  # zizmor do job workflows (.github/zizmor/requirements.txt, com hashes).
+  - package-ecosystem: pip
+    directory: /.github/zizmor
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+      include: scope

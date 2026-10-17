@@ -34,6 +34,19 @@ jobs:
           # Sem cache de pacotes: o setup-node o ligaria sozinho se o package.json ganhar packageManager.
           package-manager-cache: false
       - run: npm ci --ignore-scripts
+      # Antes do audit, para uma falha de idade não ficar escondida atrás de um advisory.
+      - name: Idade mínima das versões novas do lockfile
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node scripts/verificar-idade-deps.mjs --desde "origin/$BASE_REF"
+      # Qualquer vulnerabilidade conhecida falha, inclusive em dependência de desenvolvimento (roda no CI).
+      - run: npm audit
+      # Assinaturas do registro (e atestados de provenance, quando houver) de todo pacote instalado.
+      # --min-release-age=0: o npm 11 aplica a idade mínima também a esta consulta e falha com transitiva
+      # recente já instalada. Corrigido no npm 12: remover a opção quando o CI usar npm 12.
+      # A idade é conferida no passo acima.
+      - run: npm audit signatures --min-release-age=0
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
@@ -44,6 +57,37 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: npm run commits:check -- "origin/$BASE_REF..HEAD"
+
+  workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Versão publicada há 7 dias ou mais; SHA-256 de actionlint_<versão>_checksums.txt da release.
+      ACTIONLINT_VERSAO: '1.7.12'
+      ACTIONLINT_SHA256: '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: actionlint (sintaxe e expressões dos workflows; usa o shellcheck do runner)
+        run: |
+          arquivo="actionlint_${ACTIONLINT_VERSAO}_linux_amd64.tar.gz"
+          url="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSAO}/$arquivo"
+          curl --fail --silent --show-error --location --proto '=https' --output "$RUNNER_TEMP/$arquivo" "$url"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$arquivo" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$arquivo" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+      - name: Instala o zizmor (sem token)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/zizmor/bin/pip" install --require-hashes --only-binary :all: --no-deps -r .github/zizmor/requirements.txt
+      - name: zizmor (segurança dos workflows e do dependabot.yml)
+        # Modo online: confere pela API se cada SHA pertence ao repositório e à tag da action
+        # (impostor-commit, ref-version-mismatch, known-vulnerable-actions). Token só de leitura.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          "$RUNNER_TEMP/zizmor/bin/zizmor" --format=github .
 
   testes:
     runs-on: ${{ matrix.os }}
