@@ -224,7 +224,7 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(texto).toMatch(/node scripts\/verificar-idade-deps\.mjs --desde "origin\/\$BASE_REF"$/m);
   });
 
-  it('roda actionlint e zizmor no job workflows, com download conferido por hash', () => {
+  it('roda actionlint e zizmor (online, com o token de leitura) no job workflows, com download conferido por hash', () => {
     const workflows = semComentarios(job(lerLinhas(), 'workflows'));
     expect(workflows).toMatch(/runs-on: ubuntu-latest$/m);
     expect(workflows).toMatch(/ACTIONLINT_VERSAO: '\d+\.\d+\.\d+'$/m);
@@ -233,7 +233,9 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(workflows).toMatch(
       /pip"? install --require-hashes --only-binary :all: --no-deps -r \.github\/zizmor\/requirements\.txt/,
     );
-    expect(workflows).toMatch(/zizmor"? --offline/);
+    expect(workflows).toMatch(/zizmor"? --format=github \.$/m);
+    expect(workflows).not.toMatch(/--offline/);
+    expect(workflows).toMatch(/GH_TOKEN: \$\{\{ github\.token \}\}$/m);
   });
 
   it('testa em Ubuntu, Windows e macOS com npm ci --ignore-scripts e npm test', () => {

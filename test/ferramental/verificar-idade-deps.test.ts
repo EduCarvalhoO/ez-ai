@@ -70,6 +70,20 @@ describe('listarPacotes (package-lock.json v3)', () => {
     expect(erros[1]).toContain('../fora');
   });
 
+  it('acusa resolved que aponta para o tarball de outra versão e versão que não é semver', () => {
+    const { pacotes, erros } = listarPacotes(
+      lock({
+        'node_modules/troca': { version: '1.0.0', resolved: 'https://registry.npmjs.org/troca/-/troca-9.9.9.tgz' },
+        'node_modules/criado': {
+          version: 'created',
+          resolved: 'https://registry.npmjs.org/criado/-/criado-created.tgz',
+        },
+      }),
+    );
+    expect(pacotes).toEqual([]);
+    expect(erros).toHaveLength(2);
+  });
+
   it('rejeita lockfile que não é JSON ou não é da versão 2 ou 3', () => {
     expect(() => listarPacotes('{')).toThrow(/JSON/);
     expect(() => listarPacotes(JSON.stringify({ lockfileVersion: 1 }))).toThrow(/lockfileVersion/);

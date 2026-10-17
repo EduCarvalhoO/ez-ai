@@ -16,6 +16,8 @@ const DIA = 24 * 60 * 60 * 1000;
 const REGISTRO = 'https://registry.npmjs.org/';
 // Nome de pacote npm válido (com escopo opcional); impede que o nome vire outro caminho na URL.
 const NOME = /^(@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*$/;
+// Versão semver exata; impede chaves como "created" ou "modified" do campo time do registro.
+const VERSAO = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
 const PARALELO = 8;
 const USO = 'Uso: node scripts/verificar-idade-deps.mjs [--desde <ref>]\n';
 
@@ -66,10 +68,13 @@ export function listarPacotes(texto) {
       typeof nome !== 'string' ||
       !NOME.test(nome) ||
       typeof versao !== 'string' ||
-      typeof resolvido !== 'string' ||
-      !resolvido.startsWith(REGISTRO)
+      !VERSAO.test(versao) ||
+      // O tarball tem de ser o de nome@versao: outro resolved instalaria uma versão sem conferir a idade dela.
+      resolvido !== `${REGISTRO}${nome}/-/${nome.split('/').at(-1)}-${versao}.tgz`
     ) {
-      erros.push(`${semControle(caminho)}: fora do registro do npm ou sem nome/versão válidos`);
+      erros.push(
+        `${semControle(caminho)}: fora do registro do npm, sem nome/versão válidos ou com resolved de outra versão`,
+      );
       continue;
     }
     vistos.set(`${nome}@${versao}`, { nome, versao });
