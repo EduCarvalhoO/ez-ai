@@ -104,12 +104,25 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(semComentarios(linhas)).not.toMatch(/:\s*write\b|write-all/);
   });
 
+  it('não usa read-all nem declara permissions abaixo do topo', () => {
+    const linhas = lerLinhas();
+    expect(linhas.join('\n')).not.toContain('read-all');
+    const aninhadas = linhas.filter(
+      (linha) => ehConteudo(linha) && recuo(linha) > 0 && /^\s*(-\s+)?permissions\s*:/.test(linha),
+    );
+    expect(aninhadas).toEqual([]);
+  });
+
   it('fixa toda action por SHA de 40 caracteres com a versão em comentário', () => {
     const usos = lerLinhas().filter((linha) => /^\s*(-\s+)?uses:/.test(linha));
     expect(usos.length).toBeGreaterThan(0);
     for (const uso of usos) {
       expect(uso).toMatch(/uses: [\w.-]+\/[\w.-]+@[0-9a-f]{40} # v\d+\.\d+\.\d+$/);
     }
+  });
+
+  it('não declara uses em sintaxe de fluxo (escaparia da checagem de SHA)', () => {
+    expect(semComentarios(lerLinhas())).not.toMatch(/\{[^}]*\buses\s*:/);
   });
 
   it('usa persist-credentials: false em todo checkout e não guarda cache de dependências', () => {
@@ -129,6 +142,15 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
       .filter((passo) => passo.some((linha) => /uses: actions\/setup-node@/.test(linha)));
     expect(setups.length).toBe(jobs(linhas).size);
     for (const passo of setups) expect(semComentarios(passo)).toMatch(/^\s+check-latest: true$/m);
+  });
+
+  it('desliga no setup-node o cache automático de pacotes (package-manager-cache: false)', () => {
+    const linhas = lerLinhas();
+    const setups = [...jobs(linhas).values()]
+      .flatMap(passos)
+      .filter((passo) => passo.some((linha) => /uses: actions\/setup-node@/.test(linha)));
+    expect(setups.length).toBe(jobs(linhas).size);
+    for (const passo of setups) expect(semComentarios(passo)).toMatch(/^\s+package-manager-cache: false$/m);
   });
 
   it('cancela a execução antiga do mesmo PR e limita o tempo de cada job', () => {

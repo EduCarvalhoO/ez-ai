@@ -2,7 +2,7 @@
 
 > Status: Rascunho · Atualizado: 2026-10-17 · Relacionados: [ADR-0002](../adr/0002-stack-typescript-node.md), [ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md), [ADR-0007](../adr/0007-suporte-multiplataforma.md), [roadmap §estratégia de qualidade](../roadmap.md#estratégia-de-qualidade), [time de agentes](time-de-agentes.md), [revisão de segurança](revisao-de-seguranca.md)
 >
-> Fonte única das regras de código, testes e commits. Rascunho até a F0 fechar CI e baseline de segurança; o que ainda não foi decidido está marcado `Em aberto`.
+> Fonte única das regras de código, testes, commits e CI. Rascunho até a F0 fechar a baseline de segurança; o que ainda não foi decidido está marcado `Em aberto`.
 
 ## Quando usar
 Ao escrever ou revisar código TypeScript/JavaScript, testes, scripts de skills ou configuração de build e CI.
@@ -46,6 +46,28 @@ Revisão: revisor APROVADO[, seguranca APROVADO]
 - Validação: `npm run commits:check` (`scripts/validar-commits.mjs`, sem dependência) confere `origin/main..HEAD` ou o intervalo passado como argumento. Mensagens geradas pelo git (`Merge ...`, `Revert "..."`) são ignoradas.
 - Hook `commit-msg` versionado em `.githooks/`; ative uma vez por clone com `git config core.hooksPath .githooks`. Cuidado: o hook roda o script da árvore de trabalho, então commitar numa branch não confiável executa o código dela, o mesmo risco de rodar `npm test` nela.
 - Changesets: mudança que deve aparecer no CHANGELOG ganha um changeset com `npx changeset`. O pacote é privado e versiona sem tag até a publicação na [F8](../roadmap.md).
+
+## 5. CI
+Workflow em `.github/workflows/ci.yml`, disparado em `pull_request` e `push` para `main`.
+
+| Job | Onde | O que roda |
+|---|---|---|
+| `qualidade` | Ubuntu, Node `24.x` | `npm ci --ignore-scripts`, `format:check`, `lint`, `typecheck`, `validar-docs` e, só em PR, `commits:check` no intervalo `origin/<base>..HEAD` |
+| `testes` | Ubuntu, Windows e macOS × Node `22.x` e `24.x`, mais Ubuntu com o piso `22.12.0` (7 execuções) | `npm ci --ignore-scripts` e `npm test` (build + Vitest com cobertura, [§3](#3-testes)) |
+
+- Node: `check-latest: true` em todo `setup-node`, para usar a última correção de cada major e não a versão em cache do runner. As majors da matriz e o piso acompanham `engines.node` ([ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md)).
+- Reproduzir localmente: `node .claude/skills/verificar/verificar.mjs` (mesmas verificações, no SO e Node da máquina) e `npm run commits:check`.
+- Regras do workflow, conferidas por `test/ferramental/ci.test.ts`:
+  - token só leitura (`permissions: contents: read` no topo, nada de `read-all` nem `permissions:` em job);
+  - `pull_request`, nunca `pull_request_target`;
+  - toda action fixada por SHA de commit de 40 caracteres, com a versão em comentário (`# v7.1.0`), e versão publicada há 7 dias ou mais;
+  - `persist-credentials: false` em todo checkout;
+  - sem cache de dependências (`package-manager-cache: false`, sem `cache:`);
+  - `npm ci --ignore-scripts`;
+  - nenhuma expressão `${{ }}` dentro de `run` (passe por `env`);
+  - `concurrency` cancela a execução antiga do mesmo PR e cada job tem `timeout-minutes`.
+- Atualizar a SHA de uma action: conferir com `gh api repos/<owner>/<repo>/git/ref/tags/<tag>` (o `object.type` deve ser `commit`) e trocar SHA e comentário juntos. O teste não confere se a SHA corresponde à versão do comentário. **Em aberto:** essa conferência é só por instrução até a baseline de segurança trazer zizmor/Dependabot.
+
 ## Verificação
 `node .claude/skills/verificar/verificar.mjs` sem `falhou`.
 
@@ -54,3 +76,6 @@ Revisão: revisor APROVADO[, seguranca APROVADO]
 |---|---|---|
 | Teste passa no Windows e falha no Linux | Separador ou caixa de caminho fixos | Usar `node:path` e testar nos 3 SOs no CI |
 | Teste novo passa antes da implementação | Teste não exercita o comportamento | Reescrever até falhar sem a mudança |
+| CI vermelho e o botão de merge continua liberado | Branch protection ainda não existe (baseline de segurança da F0) | Não fazer merge com CI vermelho |
+| `commits:check` falha só no CI | Mensagem fora do padrão em algum commit do PR | Rodar `npm run commits:check` e reescrever a mensagem |
+| Job `testes` vermelho com "Coverage for lines ... does not meet global threshold" | Cobertura de `src/**` abaixo de 80% | Ver [§3](#3-testes) |
