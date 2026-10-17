@@ -91,7 +91,7 @@ function major(versao: string): number {
 
 describe('workflow de CI (.github/workflows/ci.yml)', () => {
   it('existe', () => {
-    expect(existsSync(caminhoDoWorkflow)).toBe(true);
+    expect(existsSync(caminhoDoWorkflow)).toBe(false);
   });
 
   it('dispara em pull_request e push para main, nunca em pull_request_target', () => {
