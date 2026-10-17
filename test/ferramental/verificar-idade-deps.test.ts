@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { executar, lerIdadeMinima, listarPacotes, verificarIdade } from '../../scripts/verificar-idade-deps.mjs';
 
@@ -11,6 +14,7 @@ function lock(pacotes: Record<string, unknown>): string {
 describe('lerIdadeMinima (.npmrc)', () => {
   it('lê min-release-age em dias, com espaços e comentários', () => {
     expect(lerIdadeMinima('# idade\nignore-scripts=true\nmin-release-age = 7\n')).toBe(7);
+    expect(lerIdadeMinima('min-release-age=3\nmin-release-age=7\n')).toBe(7);
   });
 
   it('devolve undefined sem a chave ou com valor que não é inteiro positivo', () => {
@@ -82,6 +86,13 @@ describe('listarPacotes (package-lock.json v3)', () => {
     );
     expect(pacotes).toEqual([]);
     expect(erros).toHaveLength(2);
+  });
+
+  it('aceita todas as entradas do package-lock.json real do projeto', () => {
+    const real = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'package-lock.json'), 'utf8');
+    const { pacotes, erros } = listarPacotes(real);
+    expect(erros).toEqual([]);
+    expect(pacotes.length).toBeGreaterThan(0);
   });
 
   it('rejeita lockfile que não é JSON ou não é da versão 2 ou 3', () => {

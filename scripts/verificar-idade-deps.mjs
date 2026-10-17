@@ -31,13 +31,14 @@ const USO = 'Uso: node scripts/verificar-idade-deps.mjs [--desde <ref>]\n';
  * @returns {number | undefined}
  */
 export function lerIdadeMinima(npmrc) {
+  // Como o npm, vale a última ocorrência da chave.
+  let valor;
   for (const linha of npmrc.split(/\r?\n/)) {
     const par = /^\s*min-release-age\s*=\s*(\S+)\s*$/.exec(linha);
-    if (par === null) continue;
-    const dias = Number(par[1]);
-    return Number.isInteger(dias) && dias > 0 ? dias : undefined;
+    if (par !== null) valor = par[1];
   }
-  return undefined;
+  const dias = Number(valor);
+  return valor !== undefined && Number.isInteger(dias) && dias > 0 ? dias : undefined;
 }
 
 /**
@@ -108,7 +109,10 @@ export function verificarIdade(pacotes, datas, agora, dias) {
  * @returns {Promise<Record<string, string>>}
  */
 async function buscarTempos(nome) {
-  const resposta = await fetch(`${REGISTRO}${nome.replace('/', '%2f')}`, { headers: { accept: 'application/json' } });
+  const resposta = await fetch(`${REGISTRO}${nome.replace('/', '%2f')}`, {
+    headers: { accept: 'application/json' },
+    signal: AbortSignal.timeout(30_000),
+  });
   if (!resposta.ok) throw new Error(`registro respondeu ${resposta.status} para ${nome}`);
   const documento = /** @type {{ time?: Record<string, string> }} */ (await resposta.json());
   return documento?.time ?? {};

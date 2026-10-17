@@ -61,6 +61,7 @@ describe('.github/dependabot.yml', () => {
       const prefixo = /^\s+prefix: "?([\w-]+)"?$/m.exec(bloco)?.[1];
       expect(bloco).toMatch(/^\s+include: "?scope"?$/m);
       expect(validarMensagem(`${prefixo}(deps): bump cac from 7.0.1 to 7.1.0`).valida).toBe(true);
+      expect(validarMensagem(`${prefixo}(deps-dev): bump cac from 7.0.1 to 7.1.0`).valida).toBe(true);
     }
   });
 });

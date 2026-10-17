@@ -34,17 +34,19 @@ jobs:
           # Sem cache de pacotes: o setup-node o ligaria sozinho se o package.json ganhar packageManager.
           package-manager-cache: false
       - run: npm ci --ignore-scripts
-      # Qualquer vulnerabilidade conhecida falha, inclusive em dependência de desenvolvimento (roda no CI).
-      - run: npm audit
-      # Assinaturas do registro (e atestados de provenance, quando houver) de todo pacote instalado.
-      # --min-release-age=0: o npm 11 aplica a idade mínima também a esta consulta e falha com transitiva
-      # recente já instalada (corrigido no npm 12); a idade é conferida no passo seguinte.
-      - run: npm audit signatures --min-release-age=0
+      # Antes do audit, para uma falha de idade não ficar escondida atrás de um advisory.
       - name: Idade mínima das versões novas do lockfile
         if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
         run: node scripts/verificar-idade-deps.mjs --desde "origin/$BASE_REF"
+      # Qualquer vulnerabilidade conhecida falha, inclusive em dependência de desenvolvimento (roda no CI).
+      - run: npm audit
+      # Assinaturas do registro (e atestados de provenance, quando houver) de todo pacote instalado.
+      # --min-release-age=0: o npm 11 aplica a idade mínima também a esta consulta e falha com transitiva
+      # recente já instalada. Corrigido no npm 12: remover a opção quando o CI usar npm 12.
+      # A idade é conferida no passo acima.
+      - run: npm audit signatures --min-release-age=0
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck

@@ -222,6 +222,9 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(texto).toMatch(/^\s+if: github\.event_name == 'pull_request'$/m);
     expect(texto).toMatch(/BASE_REF: \$\{\{ github\.base_ref \}\}$/m);
     expect(texto).toMatch(/node scripts\/verificar-idade-deps\.mjs --desde "origin\/\$BASE_REF"$/m);
+    // Antes do audit: uma falha de idade não fica escondida atrás de um advisory.
+    const qualidade = semComentarios(job(lerLinhas(), 'qualidade'));
+    expect(qualidade.indexOf('verificar-idade-deps')).toBeLessThan(qualidade.indexOf('run: npm audit'));
   });
 
   it('roda actionlint e zizmor (online, com o token de leitura) no job workflows, com download conferido por hash', () => {
