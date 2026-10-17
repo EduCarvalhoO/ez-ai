@@ -224,6 +224,7 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(texto).toMatch(/node scripts\/verificar-idade-deps\.mjs --desde "origin\/\$BASE_REF"$/m);
     // Antes do audit: uma falha de idade não fica escondida atrás de um advisory.
     const qualidade = semComentarios(job(lerLinhas(), 'qualidade'));
+    expect(qualidade.indexOf('verificar-idade-deps')).toBeGreaterThan(-1);
     expect(qualidade.indexOf('verificar-idade-deps')).toBeLessThan(qualidade.indexOf('run: npm audit'));
   });
 

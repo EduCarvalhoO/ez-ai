@@ -77,14 +77,16 @@ jobs:
           echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$arquivo" | sha256sum --check --strict
           tar -xzf "$RUNNER_TEMP/$arquivo" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
+      - name: Instala o zizmor (sem token)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/zizmor/bin/pip" install --require-hashes --only-binary :all: --no-deps -r .github/zizmor/requirements.txt
       - name: zizmor (segurança dos workflows e do dependabot.yml)
         # Modo online: confere pela API se cada SHA pertence ao repositório e à tag da action
         # (impostor-commit, ref-version-mismatch, known-vulnerable-actions). Token só de leitura.
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python3 -m venv "$RUNNER_TEMP/zizmor"
-          "$RUNNER_TEMP/zizmor/bin/pip" install --require-hashes --only-binary :all: --no-deps -r .github/zizmor/requirements.txt
           "$RUNNER_TEMP/zizmor/bin/zizmor" --format=github .
 
   testes:
