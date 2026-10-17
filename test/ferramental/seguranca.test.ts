@@ -79,3 +79,33 @@ describe('SECURITY.md', () => {
     expect(ler('SECURITY.md')).toContain('https://github.com/EduCarvalhoO/ez-ai/security/advisories/new');
   });
 });
+
+describe('.github/workflows/codeql.yml', () => {
+  const linhas = semComentarios(ler('.github', 'workflows', 'codeql.yml'));
+  const texto = linhas.join('\n');
+
+  it('analisa JavaScript/TypeScript em PR, push para main e semanalmente, nunca em pull_request_target', () => {
+    expect(texto).not.toContain('pull_request_target');
+    expect(texto).toMatch(/^ {2}pull_request:\n {4}branches: \[main\]$/m);
+    expect(texto).toMatch(/^ {2}push:\n {4}branches: \[main\]$/m);
+    expect(texto).toMatch(/^ {4}- cron: '[^']+'$/m);
+    expect(texto).toMatch(/languages: javascript-typescript$/m);
+  });
+
+  it('dá contents: read no topo e security-events: write só no job de análise', () => {
+    expect(texto).toMatch(/^permissions:\n {2}contents: read$/m);
+    expect(linhas.filter((linha) => /:\s*write\b|write-all/.test(linha)).map((linha) => linha.trim())).toEqual([
+      'security-events: write',
+    ]);
+  });
+
+  it('fixa toda action por SHA com a versão em comentário e não persiste credenciais', () => {
+    const usos = ler('.github', 'workflows', 'codeql.yml')
+      .split(/\r?\n/)
+      .filter((linha) => /^\s*(-\s+)?uses:/.test(linha));
+    expect(usos.length).toBe(3);
+    for (const uso of usos) expect(uso).toMatch(/uses: [\w.-]+\/[\w./-]+@[0-9a-f]{40} # v\d+\.\d+\.\d+$/);
+    expect(texto).toMatch(/persist-credentials: false$/m);
+    expect(texto).toMatch(/timeout-minutes: \d+$/m);
+  });
+});
