@@ -109,7 +109,7 @@ export function verificarIdade(pacotes, datas, agora, dias) {
  * @returns {Promise<Record<string, string>>}
  */
 async function buscarTempos(nome) {
-  const resposta = await fetch(`${REGISTRO}${nome.replace('/', '%2f')}`, {
+  const resposta = await fetch(`${REGISTRO}${nome.replaceAll('/', '%2f')}`, {
     headers: { accept: 'application/json' },
     signal: AbortSignal.timeout(30_000),
   });
