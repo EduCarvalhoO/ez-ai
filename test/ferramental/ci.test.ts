@@ -80,6 +80,11 @@ function semComentarios(linhas: readonly string[]): string {
     .join('\n');
 }
 
+/** Quantos jobs rodam npm (todos eles precisam de setup-node). */
+function jobsComNpm(linhas: readonly string[]): number {
+  return [...jobs(linhas).values()].filter((linhasDoJob) => /run: npm /.test(semComentarios(linhasDoJob))).length;
+}
+
 function major(versao: string): number {
   return Number(/^\s*\^?(\d+)/.exec(versao)?.[1]);
 }
@@ -140,7 +145,7 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     const setups = [...jobs(linhas).values()]
       .flatMap(passos)
       .filter((passo) => passo.some((linha) => /uses: actions\/setup-node@/.test(linha)));
-    expect(setups.length).toBe(jobs(linhas).size);
+    expect(setups.length).toBe(jobsComNpm(linhas));
     for (const passo of setups) expect(semComentarios(passo)).toMatch(/^\s+check-latest: true$/m);
   });
 
@@ -149,7 +154,7 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     const setups = [...jobs(linhas).values()]
       .flatMap(passos)
       .filter((passo) => passo.some((linha) => /uses: actions\/setup-node@/.test(linha)));
-    expect(setups.length).toBe(jobs(linhas).size);
+    expect(setups.length).toBe(jobsComNpm(linhas));
     for (const passo of setups) expect(semComentarios(passo)).toMatch(/^\s+package-manager-cache: false$/m);
   });
 
@@ -198,6 +203,37 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(texto).toMatch(/^\s+if: github\.event_name == 'pull_request'$/m);
     expect(texto).toMatch(/BASE_REF: \$\{\{ github\.base_ref \}\}$/m);
     expect(texto).toMatch(/npm run commits:check -- "origin\/\$BASE_REF\.\.HEAD"$/m);
+  });
+
+  it('roda no job qualidade npm audit (qualquer vulnerabilidade) e npm audit signatures', () => {
+    const qualidade = semComentarios(job(lerLinhas(), 'qualidade'));
+    expect(qualidade).toMatch(/run: npm audit$/m);
+    expect(qualidade).toMatch(/run: npm audit signatures --min-release-age=0$/m);
+    expect(qualidade).not.toMatch(/audit-level/);
+    expect(qualidade.indexOf('run: npm audit')).toBeGreaterThan(qualidade.indexOf('run: npm ci --ignore-scripts'));
+  });
+
+  it('confere em PR a idade mínima das versões novas do lockfile', () => {
+    const passo = passos(job(lerLinhas(), 'qualidade')).find((linhas) =>
+      linhas.some((linha) => linha.includes('verificar-idade-deps')),
+    );
+    expect(passo).toBeDefined();
+    const texto = semComentarios(passo ?? []);
+    expect(texto).toMatch(/^\s+if: github\.event_name == 'pull_request'$/m);
+    expect(texto).toMatch(/BASE_REF: \$\{\{ github\.base_ref \}\}$/m);
+    expect(texto).toMatch(/node scripts\/verificar-idade-deps\.mjs --desde "origin\/\$BASE_REF"$/m);
+  });
+
+  it('roda actionlint e zizmor no job workflows, com download conferido por hash', () => {
+    const workflows = semComentarios(job(lerLinhas(), 'workflows'));
+    expect(workflows).toMatch(/runs-on: ubuntu-latest$/m);
+    expect(workflows).toMatch(/ACTIONLINT_VERSAO: '\d+\.\d+\.\d+'$/m);
+    expect(workflows).toMatch(/ACTIONLINT_SHA256: '[0-9a-f]{64}'$/m);
+    expect(workflows).toMatch(/sha256sum --check/);
+    expect(workflows).toMatch(
+      /pip"? install --require-hashes --only-binary :all: --no-deps -r \.github\/zizmor\/requirements\.txt/,
+    );
+    expect(workflows).toMatch(/zizmor"? --offline/);
   });
 
   it('testa em Ubuntu, Windows e macOS com npm ci --ignore-scripts e npm test', () => {
