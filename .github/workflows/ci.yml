@@ -1,0 +1,72 @@
+# CI do projeto (docs/guias/padrao-de-codigo-e-testes.md). Endurecimento conferido por test/ferramental/ci.test.ts.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Token só de leitura; nenhum job pede mais.
+permissions:
+  contents: read
+
+# Um push novo no mesmo PR cancela a execução antiga; na main cada push roda até o fim.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  qualidade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Histórico completo: commits:check compara com origin/<base>.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.x'
+          # Sem isto o runner usa a versão em cache da imagem, que pode estar atrás da última correção.
+          check-latest: true
+          # Sem cache de pacotes: o setup-node o ligaria sozinho se o package.json ganhar packageManager.
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: node .claude/skills/validar-docs/validar.mjs
+      - name: Conventional Commits do PR
+        if: github.event_name == 'pull_request'
+        # base_ref via env, nunca interpolado no script (evita injeção pelo nome do branch).
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: npm run commits:check -- "origin/$BASE_REF..HEAD"
+
+  testes:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Majors de engines.node no package.json; o piso exato entra pelo include.
+        node: ['22.x', '24.x']
+        include:
+          - os: ubuntu-latest
+            node: '22.12.0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          # Última correção para 22.x/24.x; no piso exato (22.12.0) não muda a versão resolvida.
+          check-latest: true
+          # Sem cache de pacotes: o setup-node o ligaria sozinho se o package.json ganhar packageManager.
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+      - run: npm test

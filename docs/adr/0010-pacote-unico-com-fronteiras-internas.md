@@ -21,7 +21,7 @@ O [ADR-0002](0002-stack-typescript-node.md) deixou pendentes monorepo vs. pacote
 - Build, versão, CI e publicação com provenance únicos, sem orquestração de workspaces.
 - O núcleo não pode ser instalado sozinho; quem quiser só o núcleo leva a CLI junto.
 - Até a regra de lint existir, a revisão (`revisor`) confere à mão que `src/core` não importa adapters.
-- `engines.node` precisa acompanhar o calendário de LTS. **Em aberto:** incluir o Node 26, que vira LTS em 2026-10-28, é revisão futura.
+- `engines.node` precisa acompanhar o calendário de LTS. **Em aberto:** incluir o Node 26, que vira LTS em 2026-10-28, é revisão futura (encaminhado em 2026-10-17; ver [notas de implementação](#notas-de-implementação)).
 
 ## Gatilhos de revisão
 Primeiro consumidor externo que precise só do núcleo (ex.: adapter de terceiros, uso programático sem CLI). Pacote "starter" não conta: é distribuído via Git ([ADR-0005](0005-distribuicao-git-lockfile.md)).
@@ -29,3 +29,4 @@ Primeiro consumidor externo que precise só do núcleo (ex.: adapter de terceiro
 ## Notas de implementação
 Registro de estado; a decisão acima não muda.
 - 2026-10-17: a fronteira deixou de ser convenção. A regra `noRestrictedImports` do Biome (`biome.json`) faz `npm run lint` falhar quando `src/core` importa `src/adapters/` ou `src/cli`, citando este ADR, e o teste `test/ferramental/fronteiras.test.ts` cobre a regra. A conferência manual pelo `revisor` prevista nas consequências não é mais necessária. Ver [padrão de código §1](../guias/padrao-de-codigo-e-testes.md#1-código).
+- 2026-10-17: sobre o Node 26 (Em aberto nas consequências), Eduardo decidiu que ele fica fora até virar LTS em 2026-10-28. Nessa data, uma ficha curta acrescenta `^26.0.0` ao `engines.node` e o 26 à matriz do CI; `test/ferramental/ci.test.ts` obriga a matriz a acompanhar o `engines`. Ver [padrão de código §5](../guias/padrao-de-codigo-e-testes.md#5-ci).

@@ -189,6 +189,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Time de agentes do repositório | Arquiteto, pesquisador, implementador, revisor, seguranca e doc-writer, no fluxo com gates do ADR-0006 | [0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md) |
 | Estrutura do código | Pacote único com fronteiras internas (núcleo ← adapters ← CLI), npm, Node 22.12+ ou 24 | [0010](adr/0010-pacote-unico-com-fronteiras-internas.md) |
 | Ferramental | Biome para lint e format (o typescript-eslint não suporta o TypeScript 7); Conventional Commits por script próprio sem dependência e hook `commit-msg` via `core.hooksPath`; cobertura V8 com 80% de linhas; changesets 3.0.3; dependências com idade mínima de 7 dias na escolha da versão (o controle por `.npmrc` fica para a baseline de segurança da F0) | [padrão de código](guias/padrao-de-codigo-e-testes.md) |
+| CI | GitHub Actions em Windows, macOS e Linux com Node 22 e 24 (última correção) mais o piso 22.12.0; token só leitura, actions fixadas por SHA, sem cache | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [0007](adr/0007-suporte-multiplataforma.md) |
 | Capacidade/horizonte | 1 pessoa + agentes, ~6 meses até a v1.0 | [roadmap](roadmap.md) |
 | Métricas | Qualidade, custo/eficiência, conformidade, adoção | [roadmap](roadmap.md#métricas-de-sucesso) |
 
