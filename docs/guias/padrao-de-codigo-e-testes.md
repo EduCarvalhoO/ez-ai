@@ -60,13 +60,13 @@ Workflow em `.github/workflows/ci.yml`, disparado em `pull_request` e `push` par
 - Regras do workflow, conferidas por `test/ferramental/ci.test.ts`:
   - token só leitura (`permissions: contents: read` no topo, nada de `read-all` nem `permissions:` em job);
   - `pull_request`, nunca `pull_request_target`;
-  - toda action fixada por SHA de commit de 40 caracteres, com a versão em comentário (`# v7.1.0`), e versão publicada há 7 dias ou mais;
+  - toda action fixada por SHA de commit de 40 caracteres, com a versão em comentário (`# v7.1.0`);
   - `persist-credentials: false` em todo checkout;
   - sem cache de dependências (`package-manager-cache: false`, sem `cache:`);
   - `npm ci --ignore-scripts`;
   - nenhuma expressão `${{ }}` dentro de `run` (passe por `env`);
   - `concurrency` cancela a execução antiga do mesmo PR e cada job tem `timeout-minutes`.
-- Atualizar a SHA de uma action: conferir com `gh api repos/<owner>/<repo>/git/ref/tags/<tag>` (o `object.type` deve ser `commit`) e trocar SHA e comentário juntos. O teste não confere se a SHA corresponde à versão do comentário. **Em aberto:** essa conferência é só por instrução até a baseline de segurança trazer zizmor/Dependabot.
+- Atualizar a SHA de uma action: conferir com `gh api repos/<owner>/<repo>/git/ref/tags/<tag>` (o `object.type` deve ser `commit`) e trocar SHA e comentário juntos, só para versão publicada há 7 dias ou mais. O teste não confere se a SHA corresponde à versão do comentário nem a idade da versão. **Em aberto:** essa conferência é só por instrução até a baseline de segurança trazer zizmor/Dependabot.
 
 ## Verificação
 `node .claude/skills/verificar/verificar.mjs` sem `falhou`.
