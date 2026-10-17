@@ -14,7 +14,9 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "scripts", "vitest.config.ts"]
 }

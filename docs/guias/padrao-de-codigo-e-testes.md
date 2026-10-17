@@ -1,8 +1,8 @@
 # Padrão de código e testes
 
-> Status: Rascunho · Atualizado: 2026-10-15 · Relacionados: [ADR-0002](../adr/0002-stack-typescript-node.md), [ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md), [ADR-0007](../adr/0007-suporte-multiplataforma.md), [roadmap §estratégia de qualidade](../roadmap.md#estratégia-de-qualidade), [time de agentes](time-de-agentes.md), [revisão de segurança](revisao-de-seguranca.md)
+> Status: Rascunho · Atualizado: 2026-10-17 · Relacionados: [ADR-0002](../adr/0002-stack-typescript-node.md), [ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md), [ADR-0007](../adr/0007-suporte-multiplataforma.md), [roadmap §estratégia de qualidade](../roadmap.md#estratégia-de-qualidade), [time de agentes](time-de-agentes.md), [revisão de segurança](revisao-de-seguranca.md)
 >
-> Fonte única das regras de código, testes e commits. Rascunho até a F0 fechar o ferramental; o que ainda não foi decidido está marcado `Em aberto`.
+> Fonte única das regras de código, testes e commits. Rascunho até a F0 fechar CI e baseline de segurança; o que ainda não foi decidido está marcado `Em aberto`.
 
 ## Quando usar
 Ao escrever ou revisar código TypeScript/JavaScript, testes, scripts de skills ou configuração de build e CI.
@@ -14,9 +14,10 @@ Ao escrever ou revisar código TypeScript/JavaScript, testes, scripts de skills 
 - TypeScript em modo estrito, Node LTS, ESM ([ADR-0002](../adr/0002-stack-typescript-node.md)). Scripts de skills em `.mjs` sem dependências.
 - Funções pequenas e puras no núcleo; efeitos (disco, rede, processo) isolados em módulos finos e injetáveis para teste.
 - Erros com mensagem acionável (o que falhou, onde, o que fazer). Nunca engolir exceção.
-- Sem dependência nova sem justificativa na ficha; preferir a biblioteca padrão do Node ([roadmap, riscos](../roadmap.md#riscos)).
+- Sem dependência nova sem justificativa na ficha; preferir a biblioteca padrão do Node ([roadmap, riscos](../roadmap.md#riscos)). Versões exatas, publicadas há 7 dias ou mais e sem script de instalação; o `overrides` de `cac` no `package.json` só existe para cumprir essa idade e sai quando a baseline de segurança puser a idade mínima no `.npmrc`.
 - Pacote único com fronteiras internas (`src/core` não importa `src/adapters/` nem `src/cli`), Node conforme `engines.node` (22.12+ ou 24) e npm ([ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md)).
-- Lint/format: `Em aberto` (ficha "Ferramental" da F0).
+- Lint e format com Biome (config em `biome.json`): `npm run lint`, `npm run format` (aplica) e `npm run format:check` (só confere). A fronteira do [ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md) é a regra `noRestrictedImports` do `biome.json`, testada em `test/ferramental/fronteiras.test.ts`.
+- Por que não ESLint: o typescript-eslint não funciona com o TypeScript 7, porque o compilador nativo ainda não expõe a API que ele usa ([typescript-eslint#12518](https://github.com/typescript-eslint/typescript-eslint/issues/12518), acesso em 2026-10-17). Reavaliar quando o TS 7 publicar essa API (`Hipótese`: TS 7.1).
 
 ## 2. Multiplataforma ([ADR-0007](../adr/0007-suporte-multiplataforma.md))
 - Caminhos só com `node:path` (`join`, `resolve`, `relative`); nunca concatenar com `/` ou `\`.
@@ -27,6 +28,7 @@ Ao escrever ou revisar código TypeScript/JavaScript, testes, scripts de skills 
 ## 3. Testes
 - Testes primeiro: o teste do critério de aceite falha antes da implementação e passa depois.
 - Camadas e ferramentas conforme [estratégia de qualidade](../roadmap.md#estratégia-de-qualidade); metas de cobertura idem.
+- Cobertura com `@vitest/coverage-v8` (config em `vitest.config.ts`): `npm run test` falha se `src/**` ficar abaixo de 80% de linhas. `src/cli/index.ts` fica fora porque é só o ponto de entrada: roda em processo filho nos testes E2E, que o V8 não mede. A lógica da CLI fica em `src/cli/main.ts`, testável no mesmo processo.
 - Um teste por comportamento, nome descrevendo o comportamento esperado.
 - Testes E2E em diretório temporário do SO, nunca no repositório.
 - Fixtures de segredo são falsas e marcadas como tal; nenhum segredo real em teste.
@@ -41,6 +43,9 @@ Evidências:
 Revisão: revisor APROVADO[, seguranca APROVADO]
 ```
 
+- Validação: `npm run commits:check` (`scripts/validar-commits.mjs`, sem dependência) confere `origin/main..HEAD` ou o intervalo passado como argumento. Mensagens geradas pelo git (`Merge ...`, `Revert "..."`) são ignoradas.
+- Hook `commit-msg` versionado em `.githooks/`; ative uma vez por clone com `git config core.hooksPath .githooks`. Cuidado: o hook roda o script da árvore de trabalho, então commitar numa branch não confiável executa o código dela, o mesmo risco de rodar `npm test` nela.
+- Changesets: mudança que deve aparecer no CHANGELOG ganha um changeset com `npx changeset`. O pacote é privado e versiona sem tag até a publicação na [F8](../roadmap.md).
 ## Verificação
 `node .claude/skills/verificar/verificar.mjs` sem `falhou`.
 

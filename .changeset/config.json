@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/@changesets/config/schema.json",
+  "baseBranch": "main",
+  "access": "restricted",
+  "ignore": [],
+  "fixed": [],
+  "linked": [],
+  "format": false,
+  "updateInternalDependencies": "patch",
+  "commit": false,
+  "changelog": "@changesets/cli/changelog",
+  "privatePackages": { "version": true, "tag": false }
+}
