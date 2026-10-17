@@ -122,6 +122,15 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(semComentarios(linhas)).not.toMatch(/^\s*cache(-dependency-path)?:/m);
   });
 
+  it('pede ao setup-node a última correção do Node em vez da versão em cache do runner', () => {
+    const linhas = lerLinhas();
+    const setups = [...jobs(linhas).values()]
+      .flatMap(passos)
+      .filter((passo) => passo.some((linha) => /uses: actions\/setup-node@/.test(linha)));
+    expect(setups.length).toBe(jobs(linhas).size);
+    for (const passo of setups) expect(semComentarios(passo)).toMatch(/^\s+check-latest: true$/m);
+  });
+
   it('cancela a execução antiga do mesmo PR e limita o tempo de cada job', () => {
     const linhas = lerLinhas();
     const concorrencia = semComentarios(bloco(linhas, 'concurrency'));
