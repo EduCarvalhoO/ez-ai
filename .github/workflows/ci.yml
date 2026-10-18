@@ -97,7 +97,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         # Majors de engines.node no package.json; o piso exato entra pelo include.
-        node: ['22.x', '24.x']
+        node: ['22.x', '24.x', '26.x']
         include:
           - os: ubuntu-latest
             node: '22.12.0'
@@ -108,7 +108,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node }}
-          # Última correção para 22.x/24.x; no piso exato (22.12.0) não muda a versão resolvida.
+          # Última correção de cada major (22.x/24.x/26.x); no piso exato (22.12.0) não muda a versão resolvida.
           check-latest: true
           # Sem cache de pacotes: o setup-node o ligaria sozinho se o package.json ganhar packageManager.
           package-manager-cache: false

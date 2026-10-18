@@ -16,7 +16,7 @@ Ao escrever ou revisar código TypeScript/JavaScript, testes, scripts de skills 
 - Erros com mensagem acionável (o que falhou, onde, o que fazer). Nunca engolir exceção.
 - Sem dependência nova sem justificativa na ficha; preferir a biblioteca padrão do Node ([roadmap, riscos](../roadmap.md#riscos)). Versões exatas, publicadas há 7 dias ou mais e sem script de instalação.
 - O `.npmrc` da raiz aplica as duas regras: `ignore-scripts=true` e `min-release-age=7` (npm 11.10+; o npm 10 do Node 22 ignora a opção e só avisa). O `npm ci` instala do lockfile sem reavaliar a idade, então o CI confere em PR as versões novas do lockfile com `scripts/verificar-idade-deps.mjs --desde origin/<base>` ([§5](#5-ci)). Localmente, antes do PR: `node scripts/verificar-idade-deps.mjs --desde origin/main` (sem `--desde`, confere o lockfile inteiro). Sai 1 listando as versões novas demais e 2 em erro de uso, leitura ou rede.
-- Pacote único com fronteiras internas (`src/core` não importa `src/adapters/` nem `src/cli`), Node conforme `engines.node` (22.12+ ou 24) e npm ([ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md)).
+- Pacote único com fronteiras internas (`src/core` não importa `src/adapters/` nem `src/cli`), Node conforme `engines.node` (22.12+, 24 ou 26) e npm ([ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md)).
 - Lint e format com Biome (config em `biome.json`): `npm run lint`, `npm run format` (aplica) e `npm run format:check` (só confere). A fronteira do [ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md) é a regra `noRestrictedImports` do `biome.json`, testada em `test/ferramental/fronteiras.test.ts`.
 - Por que não ESLint: o typescript-eslint não funciona com o TypeScript 7, porque o compilador nativo ainda não expõe a API que ele usa ([typescript-eslint#12518](https://github.com/typescript-eslint/typescript-eslint/issues/12518), acesso em 2026-10-17). Reavaliar quando o TS 7 publicar essa API (`Hipótese`: TS 7.1).
 
@@ -55,7 +55,7 @@ Workflows em `.github/workflows/`: `ci.yml` e `codeql.yml`, disparados em `pull_
 |---|---|---|
 | `qualidade` | Ubuntu, Node `24.x` | `npm ci --ignore-scripts`; só em PR, idade mínima das versões novas do lockfile ([§1](#1-código)); `npm audit` (falha com qualquer vulnerabilidade, inclusive em dependência de desenvolvimento, que roda no CI); `npm audit signatures --min-release-age=0`; `format:check`, `lint`, `typecheck`, `validar-docs` e, só em PR, `commits:check` no intervalo `origin/<base>..HEAD` |
 | `workflows` | Ubuntu, sem Node | actionlint e zizmor nos workflows e no `dependabot.yml`; qualquer achado falha |
-| `testes` | Ubuntu, Windows e macOS × Node `22.x` e `24.x`, mais Ubuntu com o piso `22.12.0` (7 execuções) | `npm ci --ignore-scripts` e `npm test` (build + Vitest com cobertura, [§3](#3-testes)) |
+| `testes` | Ubuntu, Windows e macOS × Node `22.x`, `24.x` e `26.x`, mais Ubuntu com o piso `22.12.0` (10 execuções) | `npm ci --ignore-scripts` e `npm test` (build + Vitest com cobertura, [§3](#3-testes)) |
 | `analisar` (`codeql.yml`) | Ubuntu | CodeQL `javascript-typescript` com `security-extended`; resultados na aba Security |
 
 - A idade roda antes do `npm audit`, para uma falha de idade não ficar escondida atrás de um advisory.
