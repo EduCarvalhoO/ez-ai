@@ -56,6 +56,13 @@ describe('.github/dependabot.yml', () => {
     }
   });
 
+  it('não propõe major do @types/node (os tipos ficam no major do piso de engines.node)', () => {
+    const npm = ecossistemas.find((bloco) => /^"?npm"?\b/.test(bloco)) ?? '';
+    expect(npm).toMatch(
+      /^\s+ignore:\n\s+- dependency-name: ['"]?@types\/node['"]?\n\s+update-types: \[['"]?version-update:semver-major['"]?\]$/m,
+    );
+  });
+
   it('gera mensagens de commit aceitas pelo commits:check', () => {
     for (const bloco of ecossistemas) {
       const prefixo = /^\s+prefix: "?([\w-]+)"?$/m.exec(bloco)?.[1];
@@ -63,6 +70,19 @@ describe('.github/dependabot.yml', () => {
       expect(validarMensagem(`${prefixo}(deps): bump cac from 7.0.1 to 7.1.0`).valida).toBe(true);
       expect(validarMensagem(`${prefixo}(deps-dev): bump cac from 7.0.1 to 7.1.0`).valida).toBe(true);
     }
+  });
+});
+
+describe('package.json', () => {
+  it('fixa @types/node no major do piso de engines.node (tipos de versão maior aceitariam API ausente no piso)', () => {
+    const pacote = JSON.parse(ler('package.json')) as {
+      engines?: { node?: string };
+      devDependencies?: Record<string, string>;
+    };
+    const piso = /^\^(\d+)\./.exec(pacote.engines?.node ?? '')?.[1];
+    const tipos = pacote.devDependencies?.['@types/node'];
+    expect(piso, 'engines.node deveria começar por ^x.y.z').toBeDefined();
+    expect(tipos).toMatch(new RegExp(`^${piso}\\.\\d+\\.\\d+$`));
   });
 });
 
