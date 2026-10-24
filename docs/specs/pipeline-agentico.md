@@ -1,6 +1,6 @@
 # Pipeline agêntico
 
-> Status: Rascunho (spec v0) · Atualizado: 2026-10-24 · Relacionados: [ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md), [ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md), [ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md), [time de agentes](../guias/time-de-agentes.md), [roadmap F6](../roadmap.md#f6--workflow-mvp-feature-com-gates-s20s22)
+> Status: Rascunho (spec v0) · Atualizado: 2026-10-24 · Relacionados: [ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md), [ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md), [ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md), [ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md), [time de agentes](../guias/time-de-agentes.md), [roadmap F6](../roadmap.md#f6--workflow-mvp-feature-com-gates-s20s22)
 
 ## Objetivo
 Define as etapas, os gates, os laços de volta, os artefatos de handoff e o evento rastreável do pipeline agêntico ([ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md)). Serve ao time de agentes deste repositório, que já o usa ([guia](../guias/time-de-agentes.md)), e é a base do pacote de workflow da F6.
@@ -8,6 +8,13 @@ Define as etapas, os gates, os laços de volta, os artefatos de handoff e o even
 ## Escopo
 - Inclui: etapas E0–E5, gates G0–G3, laços e limites, conteúdo da ficha, modelo de evento, visões do painel, pontos de customização, conteúdo da base do projeto (E0).
 - Não inclui: schema do pacote, motor de estados e CLI (F6); enforcement por hook ou CI (F4); exportação para o Langfuse e dashboards (F5); painel próprio de gestão de agentes (pós-v1); orquestração automática ([ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md)).
+
+### Restrições
+Requisitos do Eduardo (2026-10-24):
+
+1. **Open source e confiável:** toda ferramenta que o harness instala ou exige para o pipeline (validadores, scripts, observabilidade, dependências) é open source e confiável. Ficam fora desta restrição o ambiente de IA e o provedor de modelo, que são escolha do usuário como a chave ([ADR-0001](../adr/0001-alvos-iniciais-claude-code-e-copilot.md)), e a hospedagem e o CI do próprio repositório no GitHub ([ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md)).
+2. **Sem custo obrigatório:** nenhuma etapa exige serviço pago. Serviços pagos pelo projeto (repositório, CI) seguem o limite de orçamento do [ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md); serviços opcionais do usuário (por exemplo, Langfuse Cloud) ficam a critério dele e nunca são exigidos.
+3. **Chave de IA do usuário:** tokens e chave de API de IA são pagos ou fornecidos pelo próprio usuário; o harness nunca os fornece nem paga. Todo agente e os evals LLM-as-judge (F5) usam a chave e o modelo do usuário, e o `custo` registrado nos eventos é custo do usuário.
 
 ## Especificação
 
@@ -104,12 +111,12 @@ Toda etapa, gate, ciclo e rodada gera um evento:
 | `inicio`, `fim`, `duracao` | Datas e duração |
 | `resultado` | `solicitado`, `executado`, `verificado`, `falhou` ou `ignorado` ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)) |
 | `tokens_entrada`, `tokens_saida` | Tokens do agente na etapa |
-| `custo` | Custo estimado |
+| `custo` | Custo estimado, pago pelo usuário ([restrições](#restrições)) |
 | `modelo` | Modelo usado |
 
 Gargalos a medir: tempo por etapa; ciclos por laço; rodadas humanas por item; taxa de aprovação na 1ª tentativa por gate; custo por etapa e por agente. Alimentam as [métricas de sucesso](../roadmap.md#métricas-de-sucesso).
 
-- Eventos locais sempre; exportação para o Langfuse opt-in na F5 ([ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md)).
+- Eventos locais sempre; exportação opt-in na F5 ([ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md)). O caminho de referência, e o único exigido, é o Langfuse self-hosted sem `ee/`, sem hospedagem ou banco pagos obrigatórios; o Langfuse Cloud continua opcional por configuração (ADR-0004), nunca exigido. Licença do Langfuse: núcleo sob MIT (Expat); os diretórios `ee/` têm licença própria ([LICENSE](https://github.com/langfuse/langfuse/blob/main/LICENSE), acessado em 2026-10-24).
 - Captura de tokens por agente em Claude Code e Copilot: `Hipótese` até pesquisa do `pesquisador` (`Em aberto`).
 - Até a F5, a ficha registra as datas por gate; não há evento automático.
 
@@ -122,7 +129,7 @@ Visões necessárias:
 4. Rodadas humanas por item.
 5. Agentes e versões instalados.
 
-As visões 1–4 viram dashboards do Langfuse na F5. A gestão de agentes (visão 5 e ações sobre agentes) fica no painel próprio do [pós-v1](../roadmap.md#pós-v10-condicionado-a-evidências).
+As visões 1–4 viram dashboards do Langfuse self-hosted na F5, usando só recursos fora de `ee/`. Quais visões dependeriam de `ee/`: `Hipótese` a verificar na F5. A gestão de agentes (visão 5 e ações sobre agentes) fica no painel próprio do [pós-v1](../roadmap.md#pós-v10-condicionado-a-evidências), também feito só com ferramentas open source.
 
 ### Customização por projeto e stack
 | Núcleo fixo | Configurável |
@@ -133,8 +140,11 @@ As visões 1–4 viram dashboards do Langfuse na F5. A gestão de agentes (visã
 | Gate `ignorado` nunca aparece como aprovado | Aprovação humana por gate (G1, G3) |
 | | Limites de ciclos por laço |
 | | Quando rodar o `seguranca` |
+| | Modelo e chave de IA por agente, vindos da configuração do usuário |
 
 Formato concreto: [configuração do projeto](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5) (spec v0 da F1) e pacote do workflow (F6). `Em aberto`.
+
+Modelo comercial: ver [ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md).
 
 ### E0 Base do projeto
 - **Objetivo:** dar às outras etapas um contexto enxuto e preciso do repositório, sem reler o projeto a cada ficha.
@@ -156,3 +166,4 @@ Spec v0: muda livremente até a F6, quando vira o schema do pacote de workflow.
 - Captura de tokens por agente em Claude Code e Copilot.
 - Formato da configuração de customização (F1/F6).
 - Enforcement dos gates por hook e CI (F4).
+- Quais visões do painel dependeriam de recursos `ee/` do Langfuse (F5).
