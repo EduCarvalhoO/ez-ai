@@ -21,6 +21,7 @@ Ao executar qualquer entrega do [roadmap](../roadmap.md) com apoio de agentes, e
 | `revisor` | Avaliador independente: confere o resultado contra a ficha e as regras, com evidência executada | Nada (só relatório) | Leitura + skills `escopo-da-mudanca` e `verificar` |
 | `seguranca` | Revisão de ameaças e controles em mudanças sensíveis; apoia o modelo de ameaças (F1) e a supply chain (F7) | Nada (só relatório) | Leitura + skill `escopo-da-mudanca` |
 | `doc-writer` | Registra ADRs, specs, guias e runbooks a partir do que os outros produziram | `docs/` | Ver [padrão de documentação](padrao-de-documentacao.md) |
+| `painel` | Atualiza e republica o painel do roadmap no encerramento da entrega | Só a cópia do painel em `.tmp/` e o artifact do painel | Leitura, edição, publicação de artifact; banco do artifact só leitura |
 
 A sessão principal (você + o assistente do ambiente) é o **orquestrador**: escolhe o agente de cada etapa, passa a ficha adiante e decide nos pontos de aprovação. Subagentes não chamam outros subagentes.
 
@@ -78,10 +79,11 @@ Sem achado bloqueante e com todos os critérios atendidos por evidência, o vere
 - Critérios de aceite atendidos com evidência; G0–G3 registrados na ficha.
 - Commit em Conventional Commits com o bloco de evidências da skill `verificar` no corpo (ver [padrão de código e testes](padrao-de-codigo-e-testes.md#4-commits)).
 - Nada `ignorado` ou `falhou` aparece como aprovado ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)).
+- Encerramento: logo após o merge, junto do registro de encerramento ([spec do pipeline](../specs/pipeline-agentico.md#economia-de-tokens)), chamar o agente `painel` ([inventário](padrao-de-agentes-e-skills.md#7-inventário)).
 
 ## 7. Princípios do time
 1. **Contexto isolado:** cada agente recebe a ficha e as linhas que precisa, não a conversa inteira.
-2. **Menor privilégio:** só `implementador` e `doc-writer` editam o repositório; avaliadores não editam o que avaliam.
+2. **Menor privilégio:** só `implementador` e `doc-writer` editam o repositório (o `painel` edita só o painel); avaliadores não editam o que avaliam.
 3. **Avaliador independente:** quem implementa não aprova. O `revisor` reexecuta as verificações.
 4. **Determinístico antes de LLM:** o que um script confere (testes, lint, links, schemas) não é julgado por agente.
 5. **Fato ≠ hipótese:** afirmações sobre ferramentas externas exigem fonte; sem fonte, `Hipótese`.
