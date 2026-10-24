@@ -135,13 +135,13 @@ function opcaoDeCodigoDoPowershell(argumento: string): boolean {
   );
 }
 
+// Um executor dentro de outro faria a varredura de janelas crescer exponencialmente (D1): recusado.
+const EXECUTOR_ANINHADO = 'executor de pacote dentro de outro executor não é permitido; rode o binário direto';
+
 /**
  * Confere como comando cada trecho que começa num argumento que não é opção. Não dá para saber quais opções
  * recebem valor (`--cache .c bash -lc ...`), então toda posição candidata a binário é conferida (conservador).
  */
-// Um executor dentro de outro faria a varredura de janelas crescer exponencialmente (D1): recusado.
-const EXECUTOR_ANINHADO = 'executor de pacote dentro de outro executor não é permitido; rode o binário direto';
-
 function problemaEmQualquerJanela(argumentos: readonly string[]): string | undefined {
   for (let k = 0; k < argumentos.length; k++) {
     const programa = argumentos[k];
