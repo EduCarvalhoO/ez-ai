@@ -115,7 +115,7 @@ Sem custo obrigatório e com ferramentas open source; a chave de IA é do usuár
 
 ## 8. Segurança e confiança
 
-Como o projeto distribui instruções, configurações, integrações e potencialmente código executável, a segurança é considerada desde as primeiras decisões. Pontos a cobrir (detalhados no modelo de ameaças da F1):
+Como o projeto distribui instruções, configurações, integrações e potencialmente código executável, a segurança é considerada desde as primeiras decisões. Pontos cobertos pelo [modelo de ameaças](arquitetura/modelo-de-ameacas.md):
 
 - Procedência e integridade dos pacotes.
 - Validação de manifestos e caminhos de arquivos.
@@ -198,6 +198,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Camadas do código | Núcleo sem I/O, com portas; única via de escrita em `src/plataforma`; adapters puros; exportadores de telemetria em `src/exportadores` (F5) | [0015](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md) |
 | Governança por ambiente | Regra crítica só conta como imposta onde o ambiente bloqueia de fato; onde não, validador externo (CI, pre-commit, CODEOWNERS) ou aviso explícito; base na [matriz de capacidades](arquitetura/matriz-de-capacidades.md) | [0016](adr/0016-governanca-por-nivel-de-enforcement.md) |
 | Propriedade de pacotes | Pacote de colaborador no repositório GitHub dele, nome `<login>/<pacote>`; dono provado por Sigstore e gravado no lockfile; instalado em `.harness/pacotes/<login>/<pacote>/` só leitura, separado do núcleo; CODEOWNERS no repositório do harness | [0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md) |
+| Segurança da instalação | O harness nunca executa código de pacote em `add`/`apply`/`update`; até a F7 só instala de origens permitidas; prompt injection tratada por contenção; ameaças no [modelo de ameaças](arquitetura/modelo-de-ameacas.md) | [0018](adr/0018-invariantes-de-seguranca-da-instalacao.md) |
 | Pipeline agêntico | Etapas E0–E5 com gates G0 (revisão da documentação) a G3 (revisão humana da entrega), laços de volta com limite e rodadas de revisão humana até aprovar; pacote na F6 | [0011](adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md) |
 | Ferramental | Biome para lint e format (o typescript-eslint não suporta o TypeScript 7); Conventional Commits por script próprio sem dependência e hook `commit-msg` via `core.hooksPath`; cobertura V8 com 80% de linhas; changesets 3.0.3; dependências com idade mínima de 7 dias e sem scripts de instalação (`min-release-age=7` e `ignore-scripts=true` no `.npmrc`; idade conferida no CI por `scripts/verificar-idade-deps.mjs`) | [padrão de código](guias/padrao-de-codigo-e-testes.md) |
 | CI | GitHub Actions em Windows, macOS e Linux com Node 22, 24 e 26 (última correção) mais o piso 22.12.0; token só leitura, actions fixadas por SHA, sem cache | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [0007](adr/0007-suporte-multiplataforma.md) |

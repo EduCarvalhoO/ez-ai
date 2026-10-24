@@ -19,7 +19,7 @@ Ao executar qualquer entrega do [roadmap](../roadmap.md) com apoio de agentes, e
 | `pesquisador` | Responde perguntas sobre ferramentas externas (Claude Code, Copilot, Langfuse, Sigstore, npm) com fontes e data | Só `.tmp/pesquisa/` (limite por instrução até a F4) | Leitura, edição, web |
 | `implementador` | Implementa o plano com testes primeiro, até as verificações passarem | Código, testes, config | Leitura, edição, terminal |
 | `revisor` | Avaliador independente: confere o resultado contra a ficha e as regras, com evidência executada | Nada (só relatório) | Leitura + skills `escopo-da-mudanca` e `verificar` |
-| `seguranca` | Revisão de ameaças e controles em mudanças sensíveis; apoia o modelo de ameaças (F1) e a supply chain (F7) | Nada (só relatório) | Leitura + skill `escopo-da-mudanca` |
+| `seguranca` | Papel de DevSecOps (segurança em todo o fluxo, não só no fim): revisa o plano de fichas sensíveis antes do G1 e a mudança no E4 contra o [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), e mantém o modelo vivo; apoia a supply chain (F7) | Nada (só relatório) | Leitura + skill `escopo-da-mudanca` |
 | `doc-writer` | Registra ADRs, specs, guias e runbooks a partir do que os outros produziram | `docs/` | Ver [padrão de documentação](padrao-de-documentacao.md) |
 | `painel` | Atualiza e republica o painel do roadmap no encerramento da entrega | Só a cópia do painel em `.tmp/` e o artifact do painel | Leitura, edição, publicação de artifact; banco do artifact só leitura |
 | `professor` | Redige a explicação didática das decisões levadas ao Eduardo | Nada (só devolve texto) | Só leitura |
