@@ -22,6 +22,7 @@ Ao executar qualquer entrega do [roadmap](../roadmap.md) com apoio de agentes, e
 | `seguranca` | Revisão de ameaças e controles em mudanças sensíveis; apoia o modelo de ameaças (F1) e a supply chain (F7) | Nada (só relatório) | Leitura + skill `escopo-da-mudanca` |
 | `doc-writer` | Registra ADRs, specs, guias e runbooks a partir do que os outros produziram | `docs/` | Ver [padrão de documentação](padrao-de-documentacao.md) |
 | `painel` | Atualiza e republica o painel do roadmap no encerramento da entrega | Só a cópia do painel em `.tmp/` e o artifact do painel | Leitura, edição, publicação de artifact; banco do artifact só leitura |
+| `professor` | Redige a explicação didática das decisões levadas ao Eduardo | Nada (só devolve texto) | Só leitura |
 
 A sessão principal (você + o assistente do ambiente) é o **orquestrador**: escolhe o agente de cada etapa, passa a ficha adiante e decide nos pontos de aprovação. Subagentes não chamam outros subagentes.
 
@@ -81,9 +82,18 @@ Sem achado bloqueante e com todos os critérios atendidos por evidência, o vere
 - Nada `ignorado` ou `falhou` aparece como aprovado ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)).
 - Encerramento: logo após o merge, junto do registro de encerramento ([spec do pipeline](../specs/pipeline-agentico.md#economia-de-tokens)), chamar o agente `painel` ([inventário](padrao-de-agentes-e-skills.md#7-inventário)).
 
-## 7. Princípios do time
+## 7. Decisões didáticas (agente `professor`)
+
+Toda decisão levada ao Eduardo (escolha de arquitetura, G1, cartão de decisão) traz, nesta ordem: (1) a opção recomendada; (2) o que ela impacta no projeto, em linguagem simples; (3) as outras formas de fazer, mesmo as não recomendadas; (4) por que cada uma foi ou não recomendada. Siglas e termos técnicos ganham legenda curta entre parênteses na primeira aparição.
+
+- **Quem escreve:** o agente `professor`, não os executores. O `arquiteto` continua listando as alternativas cruas (prós, contras, recomendação `Proposto`).
+- **Quem chama:** o orquestrador, antes de apresentar a decisão. Subagentes não chamam subagentes, então o `arquiteto` não chama o `professor`.
+- **Entrada:** pergunta, opções com prós e contras, recomendação e contexto mínimo. **Saída:** o texto nos 4 blocos, para colar no cartão, ficha ou PR (seção "Decisões explicadas").
+- **Limites:** só leitura; não decide nem registra como decidido ([princípio 6](#8-princípios-do-time)).
+
+## 8. Princípios do time
 1. **Contexto isolado:** cada agente recebe a ficha e as linhas que precisa, não a conversa inteira.
-2. **Menor privilégio:** só `implementador` e `doc-writer` editam o repositório (o `painel` edita só o painel); avaliadores não editam o que avaliam.
+2. **Menor privilégio:** só `implementador` e `doc-writer` editam o repositório (o `painel` edita só o painel; o `professor` não edita nada); avaliadores não editam o que avaliam.
 3. **Avaliador independente:** quem implementa não aprova. O `revisor` reexecuta as verificações.
 4. **Determinístico antes de LLM:** o que um script confere (testes, lint, links, schemas) não é julgado por agente.
 5. **Fato ≠ hipótese:** afirmações sobre ferramentas externas exigem fonte; sem fonte, `Hipótese`.
