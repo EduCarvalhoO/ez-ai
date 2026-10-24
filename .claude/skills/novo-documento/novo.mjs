@@ -94,10 +94,9 @@ const relDocs = `${pasta}/${nomeArquivo}`;
 if (tipo === 'adr') {
   inserirNaTabela(join(dir, 'README.md'), `| [${numero}](${nomeArquivo}) | ${titulo} | Proposto |`);
   alterados.push('docs/adr/README.md');
-} else {
-  inserirNaTabela(join(DOCS, 'README.md'), `| [${relDocs}](${relDocs}) | ${descricao || 'PREENCHER descrição'} |`);
-  alterados.push('docs/README.md');
 }
+inserirNaTabela(join(DOCS, 'indice.md'), `| [${relDocs}](${relDocs}) | ${tipo === 'adr' ? `ADR-${numero}: ${titulo}` : descricao || 'PREENCHER descrição'} |`);
+alterados.push('docs/indice.md');
 
 console.log(`Criado: docs/${relDocs}`);
 console.log(`Índice atualizado: ${alterados.join(', ')}`);

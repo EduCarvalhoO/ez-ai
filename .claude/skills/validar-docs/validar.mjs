@@ -110,7 +110,7 @@ for (const p of [...docs, ...raiz]) {
 }
 
 // 3. Índices
-const indice = join(DOCS, 'README.md');
+const indice = join(DOCS, 'indice.md');
 const adrIndice = join(DOCS, 'adr', 'README.md');
 const linkados = (arquivo) => {
   const set = new Set();
@@ -121,8 +121,8 @@ const linkados = (arquivo) => {
 const noIndice = linkados(indice);
 for (const p of docs) {
   const r = rel(p);
-  if (r === 'docs/README.md' || r.startsWith('docs/adr/')) continue;
-  if (!noIndice.has(r)) add('erro', p, 1, 'documento fora do índice docs/README.md');
+  if (r === 'docs/README.md' || r === 'docs/indice.md') continue;
+  if (!noIndice.has(r)) add('erro', p, 1, 'documento fora do índice docs/indice.md');
 }
 
 // 4. ADRs: numeração e tabela
