@@ -162,7 +162,7 @@ Agentes de IA tratam este documento como contexto e princípios, não como autor
 | Como os pacotes serão identificados, versionados e instalados? | Parcial — [ADR-0005](adr/0005-distribuicao-git-lockfile.md); spec na F1 |
 | Requisitos que justificariam serviço central ou interface web? | Parcial — [ADR-0003](adr/0003-controle-de-usuarios-faseado.md), [ADR-0004](adr/0004-observabilidade-langfuse-opcional.md) |
 | Menor conjunto de componentes para validar a proposta | Em aberto — F1 |
-| Responsabilidades do núcleo vs. adapters | Em aberto — F1 |
+| Responsabilidades do núcleo vs. adapters | Decidido — [ADR-0015](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md), [mapa de módulos](arquitetura/mapa-de-modulos.md) |
 | Preservação de customizações | Em aberto — F2 |
 | Combinação e precedência de políticas de diferentes origens | Em aberto — F1 |
 | Operações que exigem aprovação explícita | Em aberto — F1/F4 |
@@ -191,6 +191,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Agentes do repositório | Um arquivo por ambiente (`.claude/agents/`, `.github/agents/`), regras em fonte única em `docs/` | [0008](adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md) |
 | Time de agentes do repositório | Arquiteto, pesquisador, implementador, revisor, seguranca e doc-writer, no fluxo com gates do ADR-0006 | [0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md) |
 | Estrutura do código | Pacote único com fronteiras internas (núcleo ← adapters ← CLI), npm, Node 22.12+, 24 ou 26 | [0010](adr/0010-pacote-unico-com-fronteiras-internas.md) |
+| Camadas do código | Núcleo sem I/O, com portas; única via de escrita em `src/plataforma`; adapters puros; exportadores de telemetria em `src/exportadores` (F5) | [0015](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md) |
 | Pipeline agêntico | Etapas E0–E5 com gates G0 (revisão da documentação) a G3 (revisão humana da entrega), laços de volta com limite e rodadas de revisão humana até aprovar; pacote na F6 | [0011](adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md) |
 | Ferramental | Biome para lint e format (o typescript-eslint não suporta o TypeScript 7); Conventional Commits por script próprio sem dependência e hook `commit-msg` via `core.hooksPath`; cobertura V8 com 80% de linhas; changesets 3.0.3; dependências com idade mínima de 7 dias e sem scripts de instalação (`min-release-age=7` e `ignore-scripts=true` no `.npmrc`; idade conferida no CI por `scripts/verificar-idade-deps.mjs`) | [padrão de código](guias/padrao-de-codigo-e-testes.md) |
 | CI | GitHub Actions em Windows, macOS e Linux com Node 22, 24 e 26 (última correção) mais o piso 22.12.0; token só leitura, actions fixadas por SHA, sem cache | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [0007](adr/0007-suporte-multiplataforma.md) |
