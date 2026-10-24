@@ -67,6 +67,13 @@ describe('.github/dependabot.yml', () => {
     );
   });
 
+  it('agrupa pacotes que precisam subir juntos (vitest com plugins; passos do codeql-action)', () => {
+    const npm = ecossistemas.find((bloco) => /^"?npm"?\b/.test(bloco)) ?? '';
+    const actions = ecossistemas.find((bloco) => /^"?github-actions"?\b/.test(bloco)) ?? '';
+    expect(npm).toMatch(/^\s+groups:\n\s+vitest:\n\s+patterns: \[['"]vitest['"], ['"]@vitest\/\*['"]\]$/m);
+    expect(actions).toMatch(/^\s+groups:\n\s+codeql-action:\n\s+patterns: \[['"]github\/codeql-action\*['"]\]$/m);
+  });
+
   it('gera mensagens de commit aceitas pelo commits:check', () => {
     for (const bloco of ecossistemas) {
       const prefixo = /^\s+prefix: "?([\w-]+)"?$/m.exec(bloco)?.[1];
