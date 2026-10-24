@@ -1,6 +1,6 @@
 # Padrão de Documentação
 
-> Status: Estável · Atualizado: 2026-10-14 · Relacionados: [ADR-0008](../adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md), [índice](../README.md)
+> Status: Estável · Atualizado: 2026-10-14 · Relacionados: [ADR-0008](../adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md), [índice](../indice.md)
 >
 > Fonte única das regras de documentação do projeto. Agentes e pessoas seguem este guia; ninguém o repete em outros arquivos — referencia.
 
@@ -11,13 +11,13 @@
 3. **Curto e verificável.** Frases objetivas, listas e tabelas. Sem introduções genéricas, sem "neste documento iremos...".
 4. **Fato ≠ hipótese ≠ decisão.** Marque explicitamente: `Decidido (ADR-NNNN)`, `Hipótese`, `Em aberto`.
 5. **Não inventar decisões.** Agentes não registram como decidido o que não foi aprovado; usam `Em aberto`.
-6. **Índice sempre atualizado.** Todo documento novo entra em [docs/README.md](../README.md).
+6. **Índice sempre atualizado.** Todo documento novo ou alterado entra em [docs/indice.md](../indice.md), no mesmo PR; a skill `validar-docs` falha se faltar.
 
 ## 2. Estrutura de pastas
 
 ```
 docs/
-├── README.md            # Índice (mapa de todos os documentos)
+├── indice.md            # Índice (uma linha por documento; leia primeiro)
 ├── contexto.md          # Visão, problema, princípios (espelho do contexto do Project)
 ├── roadmap.md           # Fases, marcos, critérios de saída
 ├── adr/                 # Architecture Decision Records — NNNN-titulo-kebab.md
@@ -52,11 +52,11 @@ Crie uma pasta só quando o primeiro documento dela existir (princípio de evolu
 
 ## 5. Fluxo para criar ou alterar um documento
 
-1. Ler [docs/README.md](../README.md) e buscar (`grep`) o assunto em `docs/`.
+1. Ler [docs/indice.md](../indice.md) e buscar (`grep`) o assunto em `docs/`.
 2. Se já existe: **editar** o documento dono do assunto. Não criar outro.
 3. Se não existe: escolher tipo (seção 3), copiar o template, preencher.
 4. Substituir qualquer explicação já documentada por link.
-5. Atualizar o índice em `docs/README.md` e, se for ADR, a tabela em [adr/README.md](../adr/README.md).
+5. Atualizar o índice em `docs/indice.md` e, se for ADR, a tabela em [adr/README.md](../adr/README.md).
 6. Se a mudança afetar visão/princípios, atualizar também `docs/contexto.md`.
 
 Automação: as skills `localizar-documento` (passo 1), `novo-documento` (passo 3 e índices) e `validar-docs` (checklist da seção 6) executam esses passos. Ver o [inventário](padrao-de-agentes-e-skills.md#7-inventário).

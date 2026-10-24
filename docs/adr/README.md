@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-> Status: Vivo · Atualizado: 2026-10-24 · Relacionados: [índice](../README.md)
+> Status: Vivo · Atualizado: 2026-10-24 · Relacionados: [índice](../indice.md)
 >
 > Formato e regras: [padrão de documentação](../guias/padrao-de-documentacao.md#4-convenções). Template: [adr.md](../_templates/adr.md).
 

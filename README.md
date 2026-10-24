@@ -38,6 +38,7 @@ Justificativas em [ADRs](docs/adr/README.md).
 
 | Documento | Conteúdo |
 |---|---|
+| [docs/indice.md](docs/indice.md) | Índice de toda a documentação (leia primeiro) |
 | [docs/contexto.md](docs/contexto.md) | Visão, princípios e decisões resumidas |
 | [docs/roadmap.md](docs/roadmap.md) | Fases até a v1.0, marcos, métricas e riscos |
 | [docs/adr/](docs/adr/README.md) | Decisões arquiteturais |

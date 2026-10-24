@@ -1,5 +1,6 @@
 # Instruções para agentes de IA
 
+- **Índice primeiro:** antes de procurar informação, leia [docs/indice.md](docs/indice.md) (uma linha por documento) e abra só o necessário. Ao criar ou mudar ADR, guia ou spec, atualize o índice no mesmo PR.
 - Contexto e princípios: [docs/contexto.md](docs/contexto.md). Decisões: [docs/adr/](docs/adr/README.md). Plano: [docs/roadmap.md](docs/roadmap.md).
 - Itens do roadmap: siga o [time de agentes](docs/guias/time-de-agentes.md) ([ADR-0009](docs/adr/0009-time-de-agentes-para-executar-o-roadmap.md)) (ficha → plano aprovado → implementação com testes → `revisor` → `seguranca` se sensível → `doc-writer`). Código: [padrão de código e testes](docs/guias/padrao-de-codigo-e-testes.md).
 - Branches: PRs miram `develop`; a `main` só recebe PR da `develop` ([ADR-0013](docs/adr/0013-fluxo-de-branches-develop-para-main.md)).
