@@ -6,7 +6,7 @@ FSL-1.1-ALv2
 
 ## Notice
 
-Copyright 2026 EduCarvalhoO
+Copyright 2026 Eduardo Carvalho Filho
 
 ## Terms and Conditions
 

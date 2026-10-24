@@ -31,7 +31,6 @@ Três fatos pesam na escolha (preços conferidos em 2026-10-24):
 - O pipeline agêntico com laço de revisão humana (ADR-0011, [PR #9](https://github.com/EduCarvalhoO/ez-ai/pull/9)) e qualquer ferramenta nova do repositório devem respeitar este modelo: ferramentas open source e confiáveis, sem serviço pago que passe do limite de orçamento.
 - Dependências novas precisam de licença compatível com a redistribuição sob FSL ([revisão de segurança](../guias/revisao-de-seguranca.md)).
 - Risco aceito: a licença não teve revisão jurídica; antes da primeira venda, vale uma revisão rápida por advogado.
-- O nome do licenciante no `LICENSE.md` precisa ser confirmado pelo Eduardo.
 
 ## Gatilhos de revisão
 Primeira venda ou cliente pedindo licença open source pela definição da OSI; custo do GitHub ou da CI acima do limite; mudança de preço ou de disponibilidade gratuita de CodeQL, secret scanning ou Actions para repositórios públicos; contribuidores externos que exijam política de contribuição (CLA ou DCO).
