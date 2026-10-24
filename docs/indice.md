@@ -26,8 +26,8 @@
 | [adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md) | ADR-0015: núcleo sem I/O com portas; adapters puros; exportadores à parte |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [guias/padrao-de-documentacao.md](guias/padrao-de-documentacao.md) | Caminhos, estrutura, fluxo e checklist de documentação |
-| [guias/padrao-de-agentes-e-skills.md](guias/padrao-de-agentes-e-skills.md) | Onde e como criar agentes, skills e rules; inventário (inclui o agente `painel`) |
-| [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs, definição de pronto e encerramento (agente `painel`) |
+| [guias/padrao-de-agentes-e-skills.md](guias/padrao-de-agentes-e-skills.md) | Onde e como criar agentes, skills e rules; inventário (inclui os agentes `painel` e `professor`) |
+| [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs, definição de pronto e encerramento (agente `painel`) e decisões didáticas (agente `professor`) |
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
 | [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |
