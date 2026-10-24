@@ -130,9 +130,13 @@ Como o projeto distribui instruções, configurações, integrações e potencia
 
 A presença de um pacote em fonte conhecida ou a correspondência de hash não é, por si só, prova de segurança.
 
+Propriedade de pacotes ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)): todo pacote de colaborador pertence a uma conta do GitHub (`<login>/<pacote>`) e só o dono publica versões, provado por assinatura ligada a essa conta. Pacotes de terceiros nunca se misturam com o núcleo: no repositório do harness não entra código de terceiros, e no projeto que instala cada pacote fica em pasta própria, só leitura, separada dos arquivos do núcleo e do projeto.
+
 ## 9. Distribuição e comunidade
 
 Pacotes compartilhados via repositórios Git ([ADR-0005](adr/0005-distribuicao-git-lockfile.md)); catálogo/registry avaliado após a v1.0.
+
+Cada colaborador publica no próprio repositório do GitHub; o nome do pacote carrega o login do dono e a troca de dono é bloqueada até aprovação humana ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)).
 
 O modelo de contribuição considera: identidade e versionamento, licença e autoria, compatibilidade com versões do harness e ambientes de IA, dependências e integridade, permissões necessárias, documentação e testes, processo de publicação/atualização e tratamento de componentes incompatíveis ou perigosos.
 
@@ -193,6 +197,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Estrutura do código | Pacote único com fronteiras internas (núcleo ← adapters ← CLI), npm, Node 22.12+, 24 ou 26 | [0010](adr/0010-pacote-unico-com-fronteiras-internas.md) |
 | Camadas do código | Núcleo sem I/O, com portas; única via de escrita em `src/plataforma`; adapters puros; exportadores de telemetria em `src/exportadores` (F5) | [0015](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md) |
 | Governança por ambiente | Regra crítica só conta como imposta onde o ambiente bloqueia de fato; onde não, validador externo (CI, pre-commit, CODEOWNERS) ou aviso explícito; base na [matriz de capacidades](arquitetura/matriz-de-capacidades.md) | [0016](adr/0016-governanca-por-nivel-de-enforcement.md) |
+| Propriedade de pacotes | Pacote de colaborador no repositório GitHub dele, nome `<login>/<pacote>`; dono provado por Sigstore e gravado no lockfile; instalado em `.harness/pacotes/<login>/<pacote>/` só leitura, separado do núcleo; CODEOWNERS no repositório do harness | [0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md) |
 | Pipeline agêntico | Etapas E0–E5 com gates G0 (revisão da documentação) a G3 (revisão humana da entrega), laços de volta com limite e rodadas de revisão humana até aprovar; pacote na F6 | [0011](adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md) |
 | Ferramental | Biome para lint e format (o typescript-eslint não suporta o TypeScript 7); Conventional Commits por script próprio sem dependência e hook `commit-msg` via `core.hooksPath`; cobertura V8 com 80% de linhas; changesets 3.0.3; dependências com idade mínima de 7 dias e sem scripts de instalação (`min-release-age=7` e `ignore-scripts=true` no `.npmrc`; idade conferida no CI por `scripts/verificar-idade-deps.mjs`) | [padrão de código](guias/padrao-de-codigo-e-testes.md) |
 | CI | GitHub Actions em Windows, macOS e Linux com Node 22, 24 e 26 (última correção) mais o piso 22.12.0; token só leitura, actions fixadas por SHA, sem cache | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [0007](adr/0007-suporte-multiplataforma.md) |
