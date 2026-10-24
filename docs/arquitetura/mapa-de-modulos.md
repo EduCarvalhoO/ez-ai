@@ -41,9 +41,9 @@ Pastas criadas só quando o primeiro código existir ([contexto §7.7](../contex
 | `modelo` | Tipos neutros: pacote, componente (agent, skill, instruction, MCP, policy, validator, workflow) | Manifesto | F2 |
 | `contratos` | Leitura segura de JSON, validação por JSON Schema ([ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md)) e formato de erro comuns a todos os contratos | Todos | F1 |
 | `manifesto` | Validar manifesto, regras de caminho e comando, diff de permissões ([spec](../specs/manifesto-de-pacote.md)) | Manifesto | F1 (validação), F2 (leitura do pacote) |
-| `config` | Configuração do projeto | Configuração | F2 |
+| `configuracao` | Validar a configuração, origens permitidas e limites efetivos ([spec](../specs/configuracao-e-lockfile.md)) | Configuração | F1 (validação), F2 (leitura e `add`) |
 | `resolucao` | Tag semver → commit SHA, pela porta Git | Lockfile | F2 |
-| `lockfile` | Ler, gravar e verificar hash de conteúdo | Lockfile | F2 |
+| `lockfile` | Validar o lockfile e calcular o hash de conteúdo ([spec](../specs/configuracao-e-lockfile.md)); ler, gravar e verificar na F2 | Lockfile | F1 (validação e hash), F2 (I/O e verificação) |
 | `plano` | Diff entre o instalado e os arquivos em memória dos adapters; base de `plan` e `--dry-run` | — | F2 |
 | `customizacoes` | Preservar e detectar conflito com edições locais | — | F2 |
 | `validadores` | Verificações determinísticas sobre manifesto, plano e projeto (`validate`, `doctor`, `validate --ci`) | — | F2, F4 |

@@ -1,0 +1,82 @@
+[
+  {
+    "arquivo": "tag-de-outra-versao.json",
+    "regra": "tag-da-versao",
+    "caminho": "/pacotes/eduardo~1revisao-ts/tag"
+  },
+  {
+    "arquivo": "github-sem-commit.json",
+    "regra": "origem-git-sem-trava",
+    "caminho": "/pacotes/eduardo~1revisao-ts"
+  },
+  {
+    "arquivo": "commit-curto.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/eduardo~1revisao-ts/commit"
+  },
+  {
+    "arquivo": "commit-maiusculo.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/eduardo~1revisao-ts/commit"
+  },
+  {
+    "arquivo": "local-com-commit.json",
+    "regra": "local-sem-git",
+    "caminho": "/pacotes/eduardo~1rascunho"
+  },
+  {
+    "arquivo": "hash-sha512.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/eduardo~1revisao-ts/hash"
+  },
+  {
+    "arquivo": "hash-maiusculo.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/eduardo~1revisao-ts/hash"
+  },
+  {
+    "arquivo": "outro-dono.json",
+    "regra": "mesmo-dono",
+    "caminho": "/pacotes/eduardo~1revisao-ts/origem"
+  },
+  {
+    "arquivo": "origem-com-credencial.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/eduardo~1revisao-ts/origem"
+  },
+  {
+    "arquivo": "versao-intervalo.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/eduardo~1revisao-ts/versao"
+  },
+  {
+    "arquivo": "retrato-escrever-protegido.json",
+    "regra": "destino-protegido",
+    "caminho": "/pacotes/eduardo~1revisao-ts/componentes/0/permissoes/escrever/0"
+  },
+  {
+    "arquivo": "retrato-comando-latest.json",
+    "regra": "comando",
+    "caminho": "/pacotes/eduardo~1revisao-ts/componentes/1/comando"
+  },
+  {
+    "arquivo": "retrato-id-repetido.json",
+    "regra": "id-unico",
+    "caminho": "/pacotes/eduardo~1revisao-ts/componentes/1/id"
+  },
+  {
+    "arquivo": "local-git-maiusculo.json",
+    "regra": "caminho",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "campo-data.json",
+    "regra": "additionalProperties",
+    "caminho": "/pacotes/eduardo~1revisao-ts"
+  },
+  {
+    "arquivo": "chave-duplicada.json",
+    "regra": "chave-duplicada",
+    "caminho": "/pacotes"
+  }
+]

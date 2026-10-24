@@ -20,7 +20,25 @@ const mensagens: Readonly<Record<string, string>> = {
   minimum: 'número abaixo do mínimo',
   maximum: 'número acima do máximo',
   not: 'campo não permitido para este tipo de componente',
+  propertyNames: 'nome de chave inválido',
+  maxProperties: 'objeto com chaves demais',
+  false: 'campo não permitido neste lugar',
 };
+
+// Erros que a biblioteca repete no objeto pai quando um valor de `additionalProperties` com schema falha.
+const derivadas = new Set(['additionalProperties', 'false']);
+
+/** Tira o erro derivado quando há um erro de verdade no mesmo lugar ou mais fundo (`/pacotes/x/origem`). */
+function semDerivados(unidades: readonly OutputUnit[]): OutputUnit[] {
+  const reais = unidades.filter((u) => !derivadas.has(u.keyword));
+  return unidades.filter(
+    (u) =>
+      !derivadas.has(u.keyword) ||
+      !reais.some(
+        (r) => r.instanceLocation === u.instanceLocation || r.instanceLocation.startsWith(`${u.instanceLocation}/`),
+      ),
+  );
+}
 
 // Palavras-chave que só agregam erros de filhos; o erro útil é o do filho.
 const agregadoras = new Set([
@@ -52,6 +70,6 @@ export function criarValidador(schema: object): ValidarContraSchema {
     const { valid, errors } = validador.validate(dado);
     if (valid) return [];
     const uteis = errors.filter((unidade) => !agregadoras.has(unidade.keyword));
-    return (uteis.length > 0 ? uteis : errors).map(converter);
+    return semDerivados(uteis.length > 0 ? uteis : errors).map(converter);
   };
 }

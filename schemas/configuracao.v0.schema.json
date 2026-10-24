@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/configuracao.v0.schema.json",
+  "title": "Configuração do projeto do harness-ai (v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["versaoConfig", "ambientes"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^https://"
+    },
+    "versaoConfig": {
+      "const": 0
+    },
+    "ambientes": {
+      "type": "array",
+      "items": {
+        "enum": ["claude-code", "copilot"]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "origensPermitidas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 160,
+        "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+      },
+      "maxItems": 100,
+      "uniqueItems": true
+    },
+    "pacotes": {
+      "type": "object",
+      "maxProperties": 100,
+      "propertyNames": {
+        "type": "string",
+        "maxLength": 104,
+        "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["origem"],
+        "properties": {
+          "origem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160,
+                "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+              },
+              {
+                "type": "string",
+                "maxLength": 166,
+                "pattern": "^local:[A-Za-z0-9._/-]+$"
+              }
+            ]
+          },
+          "versao": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^(?:>=|<=|>|<|=|\\^|~)?(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?: (?:>=|<=|>|<|=|\\^|~)?(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*))?$"
+          }
+        }
+      }
+    },
+    "limites": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bytesDoManifesto": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "componentes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "arquivosDoPacote": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytesDoPacote": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytesPorArquivo": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
