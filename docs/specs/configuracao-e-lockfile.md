@@ -80,7 +80,7 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 2. Para cada arquivo, a linha `<sha256 hex minúsculo dos bytes>  <caminho>\n` (dois espaços). Os bytes são os do blob do Git, sem conversão de fim de linha.
 3. Linhas em ordem de bytes do caminho; `sha256` do texto todo → `sha256:<hex>`.
 4. Caminho com `/`, só ASCII e com as regras de caminho do manifesto; repetido, inclusive só por caixa (`A.md` e `a.md`) ou arquivo com o nome de uma pasta (`Agentes` e `agentes/x.md`), é recusado. O modo do arquivo (bit de execução) fica fora do hash.
-5. Pacote sem `harness-pacote.json` na raiz e arquivo que casa com os padrões de segredo do manifesto (`.env`, `*.pem`, `id_rsa`, `.npmrc`…) são recusados: o segredo seria copiado para `.harness/pacotes/` e iria para o commit (I1). Vale para pacote do GitHub e pasta local.
+5. Pacote sem `harness-pacote.json` na raiz e arquivo que casa com os padrões de segredo do manifesto (`.env`, `*.pem`, `id_rsa`, `.npmrc`…) são recusados: o segredo seria copiado para `.harness/pacotes/` e iria para o commit (I1). Vale para pacote do GitHub e pasta local. A lista é heurística e de nomes literais (`.env.qa` ou `config/secrets.json` passam); o controle continua sendo a revisão humana do `plan` (F2).
 
 Vetor de teste fixo em `test/core/lockfile/hash.test.ts`, conferido com `sha256sum`.
 
