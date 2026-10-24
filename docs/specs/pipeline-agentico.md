@@ -23,7 +23,7 @@ Requisitos do Eduardo (2026-10-24):
 |---|---|---|---|
 | E0 Conhecer o projeto | Repositório | Base do projeto ([seção E0](#e0-base-do-projeto)) | Agente de base de conhecimento (nome provisório `cartografo`, `Em aberto`) |
 | E1 Ficha e documentação | Item do roadmap ou pedido; base do projeto; feedback de G0, G1 ou G3 | Ficha com critérios de aceite; spec, plano e ADR quando há decisão | `arquiteto`, `doc-writer`; `pesquisador` quando há dúvida sobre ferramenta externa |
-| E2 Revisão da documentação | Ficha e documentos da E1 | Saída do `validar-docs` e relatório do `revisor` | Skill `validar-docs` primeiro; depois `revisor` em modo documentação |
+| E2 Revisão da documentação | Ficha e documentos da E1 | Saída do `validar-docs`, relatório do `revisor` e, se a ficha for [sensível](../guias/time-de-agentes.md#2-fluxo-com-gates), do `seguranca` sobre o plano | Skill `validar-docs` primeiro; depois `revisor` em modo documentação; `seguranca` se sensível |
 | E3 Execução | Ficha aprovada no G1 (e feedback da rodada, se houver) | Código, testes e configuração; saída do `verificar` | `implementador`, testes primeiro |
 | E4 Code review | Mudança da E3 e ficha | Relatório do `revisor`; do `seguranca` se a mudança for [sensível](../guias/time-de-agentes.md#2-fluxo-com-gates) | `revisor`; `seguranca` se sensível |
 | E5 Entrega | Relatórios aprovados | Docs atualizados; commit ou PR com bloco de evidências; registro de encerramento ([economia de tokens](#economia-de-tokens)) | `doc-writer`; orquestrador abre o PR para a `develop` ([ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md)) |

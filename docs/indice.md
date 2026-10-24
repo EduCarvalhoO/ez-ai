@@ -26,7 +26,9 @@
 | [adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md) | ADR-0015: núcleo sem I/O com portas; adapters puros; exportadores à parte |
 | [adr/0016-governanca-por-nivel-de-enforcement.md](adr/0016-governanca-por-nivel-de-enforcement.md) | ADR-0016: regra crítica só conta como imposta onde o ambiente bloqueia; senão validador externo ou aviso |
 | [adr/0017-propriedade-de-pacotes-por-identidade-github.md](adr/0017-propriedade-de-pacotes-por-identidade-github.md) | ADR-0017: pacote de colaborador pertence a uma conta do GitHub, isolado do núcleo; só o dono publica |
+| [adr/0018-invariantes-de-seguranca-da-instalacao.md](adr/0018-invariantes-de-seguranca-da-instalacao.md) | ADR-0018: harness nunca executa código de pacote; só origens permitidas até a F7; prompt injection por contenção |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
+| [arquitetura/modelo-de-ameacas.md](arquitetura/modelo-de-ameacas.md) | Ameaças STRIDE com severidade, controle, fase e teste previsto; riscos residuais aceitos |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
 | [guias/padrao-de-documentacao.md](guias/padrao-de-documentacao.md) | Caminhos, estrutura, fluxo e checklist de documentação |
 | [guias/padrao-de-agentes-e-skills.md](guias/padrao-de-agentes-e-skills.md) | Onde e como criar agentes, skills e rules; inventário (inclui os agentes `painel` e `professor`) |
