@@ -1,0 +1,527 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/manifesto-pacote.v0.schema.json",
+  "versaoManifesto": 0,
+  "nome": "eduardo/revisao-ts",
+  "versao": "1.2.0-beta.1",
+  "descricao": "Agente revisor, hook de lint e MCP do GitHub para projetos TypeScript",
+  "licenca": "MIT OR Apache-2.0",
+  "repositorio": "https://github.com/eduardo/revisao-ts",
+  "assinatura": {
+    "identidade": "https://github.com/eduardo/revisao-ts/.github/workflows/release.yml@refs/tags/v1.2.0-beta.1",
+    "emissor": "https://token.actions.githubusercontent.com"
+  },
+  "compatibilidade": {
+    "harness": ">=0.1.0 <1.0.0",
+    "ambientes": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "componentes": [
+    {
+      "id": "c0",
+      "tipo": "instrucao",
+      "arquivo": "i/0.md"
+    },
+    {
+      "id": "c1",
+      "tipo": "instrucao",
+      "arquivo": "i/1.md"
+    },
+    {
+      "id": "c2",
+      "tipo": "instrucao",
+      "arquivo": "i/2.md"
+    },
+    {
+      "id": "c3",
+      "tipo": "instrucao",
+      "arquivo": "i/3.md"
+    },
+    {
+      "id": "c4",
+      "tipo": "instrucao",
+      "arquivo": "i/4.md"
+    },
+    {
+      "id": "c5",
+      "tipo": "instrucao",
+      "arquivo": "i/5.md"
+    },
+    {
+      "id": "c6",
+      "tipo": "instrucao",
+      "arquivo": "i/6.md"
+    },
+    {
+      "id": "c7",
+      "tipo": "instrucao",
+      "arquivo": "i/7.md"
+    },
+    {
+      "id": "c8",
+      "tipo": "instrucao",
+      "arquivo": "i/8.md"
+    },
+    {
+      "id": "c9",
+      "tipo": "instrucao",
+      "arquivo": "i/9.md"
+    },
+    {
+      "id": "c10",
+      "tipo": "instrucao",
+      "arquivo": "i/10.md"
+    },
+    {
+      "id": "c11",
+      "tipo": "instrucao",
+      "arquivo": "i/11.md"
+    },
+    {
+      "id": "c12",
+      "tipo": "instrucao",
+      "arquivo": "i/12.md"
+    },
+    {
+      "id": "c13",
+      "tipo": "instrucao",
+      "arquivo": "i/13.md"
+    },
+    {
+      "id": "c14",
+      "tipo": "instrucao",
+      "arquivo": "i/14.md"
+    },
+    {
+      "id": "c15",
+      "tipo": "instrucao",
+      "arquivo": "i/15.md"
+    },
+    {
+      "id": "c16",
+      "tipo": "instrucao",
+      "arquivo": "i/16.md"
+    },
+    {
+      "id": "c17",
+      "tipo": "instrucao",
+      "arquivo": "i/17.md"
+    },
+    {
+      "id": "c18",
+      "tipo": "instrucao",
+      "arquivo": "i/18.md"
+    },
+    {
+      "id": "c19",
+      "tipo": "instrucao",
+      "arquivo": "i/19.md"
+    },
+    {
+      "id": "c20",
+      "tipo": "instrucao",
+      "arquivo": "i/20.md"
+    },
+    {
+      "id": "c21",
+      "tipo": "instrucao",
+      "arquivo": "i/21.md"
+    },
+    {
+      "id": "c22",
+      "tipo": "instrucao",
+      "arquivo": "i/22.md"
+    },
+    {
+      "id": "c23",
+      "tipo": "instrucao",
+      "arquivo": "i/23.md"
+    },
+    {
+      "id": "c24",
+      "tipo": "instrucao",
+      "arquivo": "i/24.md"
+    },
+    {
+      "id": "c25",
+      "tipo": "instrucao",
+      "arquivo": "i/25.md"
+    },
+    {
+      "id": "c26",
+      "tipo": "instrucao",
+      "arquivo": "i/26.md"
+    },
+    {
+      "id": "c27",
+      "tipo": "instrucao",
+      "arquivo": "i/27.md"
+    },
+    {
+      "id": "c28",
+      "tipo": "instrucao",
+      "arquivo": "i/28.md"
+    },
+    {
+      "id": "c29",
+      "tipo": "instrucao",
+      "arquivo": "i/29.md"
+    },
+    {
+      "id": "c30",
+      "tipo": "instrucao",
+      "arquivo": "i/30.md"
+    },
+    {
+      "id": "c31",
+      "tipo": "instrucao",
+      "arquivo": "i/31.md"
+    },
+    {
+      "id": "c32",
+      "tipo": "instrucao",
+      "arquivo": "i/32.md"
+    },
+    {
+      "id": "c33",
+      "tipo": "instrucao",
+      "arquivo": "i/33.md"
+    },
+    {
+      "id": "c34",
+      "tipo": "instrucao",
+      "arquivo": "i/34.md"
+    },
+    {
+      "id": "c35",
+      "tipo": "instrucao",
+      "arquivo": "i/35.md"
+    },
+    {
+      "id": "c36",
+      "tipo": "instrucao",
+      "arquivo": "i/36.md"
+    },
+    {
+      "id": "c37",
+      "tipo": "instrucao",
+      "arquivo": "i/37.md"
+    },
+    {
+      "id": "c38",
+      "tipo": "instrucao",
+      "arquivo": "i/38.md"
+    },
+    {
+      "id": "c39",
+      "tipo": "instrucao",
+      "arquivo": "i/39.md"
+    },
+    {
+      "id": "c40",
+      "tipo": "instrucao",
+      "arquivo": "i/40.md"
+    },
+    {
+      "id": "c41",
+      "tipo": "instrucao",
+      "arquivo": "i/41.md"
+    },
+    {
+      "id": "c42",
+      "tipo": "instrucao",
+      "arquivo": "i/42.md"
+    },
+    {
+      "id": "c43",
+      "tipo": "instrucao",
+      "arquivo": "i/43.md"
+    },
+    {
+      "id": "c44",
+      "tipo": "instrucao",
+      "arquivo": "i/44.md"
+    },
+    {
+      "id": "c45",
+      "tipo": "instrucao",
+      "arquivo": "i/45.md"
+    },
+    {
+      "id": "c46",
+      "tipo": "instrucao",
+      "arquivo": "i/46.md"
+    },
+    {
+      "id": "c47",
+      "tipo": "instrucao",
+      "arquivo": "i/47.md"
+    },
+    {
+      "id": "c48",
+      "tipo": "instrucao",
+      "arquivo": "i/48.md"
+    },
+    {
+      "id": "c49",
+      "tipo": "instrucao",
+      "arquivo": "i/49.md"
+    },
+    {
+      "id": "c50",
+      "tipo": "instrucao",
+      "arquivo": "i/50.md"
+    },
+    {
+      "id": "c51",
+      "tipo": "instrucao",
+      "arquivo": "i/51.md"
+    },
+    {
+      "id": "c52",
+      "tipo": "instrucao",
+      "arquivo": "i/52.md"
+    },
+    {
+      "id": "c53",
+      "tipo": "instrucao",
+      "arquivo": "i/53.md"
+    },
+    {
+      "id": "c54",
+      "tipo": "instrucao",
+      "arquivo": "i/54.md"
+    },
+    {
+      "id": "c55",
+      "tipo": "instrucao",
+      "arquivo": "i/55.md"
+    },
+    {
+      "id": "c56",
+      "tipo": "instrucao",
+      "arquivo": "i/56.md"
+    },
+    {
+      "id": "c57",
+      "tipo": "instrucao",
+      "arquivo": "i/57.md"
+    },
+    {
+      "id": "c58",
+      "tipo": "instrucao",
+      "arquivo": "i/58.md"
+    },
+    {
+      "id": "c59",
+      "tipo": "instrucao",
+      "arquivo": "i/59.md"
+    },
+    {
+      "id": "c60",
+      "tipo": "instrucao",
+      "arquivo": "i/60.md"
+    },
+    {
+      "id": "c61",
+      "tipo": "instrucao",
+      "arquivo": "i/61.md"
+    },
+    {
+      "id": "c62",
+      "tipo": "instrucao",
+      "arquivo": "i/62.md"
+    },
+    {
+      "id": "c63",
+      "tipo": "instrucao",
+      "arquivo": "i/63.md"
+    },
+    {
+      "id": "c64",
+      "tipo": "instrucao",
+      "arquivo": "i/64.md"
+    },
+    {
+      "id": "c65",
+      "tipo": "instrucao",
+      "arquivo": "i/65.md"
+    },
+    {
+      "id": "c66",
+      "tipo": "instrucao",
+      "arquivo": "i/66.md"
+    },
+    {
+      "id": "c67",
+      "tipo": "instrucao",
+      "arquivo": "i/67.md"
+    },
+    {
+      "id": "c68",
+      "tipo": "instrucao",
+      "arquivo": "i/68.md"
+    },
+    {
+      "id": "c69",
+      "tipo": "instrucao",
+      "arquivo": "i/69.md"
+    },
+    {
+      "id": "c70",
+      "tipo": "instrucao",
+      "arquivo": "i/70.md"
+    },
+    {
+      "id": "c71",
+      "tipo": "instrucao",
+      "arquivo": "i/71.md"
+    },
+    {
+      "id": "c72",
+      "tipo": "instrucao",
+      "arquivo": "i/72.md"
+    },
+    {
+      "id": "c73",
+      "tipo": "instrucao",
+      "arquivo": "i/73.md"
+    },
+    {
+      "id": "c74",
+      "tipo": "instrucao",
+      "arquivo": "i/74.md"
+    },
+    {
+      "id": "c75",
+      "tipo": "instrucao",
+      "arquivo": "i/75.md"
+    },
+    {
+      "id": "c76",
+      "tipo": "instrucao",
+      "arquivo": "i/76.md"
+    },
+    {
+      "id": "c77",
+      "tipo": "instrucao",
+      "arquivo": "i/77.md"
+    },
+    {
+      "id": "c78",
+      "tipo": "instrucao",
+      "arquivo": "i/78.md"
+    },
+    {
+      "id": "c79",
+      "tipo": "instrucao",
+      "arquivo": "i/79.md"
+    },
+    {
+      "id": "c80",
+      "tipo": "instrucao",
+      "arquivo": "i/80.md"
+    },
+    {
+      "id": "c81",
+      "tipo": "instrucao",
+      "arquivo": "i/81.md"
+    },
+    {
+      "id": "c82",
+      "tipo": "instrucao",
+      "arquivo": "i/82.md"
+    },
+    {
+      "id": "c83",
+      "tipo": "instrucao",
+      "arquivo": "i/83.md"
+    },
+    {
+      "id": "c84",
+      "tipo": "instrucao",
+      "arquivo": "i/84.md"
+    },
+    {
+      "id": "c85",
+      "tipo": "instrucao",
+      "arquivo": "i/85.md"
+    },
+    {
+      "id": "c86",
+      "tipo": "instrucao",
+      "arquivo": "i/86.md"
+    },
+    {
+      "id": "c87",
+      "tipo": "instrucao",
+      "arquivo": "i/87.md"
+    },
+    {
+      "id": "c88",
+      "tipo": "instrucao",
+      "arquivo": "i/88.md"
+    },
+    {
+      "id": "c89",
+      "tipo": "instrucao",
+      "arquivo": "i/89.md"
+    },
+    {
+      "id": "c90",
+      "tipo": "instrucao",
+      "arquivo": "i/90.md"
+    },
+    {
+      "id": "c91",
+      "tipo": "instrucao",
+      "arquivo": "i/91.md"
+    },
+    {
+      "id": "c92",
+      "tipo": "instrucao",
+      "arquivo": "i/92.md"
+    },
+    {
+      "id": "c93",
+      "tipo": "instrucao",
+      "arquivo": "i/93.md"
+    },
+    {
+      "id": "c94",
+      "tipo": "instrucao",
+      "arquivo": "i/94.md"
+    },
+    {
+      "id": "c95",
+      "tipo": "instrucao",
+      "arquivo": "i/95.md"
+    },
+    {
+      "id": "c96",
+      "tipo": "instrucao",
+      "arquivo": "i/96.md"
+    },
+    {
+      "id": "c97",
+      "tipo": "instrucao",
+      "arquivo": "i/97.md"
+    },
+    {
+      "id": "c98",
+      "tipo": "instrucao",
+      "arquivo": "i/98.md"
+    },
+    {
+      "id": "c99",
+      "tipo": "instrucao",
+      "arquivo": "i/99.md"
+    },
+    {
+      "id": "c100",
+      "tipo": "instrucao",
+      "arquivo": "i/100.md"
+    }
+  ]
+}

@@ -39,7 +39,8 @@ Pastas criadas só quando o primeiro código existir ([contexto §7.7](../contex
 | Módulo | Responsabilidade | Contrato (F1) | Nasce |
 |---|---|---|---|
 | `modelo` | Tipos neutros: pacote, componente (agent, skill, instruction, MCP, policy, validator, workflow) | Manifesto | F2 |
-| `manifesto` | Ler e validar manifesto e permissões declaradas | Manifesto | F2 |
+| `contratos` | Leitura segura de JSON, validação por JSON Schema ([ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md)) e formato de erro comuns a todos os contratos | Todos | F1 |
+| `manifesto` | Validar manifesto, regras de caminho e comando, diff de permissões ([spec](../specs/manifesto-de-pacote.md)) | Manifesto | F1 (validação), F2 (leitura do pacote) |
 | `config` | Configuração do projeto | Configuração | F2 |
 | `resolucao` | Tag semver → commit SHA, pela porta Git | Lockfile | F2 |
 | `lockfile` | Ler, gravar e verificar hash de conteúdo | Lockfile | F2 |

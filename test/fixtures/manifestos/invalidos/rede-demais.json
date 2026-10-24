@@ -1,0 +1,137 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/manifesto-pacote.v0.schema.json",
+  "versaoManifesto": 0,
+  "nome": "eduardo/revisao-ts",
+  "versao": "1.2.0-beta.1",
+  "descricao": "Agente revisor, hook de lint e MCP do GitHub para projetos TypeScript",
+  "licenca": "MIT OR Apache-2.0",
+  "repositorio": "https://github.com/eduardo/revisao-ts",
+  "assinatura": {
+    "identidade": "https://github.com/eduardo/revisao-ts/.github/workflows/release.yml@refs/tags/v1.2.0-beta.1",
+    "emissor": "https://token.actions.githubusercontent.com"
+  },
+  "compatibilidade": {
+    "harness": ">=0.1.0 <1.0.0",
+    "ambientes": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "componentes": [
+    {
+      "id": "revisor",
+      "tipo": "agente",
+      "arquivo": "agentes/revisor.md",
+      "descricao": "Revisa diffs de TypeScript",
+      "permissoes": {
+        "ler": [
+          "src/**",
+          "test/**/*.ts"
+        ],
+        "executar": [
+          {
+            "programa": "npm",
+            "argumentos": [
+              "test"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "lint",
+      "tipo": "hook",
+      "arquivo": "hooks/lint.mjs",
+      "evento": "antes-de-ferramenta",
+      "comando": {
+        "programa": "node",
+        "argumentos": [
+          "hooks/lint.mjs"
+        ]
+      },
+      "permissoes": {
+        "ler": [
+          "src/**"
+        ],
+        "configurarAmbiente": [
+          ".claude/settings.json",
+          ".github/hooks/*.json"
+        ]
+      }
+    },
+    {
+      "id": "github",
+      "tipo": "mcp",
+      "arquivo": "mcp/github.json",
+      "comando": {
+        "programa": "npx",
+        "argumentos": [
+          "-y",
+          "@modelcontextprotocol/server-github@2025.4.8"
+        ]
+      },
+      "permissoes": {
+        "rede": [
+          "h0.exemplo.com",
+          "h1.exemplo.com",
+          "h2.exemplo.com",
+          "h3.exemplo.com",
+          "h4.exemplo.com",
+          "h5.exemplo.com",
+          "h6.exemplo.com",
+          "h7.exemplo.com",
+          "h8.exemplo.com",
+          "h9.exemplo.com",
+          "h10.exemplo.com",
+          "h11.exemplo.com",
+          "h12.exemplo.com",
+          "h13.exemplo.com",
+          "h14.exemplo.com",
+          "h15.exemplo.com",
+          "h16.exemplo.com",
+          "h17.exemplo.com",
+          "h18.exemplo.com",
+          "h19.exemplo.com",
+          "h20.exemplo.com",
+          "h21.exemplo.com",
+          "h22.exemplo.com",
+          "h23.exemplo.com",
+          "h24.exemplo.com",
+          "h25.exemplo.com",
+          "h26.exemplo.com",
+          "h27.exemplo.com",
+          "h28.exemplo.com",
+          "h29.exemplo.com",
+          "h30.exemplo.com",
+          "h31.exemplo.com",
+          "h32.exemplo.com",
+          "h33.exemplo.com",
+          "h34.exemplo.com",
+          "h35.exemplo.com",
+          "h36.exemplo.com",
+          "h37.exemplo.com",
+          "h38.exemplo.com",
+          "h39.exemplo.com",
+          "h40.exemplo.com",
+          "h41.exemplo.com",
+          "h42.exemplo.com",
+          "h43.exemplo.com",
+          "h44.exemplo.com",
+          "h45.exemplo.com",
+          "h46.exemplo.com",
+          "h47.exemplo.com",
+          "h48.exemplo.com",
+          "h49.exemplo.com",
+          "h50.exemplo.com"
+        ],
+        "segredos": [
+          "GITHUB_TOKEN"
+        ],
+        "configurarAmbiente": [
+          ".mcp.json",
+          ".vscode/mcp.json"
+        ]
+      }
+    }
+  ]
+}
