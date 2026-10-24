@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-> Status: Vivo · Atualizado: 2026-10-15 · Relacionados: [índice](../README.md)
+> Status: Vivo · Atualizado: 2026-10-24 · Relacionados: [índice](../README.md)
 >
 > Formato e regras: [padrão de documentação](../guias/padrao-de-documentacao.md#4-convenções). Template: [adr.md](../_templates/adr.md).
 
@@ -16,12 +16,12 @@
 | [0008](0008-agentes-por-ambiente-com-regras-em-fonte-unica.md) | Agentes: um arquivo por ambiente, regras em fonte única | Aceito |
 | [0009](0009-time-de-agentes-para-executar-o-roadmap.md) | Time de agentes para executar o roadmap | Aceito |
 | [0010](0010-pacote-unico-com-fronteiras-internas.md) | Pacote único com fronteiras internas | Aceito |
+| [0012](0012-licenca-fsl-e-modelo-open-core.md) | Licença FSL e modelo open core | Aceito |
 | [0011](0011-pipeline-agentico-com-laco-de-revisao-humana.md) | Pipeline agêntico com laço de revisão humana | Proposto |
 
 ## Decisões em aberto
 
 | Tema | Prazo | Observação |
 |---|---|---|
-| Licença | Antes da F8 | Opções: Apache-2.0, MIT, open core |
 | Nome do produto/CLI | Antes da F8 | Codinome `harness-ai`; checar npm, marca e domínio (colisão com Harness.io) |
 | Formato de policy (DSL própria, JSON/YAML, Rego/Cedar) | F1 | |

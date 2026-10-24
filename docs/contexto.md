@@ -167,7 +167,7 @@ Agentes de IA tratam este documento como contexto e princípios, não como autor
 | Garantias de compatibilidade | Em aberto — F8 |
 | Testes de pacotes antes do compartilhamento | Em aberto — F7 |
 | Quando a orquestração própria será necessária | Em aberto — pós-v1 |
-| Licença do projeto | Em aberto — antes da F8 |
+| Licença do projeto | Decidido — [ADR-0012](adr/0012-licenca-fsl-e-modelo-open-core.md) |
 | Nome do produto/CLI | Em aberto — antes da F8 (codinome `harness-ai`) |
 
 ## 13. Resultado esperado da fase de descoberta
@@ -192,6 +192,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Ferramental | Biome para lint e format (o typescript-eslint não suporta o TypeScript 7); Conventional Commits por script próprio sem dependência e hook `commit-msg` via `core.hooksPath`; cobertura V8 com 80% de linhas; changesets 3.0.3; dependências com idade mínima de 7 dias e sem scripts de instalação (`min-release-age=7` e `ignore-scripts=true` no `.npmrc`; idade conferida no CI por `scripts/verificar-idade-deps.mjs`) | [padrão de código](guias/padrao-de-codigo-e-testes.md) |
 | CI | GitHub Actions em Windows, macOS e Linux com Node 22, 24 e 26 (última correção) mais o piso 22.12.0; token só leitura, actions fixadas por SHA, sem cache | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [0007](adr/0007-suporte-multiplataforma.md) |
 | Segurança do repositório e da cadeia de suprimentos | Repositório público (decisão do Eduardo em 2026-10-17) para ter de graça branch protection, CodeQL, secret scanning com push protection e reporte privado de vulnerabilidade; `npm audit` sem nível de corte e `npm audit signatures` no CI; zizmor e actionlint nos workflows; Dependabot (npm, actions, pip) com cooldown de 7 dias; `SECURITY.md` | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [SECURITY.md](../SECURITY.md) |
+| Licença e modelo comercial | FSL-1.1-ALv2 no repositório público (cada versão vira Apache 2.0 após 2 anos); extensões pagas depois em repositório privado com GitHub Pro; orçamento até ~US$ 4/mês | [0012](adr/0012-licenca-fsl-e-modelo-open-core.md) |
 | Capacidade/horizonte | 1 pessoa + agentes, ~6 meses até a v1.0 | [roadmap](roadmap.md) |
 | Métricas | Qualidade, custo/eficiência, conformidade, adoção | [roadmap](roadmap.md#métricas-de-sucesso) |
 

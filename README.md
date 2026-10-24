@@ -47,8 +47,14 @@ Justificativas em [ADRs](docs/adr/README.md).
 
 ## Contribuindo
 
-Ainda não aceitamos contribuições externas (licença em definição). Para trabalho interno com agentes de IA, veja [AGENTS.md](AGENTS.md). Arquivos temporários e auxiliares ficam em `.tmp/` (ignorado pelo Git).
+Ainda não aceitamos contribuições externas. Para trabalho interno com agentes de IA, veja [AGENTS.md](AGENTS.md). Arquivos temporários e auxiliares ficam em `.tmp/` (ignorado pelo Git).
 
 ## Licença
 
-Em definição — ver [decisões em aberto](docs/adr/README.md#decisões-em-aberto).
+[FSL-1.1-ALv2](LICENSE.md) (Functional Source License). Em palavras simples:
+
+- Você pode ler, usar, copiar e modificar o código, inclusive em uso interno e comercial na sua empresa.
+- Você não pode usá-lo para oferecer um produto ou serviço que concorra com o harness.
+- Cada versão vira Apache 2.0, uma licença aberta comum, dois anos depois de lançada.
+
+O texto que vale é o do [LICENSE.md](LICENSE.md). Motivos em [ADR-0012](docs/adr/0012-licenca-fsl-e-modelo-open-core.md).
