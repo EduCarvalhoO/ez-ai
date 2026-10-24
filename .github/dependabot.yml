@@ -5,6 +5,8 @@ version: 2
 updates:
   - package-ecosystem: npm
     directory: /
+    # Version updates na develop (ADR-0013); security updates vão sempre para a branch padrão, que é a develop.
+    target-branch: develop
     schedule:
       interval: weekly
     cooldown:
@@ -21,6 +23,8 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    # Version updates na develop (ADR-0013); security updates vão sempre para a branch padrão, que é a develop.
+    target-branch: develop
     schedule:
       interval: weekly
     cooldown:
@@ -32,6 +36,8 @@ updates:
   # zizmor do job workflows (.github/zizmor/requirements.txt, com hashes).
   - package-ecosystem: pip
     directory: /.github/zizmor
+    # Version updates na develop (ADR-0013); security updates vão sempre para a branch padrão, que é a develop.
+    target-branch: develop
     schedule:
       interval: weekly
     cooldown:
