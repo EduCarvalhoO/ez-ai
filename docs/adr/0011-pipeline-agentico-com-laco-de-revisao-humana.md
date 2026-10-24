@@ -1,6 +1,6 @@
 # ADR-0011: Pipeline agêntico com laço de revisão humana
 
-> Status: Proposto · Data: 2026-10-24 · Relacionados: [spec do pipeline](../specs/pipeline-agentico.md), [ADR-0006](0006-workflow-mvp-feature-com-gates.md), [ADR-0009](0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0004](0004-observabilidade-langfuse-opcional.md), [time de agentes](../guias/time-de-agentes.md)
+> Status: Aceito · Data: 2026-10-24 · Relacionados: [spec do pipeline](../specs/pipeline-agentico.md), [ADR-0012](0012-licenca-fsl-e-modelo-open-core.md), [ADR-0006](0006-workflow-mvp-feature-com-gates.md), [ADR-0009](0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0004](0004-observabilidade-langfuse-opcional.md), [time de agentes](../guias/time-de-agentes.md)
 
 ## Contexto
 O fluxo atual do time ([guia §2](../guias/time-de-agentes.md#2-fluxo-com-gates), [ADR-0009](0009-time-de-agentes-para-executar-o-roadmap.md)), que antecipa o workflow do MVP ([ADR-0006](0006-workflow-mvp-feature-com-gates.md)), tem três lacunas:
@@ -15,6 +15,8 @@ O Eduardo acrescentou quatro requisitos (2026-10-24):
 5. Painel para ver essas métricas e gerenciar agentes.
 6. Esteira customizável por projeto, tecnologia e stack.
 7. Agentes que criam uma base de conhecimento enxuta e precisa do projeto.
+
+E três restrições (2026-10-24, detalhes nas [restrições da spec](../specs/pipeline-agentico.md#restrições)): ferramentas open source e confiáveis; nenhuma etapa exige serviço pago; tokens e chave de IA são do usuário.
 
 ## Alternativas
 | Opção | Prós | Contras |
@@ -38,6 +40,7 @@ Opção (b). Detalhes na [spec do pipeline](../specs/pipeline-agentico.md):
 ## Consequências
 - Positivas: o usuário recebe documentação já revisada no G1; todo pedido de ajuste tem destino e limite; o time testa o workflow da F6 antes de implementá-lo; a spec define o evento que a F5 vai exportar.
 - Limite de ciclos: deixa de ser "2 por ficha" ([ADR-0009](0009-time-de-agentes-para-executar-o-roadmap.md)) e passa a ser 2 por laço (documentação e código), zerados a cada rodada humana. Uma ficha pode somar mais ciclos que antes; o teto por laço e a escala na 2ª reprovação seguem evitando ciclo infinito entre agentes.
+- Ferramentas e custo: o pipeline só exige ferramentas open source. O caminho de referência, e o único exigido, para observabilidade é o Langfuse self-hosted sem os recursos `ee/`; o Langfuse Cloud continua opcional por configuração ([ADR-0004](0004-observabilidade-langfuse-opcional.md)), nunca exigido. O pipeline não depende de serviço pago e roda cada agente com a chave e o modelo do usuário; o custo nos eventos é do usuário. O núcleo do pipeline fica no repositório público sob a licença do [ADR-0012](0012-licenca-fsl-e-modelo-open-core.md) (FSL-1.1-ALv2); extensões pagas futuras são opcionais e o núcleo nunca depende delas (compatível com open core).
 - Custos: mais etapas por item (mais tokens e tempo), mitigado por rodar primeiro a verificação determinística (`validar-docs`) na E2.
 - Riscos aceitos: os gates continuam por instrução até a F4 ([contexto §7.1](../contexto.md#71-governança-como-parte-da-arquitetura)); a spec v0 pode ser refeita na F6; rodadas humanas sem teto podem gerar retrabalho, mitigado pela proposta de replanejar e pelas métricas da F5.
 
@@ -45,4 +48,5 @@ Opção (b). Detalhes na [spec do pipeline](../specs/pipeline-agentico.md):
 - F4: hooks e CI permitem impor os gates; rever o que deixa de ser instrução.
 - F5: métricas reais (tempo por etapa, ciclos, custo) mostram etapa cara ou sem efeito.
 - F6: schema e motor de workflow exigem mudar etapas, gates ou laços.
+- Alguma etapa passa a exigir serviço pago ou ferramenta não open source além das exceções das [restrições da spec](../specs/pipeline-agentico.md#restrições).
 - Taxa de rodadas humanas por item alta ou crescente: sinal de que E1/E2 não estão pegando os problemas.
