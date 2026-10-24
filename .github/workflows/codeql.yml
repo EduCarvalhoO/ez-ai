@@ -4,9 +4,9 @@ name: CodeQL
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
-    branches: [main]
+    branches: [main, develop]
   schedule:
     # Toda segunda-feira, para pegar consultas novas do CodeQL mesmo sem push.
     - cron: '17 6 * * 1'

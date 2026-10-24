@@ -19,7 +19,7 @@ Define as etapas, os gates, os laços de volta, os artefatos de handoff e o even
 | E2 Revisão da documentação | Ficha e documentos da E1 | Saída do `validar-docs` e relatório do `revisor` | Skill `validar-docs` primeiro; depois `revisor` em modo documentação |
 | E3 Execução | Ficha aprovada no G1 (e feedback da rodada, se houver) | Código, testes e configuração; saída do `verificar` | `implementador`, testes primeiro |
 | E4 Code review | Mudança da E3 e ficha | Relatório do `revisor`; do `seguranca` se a mudança for [sensível](../guias/time-de-agentes.md#2-fluxo-com-gates) | `revisor`; `seguranca` se sensível |
-| E5 Entrega | Relatórios aprovados | Docs atualizados; commit ou PR com bloco de evidências | `doc-writer`; orquestrador abre o PR |
+| E5 Entrega | Relatórios aprovados | Docs atualizados; commit ou PR com bloco de evidências | `doc-writer`; orquestrador abre o PR para a `develop` ([ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md)) |
 
 O formato dos relatórios está no [guia §5](../guias/time-de-agentes.md#5-formato-dos-relatórios).
 

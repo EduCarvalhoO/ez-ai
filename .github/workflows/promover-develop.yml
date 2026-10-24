@@ -1,0 +1,61 @@
+# Promoção automática develop → main (ADR-0013). Conferido por test/ferramental/promover-develop.test.ts.
+# A cada push na develop, abre (ou reaproveita) o PR develop → main e liga o auto-merge com merge commit;
+# o GitHub faz o merge quando os checks obrigatórios da main passam. PR aberto pelo GITHUB_TOKEN não dispara
+# workflows, então valem os checks do push na develop, que rodam no mesmo commit.
+name: Promover develop
+
+on:
+  push:
+    branches: [develop]
+
+permissions: {}
+
+# Um push por vez; o seguinte reaproveita o PR aberto.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  # Check obrigatório da main: neste commit, a origem é a develop deste repositório por construção.
+  # Em PR aberto por pessoa, o mesmo check vem de origem-do-pr.yml.
+  origem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Commit vem de push na develop deste repositório
+        run: echo "Origem develop"
+
+  promover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Único job com escrita fora do CodeQL: abrir o PR e ligar o auto-merge.
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Abre ou reaproveita o PR develop → main e liga o auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # Só PR cuja branch é a develop deste repositório: --head do gh filtra só pelo nome, e um fork
+        # com branch develop ganharia o auto-merge. head=<dono>:develop na API filtra pelo dono.
+        run: |
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&base=main&head=$GITHUB_REPOSITORY_OWNER:develop" \
+            --jq "[.[] | select(.head.repo.full_name == \"$GITHUB_REPOSITORY\")][0].number // empty")
+          if [ -z "$pr" ]; then
+            if [ "$(gh api "repos/$GITHUB_REPOSITORY/compare/main...develop" --jq .ahead_by)" = 0 ]; then
+              echo "develop não tem commits novos para a main"
+              exit 0
+            fi
+            url=$(gh pr create --repo "$GITHUB_REPOSITORY" --base main --head develop \
+              --title "chore(release): promove develop para main" \
+              --body "PR automático (ADR-0013): entra sozinho com merge commit quando os checks obrigatórios passarem.")
+            pr=${url##*/}
+          fi
+          # Confere de novo antes de ligar o auto-merge.
+          origem=$(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json isCrossRepository,headRefName,baseRefName \
+            --jq '"\(.isCrossRepository) \(.headRefName) \(.baseRefName)"')
+          if [ "$origem" != "false develop main" ]; then
+            echo "::error::PR $pr não é develop → main deste repositório ($origem)"
+            exit 1
+          fi
+          gh pr merge "$pr" --repo "$GITHUB_REPOSITORY" --auto --merge
