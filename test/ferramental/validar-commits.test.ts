@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { semControle, validarMensagem } from '../../scripts/validar-commits.mjs';
+import { INTERVALO_PADRAO, semControle, validarMensagem } from '../../scripts/validar-commits.mjs';
 
 const executar = promisify(execFile);
 const raiz = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -28,6 +28,12 @@ async function rodar(comando: string, args: readonly string[], cwd: string): Pro
     throw erro;
   }
 }
+
+describe('INTERVALO_PADRAO', () => {
+  it('compara com a develop, a base dos PRs', () => {
+    expect(INTERVALO_PADRAO).toBe('origin/develop..HEAD');
+  });
+});
 
 describe('validarMensagem', () => {
   it.each([

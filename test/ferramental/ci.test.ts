@@ -94,12 +94,12 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(existsSync(caminhoDoWorkflow)).toBe(true);
   });
 
-  it('dispara em pull_request e push para main, nunca em pull_request_target', () => {
+  it('dispara em pull_request e push para main e develop, nunca em pull_request_target', () => {
     const linhas = lerLinhas();
     expect(linhas.join('\n')).not.toMatch(/pull_request_target/);
     const gatilhos = semComentarios(bloco(linhas, 'on'));
-    expect(gatilhos).toMatch(/^\s+pull_request:\n\s+branches: \[main\]$/m);
-    expect(gatilhos).toMatch(/^\s+push:\n\s+branches: \[main\]$/m);
+    expect(gatilhos).toMatch(/^\s+pull_request:\n\s+branches: \[main, develop\]$/m);
+    expect(gatilhos).toMatch(/^\s+push:\n\s+branches: \[main, develop\]$/m);
   });
 
   it('dá ao token só contents: read no topo e nenhuma permissão de escrita', () => {

@@ -1,7 +1,9 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    // .tmp/ guarda worktrees e rascunhos fora do projeto; os testes deles não rodam aqui.
+    exclude: [...configDefaults.exclude, '.tmp/**'],
     coverage: {
       provider: 'v8',
       include: ['src/**'],

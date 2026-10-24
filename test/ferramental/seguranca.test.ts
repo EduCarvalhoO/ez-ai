@@ -56,6 +56,10 @@ describe('.github/dependabot.yml', () => {
     }
   });
 
+  it('abre os PRs de version update na develop', () => {
+    for (const bloco of ecossistemas) expect(bloco).toMatch(/^\s+target-branch: "?develop"?$/m);
+  });
+
   it('não propõe major do @types/node (os tipos ficam no major do piso de engines.node)', () => {
     const npm = ecossistemas.find((bloco) => /^"?npm"?\b/.test(bloco)) ?? '';
     expect(npm).toMatch(
@@ -105,10 +109,10 @@ describe('.github/workflows/codeql.yml', () => {
   const linhas = semComentarios(ler('.github', 'workflows', 'codeql.yml'));
   const texto = linhas.join('\n');
 
-  it('analisa JavaScript/TypeScript em PR, push para main e semanalmente, nunca em pull_request_target', () => {
+  it('analisa JavaScript/TypeScript em PR, push para main e develop e semanalmente, nunca em pull_request_target', () => {
     expect(texto).not.toContain('pull_request_target');
-    expect(texto).toMatch(/^ {2}pull_request:\n {4}branches: \[main\]$/m);
-    expect(texto).toMatch(/^ {2}push:\n {4}branches: \[main\]$/m);
+    expect(texto).toMatch(/^ {2}pull_request:\n {4}branches: \[main, develop\]$/m);
+    expect(texto).toMatch(/^ {2}push:\n {4}branches: \[main, develop\]$/m);
     expect(texto).toMatch(/^ {4}- cron: '[^']+'$/m);
     expect(texto).toMatch(/languages: javascript-typescript$/m);
   });

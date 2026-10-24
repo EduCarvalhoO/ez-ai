@@ -18,6 +18,7 @@
 | [0010](0010-pacote-unico-com-fronteiras-internas.md) | Pacote único com fronteiras internas | Aceito |
 | [0011](0011-pipeline-agentico-com-laco-de-revisao-humana.md) | Pipeline agêntico com laço de revisão humana | Aceito |
 | [0012](0012-licenca-fsl-e-modelo-open-core.md) | Licença FSL e modelo open core | Aceito |
+| [0013](0013-fluxo-de-branches-develop-para-main.md) | Fluxo de branches `develop` → `main` | Aceito |
 
 ## Decisões em aberto
 
