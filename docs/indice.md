@@ -22,10 +22,11 @@
 | [adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md](adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md) | ADR-0011: pipeline agêntico com laço de revisão humana |
 | [adr/0012-licenca-fsl-e-modelo-open-core.md](adr/0012-licenca-fsl-e-modelo-open-core.md) | ADR-0012: licença FSL e modelo open core |
 | [adr/0013-fluxo-de-branches-develop-para-main.md](adr/0013-fluxo-de-branches-develop-para-main.md) | ADR-0013: PRs miram `develop`; `main` só recebe da `develop` |
+| [adr/0014-economia-de-tokens-no-pipeline-agentico.md](adr/0014-economia-de-tokens-no-pipeline-agentico.md) | ADR-0014: economia de tokens faz parte do pipeline instalável |
 | [guias/padrao-de-documentacao.md](guias/padrao-de-documentacao.md) | Caminhos, estrutura, fluxo e checklist de documentação |
 | [guias/padrao-de-agentes-e-skills.md](guias/padrao-de-agentes-e-skills.md) | Onde e como criar agentes, skills e rules; inventário |
 | [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs e definição de pronto |
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
-| [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos e customização do pipeline |
+| [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |
 | [_templates/](_templates/) | Modelos de ADR, spec e guia (fora da checagem do índice) |

@@ -19,6 +19,7 @@
 | [0011](0011-pipeline-agentico-com-laco-de-revisao-humana.md) | Pipeline agêntico com laço de revisão humana | Aceito |
 | [0012](0012-licenca-fsl-e-modelo-open-core.md) | Licença FSL e modelo open core | Aceito |
 | [0013](0013-fluxo-de-branches-develop-para-main.md) | Fluxo de branches `develop` → `main` | Aceito |
+| [0014](0014-economia-de-tokens-no-pipeline-agentico.md) | Economia de tokens no pipeline agêntico | Aceito |
 
 ## Decisões em aberto
 
