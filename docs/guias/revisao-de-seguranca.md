@@ -1,6 +1,6 @@
 # Revisão de segurança
 
-> Status: Rascunho · Atualizado: 2026-10-14 · Relacionados: [contexto §8](../contexto.md#8-segurança-e-confiança), [roadmap F1 e F7](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5), [time de agentes](time-de-agentes.md), [padrão de código e testes](padrao-de-codigo-e-testes.md)
+> Status: Rascunho · Atualizado: 2026-10-24 · Relacionados: [contexto §8](../contexto.md#8-segurança-e-confiança), [roadmap F1 e F7](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5), [time de agentes](time-de-agentes.md), [padrão de código e testes](padrao-de-codigo-e-testes.md)
 >
 > Checklist usado pelo agente `seguranca` e por quem revisa mudanças sensíveis. Quando o modelo de ameaças da F1 existir, ele passa a ser a fonte das ameaças e este guia só aponta para ele.
 
@@ -29,6 +29,11 @@ Em toda mudança sensível ([time de agentes §2](time-de-agentes.md#2-fluxo-com
 - [ ] Hash/assinatura verificados antes de usar o conteúdo; falha bloqueia, não só avisa.
 - [ ] Dependência nova justificada, mantida, com licença compatível e sem scripts de instalação desnecessários.
 - [ ] Workflows de CI com permissões mínimas (`permissions:`), actions fixadas por SHA, sem segredo exposto a PR de fork.
+
+### Propriedade de pacotes ([ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-github.md))
+- [ ] Nada escreve em pasta de pacote instalado (`.harness/pacotes/**`) fora da atualização vinda da origem.
+- [ ] Identidade do assinante confere com o dono gravado no lockfile; troca de dono bloqueia, não só avisa.
+- [ ] Aumento de permissão declarada entre versões exige aprovação humana nova.
 
 ### Agentes e prompt injection
 - [ ] Texto vindo de pacote, MCP ou web é dado, nunca instrução para o agente.
