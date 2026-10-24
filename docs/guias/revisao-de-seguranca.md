@@ -1,8 +1,8 @@
 # Revisão de segurança
 
-> Status: Rascunho · Atualizado: 2026-10-24 · Relacionados: [contexto §8](../contexto.md#8-segurança-e-confiança), [roadmap F1 e F7](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5), [time de agentes](time-de-agentes.md), [padrão de código e testes](padrao-de-codigo-e-testes.md)
+> Status: Rascunho · Atualizado: 2026-10-24 · Relacionados: [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), [contexto §8](../contexto.md#8-segurança-e-confiança), [roadmap F1 e F7](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5), [time de agentes](time-de-agentes.md), [padrão de código e testes](padrao-de-codigo-e-testes.md)
 >
-> Checklist usado pelo agente `seguranca` e por quem revisa mudanças sensíveis. Quando o modelo de ameaças da F1 existir, ele passa a ser a fonte das ameaças e este guia só aponta para ele.
+> Checklist usado pelo agente `seguranca` e por quem revisa mudanças sensíveis. A fonte das ameaças é o [modelo de ameaças](../arquitetura/modelo-de-ameacas.md); este guia só traz o checklist.
 
 ## Quando usar
 Em toda mudança sensível ([time de agentes §2](time-de-agentes.md#2-fluxo-com-gates)) e ao revisar dependências, CI e componentes de agentes.

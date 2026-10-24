@@ -78,8 +78,10 @@ Entregas:
 - Validação de manifestos e caminhos (bloqueio de path traversal, symlinks, arquivos fora do escopo).
 - **Modelo de eventos local**: toda operação gera evento de auditoria (JSONL) com ator, versão e resultado — base para F4/F5.
 - `--dry-run` em todas as operações que alteram arquivos.
+- Invariantes do [ADR-0018](adr/0018-invariantes-de-seguranca-da-instalacao.md): nenhum código de pacote roda na instalação; recusa de origem fora da lista permitida; diff de instruções no `plan`/`update`.
+- Controles F2 do [modelo de ameaças](arquitetura/modelo-de-ameacas.md): Git sem injeção de argumento ou transporte (T3), caracteres invisíveis escapados no `plan` (T5), limites de tamanho e profundidade (D1), redação de segredos na auditoria e no lockfile (I1), MCP e hooks sem download em tempo de execução (E7).
 
-Critérios de saída: testes E2E nos 3 SOs instalando/atualizando/removendo pacote de exemplo; `update` nunca sobrescreve customização sem aviso; fuzzing de manifestos sem falhas.
+Critérios de saída: testes E2E nos 3 SOs instalando/atualizando/removendo pacote de exemplo; `update` nunca sobrescreve customização sem aviso; fuzzing de manifestos sem falhas; testes previstos das ameaças com fase F2 no [modelo de ameaças](arquitetura/modelo-de-ameacas.md) passando.
 
 ## F3 — Adapters Claude Code e Copilot (S12–S14)
 
@@ -145,6 +147,7 @@ Entregas:
 - Identidade via Git e papéis em arquivo versionado ([ADR-0003](adr/0003-controle-de-usuarios-faseado.md)).
 - SBOM e provenance (SLSA) do próprio harness.
 - *(corte)* Sandbox de execução para scripts de pacotes.
+- Rever a lista de origens permitidas diante da assinatura e dos níveis de confiança ([ADR-0018](adr/0018-invariantes-de-seguranca-da-instalacao.md)).
 
 Critérios de saída: pacote não assinado/adulterado é rejeitado conforme política; testes cobrindo as ameaças altas do modelo da F1.
 
@@ -157,7 +160,7 @@ Entregas:
 - Beta fechado com 3–5 projetos reais; correções.
 - Política de compatibilidade e versionamento (semver dos schemas e da CLI), guia de migração.
 - Docs de usuário: quickstart, criação de pacotes, contribuição, segurança.
-- Pipeline de release: npm com provenance, changelog automático, binários *(corte)*.
+- Pipeline de release: npm com provenance e publicação por OIDC (trusted publishing, sem token guardado; ameaça E6), changelog automático, binários *(corte)*.
 
 Critérios de saída (**M4**): instalação limpa via `npx` nos 3 SOs; zero vulnerabilidades altas abertas; checklist de release com evidências anexadas.
 
