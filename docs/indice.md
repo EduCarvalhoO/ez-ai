@@ -27,6 +27,7 @@
 | [adr/0016-governanca-por-nivel-de-enforcement.md](adr/0016-governanca-por-nivel-de-enforcement.md) | ADR-0016: regra crítica só conta como imposta onde o ambiente bloqueia; senão validador externo ou aviso |
 | [adr/0017-propriedade-de-pacotes-por-identidade-github.md](adr/0017-propriedade-de-pacotes-por-identidade-github.md) | ADR-0017: pacote de colaborador pertence a uma conta do GitHub, isolado do núcleo; só o dono publica |
 | [adr/0018-invariantes-de-seguranca-da-instalacao.md](adr/0018-invariantes-de-seguranca-da-instalacao.md) | ADR-0018: harness nunca executa código de pacote; só origens permitidas até a F7; prompt injection por contenção |
+| [adr/0019-validacao-de-contratos-com-cfworker-json-schema.md](adr/0019-validacao-de-contratos-com-cfworker-json-schema.md) | ADR-0019: contratos em JSON Schema 2020-12 como objeto TS no núcleo, validados por `@cfworker/json-schema` atrás de um wrapper |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [arquitetura/modelo-de-ameacas.md](arquitetura/modelo-de-ameacas.md) | Ameaças STRIDE com severidade, controle, fase e teste previsto; riscos residuais aceitos |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
@@ -35,5 +36,6 @@
 | [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs, definição de pronto e encerramento (agente `painel`) e decisões didáticas (agente `professor`) |
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
+| [specs/manifesto-de-pacote.md](specs/manifesto-de-pacote.md) | Manifesto de pacote v0: campos, tipos de componente, permissões declaradas, limites, regras de comando e diff de permissões |
 | [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |
 | [_templates/](_templates/) | Modelos de ADR, spec e guia (fora da checagem do índice) |

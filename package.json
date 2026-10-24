@@ -17,7 +17,8 @@
     "lint": "biome lint",
     "format": "biome format --write",
     "format:check": "biome format",
-    "commits:check": "node scripts/validar-commits.mjs"
+    "commits:check": "node scripts/validar-commits.mjs",
+    "schemas": "npm run build && node scripts/gerar-schemas.mjs && biome format --write schemas"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
@@ -26,5 +27,8 @@
     "@vitest/coverage-v8": "5.0.5",
     "typescript": "7.0.2",
     "vitest": "5.0.5"
+  },
+  "dependencies": {
+    "@cfworker/json-schema": "4.1.1"
   }
 }
