@@ -15,6 +15,11 @@ updates:
       prefix: chore
       include: scope
     open-pull-requests-limit: 5
+    # vitest e @vitest/coverage-v8 exigem a mesma versão (peer dependency); em PRs separados o npm ci
+    # falha com ERESOLVE. Conferido por test/ferramental/seguranca.test.ts.
+    groups:
+      vitest:
+        patterns: ['vitest', '@vitest/*']
     # Tipos do Node no major do piso de engines.node (ADR-0010): tipos de um major maior aceitariam
     # API ausente no piso. Conferido por test/ferramental/seguranca.test.ts.
     ignore:
@@ -32,6 +37,11 @@ updates:
     commit-message:
       prefix: ci
       include: scope
+    # Todos os passos github/codeql-action de um workflow precisam da mesma versão, senão o analyze
+    # falha. Conferido por test/ferramental/seguranca.test.ts.
+    groups:
+      codeql-action:
+        patterns: ['github/codeql-action*']
 
   # zizmor do job workflows (.github/zizmor/requirements.txt, com hashes).
   - package-ecosystem: pip
