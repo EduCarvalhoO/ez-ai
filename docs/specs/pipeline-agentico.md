@@ -1,12 +1,12 @@
 # Pipeline agêntico
 
-> Status: Rascunho (spec v0) · Atualizado: 2026-10-24 · Relacionados: [ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md), [ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md), [ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md), [ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md), [time de agentes](../guias/time-de-agentes.md), [roadmap F6](../roadmap.md#f6--workflow-mvp-feature-com-gates-s20s22)
+> Status: Rascunho (spec v0) · Atualizado: 2026-10-24 · Relacionados: [ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md), [ADR-0014](../adr/0014-economia-de-tokens-no-pipeline-agentico.md), [ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md), [ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md), [ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md), [time de agentes](../guias/time-de-agentes.md), [roadmap F6](../roadmap.md#f6--workflow-mvp-feature-com-gates-s20s22)
 
 ## Objetivo
 Define as etapas, os gates, os laços de volta, os artefatos de handoff e o evento rastreável do pipeline agêntico ([ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md)). Serve ao time de agentes deste repositório, que já o usa ([guia](../guias/time-de-agentes.md)), e é a base do pacote de workflow da F6.
 
 ## Escopo
-- Inclui: etapas E0–E5, gates G0–G3, laços e limites, conteúdo da ficha, modelo de evento, visões do painel, pontos de customização, conteúdo da base do projeto (E0).
+- Inclui: etapas E0–E5, gates G0–G3, laços e limites, conteúdo da ficha, modelo de evento, visões do painel, pontos de customização, economia de tokens, conteúdo da base do projeto (E0).
 - Não inclui: schema do pacote, motor de estados e CLI (F6); enforcement por hook ou CI (F4); exportação para o Langfuse e dashboards (F5); painel próprio de gestão de agentes (pós-v1); orquestração automática ([ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md)).
 
 ### Restrições
@@ -26,7 +26,7 @@ Requisitos do Eduardo (2026-10-24):
 | E2 Revisão da documentação | Ficha e documentos da E1 | Saída do `validar-docs` e relatório do `revisor` | Skill `validar-docs` primeiro; depois `revisor` em modo documentação |
 | E3 Execução | Ficha aprovada no G1 (e feedback da rodada, se houver) | Código, testes e configuração; saída do `verificar` | `implementador`, testes primeiro |
 | E4 Code review | Mudança da E3 e ficha | Relatório do `revisor`; do `seguranca` se a mudança for [sensível](../guias/time-de-agentes.md#2-fluxo-com-gates) | `revisor`; `seguranca` se sensível |
-| E5 Entrega | Relatórios aprovados | Docs atualizados; commit ou PR com bloco de evidências | `doc-writer`; orquestrador abre o PR para a `develop` ([ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md)) |
+| E5 Entrega | Relatórios aprovados | Docs atualizados; commit ou PR com bloco de evidências; registro de encerramento ([economia de tokens](#economia-de-tokens)) | `doc-writer`; orquestrador abre o PR para a `develop` ([ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md)) |
 
 O formato dos relatórios está no [guia §5](../guias/time-de-agentes.md#5-formato-dos-relatórios).
 
@@ -140,11 +140,26 @@ As visões 1–4 viram dashboards do Langfuse self-hosted na F5, usando só recu
 | Gate `ignorado` nunca aparece como aprovado | Aprovação humana por gate (G1, G3) |
 | | Limites de ciclos por laço |
 | | Quando rodar o `seguranca` |
-| | Modelo e chave de IA por agente, vindos da configuração do usuário |
+| | Modelo por etapa e por agente ([economia de tokens](#economia-de-tokens)); chave de IA vinda da configuração do usuário |
 
 Formato concreto: [configuração do projeto](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5) (spec v0 da F1) e pacote do workflow (F6). `Em aberto`.
 
 Modelo comercial: ver [ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md).
+
+### Economia de tokens
+Regras do Eduardo (2026-10-24, [ADR-0014](../adr/0014-economia-de-tokens-no-pipeline-agentico.md)) que o pipeline instala em todo projeto, para reduzir tokens e custo do usuário ([restrições](#restrições)):
+
+| Regra | Forma no projeto que instala o harness | Núcleo fixo ou configurável |
+|---|---|---|
+| Uma sessão por tarefa | Cada item do pipeline roda numa sessão própria do ambiente de IA; depois da entrega aceita (G3), a sessão grava o registro de encerramento e termina. Assunto novo, sessão nova | Fixo |
+| Índice primeiro | Rule e skill instaladas: antes de procurar informação, o agente lê o índice da documentação (uma linha por documento, com link) e abre só o necessário; ao criar ou mudar ADR, guia ou spec, atualiza o índice na mesma mudança. Neste repositório: [docs/indice.md](../indice.md) | Fixo; o caminho do índice é configurável |
+| Memória curta | Rule instalada: a memória do projeto guarda só regras e ponteiros; o detalhe vai para ADRs e docs | Fixo |
+| Registro de encerramento | Skill instalada e saída obrigatória da E5: 3 a 5 linhas (o que foi decidido, onde está, o que ficou pendente) gravadas no ADR, na ficha ou na memória do projeto | Fixo; o destino é configurável |
+| Modelo pelo tipo de tarefa | Configuração de modelo por etapa. Padrão sugerido: modelo mais capaz em E0, E1, E2 e E4 (planejamento, arquitetura e revisões); modelo mais leve em tarefas mecânicas (ajustes pequenos, CI, atualização de dependências, documentação simples). O harness não fixa fornecedor nem modelo | Configurável por projeto e por agente |
+| Subagentes para leituras grandes | Regra dos agentes: leituras de muitos arquivos ou logs longos vão para um subagente, que devolve só o resumo | Fixo |
+| Respostas curtas | Regra dos agentes: respostas e relatórios trazem o essencial, sem repetir o processo; o formato dos relatórios segue o [guia §5](../guias/time-de-agentes.md#5-formato-dos-relatórios) | Fixo |
+
+O efeito das regras será acompanhado pelo custo e pelos tokens por etapa e por agente da [rastreabilidade](#rastreabilidade) e pela visão 2 do [painel](#painel). Não há comparação "antes × depois": as regras nascem junto com o pipeline e não existe linha de base anterior.
 
 ### E0 Base do projeto
 - **Objetivo:** dar às outras etapas um contexto enxuto e preciso do repositório, sem reler o projeto a cada ficha.
@@ -164,6 +179,6 @@ Spec v0: muda livremente até a F6, quando vira o schema do pacote de workflow.
 ## Em aberto
 - Nome e local do agente da E0 (provisório `cartografo`); implementação em ficha seguinte.
 - Captura de tokens por agente em Claude Code e Copilot.
-- Formato da configuração de customização (F1/F6).
+- Formato da configuração de customização (F1/F6), incluindo modelo por etapa e caminhos do índice e do registro de encerramento.
 - Enforcement dos gates por hook e CI (F4).
 - Quais visões do painel dependeriam de recursos `ee/` do Langfuse (F5).
