@@ -59,8 +59,11 @@ export interface Manifesto {
 const validarSchema = criarValidador(SCHEMA_DO_MANIFESTO);
 
 // Caracteres de controle, de formato (bidi, largura zero, tags Unicode) e separadores de linha (T5).
-const INVISIVEL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u;
-const HOSTS_INTERNOS = /(?:^|\.)(?:localhost|local|internal|localdomain|home\.arpa)$/;
+// Também ignoráveis por padrão (seletores de variação, CGJ), uso privado, não atribuídos e brancos que parecem letra.
+const INVISIVEL =
+  /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}\p{Co}\p{Cn}\u2800\u3164\u115F\u1160\uFFA0]/u;
+const HOSTS_INTERNOS =
+  /(?:^|\.)(?:localhost|local|internal|localdomain|home\.arpa|lan|corp|home|intranet|svc|nip\.io|sslip\.io|localtest\.me)$/;
 const SEGREDOS_PROIBIDOS = new Set([
   'PATH',
   'HOME',
@@ -174,6 +177,9 @@ function regrasSemanticas(m: Manifesto): ErroDeContrato[] {
   const [, donoRepo = '', repo = ''] = /^https:\/\/github\.com\/([^/]+)\/([^/]+)$/.exec(m.repositorio) ?? [];
   if (donoRepo !== m.login) {
     falha('/repositorio', 'mesmo-dono', `o repositório precisa ser da conta "${m.login}", dona do pacote (ADR-0017)`);
+  }
+  if (repo === '.' || repo === '..') {
+    falha('/repositorio', 'url-canonica', 'nome de repositório inválido');
   }
   if (repo.toLowerCase().endsWith('.git')) {
     falha('/repositorio', 'url-canonica', 'use a URL sem o sufixo .git');

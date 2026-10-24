@@ -6,6 +6,7 @@ import { globsSeCruzam } from '../../../src/core/manifesto/caminhos.js';
 import {
   diferencaDePermissoes,
   type Manifesto,
+  marcarEscrita,
   marcarLeitura,
   permissoesDoPacote,
   validarManifesto,
@@ -35,7 +36,7 @@ describe('diferencaDePermissoes', () => {
     expect(diferencaDePermissoes(manifesto(), manifesto())).toEqual([]);
   });
 
-  it('ordem diferente e host em outra caixa não contam como aumento', () => {
+  it('ordem diferente não conta como aumento', () => {
     const depois = manifesto((m) => m.componentes[0].permissoes.ler.reverse());
     expect(diferencaDePermissoes(manifesto(), depois)).toEqual([]);
   });
@@ -79,10 +80,20 @@ describe('diferencaDePermissoes', () => {
         tipo: 'execucao-alterada',
         componente: 'github',
         campo: 'comando',
-        antes: 'npx -y @modelcontextprotocol/server-github@2025.4.8',
-        depois: 'npx -y @outro/servidor@1.0.0',
+        antes: '["npx","-y","@modelcontextprotocol/server-github@2025.4.8"]',
+        depois: '["npx","-y","@outro/servidor@1.0.0"]',
       },
     ]);
+  });
+
+  it('juntar ou separar argumentos do comando é aumento', () => {
+    const depois = manifesto((m) => {
+      m.componentes[1].comando.argumentos = ['hooks/lint.mjs x'];
+    });
+    const antes = manifesto((m) => {
+      m.componentes[1].comando.argumentos = ['hooks/lint.mjs', 'x'];
+    });
+    expect(diferencaDePermissoes(antes, depois)).toHaveLength(1);
   });
 
   it('trocar evento ou arquivo de hook é aumento', () => {
@@ -122,6 +133,7 @@ describe('permissoesDoPacote', () => {
       '.vscode/mcp.json',
     ]);
     expect(p.segredos).toEqual(['GITHUB_TOKEN']);
+    expect(p.executar).toContain('["npx","-y","@modelcontextprotocol/server-github@2025.4.8"]');
   });
 });
 
@@ -136,6 +148,18 @@ describe('marcarLeitura', () => {
     ['README.md', []],
   ])('%s → %j', (glob, marcas) => {
     expect(marcarLeitura(glob)).toEqual(marcas);
+  });
+});
+
+describe('marcarEscrita', () => {
+  it.each([
+    ['package.json', ['executavel']],
+    ['pacotes/*/package.json', ['executavel']],
+    ['scripts/*.sh', []],
+    ['build.cmd', ['executavel']],
+    ['src/**/*.ts', []],
+  ])('%s → %j', (glob, marcas) => {
+    expect(marcarEscrita(glob)).toEqual(marcas);
   });
 });
 

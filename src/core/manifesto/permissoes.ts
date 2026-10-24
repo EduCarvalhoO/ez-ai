@@ -1,5 +1,5 @@
 // Comparação de permissões entre versões (E2 do modelo de ameaças; ADR-0017 D5): aumento exige nova aprovação.
-import { globsSeCruzam, PADROES_DE_SEGREDO } from './caminhos.js';
+import { DESTINOS_EXECUTAVEIS, globsSeCruzam, PADROES_DE_SEGREDO } from './caminhos.js';
 import type { Comando, Componente, Manifesto, Permissoes } from './manifesto.js';
 
 type Categoria = keyof Permissoes;
@@ -25,6 +25,9 @@ export type Aumento =
 /** Destaque de um glob de `ler` para o `plan` (I2): `amplo` cobre o projeto todo; `sensivel` alcança arquivo de segredo. */
 export type MarcaDeLeitura = 'amplo' | 'sensivel';
 
+/** Destaque de um glob de `escrever` para o `plan`: `executavel` alcança arquivo que outra ferramenta executa. */
+export type MarcaDeEscrita = 'executavel';
+
 function chave(categoria: Categoria, item: string | Comando): string {
   if (typeof item === 'string') return categoria === 'rede' ? item.toLowerCase() : item;
   return JSON.stringify([item.programa, ...item.argumentos]);
@@ -35,7 +38,7 @@ function itens(p: Permissoes, categoria: Categoria): Set<string> {
 }
 
 function textoDoComando(comando: Comando | undefined): string {
-  return comando ? [comando.programa, ...comando.argumentos].join(' ') : '';
+  return comando ? JSON.stringify([comando.programa, ...comando.argumentos]) : '';
 }
 
 /** Componente que roda código: o que ele roda faz parte da permissão. */
@@ -89,6 +92,8 @@ export function permissoesDoPacote(manifesto: Manifesto): Readonly<Record<Catego
     for (const categoria of CATEGORIAS) {
       for (const item of itens(componente.permissoes, categoria)) uniao[categoria].add(item);
     }
+    // O que um hook ou MCP roda também aparece no agregado que o `plan` mostra.
+    if (componente.comando) uniao.executar.add(chave('executar', componente.comando));
   }
   return Object.fromEntries(CATEGORIAS.map((c) => [c, [...uniao[c]].sort()])) as Record<Categoria, string[]>;
 }
@@ -99,4 +104,9 @@ export function marcarLeitura(glob: string): readonly MarcaDeLeitura[] {
   if (glob === '**' || glob.startsWith('**/')) marcas.push('amplo');
   if (PADROES_DE_SEGREDO.some((segredo) => globsSeCruzam(glob, segredo))) marcas.push('sensivel');
   return marcas;
+}
+
+/** Marcas de um glob de `escrever` para destaque no `plan`. */
+export function marcarEscrita(glob: string): readonly MarcaDeEscrita[] {
+  return DESTINOS_EXECUTAVEIS.some((destino) => globsSeCruzam(glob, destino)) ? ['executavel'] : [];
 }

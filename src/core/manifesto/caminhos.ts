@@ -77,13 +77,22 @@ export const DESTINOS_PROTEGIDOS = [
   '.github/**',
   '.vscode/**',
   '.githooks/**',
+  '.husky/**',
   '.mcp.json',
   'CODEOWNERS',
   'docs/CODEOWNERS',
-  'CLAUDE.md',
-  'CLAUDE.local.md',
-  'AGENTS.md',
+  '.envrc',
+  '.npmrc',
+  '.devcontainer/**',
+  '.gitmodules',
+  '.gitattributes',
+  '**/CLAUDE.md',
+  '**/CLAUDE.local.md',
+  '**/AGENTS.md',
 ] as const;
+
+/** Arquivos que viram execução quando outra ferramenta roda (scripts do npm, make, atalhos do Windows na raiz). */
+export const DESTINOS_EXECUTAVEIS = ['**/package.json', 'Makefile', '*.cmd', '*.bat', '*.ps1', '*.sh'] as const;
 
 /**
  * Padrões de arquivo com segredo; `ler` que os alcança é marcado `sensivel` para o `plan` (I2). Nomes literais de
@@ -96,6 +105,12 @@ export const PADROES_DE_SEGREDO = [
   '**/.env.production',
   '**/.env.staging',
   '**/.env.test',
+  '**/.env.prod',
+  '**/.env.dev',
+  '**/.aws/credentials',
+  '**/.docker/config.json',
+  '**/.git-credentials',
+  '.git/config',
   '**/*.pem',
   '**/*.key',
   '**/*.p12',

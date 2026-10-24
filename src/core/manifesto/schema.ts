@@ -98,7 +98,7 @@ export const SCHEMA_DO_MANIFESTO = {
         identidade: {
           type: 'string',
           maxLength: LIMITES.texto,
-          pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}/\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml@refs/(?:tags|heads)/[A-Za-z0-9._/*-]+$`,
+          pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}/\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml@refs/(?:tags|heads)/[A-Za-z0-9._/-]+$`,
         },
         emissor: { const: 'https://token.actions.githubusercontent.com' },
       },

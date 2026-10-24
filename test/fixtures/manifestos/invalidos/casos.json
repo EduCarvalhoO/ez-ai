@@ -358,5 +358,180 @@
     "arquivo": "grande.json",
     "regra": "tamanho",
     "caminho": ""
+  },
+  {
+    "arquivo": "executar-npm-opcao-antes-do-exec.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-npm-x-sem-versao.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-pnpm-opcao-antes-do-dlx.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-npm-init-pacote.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-bun-x-sem-versao.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-uv-tool-run-sem-versao.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-uvx-from.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-npx-registry.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-node-pe-combinado.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-nodejs-e.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-python-ic-combinado.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-python-versao-c.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-perl-we-combinado.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-cmd-c-colado.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-deno-run-remoto.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-npx-p-com-c.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-npx-p-binario-sh.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-npm-exec-p-com-c.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-pnpm-exec-sh.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-node-import-data.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-node-import-igual-https.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-py-c.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-fish-command-igual.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-wsl.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-git-c-alias.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-find-exec.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-awk.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-mshta.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "escrever-harness.json",
+    "regra": "destino-protegido",
+    "caminho": "/componentes/0/permissoes/escrever/0"
+  },
+  {
+    "arquivo": "escrever-claude-md-aninhado.json",
+    "regra": "destino-protegido",
+    "caminho": "/componentes/0/permissoes/escrever/0"
+  },
+  {
+    "arquivo": "escrever-envrc.json",
+    "regra": "destino-protegido",
+    "caminho": "/componentes/0/permissoes/escrever/0"
+  },
+  {
+    "arquivo": "texto-seletor-de-variacao.json",
+    "regra": "caractere-invisivel",
+    "caminho": "/descricao"
+  },
+  {
+    "arquivo": "texto-hangul-filler.json",
+    "regra": "caractere-invisivel",
+    "caminho": "/componentes/0/descricao"
+  },
+  {
+    "arquivo": "repositorio-ponto-ponto.json",
+    "regra": "url-canonica",
+    "caminho": "/repositorio"
+  },
+  {
+    "arquivo": "assinatura-ref-curinga.json",
+    "regra": "pattern",
+    "caminho": "/assinatura/identidade"
   }
 ]

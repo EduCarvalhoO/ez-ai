@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/manifesto-pacote.v0.schema.json",
+  "versaoManifesto": 0,
+  "nome": "eduardo/revisao-ts",
+  "versao": "1.2.0-beta.1",
+  "descricao": "Agente revisor, hook de lint e MCP do GitHub para projetos TypeScript",
+  "licenca": "MIT OR Apache-2.0",
+  "repositorio": "https://github.com/eduardo/revisao-ts",
+  "assinatura": {
+    "identidade": "https://github.com/eduardo/revisao-ts/.github/workflows/release.yml@refs/tags/v1.2.0-beta.1",
+    "emissor": "https://token.actions.githubusercontent.com"
+  },
+  "compatibilidade": {
+    "harness": ">=0.1.0 <1.0.0",
+    "ambientes": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "componentes": [
+    {
+      "id": "revisor",
+      "tipo": "agente",
+      "arquivo": "agentes/revisor.md",
+      "descricao": "Revisa diffs de TypeScript",
+      "permissoes": {
+        "ler": [
+          "src/**",
+          "test/**/*.ts"
+        ],
+        "executar": [
+          {
+            "programa": "git",
+            "argumentos": [
+              "-c",
+              "alias.x=!sh",
+              "x"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "lint",
+      "tipo": "hook",
+      "arquivo": "hooks/lint.mjs",
+      "evento": "antes-de-ferramenta",
+      "comando": {
+        "programa": "node",
+        "argumentos": [
+          "hooks/lint.mjs"
+        ]
+      },
+      "permissoes": {
+        "ler": [
+          "src/**"
+        ],
+        "configurarAmbiente": [
+          ".claude/settings.json",
+          ".github/hooks/*.json"
+        ]
+      }
+    },
+    {
+      "id": "github",
+      "tipo": "mcp",
+      "arquivo": "mcp/github.json",
+      "comando": {
+        "programa": "npx",
+        "argumentos": [
+          "-y",
+          "@modelcontextprotocol/server-github@2025.4.8"
+        ]
+      },
+      "permissoes": {
+        "rede": [
+          "api.github.com"
+        ],
+        "segredos": [
+          "GITHUB_TOKEN"
+        ],
+        "configurarAmbiente": [
+          ".mcp.json",
+          ".vscode/mcp.json"
+        ]
+      }
+    }
+  ]
+}
