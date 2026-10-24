@@ -110,6 +110,9 @@ Distinguir operação solicitada, executada e verificada. Etapa ignorada ou com 
 ### 7.10 Mensurabilidade
 Todo workflow deve produzir dados suficientes para medir qualidade, custo, conformidade e adoção, sem expor segredos ou dados sensíveis.
 
+### 7.11 Sem custo obrigatório
+Sem custo obrigatório e com ferramentas open source; a chave de IA é do usuário. Detalhes nas [restrições do pipeline](specs/pipeline-agentico.md#restrições) e no [ADR-0012](adr/0012-licenca-fsl-e-modelo-open-core.md).
+
 ## 8. Segurança e confiança
 
 Como o projeto distribui instruções, configurações, integrações e potencialmente código executável, a segurança é considerada desde as primeiras decisões. Pontos a cobrir (detalhados no modelo de ameaças da F1):
@@ -188,7 +191,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Agentes do repositório | Um arquivo por ambiente (`.claude/agents/`, `.github/agents/`), regras em fonte única em `docs/` | [0008](adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md) |
 | Time de agentes do repositório | Arquiteto, pesquisador, implementador, revisor, seguranca e doc-writer, no fluxo com gates do ADR-0006 | [0009](adr/0009-time-de-agentes-para-executar-o-roadmap.md) |
 | Estrutura do código | Pacote único com fronteiras internas (núcleo ← adapters ← CLI), npm, Node 22.12+, 24 ou 26 | [0010](adr/0010-pacote-unico-com-fronteiras-internas.md) |
-| Pipeline agêntico | Proposto: etapas E0–E5 com gates G0 (revisão da documentação) a G3 (revisão humana da entrega), laços de volta com limite e rodadas de revisão humana até aprovar; pacote na F6 | [0011](adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md) |
+| Pipeline agêntico | Etapas E0–E5 com gates G0 (revisão da documentação) a G3 (revisão humana da entrega), laços de volta com limite e rodadas de revisão humana até aprovar; pacote na F6 | [0011](adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md) |
 | Ferramental | Biome para lint e format (o typescript-eslint não suporta o TypeScript 7); Conventional Commits por script próprio sem dependência e hook `commit-msg` via `core.hooksPath`; cobertura V8 com 80% de linhas; changesets 3.0.3; dependências com idade mínima de 7 dias e sem scripts de instalação (`min-release-age=7` e `ignore-scripts=true` no `.npmrc`; idade conferida no CI por `scripts/verificar-idade-deps.mjs`) | [padrão de código](guias/padrao-de-codigo-e-testes.md) |
 | CI | GitHub Actions em Windows, macOS e Linux com Node 22, 24 e 26 (última correção) mais o piso 22.12.0; token só leitura, actions fixadas por SHA, sem cache | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [0007](adr/0007-suporte-multiplataforma.md) |
 | Segurança do repositório e da cadeia de suprimentos | Repositório público (decisão do Eduardo em 2026-10-17) para ter de graça branch protection, CodeQL, secret scanning com push protection e reporte privado de vulnerabilidade; `npm audit` sem nível de corte e `npm audit signatures` no CI; zizmor e actionlint nos workflows; Dependabot (npm, actions, pip) com cooldown de 7 dias; `SECURITY.md` | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [SECURITY.md](../SECURITY.md) |
