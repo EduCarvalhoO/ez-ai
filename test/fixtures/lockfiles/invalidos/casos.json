@@ -78,5 +78,10 @@
     "arquivo": "chave-duplicada.json",
     "regra": "chave-duplicada",
     "caminho": "/pacotes"
+  },
+  {
+    "arquivo": "invisivel-no-retrato.json",
+    "regra": "caractere-invisivel",
+    "caminho": "/pacotes/eduardo~1revisao-ts/componentes/0/descricao"
   }
 ]

@@ -105,7 +105,10 @@ export function procurarInvisiveis(valor: unknown, caminho: string, erros: ErroD
   } else if (Array.isArray(valor)) {
     for (const [i, item] of valor.entries()) procurarInvisiveis(item, `${caminho}/${i}`, erros);
   } else if (typeof valor === 'object' && valor !== null) {
-    for (const [chave, item] of Object.entries(valor)) procurarInvisiveis(item, `${caminho}/${chave}`, erros);
+    for (const [chave, item] of Object.entries(valor)) {
+      // JSON Pointer (RFC 6901): `~` vira `~0` e `/` vira `~1` (`/pacotes/eduardo~1x`).
+      procurarInvisiveis(item, `${caminho}/${chave.replaceAll('~', '~0').replaceAll('/', '~1')}`, erros);
+    }
   }
 }
 

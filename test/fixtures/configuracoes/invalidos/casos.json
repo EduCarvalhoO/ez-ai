@@ -131,7 +131,7 @@
   },
   {
     "arquivo": "invisivel-na-versao.json",
-    "regra": "pattern",
+    "regra": "caractere-invisivel",
     "caminho": "/pacotes/eduardo~1revisao-ts/versao"
   },
   {
@@ -148,5 +148,15 @@
     "arquivo": "muitos-pacotes.json",
     "regra": "maxProperties",
     "caminho": "/pacotes"
+  },
+  {
+    "arquivo": "origem-com-porta.json",
+    "regra": "pattern",
+    "caminho": "/origensPermitidas/1"
+  },
+  {
+    "arquivo": "origem-com-query.json",
+    "regra": "pattern",
+    "caminho": "/origensPermitidas/1"
   }
 ]

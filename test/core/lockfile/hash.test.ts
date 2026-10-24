@@ -34,6 +34,9 @@ describe('hashDoConteudo', () => {
   });
 
   it.each([
+    ['arquivo com nome de pasta', [...arquivos, { caminho: 'Agentes', bytes: texto('') }], 'caminho-repetido'],
+    ['de segredo (.env)', [...arquivos, { caminho: 'config/.env', bytes: texto('') }], 'arquivo-de-segredo'],
+    ['de segredo (id_rsa)', [...arquivos, { caminho: 'id_rsa', bytes: texto('') }], 'arquivo-de-segredo'],
     ['repetido só por caixa', [...arquivos, { caminho: 'Agentes/revisor.md', bytes: texto('') }], 'caminho-repetido'],
     ['não ASCII', [{ caminho: 'agentes/revisão.md', bytes: texto('') }], 'caminho'],
     ['com ..', [{ caminho: '../fora.md', bytes: texto('') }], 'caminho'],
@@ -41,7 +44,14 @@ describe('hashDoConteudo', () => {
     ['com barra invertida', [{ caminho: 'a\\b.md', bytes: texto('') }], 'caminho'],
     ['longo demais', [{ caminho: `${'a'.repeat(161)}`, bytes: texto('') }], 'caminho'],
   ] as const)('recusa caminho %s', (_, lista, regra) => {
-    const resultado = hashDoConteudo(lista);
-    expect(resultado.ok ? '' : resultado.erros[0]?.regra).toBe(regra);
+    const resultado = hashDoConteudo([arquivos[0] as ArquivoDoPacote, ...lista]);
+    expect(resultado.ok ? [] : resultado.erros).toContainEqual(expect.objectContaining({ regra }));
+  });
+
+  it('recusa pacote sem harness-pacote.json, inclusive vazio', () => {
+    for (const lista of [[], arquivos.slice(1)]) {
+      const resultado = hashDoConteudo(lista);
+      expect(resultado.ok ? '' : resultado.erros[0]?.regra).toBe('sem-manifesto');
+    }
   });
 });

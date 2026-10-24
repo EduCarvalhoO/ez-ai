@@ -70,6 +70,15 @@ export function criarValidador(schema: object): ValidarContraSchema {
     const { valid, errors } = validador.validate(dado);
     if (valid) return [];
     const uteis = errors.filter((unidade) => !agregadoras.has(unidade.keyword));
-    return semDerivados(uteis.length > 0 ? uteis : errors).map(converter);
+    const vistos = new Set<string>();
+    // O `anyOf` de `origem` repete o mesmo erro em cada ramo; fica um por caminho e regra.
+    return semDerivados(uteis.length > 0 ? uteis : errors)
+      .filter((u) => {
+        const chave = `${u.instanceLocation} ${u.keyword}`;
+        if (vistos.has(chave)) return false;
+        vistos.add(chave);
+        return true;
+      })
+      .map(converter);
   };
 }

@@ -136,3 +136,20 @@ describe('entrada adversarial (ReDoS)', () => {
     expect(performance.now() - inicio).toBeLessThan(50);
   });
 });
+
+describe('erros do schema', () => {
+  it('campo desconhecido continua apontado mesmo com outro erro no arquivo', () => {
+    const resultado = validarConfiguracao(JSON.stringify({ versaoConfig: 0, ambientes: ['cursor'], x: 1 }));
+    expect(resultado.ok).toBe(false);
+    if (resultado.ok) return;
+    expect(resultado.erros).toContainEqual(expect.objectContaining({ caminho: '/x' }));
+    expect(resultado.erros).toContainEqual(expect.objectContaining({ caminho: '/ambientes/0', regra: 'enum' }));
+  });
+
+  it('não repete o mesmo erro dos ramos de origem', () => {
+    const texto = JSON.stringify({ versaoConfig: 0, ambientes: ['copilot'], origensPermitidas: ['x'] });
+    const resultado = validarConfiguracao(texto);
+    const chaves = resultado.ok ? [] : resultado.erros.map((e) => `${e.caminho} ${e.regra}`);
+    expect(chaves.length).toBe(new Set(chaves).size);
+  });
+});

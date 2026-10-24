@@ -3,7 +3,7 @@
 // Cobre a árvore inteira do pacote, que é exatamente o que a F2 copia. Cálculo puro: recebe os bytes já lidos.
 import { createHash } from 'node:crypto';
 import type { Resultado } from '../contratos/resultado.js';
-import { problemaNoCaminho } from '../manifesto/caminhos.js';
+import { globsSeCruzam, PADROES_DE_SEGREDO, problemaNoCaminho } from '../manifesto/caminhos.js';
 import { CARACTERES_DE_CAMINHO, LIMITES } from '../manifesto/schema.js';
 
 /** Um arquivo do pacote: caminho relativo com `/` e os bytes do blob do Git, sem conversão de fim de linha. */
@@ -18,10 +18,22 @@ function sha256(dado: Uint8Array | string): string {
   return createHash('sha256').update(dado).digest('hex');
 }
 
-/** Calcula `sha256:<hex>` dos arquivos, na ordem que vierem; recusa caminho inválido ou repetido (inclusive por caixa). */
+/**
+ * Calcula `sha256:<hex>` dos arquivos, na ordem que vierem. Recusa pacote sem manifesto, caminho inválido, repetido
+ * (inclusive por caixa ou arquivo com o nome de uma pasta) e arquivo de segredo, que seria copiado para o projeto (I1).
+ */
 export function hashDoConteudo(arquivos: readonly ArquivoDoPacote[]): Resultado<string> {
   const erros: { caminho: string; regra: string; mensagem: string }[] = [];
   const vistos = new Set<string>();
+  // Pastas de cada caminho, em minúsculas: arquivo `Agentes` e pasta `agentes/` colidem no Windows e no macOS.
+  const pastas = new Set<string>();
+  for (const { caminho } of arquivos) {
+    const segmentos = caminho.toLowerCase().split('/');
+    for (let n = 1; n < segmentos.length; n++) pastas.add(segmentos.slice(0, n).join('/'));
+  }
+  if (!arquivos.some((a) => a.caminho === 'harness-pacote.json')) {
+    erros.push({ caminho: '', regra: 'sem-manifesto', mensagem: 'o pacote precisa ter harness-pacote.json na raiz' });
+  }
   for (const [i, { caminho }] of arquivos.entries()) {
     const problema =
       caminho.length > LIMITES.caminho
@@ -30,8 +42,16 @@ export function hashDoConteudo(arquivos: readonly ArquivoDoPacote[]): Resultado<
           ? 'use só letras ASCII, dígitos, ".", "_", "-" e "/"'
           : problemaNoCaminho(caminho, false);
     if (problema) erros.push({ caminho: `/${i}`, regra: 'caminho', mensagem: `"${caminho}": ${problema}` });
+    const segredo = !problema && PADROES_DE_SEGREDO.find((padrao) => globsSeCruzam(caminho, padrao));
+    if (segredo) {
+      erros.push({
+        caminho: `/${i}`,
+        regra: 'arquivo-de-segredo',
+        mensagem: `"${caminho}" parece arquivo de segredo (${segredo}); tire-o do pacote, ele seria copiado para o projeto`,
+      });
+    }
     const chave = caminho.toLowerCase();
-    if (vistos.has(chave)) {
+    if (vistos.has(chave) || pastas.has(chave)) {
       erros.push({
         caminho: `/${i}`,
         regra: 'caminho-repetido',

@@ -50,6 +50,26 @@ describe('lockfiles inválidos', () => {
   });
 });
 
+describe('limites do lockfile', () => {
+  const pacote = { versao: '0.1.0', origem: 'local:p', hash: `sha256:${'0'.repeat(64)}` };
+  const componentes = [{ id: 'a', tipo: 'instrucao', arquivo: 'a.md' }];
+
+  it('recusa mais de 100 pacotes', () => {
+    const pacotes = Object.fromEntries(
+      Array.from({ length: 101 }, (_, i) => [`eduardo/p${i}`, { ...pacote, origem: `local:p${i}`, componentes }]),
+    );
+    const resultado = validarLockfile(JSON.stringify({ versaoLockfile: 0, pacotes }));
+    expect(resultado.ok ? [] : resultado.erros).toContainEqual(expect.objectContaining({ regra: 'maxProperties' }));
+  });
+
+  it('recusa lockfile acima de 8 MiB e profundidade acima de 32', () => {
+    const grande = validarLockfile(JSON.stringify({ versaoLockfile: 0, pacotes: {}, x: 'a'.repeat(8 * 1024 * 1024) }));
+    expect(grande.ok ? '' : grande.erros[0]?.regra).toBe('tamanho');
+    const fundo = validarLockfile(`${'['.repeat(33)}${']'.repeat(33)}`);
+    expect(fundo.ok ? '' : fundo.erros[0]?.regra).toBe('profundidade');
+  });
+});
+
 describe('retrato de permissões', () => {
   it('diferencaDePermissoes compara o retrato do lockfile com o manifesto novo (E2)', () => {
     const [, travado] = valido('completo.json').pacotes;
