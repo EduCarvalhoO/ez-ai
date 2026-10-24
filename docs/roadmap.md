@@ -1,6 +1,6 @@
 # Roadmap até a v1.0
 
-> Status: Aceito (revisável a cada fase) · Atualizado: 2026-10-14 · Relacionados: [contexto](contexto.md), [ADRs](adr/README.md)
+> Status: Aceito (revisável a cada fase) · Atualizado: 2026-10-24 · Relacionados: [contexto](contexto.md), [ADRs](adr/README.md)
 
 ## Premissas
 
@@ -116,7 +116,7 @@ Entregas:
 - Redação de segredos/PII antes da exportação, com testes.
 - Docker Compose de referência do Langfuse + runbook.
 - Datasets e evals: verificações determinísticas + LLM-as-judge com rubricas versionadas.
-- Dashboards/consultas para as [métricas de sucesso](#métricas-de-sucesso).
+- Dashboards/consultas para as [métricas de sucesso](#métricas-de-sucesso), cobrindo as [visões do painel do pipeline](specs/pipeline-agentico.md#painel).
 
 Critérios de saída: trace completo de uma execução visível no Langfuse local; teste garante que segredos de fixture nunca chegam ao exportador; telemetria desligada = zero chamadas de rede.
 
@@ -125,7 +125,8 @@ Critérios de saída: trace completo de uma execução visível no Langfuse loca
 **Objetivo:** provar valor real ponta a ponta ([ADR-0006](adr/0006-workflow-mvp-feature-com-gates.md)).
 
 Entregas:
-- Workflow `spec → plano → implementação → testes → review` como pacote oficial.
+- Workflow `spec → plano → implementação → testes → review` como pacote oficial, conforme a [spec do pipeline](specs/pipeline-agentico.md) ([ADR-0011](adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md)).
+- Spec da etapa E0 (base de conhecimento do projeto) já na [spec do pipeline](specs/pipeline-agentico.md#e0-base-do-projeto); o agente vem em ficha seguinte, fase `Em aberto`.
 - Gates por etapa: spec com critérios de aceite; plano revisado; testes passando + cobertura; review com checklist de policies.
 - Aprovação humana configurável entre etapas.
 - **Benchmark interno:** conjunto de 10–20 tarefas reais (golden tasks) executadas com e sem harness para comparação.

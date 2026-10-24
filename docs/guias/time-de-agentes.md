@@ -1,6 +1,6 @@
 # Time de agentes
 
-> Status: Rascunho · Atualizado: 2026-10-14 · Relacionados: [ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md), [roadmap](../roadmap.md), [ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md), [padrão de agentes e skills](padrao-de-agentes-e-skills.md)
+> Status: Rascunho · Atualizado: 2026-10-24 · Relacionados: [ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md), [spec do pipeline](../specs/pipeline-agentico.md), [roadmap](../roadmap.md), [ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md), [padrão de agentes e skills](padrao-de-agentes-e-skills.md)
 >
 > Fonte única de como o time de agentes executa os itens do roadmap. Os arquivos dos agentes apontam para cá e não repetem estas regras.
 
@@ -26,29 +26,14 @@ A sessão principal (você + o assistente do ambiente) é o **orquestrador**: es
 
 ## 2. Fluxo com gates
 
-O time usa o mesmo workflow que o produto vai entregar ([ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md)); cada execução é também um teste do MVP.
+O time segue o [pipeline agêntico](../specs/pipeline-agentico.md) ([ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md)), o mesmo workflow que o produto vai entregar na F6; cada execução é também um teste do MVP. Etapas, gates, diagrama e laços estão na spec. Em resumo:
 
-```mermaid
-flowchart LR
-  A[arquiteto: ficha + plano] -->|G1 aprovação humana| I[implementador: testes primeiro]
-  P[pesquisador] -.fatos com fonte.-> A
-  I -->|G2 verificar| R[revisor]
-  R -->|reprovado, até 2 ciclos| I
-  R -->|aprovado| S{mudança sensível?}
-  S -->|sim| SG[seguranca] --> D
-  S -->|não| D[doc-writer: ADR/spec/guia]
-  D -->|G3 aprovação humana| C[commit com evidências]
-```
-
-| Gate | Passa quando | Quem confere |
-|---|---|---|
-| G1 Plano | Ficha com critérios de aceite verificáveis, fora de escopo, testes previstos e riscos; perguntas `Em aberto` respondidas pelo usuário | Usuário |
-| G2 Verificação | Skill `verificar` sem `falhou`; cada `ignorado` justificado | `revisor` (executa de novo, não confia no relato) |
-| G3 Entrega | Relatório do `revisor` aprovado, do `seguranca` quando aplicável, docs validados | Usuário |
+- E1 ficha e documentação → E2 revisão da documentação (`validar-docs` + `revisor` em modo documentação, **G0**) → **G1** aprovação humana do plano → E3 execução → **G2** `verificar` → E4 code review → E5 entrega → **G3** revisão humana.
+- Pedido de ajuste no G3 abre uma rodada de revisão humana: dentro do plano volta a E3; mudança de escopo ou de critério volta a E1 e passa de novo por G0 e G1.
 
 **Mudança sensível:** toca validação de caminhos, execução de comandos/scripts, permissões, policies, assinatura/integridade, telemetria/redação, CI ou dependências.
 
-**Limite de iterações:** no máximo 2 ciclos `revisor → implementador` por ficha. Após a 2ª reprovação, o orquestrador para e leva o impasse ao usuário (o problema costuma estar no plano, não no código).
+**Limite de iterações:** no máximo 2 revisões por laço de agentes, Documentação (E2) e Código (E4), zeradas a cada rodada humana. Na 2ª reprovação, o orquestrador para e leva o impasse ao usuário (o problema costuma estar no plano; volta ao `arquiteto`). Rodadas humanas não têm teto. Detalhes na [tabela de laços e limites](../specs/pipeline-agentico.md#laços-e-limites).
 
 ## 3. Escolha por fase
 
@@ -68,7 +53,7 @@ flowchart LR
 
 O trabalho passa entre agentes por arquivos, não por memória de conversa:
 
-- **Ficha da tarefa:** `.tmp/tarefas/<fase>-<slug>/ficha.md`, criada pela skill `ficha-de-tarefa`. Seções: item do roadmap (citado do roadmap), critérios de aceite, fora de escopo, plano, testes previstos, riscos, perguntas `Em aberto`, registro de gates.
+- **Ficha da tarefa:** `.tmp/tarefas/<fase>-<slug>/ficha.md`, criada pela skill `ficha-de-tarefa`. Seções: item do roadmap (citado do roadmap), critérios de aceite, fora de escopo, plano, testes previstos, riscos, perguntas `Em aberto`, registro de gates (G0–G3), ciclos de revisão e rodadas de revisão humana ([artefatos de handoff](../specs/pipeline-agentico.md#artefatos-de-handoff)).
 - **Pesquisa:** `.tmp/pesquisa/<assunto>.md`, cada afirmação com URL e data de acesso, marcada `Fato` ou `Hipótese`.
 - **Relatório de revisão:** resposta do `revisor`/`seguranca` no formato da [seção 5](#5-formato-dos-relatórios), anexado à ficha pelo orquestrador.
 
@@ -89,7 +74,7 @@ Critérios de aceite: <um por linha: atendido (evidência) | não atendido | nã
 Sem achado bloqueante e com todos os critérios atendidos por evidência, o veredito é `APROVADO`. Opinião sem evidência vira `sugestão`.
 
 ## 6. Definição de pronto e commit
-- Critérios de aceite atendidos com evidência; G1–G3 registrados na ficha.
+- Critérios de aceite atendidos com evidência; G0–G3 registrados na ficha.
 - Commit em Conventional Commits com o bloco de evidências da skill `verificar` no corpo (ver [padrão de código e testes](padrao-de-codigo-e-testes.md#4-commits)).
 - Nada `ignorado` ou `falhou` aparece como aprovado ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)).
 

@@ -15,3 +15,4 @@
 | [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs e definição de pronto do time de agentes |
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma e commits com evidências |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
+| [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços de revisão, eventos rastreáveis e pontos de customização do pipeline de agentes |
