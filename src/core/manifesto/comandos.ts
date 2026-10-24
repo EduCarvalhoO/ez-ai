@@ -51,6 +51,11 @@ const PROGRAMAS_PROIBIDOS = new Set([
   'rundll32',
   'regsvr32',
   'msiexec',
+  'vi',
+  'vim',
+  'nvim',
+  'emacs',
+  'rsync',
 ]);
 
 const SHELLS = new Set(['sh', 'bash', 'zsh', 'dash', 'ksh', 'fish', 'csh', 'tcsh']);
@@ -111,19 +116,66 @@ function problemaNoExecutor(programa: string, argumentos: readonly string[], fix
   if (solto !== undefined) {
     return `"${programa}" roda "${solto || '(nada)'}" sem versão exata; fixe como nome@1.2.3 (sem @latest nem intervalo)`;
   }
-  // Com -p, o primeiro posicional é o binário a rodar (pode ser `sh`): passa pelas mesmas regras.
-  const binario = pacotesDeOpcao(argumentos).length > 0 ? posicionais[0] : undefined;
-  if (binario === undefined) return undefined;
-  return problemaNoComando({ programa: binario, argumentos: argumentos.slice(argumentos.indexOf(binario) + 1) });
+  // Com -p, o binário que roda depois (pode ser `sh`) passa pelas mesmas regras.
+  return pacotesDeOpcao(argumentos).length > 0 ? problemaEmQualquerJanela(argumentos) : undefined;
 }
 
 /** `-Command`, `-EncodedCommand` e `-CommandWithArgs` aceitam qualquer abreviação (`-c`, `-enc`); `-ExecutionPolicy` não é código. */
 function opcaoDeCodigoDoPowershell(argumento: string): boolean {
-  if (!/^[-/][A-Za-z]+$/.test(argumento)) return false;
-  const nome = argumento.slice(1).toLowerCase();
+  if (!/^(?:--?|\/)[A-Za-z]+$/.test(argumento)) return false;
+  const nome = argumento.replace(/^(?:--?|\/)/, '').toLowerCase();
   return (
     ['command', 'encodedcommand', 'commandwithargs'].some((o) => o.startsWith(nome)) || nome === 'ec' || nome === 'cwa'
   );
+}
+
+/**
+ * Confere como comando cada trecho que começa num argumento que não é opção. Não dá para saber quais opções
+ * recebem valor (`--cache .c bash -lc ...`), então toda posição candidata a binário é conferida (conservador).
+ */
+function problemaEmQualquerJanela(argumentos: readonly string[]): string | undefined {
+  for (let k = 0; k < argumentos.length; k++) {
+    const programa = argumentos[k];
+    if (programa === undefined || programa.startsWith('-') || !/^[A-Za-z0-9._-]+$/.test(programa)) continue;
+    const problema = problemaNoComando({ programa: programa.toLowerCase(), argumentos: argumentos.slice(k + 1) });
+    if (problema) return problema;
+  }
+  return undefined;
+}
+
+// Instaladores: baixam pacote e podem rodar script de instalação, então só com versão exata.
+const INSTALADORES: Readonly<
+  Record<string, { readonly subcomandos: readonly string[]; readonly fixo: 'npm' | 'python' }>
+> = {
+  npm: { subcomandos: ['install', 'i', 'in', 'ins', 'add', 'isntall'], fixo: 'npm' },
+  pnpm: { subcomandos: ['add', 'install', 'i'], fixo: 'npm' },
+  yarn: { subcomandos: ['add'], fixo: 'npm' },
+  bun: { subcomandos: ['add', 'install', 'i'], fixo: 'npm' },
+  pip: { subcomandos: ['install'], fixo: 'python' },
+  pip3: { subcomandos: ['install'], fixo: 'python' },
+  uv: { subcomandos: ['add', 'pip'], fixo: 'python' },
+};
+
+function problemaNoInstalador(programa: string, argumentos: readonly string[]): string | undefined {
+  // `python -m pip install x` instala como `pip install x`.
+  if (programa === 'python' && argumentos.includes('-m')) {
+    const modulo = argumentos[argumentos.indexOf('-m') + 1];
+    if (modulo === 'pip' || modulo === 'pipx')
+      return problemaNoComando({ programa: modulo, argumentos: argumentos.slice(argumentos.indexOf('-m') + 2) });
+  }
+  if (programa === 'uv' && argumentos.includes('run') && argumentos.some((a) => OPCOES_DE_ORIGEM.test(a))) {
+    return '"uv run" com --with/--from baixa pacote sem passar pelas regras; não é permitido';
+  }
+  const regra = INSTALADORES[programa];
+  const i = regra ? argumentos.findIndex((a) => regra.subcomandos.includes(a)) : -1;
+  if (!regra || i < 0) return undefined;
+  const resto = argumentos.slice(programa === 'uv' && argumentos[i] === 'pip' ? i + 2 : i + 1);
+  const origem = resto.find((a) => OPCOES_DE_ORIGEM.test(a));
+  if (origem) return `"${programa}" com "${origem}" troca a origem do pacote; não é permitido`;
+  const fixo = regra.fixo === 'npm' ? PACOTE_NPM_FIXO : PACOTE_PYTHON_FIXO;
+  const solto = resto.find((a) => !a.startsWith('-') && !fixo.test(a));
+  if (solto === undefined) return undefined;
+  return `"${programa} ${argumentos[i]}" instala "${solto}" sem versão exata; fixe a versão (sem @latest nem intervalo)`;
 }
 
 /** Nome canônico: `bash.exe` → `bash`, `python3.12` → `python`, `nodejs` → `node`. */
@@ -162,21 +214,28 @@ export function problemaNoComando(comando: Comando): string | undefined {
       return `"${programa}" com código remoto no argumento; inclua o arquivo no pacote`;
     }
   }
-  if (programa === 'git' && argumentos.some((a) => a === '-c' || a.startsWith('--config-env'))) {
-    return '"git -c" muda a configuração (ex.: alias que roda shell); não é permitido';
+  if (programa === 'git' && argumentos.some((a) => a === '-c' || a === 'config' || a.startsWith('--config-env'))) {
+    return '"git -c" e "git config" mudam a configuração (ex.: alias ou fsmonitor que roda shell); não é permitido';
   }
+  if (
+    programa === 'tar' &&
+    argumentos.some(
+      (a) =>
+        /^--(?:to-command|use-compress-program|checkpoint-action|info-script|new-volume-script)/.test(a) ||
+        /^-[A-Za-z]*I/.test(a),
+    )
+  ) {
+    return '"tar" com opção que roda outro programa; não é permitido';
+  }
+  const instalador = problemaNoInstalador(programa, argumentos);
+  if (instalador) return instalador;
   if (programa === 'find' && argumentos.some((a) => /^-(?:exec|execdir|ok|okdir)$/.test(a))) {
     return '"find -exec" roda outro comando; não é permitido';
   }
   // `pnpm exec` e `yarn exec` rodam um binário local: o comando que vem depois passa pelas mesmas regras.
   if ((programa === 'pnpm' || programa === 'yarn') && argumentos.includes('exec')) {
-    const depois = argumentos.slice(argumentos.indexOf('exec') + 1);
-    const i = depois.findIndex((a) => !a.startsWith('-'));
-    const binario = depois[i];
-    if (binario !== undefined) {
-      const interno = problemaNoComando({ programa: binario, argumentos: depois.slice(i + 1) });
-      if (interno) return interno;
-    }
+    const interno = problemaEmQualquerJanela(argumentos.slice(argumentos.indexOf('exec') + 1));
+    if (interno) return interno;
   }
   if (EXECUTORES_DIRETOS.has(programa)) return problemaNoExecutor(programa, argumentos, PACOTE_NPM_FIXO);
   if (EXECUTORES_PYTHON.has(programa)) return problemaNoExecutor(programa, argumentos, PACOTE_PYTHON_FIXO);
