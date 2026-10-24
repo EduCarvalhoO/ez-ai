@@ -23,6 +23,8 @@
 | [adr/0012-licenca-fsl-e-modelo-open-core.md](adr/0012-licenca-fsl-e-modelo-open-core.md) | ADR-0012: licença FSL e modelo open core |
 | [adr/0013-fluxo-de-branches-develop-para-main.md](adr/0013-fluxo-de-branches-develop-para-main.md) | ADR-0013: PRs miram `develop`; `main` só recebe da `develop` |
 | [adr/0014-economia-de-tokens-no-pipeline-agentico.md](adr/0014-economia-de-tokens-no-pipeline-agentico.md) | ADR-0014: economia de tokens faz parte do pipeline instalável |
+| [adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md) | ADR-0015: núcleo sem I/O com portas; adapters puros; exportadores à parte |
+| [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [guias/padrao-de-documentacao.md](guias/padrao-de-documentacao.md) | Caminhos, estrutura, fluxo e checklist de documentação |
 | [guias/padrao-de-agentes-e-skills.md](guias/padrao-de-agentes-e-skills.md) | Onde e como criar agentes, skills e rules; inventário (inclui o agente `painel`) |
 | [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs, definição de pronto e encerramento (agente `painel`) |
