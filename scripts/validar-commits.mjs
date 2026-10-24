@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Valida mensagens de commit no padrão Conventional Commits (docs/guias/padrao-de-codigo-e-testes.md §4).
 // Uso:
-//   node scripts/validar-commits.mjs [intervalo]       (padrão: origin/main..HEAD; commits de merge ficam de fora)
+//   node scripts/validar-commits.mjs [intervalo]       (padrão: origin/develop..HEAD; commits de merge ficam de fora)
 //   node scripts/validar-commits.mjs --arquivo <path>  (uma mensagem; usado pelo hook .githooks/commit-msg)
 // Código de saída: 0 válido, 1 mensagem inválida, 2 uso incorreto ou erro do git.
 import { execFile } from 'node:child_process';
@@ -10,7 +10,7 @@ import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 export const TIPOS = ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'];
-export const INTERVALO_PADRAO = 'origin/main..HEAD';
+export const INTERVALO_PADRAO = 'origin/develop..HEAD';
 
 const CABECALHO = /^(?<tipo>[a-z]+)(?:\((?<escopo>[^()\s][^()]*)\))?(?<quebra>!)?: (?<assunto>.*)$/;
 // Mensagens que o próprio git gera (git merge, git revert); não são escritas por quem commita.
@@ -21,7 +21,7 @@ const LINHA_DE_CORTE = /^# -+ >8 -+$/;
 // biome-ignore lint/suspicious/noControlCharactersInRegex: casar caracteres de controle é o objetivo desta regex.
 const CONTROLE = /[\u0000-\u001f\u007f-\u009f]/g;
 const USO =
-  'Uso: node scripts/validar-commits.mjs [intervalo]  (padrão: origin/main..HEAD)\n' +
+  'Uso: node scripts/validar-commits.mjs [intervalo]  (padrão: origin/develop..HEAD)\n' +
   '     node scripts/validar-commits.mjs --arquivo <caminho-da-mensagem>\n';
 
 /**

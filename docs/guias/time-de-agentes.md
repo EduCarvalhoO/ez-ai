@@ -30,6 +30,7 @@ O time segue o [pipeline agêntico](../specs/pipeline-agentico.md) ([ADR-0011](.
 
 - E1 ficha e documentação → E2 revisão da documentação (`validar-docs` + `revisor` em modo documentação, **G0**) → **G1** aprovação humana do plano → E3 execução → **G2** `verificar` → E4 code review → E5 entrega → **G3** revisão humana.
 - Pedido de ajuste no G3 abre uma rodada de revisão humana: dentro do plano volta a E3; mudança de escopo ou de critério volta a E1 e passa de novo por G0 e G1.
+- A aprovação do G3 é o clique de merge do Eduardo no PR para a `develop`; agentes nunca fazem esse merge nem ligam auto-merge nele ([ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md)).
 
 **Mudança sensível:** toca validação de caminhos, execução de comandos/scripts, permissões, policies, assinatura/integridade, telemetria/redação, CI ou dependências.
 

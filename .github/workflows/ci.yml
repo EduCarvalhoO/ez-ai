@@ -3,9 +3,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
-    branches: [main]
+    branches: [main, develop]
 
 # Token só de leitura; nenhum job pede mais.
 permissions:

@@ -1,0 +1,32 @@
+# A main só recebe PR da develop deste repositório (ADR-0013). Conferido por test/ferramental/origem-do-pr.test.ts.
+# Protege contra erro de processo, não contra autor de PR malicioso: com pull_request roda a versão do
+# workflow do próprio PR. O que barra código de fora é só quem tem escrita poder fazer merge.
+name: Origem do PR
+
+on:
+  pull_request:
+    branches: [main]
+    # edited: trocar a base de um PR para main roda a checagem de novo.
+    types: [opened, synchronize, reopened, edited]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  origem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      # Nome e repositório da branch via env, nunca interpolados no script.
+      - name: PR para main vem da develop deste repositório
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ "$HEAD_REF" != develop ] || [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            echo "::error::PR para main só pode vir da develop deste repositório; troque a base para develop"
+            exit 1
+          fi
