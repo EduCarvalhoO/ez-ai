@@ -24,7 +24,9 @@
 | [adr/0013-fluxo-de-branches-develop-para-main.md](adr/0013-fluxo-de-branches-develop-para-main.md) | ADR-0013: PRs miram `develop`; `main` só recebe da `develop` |
 | [adr/0014-economia-de-tokens-no-pipeline-agentico.md](adr/0014-economia-de-tokens-no-pipeline-agentico.md) | ADR-0014: economia de tokens faz parte do pipeline instalável |
 | [adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md) | ADR-0015: núcleo sem I/O com portas; adapters puros; exportadores à parte |
+| [adr/0016-governanca-por-nivel-de-enforcement.md](adr/0016-governanca-por-nivel-de-enforcement.md) | ADR-0016: regra crítica só conta como imposta onde o ambiente bloqueia; senão validador externo ou aviso |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
+| [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
 | [guias/padrao-de-documentacao.md](guias/padrao-de-documentacao.md) | Caminhos, estrutura, fluxo e checklist de documentação |
 | [guias/padrao-de-agentes-e-skills.md](guias/padrao-de-agentes-e-skills.md) | Onde e como criar agentes, skills e rules; inventário (inclui os agentes `painel` e `professor`) |
 | [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs, definição de pronto e encerramento (agente `painel`) e decisões didáticas (agente `professor`) |
