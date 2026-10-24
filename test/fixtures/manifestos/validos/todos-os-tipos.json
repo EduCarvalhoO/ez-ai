@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/manifesto-pacote.v0.schema.json",
+  "versaoManifesto": 0,
+  "nome": "eduardo/todos-os-tipos",
+  "versao": "1.2.0-beta.1",
+  "descricao": "Agente revisor, hook de lint e MCP do GitHub para projetos TypeScript",
+  "licenca": "MIT OR Apache-2.0",
+  "repositorio": "https://github.com/eduardo/todos-os-tipos",
+  "compatibilidade": {
+    "harness": ">=0.1.0 <1.0.0",
+    "ambientes": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "componentes": [
+    {
+      "id": "revisor",
+      "tipo": "agente",
+      "arquivo": "agentes/revisor.md",
+      "descricao": "Revisa diffs de TypeScript",
+      "permissoes": {
+        "ler": [
+          "src/**",
+          "test/**/*.ts"
+        ],
+        "executar": [
+          {
+            "programa": "npm",
+            "argumentos": [
+              "test"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "lint",
+      "tipo": "hook",
+      "arquivo": "hooks/lint.mjs",
+      "evento": "antes-de-ferramenta",
+      "comando": {
+        "programa": "node",
+        "argumentos": [
+          "hooks/lint.mjs"
+        ]
+      },
+      "permissoes": {
+        "ler": [
+          "src/**"
+        ],
+        "configurarAmbiente": [
+          ".claude/settings.json",
+          ".github/hooks/*.json"
+        ]
+      }
+    },
+    {
+      "id": "github",
+      "tipo": "mcp",
+      "arquivo": "mcp/github.json",
+      "comando": {
+        "programa": "npx",
+        "argumentos": [
+          "-y",
+          "@modelcontextprotocol/server-github@2025.4.8"
+        ]
+      },
+      "permissoes": {
+        "rede": [
+          "api.github.com"
+        ],
+        "segredos": [
+          "GITHUB_TOKEN"
+        ],
+        "configurarAmbiente": [
+          ".mcp.json",
+          ".vscode/mcp.json"
+        ]
+      }
+    },
+    {
+      "id": "regras",
+      "tipo": "instrucao",
+      "arquivo": "instrucoes/regras.md"
+    },
+    {
+      "id": "formatar",
+      "tipo": "skill",
+      "arquivo": "skills/formatar/SKILL.md",
+      "permissoes": {
+        "escrever": [
+          "src/**/*.ts"
+        ],
+        "executar": [
+          {
+            "programa": "npx",
+            "argumentos": [
+              "--yes",
+              "prettier@3.3.3",
+              "--write",
+              "."
+            ]
+          },
+          {
+            "programa": "uvx",
+            "argumentos": [
+              "ruff==0.6.9",
+              "check"
+            ]
+          },
+          {
+            "programa": "pwsh",
+            "argumentos": [
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "skills/formatar/x.ps1"
+            ]
+          },
+          {
+            "programa": "npx",
+            "argumentos": [
+              "-p",
+              "typescript@5.6.3",
+              "tsc",
+              "--noEmit"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

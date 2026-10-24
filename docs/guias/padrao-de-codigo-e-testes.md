@@ -33,6 +33,7 @@ Ao escrever ou revisar código TypeScript/JavaScript, testes, scripts de skills 
 - Um teste por comportamento, nome descrevendo o comportamento esperado.
 - Testes E2E em diretório temporário do SO, nunca no repositório.
 - Fixtures de segredo são falsas e marcadas como tal; nenhum segredo real em teste.
+- Contratos (JSON Schema): o schema é objeto TypeScript em `src/core/<modulo>/schema.ts` e a cópia em `schemas/` é gerada por `npm run schemas`; um teste falha se divergirem ([ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md)). Fixtures de contrato ficam em `test/fixtures/` (fora do Biome, para manter os bytes exatos, inclusive BOM e JSON inválido de propósito), e cada inválido tem regra e caminho esperados.
 
 ## 4. Commits
 Conventional Commits em português. Mudança que fecha um item do roadmap leva no corpo:

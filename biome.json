@@ -11,7 +11,8 @@
       "!**/.github",
       "!**/docs",
       "!**/.changeset",
-      "!**/package-lock.json"
+      "!**/package-lock.json",
+      "!**/test/fixtures"
     ]
   },
   "formatter": {
