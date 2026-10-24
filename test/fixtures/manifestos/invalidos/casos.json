@@ -598,5 +598,35 @@
     "arquivo": "segredos-java-tool-options.json",
     "regra": "variavel-de-execucao",
     "caminho": "/componentes/2/permissoes/segredos/0"
+  },
+  {
+    "arquivo": "executar-go-run-latest.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-cargo-install-sem-versao.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-git-submodule-foreach.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-git-rebase-exec.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-deno-x.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-pnpm-exec-aninhado.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
   }
 ]

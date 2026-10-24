@@ -65,7 +65,7 @@ const CMD = new Set(['cmd']);
 const CODIGO_INLINE: Readonly<Record<string, { readonly curtas: RegExp; readonly longas: readonly string[] }>> = {
   node: { curtas: /^-[A-Za-z]*[ep][A-Za-z]*$/, longas: ['--eval', '--print'] },
   bun: { curtas: /^-[A-Za-z]*[ep][A-Za-z]*$/, longas: ['--eval', '--print'] },
-  deno: { curtas: /^eval$/, longas: [] },
+  deno: { curtas: /^(?:eval|x)$/, longas: [] },
   python: { curtas: /^-[A-Za-z]*c[A-Za-z]*$/, longas: [] },
   ruby: { curtas: /^-[A-Za-z]*e[A-Za-z]*$/, longas: [] },
   perl: { curtas: /^-[A-Za-z]*[eE][A-Za-z]*$/, longas: [] },
@@ -101,7 +101,12 @@ function pacotesDeOpcao(argumentos: readonly string[]): string[] {
   return valores;
 }
 
-function problemaNoExecutor(programa: string, argumentos: readonly string[], fixo: RegExp): string | undefined {
+function problemaNoExecutor(
+  programa: string,
+  argumentos: readonly string[],
+  fixo: RegExp,
+  aninhado: boolean,
+): string | undefined {
   const origem = argumentos.find((argumento) => OPCOES_DE_ORIGEM.test(argumento));
   if (origem) return `"${programa}" com "${origem}" troca a origem do pacote; não é permitido`;
   if (argumentos.some((a) => a === '-c' || a === '--call' || a.startsWith('--call='))) {
@@ -117,7 +122,8 @@ function problemaNoExecutor(programa: string, argumentos: readonly string[], fix
     return `"${programa}" roda "${solto || '(nada)'}" sem versão exata; fixe como nome@1.2.3 (sem @latest nem intervalo)`;
   }
   // Com -p, o binário que roda depois (pode ser `sh`) passa pelas mesmas regras.
-  return pacotesDeOpcao(argumentos).length > 0 ? problemaEmQualquerJanela(argumentos) : undefined;
+  if (pacotesDeOpcao(argumentos).length === 0) return undefined;
+  return aninhado ? EXECUTOR_ANINHADO : problemaEmQualquerJanela(argumentos);
 }
 
 /** `-Command`, `-EncodedCommand` e `-CommandWithArgs` aceitam qualquer abreviação (`-c`, `-enc`); `-ExecutionPolicy` não é código. */
@@ -133,11 +139,14 @@ function opcaoDeCodigoDoPowershell(argumento: string): boolean {
  * Confere como comando cada trecho que começa num argumento que não é opção. Não dá para saber quais opções
  * recebem valor (`--cache .c bash -lc ...`), então toda posição candidata a binário é conferida (conservador).
  */
+// Um executor dentro de outro faria a varredura de janelas crescer exponencialmente (D1): recusado.
+const EXECUTOR_ANINHADO = 'executor de pacote dentro de outro executor não é permitido; rode o binário direto';
+
 function problemaEmQualquerJanela(argumentos: readonly string[]): string | undefined {
   for (let k = 0; k < argumentos.length; k++) {
     const programa = argumentos[k];
     if (programa === undefined || programa.startsWith('-') || !/^[A-Za-z0-9._-]+$/.test(programa)) continue;
-    const problema = problemaNoComando({ programa: programa.toLowerCase(), argumentos: argumentos.slice(k + 1) });
+    const problema = problemaNoComando({ programa: programa.toLowerCase(), argumentos: argumentos.slice(k + 1) }, true);
     if (problema) return problema;
   }
   return undefined;
@@ -156,12 +165,15 @@ const INSTALADORES: Readonly<
   uv: { subcomandos: ['add', 'pip'], fixo: 'python' },
 };
 
-function problemaNoInstalador(programa: string, argumentos: readonly string[]): string | undefined {
+function problemaNoInstalador(programa: string, argumentos: readonly string[], aninhado: boolean): string | undefined {
   // `python -m pip install x` instala como `pip install x`.
   if (programa === 'python' && argumentos.includes('-m')) {
     const modulo = argumentos[argumentos.indexOf('-m') + 1];
     if (modulo === 'pip' || modulo === 'pipx')
-      return problemaNoComando({ programa: modulo, argumentos: argumentos.slice(argumentos.indexOf('-m') + 2) });
+      return problemaNoComando(
+        { programa: modulo, argumentos: argumentos.slice(argumentos.indexOf('-m') + 2) },
+        aninhado,
+      );
   }
   if (programa === 'uv' && argumentos.includes('run') && argumentos.some((a) => OPCOES_DE_ORIGEM.test(a))) {
     return '"uv run" com --with/--from baixa pacote sem passar pelas regras; não é permitido';
@@ -187,7 +199,7 @@ function nomeCanonico(programa: string): string {
 }
 
 /** Confere um comando. Devolve o motivo da recusa, se houver. */
-export function problemaNoComando(comando: Comando): string | undefined {
+export function problemaNoComando(comando: Comando, aninhado = false): string | undefined {
   const { argumentos } = comando;
   const programa = nomeCanonico(comando.programa);
   if (PROGRAMAS_PROIBIDOS.has(programa)) {
@@ -218,6 +230,24 @@ export function problemaNoComando(comando: Comando): string | undefined {
     return '"git -c" e "git config" mudam a configuração (ex.: alias ou fsmonitor que roda shell); não é permitido';
   }
   if (
+    programa === 'git' &&
+    (argumentos.includes('foreach') || argumentos.some((a) => a === '-x' || a.startsWith('--exec')))
+  ) {
+    return '"git submodule foreach" e "git rebase --exec" rodam texto como comando; não é permitido';
+  }
+  if (programa === 'go' && argumentos.some((a) => a === 'run' || a === 'install')) {
+    const solto = argumentos.find((a) => a.includes('@') && !/@v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/.test(a));
+    if (solto) return `"go" roda "${solto}" sem versão exata; fixe como modulo@v1.2.3`;
+  }
+  if (programa === 'cargo' && argumentos.includes('install')) {
+    if (
+      argumentos.some((a) => /^--(?:git|path|registry|index)(?:=|$)/.test(a)) ||
+      !argumentos.some((a) => a === '--version' || a.startsWith('--version='))
+    ) {
+      return '"cargo install" precisa de --version exata e não pode usar --git, --path, --registry nem --index';
+    }
+  }
+  if (
     programa === 'tar' &&
     argumentos.some(
       (a) =>
@@ -227,18 +257,19 @@ export function problemaNoComando(comando: Comando): string | undefined {
   ) {
     return '"tar" com opção que roda outro programa; não é permitido';
   }
-  const instalador = problemaNoInstalador(programa, argumentos);
+  const instalador = problemaNoInstalador(programa, argumentos, aninhado);
   if (instalador) return instalador;
   if (programa === 'find' && argumentos.some((a) => /^-(?:exec|execdir|ok|okdir)$/.test(a))) {
     return '"find -exec" roda outro comando; não é permitido';
   }
   // `pnpm exec` e `yarn exec` rodam um binário local: o comando que vem depois passa pelas mesmas regras.
   if ((programa === 'pnpm' || programa === 'yarn') && argumentos.includes('exec')) {
+    if (aninhado) return EXECUTOR_ANINHADO;
     const interno = problemaEmQualquerJanela(argumentos.slice(argumentos.indexOf('exec') + 1));
     if (interno) return interno;
   }
-  if (EXECUTORES_DIRETOS.has(programa)) return problemaNoExecutor(programa, argumentos, PACOTE_NPM_FIXO);
-  if (EXECUTORES_PYTHON.has(programa)) return problemaNoExecutor(programa, argumentos, PACOTE_PYTHON_FIXO);
+  if (EXECUTORES_DIRETOS.has(programa)) return problemaNoExecutor(programa, argumentos, PACOTE_NPM_FIXO, aninhado);
+  if (EXECUTORES_PYTHON.has(programa)) return problemaNoExecutor(programa, argumentos, PACOTE_PYTHON_FIXO, aninhado);
   // O subcomando pode vir depois de opções (`npm --yes exec x`): procura em qualquer posição.
   for (const [tabela, fixo] of [
     [EXECUTORES_COM_SUBCOMANDO, PACOTE_NPM_FIXO],
@@ -254,6 +285,7 @@ export function problemaNoComando(comando: Comando): string | undefined {
         `${programa} ${argumentos.slice(i, inicio + 1).join(' ')}`,
         argumentos.slice(inicio + 1),
         fixo,
+        aninhado,
       );
     }
   }

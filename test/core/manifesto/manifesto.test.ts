@@ -141,6 +141,19 @@ describe('desempenho com entrada adversarial (ReDoS)', () => {
     ],
   ];
 
+  it('executores aninhados no limite de argumentos terminam em menos de 50 ms', () => {
+    const m = structuredClone(base);
+    const aninhado = ['exec', ...Array.from({ length: 24 }, () => ['pnpm', 'exec']).flat(), 'sh'];
+    const npx = Array.from({ length: 16 }, () => ['npx', '-p', 'x@1.0.0']).flat();
+    m.componentes[0].permissoes.executar = [
+      { programa: 'pnpm', argumentos: aninhado },
+      { programa: 'npx', argumentos: npx.slice(1, 50) },
+    ];
+    const inicio = performance.now();
+    expect(validarManifesto(JSON.stringify(m)).ok).toBe(false);
+    expect(performance.now() - inicio).toBeLessThan(50);
+  });
+
   it.each(adversariais)('%s inválido termina em menos de 50 ms', (_, mudar) => {
     const m = structuredClone(base);
     mudar(m);
