@@ -85,12 +85,17 @@ Cada um verificável por comando, teste ou arquivo. Sem critério vago.
 ## Registro de gates
 | Gate | Data | Resultado | Evidência |
 |---|---|---|---|
+| G0 Documentação | | | |
 | G1 Plano | | | |
 | G2 Verificação | | | |
 | G3 Entrega | | | |
 
 ## Ciclos de revisão
-0 de 2
+Documentação (E2): 0 de 2 · Código (E4): 0 de 2. Cada rodada de revisão humana zera os contadores.
+
+## Rodadas de revisão humana
+| Rodada | Data | Feedback | Classificação (dentro do plano / mudança de escopo) | Volta para | Resultado |
+|---|---|---|---|---|---|
 `;
 
 mkdirSync(pasta, { recursive: true });
