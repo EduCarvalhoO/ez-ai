@@ -21,6 +21,7 @@
 | [0013](0013-fluxo-de-branches-develop-para-main.md) | Fluxo de branches `develop` → `main` | Aceito |
 | [0014](0014-economia-de-tokens-no-pipeline-agentico.md) | Economia de tokens no pipeline agêntico | Aceito |
 | [0015](0015-nucleo-sem-io-com-portas-e-adapters-puros.md) | Núcleo sem I/O, com portas, e adapters puros | Aceito |
+| [0016](0016-governanca-por-nivel-de-enforcement.md) | Governança por nível de enforcement do ambiente | Aceito |
 
 ## Decisões em aberto
 
