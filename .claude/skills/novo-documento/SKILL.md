@@ -11,7 +11,7 @@ Passo 3 do fluxo do [padrão de documentação](../../../docs/guias/padrao-de-do
 ## Passos
 1. Na raiz do repositório, rode `node .claude/skills/novo-documento/novo.mjs <tipo> "<Título>" [--descricao "<uma linha para o índice>"]`. Tipos: `adr`, `spec`, `arquitetura`, `guia`, `runbook`.
 2. ADR que substitui outro: acrescente `--substitui NNNN`. O novo nasce `Proposto`; o antigo só vira `Substituído por` depois que o usuário aceitar o novo.
-3. O script cria o arquivo com nome em kebab-case, próximo número de ADR, status inicial (`Proposto` ou `Rascunho`), data de hoje, e acrescenta a linha no índice (`docs/README.md` ou `docs/adr/README.md`).
+3. O script cria o arquivo com nome em kebab-case, próximo número de ADR, status inicial (`Proposto` ou `Rascunho`), data de hoje, e acrescenta a linha no índice (`docs/indice.md` e, se for ADR, `docs/adr/README.md`).
 4. Preencha cada seção do template, trocando o texto de orientação. Use links em vez de repetir conteúdo.
 5. Preencha `Relacionados:` no cabeçalho.
 
