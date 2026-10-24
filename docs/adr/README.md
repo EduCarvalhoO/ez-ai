@@ -22,6 +22,7 @@
 | [0014](0014-economia-de-tokens-no-pipeline-agentico.md) | Economia de tokens no pipeline agêntico | Aceito |
 | [0015](0015-nucleo-sem-io-com-portas-e-adapters-puros.md) | Núcleo sem I/O, com portas, e adapters puros | Aceito |
 | [0016](0016-governanca-por-nivel-de-enforcement.md) | Governança por nível de enforcement do ambiente | Aceito |
+| [0017](0017-propriedade-de-pacotes-por-identidade-github.md) | Propriedade de pacotes por identidade do GitHub | Aceito |
 
 ## Decisões em aberto
 

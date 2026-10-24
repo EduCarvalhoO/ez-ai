@@ -63,6 +63,7 @@ Entregas (em `docs/specs/` e `docs/arquitetura/`):
 - Formato e precedência de policies (núcleo > organização > projeto > pacote) — ADR.
 - Modelo de ameaças (STRIDE) cobrindo pacotes maliciosos, path traversal, execução de scripts, vazamento de segredos, prompt injection via pacote.
 - Modelo de permissões declaradas por componente.
+- Propriedade e isolamento de pacotes ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)): entrada para o modelo de ameaças e para o manifesto (campos de dono, identidade esperada e permissões comparáveis entre versões).
 
 Critérios de saída: schemas com testes de exemplos válidos/inválidos; cada ameaça alta tem controle planejado em uma fase.
 
@@ -139,6 +140,7 @@ Critérios de saída (**M3**): benchmark executado nos dois ambientes com result
 
 Entregas:
 - Assinatura e verificação de pacotes (Sigstore) e níveis de confiança (oficial, verificado, comunidade, local).
+- Identidade do dono gravada no lockfile e troca de dono bloqueada até aprovação ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)).
 - Permissões declaradas exibidas e aprovadas na instalação; execução de scripts de terceiros desabilitada por padrão.
 - Identidade via Git e papéis em arquivo versionado ([ADR-0003](adr/0003-controle-de-usuarios-faseado.md)).
 - SBOM e provenance (SLSA) do próprio harness.

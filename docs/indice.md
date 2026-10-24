@@ -25,6 +25,7 @@
 | [adr/0014-economia-de-tokens-no-pipeline-agentico.md](adr/0014-economia-de-tokens-no-pipeline-agentico.md) | ADR-0014: economia de tokens faz parte do pipeline instalável |
 | [adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md) | ADR-0015: núcleo sem I/O com portas; adapters puros; exportadores à parte |
 | [adr/0016-governanca-por-nivel-de-enforcement.md](adr/0016-governanca-por-nivel-de-enforcement.md) | ADR-0016: regra crítica só conta como imposta onde o ambiente bloqueia; senão validador externo ou aviso |
+| [adr/0017-propriedade-de-pacotes-por-identidade-github.md](adr/0017-propriedade-de-pacotes-por-identidade-github.md) | ADR-0017: pacote de colaborador pertence a uma conta do GitHub, isolado do núcleo; só o dono publica |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
 | [guias/padrao-de-documentacao.md](guias/padrao-de-documentacao.md) | Caminhos, estrutura, fluxo e checklist de documentação |

@@ -1,0 +1,17 @@
+# Donos do código (ADR-0017). O núcleo do harness é do Eduardo; pacotes de
+# colaboradores não entram neste repositório, ficam no repositório de cada um.
+# Revisão obrigatória de code owner fica desligada enquanto houver um só
+# mantenedor (ver ADR-0017, D4). A última regra que casa com o caminho vence.
+
+*                       @EduCarvalhoO
+
+# Arquivos de enforcement (ADR-0016, condição 3) e governança do repositório.
+/.github/               @EduCarvalhoO
+/.claude/               @EduCarvalhoO
+/.githooks/             @EduCarvalhoO
+/.npmrc                 @EduCarvalhoO
+/package.json           @EduCarvalhoO
+/package-lock.json      @EduCarvalhoO
+/docs/adr/              @EduCarvalhoO
+/LICENSE.md             @EduCarvalhoO
+/SECURITY.md            @EduCarvalhoO
