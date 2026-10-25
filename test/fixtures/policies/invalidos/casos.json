@@ -1,0 +1,127 @@
+[
+  {
+    "arquivo": "efeito-permitir.json",
+    "regra": "enum",
+    "caminho": "/regras/0/efeito"
+  },
+  {
+    "arquivo": "versao-desconhecida.json",
+    "regra": "const",
+    "caminho": "/versaoPolicy"
+  },
+  {
+    "arquivo": "sem-motivo.json",
+    "regra": "required",
+    "caminho": "/regras/0"
+  },
+  {
+    "arquivo": "padroes-e-marca.json",
+    "regra": "not",
+    "caminho": "/regras/0"
+  },
+  {
+    "arquivo": "sem-padroes-nem-marca.json",
+    "regra": "required",
+    "caminho": "/regras/0"
+  },
+  {
+    "arquivo": "marca-com-exceto.json",
+    "regra": "not",
+    "caminho": "/regras/0"
+  },
+  {
+    "arquivo": "critica-sem-negar.json",
+    "regra": "not",
+    "caminho": "/regras/0"
+  },
+  {
+    "arquivo": "marca-de-outra-categoria.json",
+    "regra": "marca-da-categoria",
+    "caminho": "/regras/0/marca"
+  },
+  {
+    "arquivo": "rede-maiuscula.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/padroes/0"
+  },
+  {
+    "arquivo": "rede-curinga-no-meio.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/padroes/0"
+  },
+  {
+    "arquivo": "glob-ponto-ponto.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/padroes/0"
+  },
+  {
+    "arquivo": "glob-absoluto.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/padroes/0"
+  },
+  {
+    "arquivo": "exceto-invalido.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/exceto/0"
+  },
+  {
+    "arquivo": "programa-com-caminho.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/padroes/0"
+  },
+  {
+    "arquivo": "programa-maiusculo.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/padroes/0"
+  },
+  {
+    "arquivo": "tipo-desconhecido.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/padroes/0"
+  },
+  {
+    "arquivo": "segredo-invalido.json",
+    "regra": "padrao",
+    "caminho": "/regras/0/padroes/0"
+  },
+  {
+    "arquivo": "categoria-desconhecida.json",
+    "regra": "enum",
+    "caminho": "/regras/0/categoria"
+  },
+  {
+    "arquivo": "id-repetido.json",
+    "regra": "id-unico",
+    "caminho": "/regras/1/id"
+  },
+  {
+    "arquivo": "pacotes-curinga-total.json",
+    "regra": "pattern",
+    "caminho": "/regras/0/pacotes/0"
+  },
+  {
+    "arquivo": "campo-desconhecido.json",
+    "regra": "additionalProperties",
+    "caminho": "/regras/0"
+  },
+  {
+    "arquivo": "chave-duplicada.json",
+    "regra": "chave-duplicada",
+    "caminho": "/regras/0/efeito"
+  },
+  {
+    "arquivo": "invisivel-no-motivo.json",
+    "regra": "caractere-invisivel",
+    "caminho": "/regras/0/motivo"
+  },
+  {
+    "arquivo": "padrao-repetido.json",
+    "regra": "uniqueItems",
+    "caminho": "/regras/0/padroes"
+  },
+  {
+    "arquivo": "motivo-longo.json",
+    "regra": "maxLength",
+    "caminho": "/regras/0/motivo"
+  }
+]

@@ -129,6 +129,12 @@
           }
         ]
       }
+    },
+    {
+      "id": "autolimite",
+      "tipo": "policy",
+      "arquivo": "policy/regras.json",
+      "descricao": "Regras que o pacote impõe a si mesmo"
     }
   ]
 }

@@ -1,0 +1,1 @@
+{"versaoPolicy":0,"regras":[{"id":"r","efeito":"negar","efeito":"avisar","categoria":"rede","padroes":["*"],"motivo":"m"}]}

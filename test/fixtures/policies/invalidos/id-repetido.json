@@ -1,0 +1,23 @@
+{
+  "versaoPolicy": 0,
+  "regras": [
+    {
+      "id": "r",
+      "efeito": "negar",
+      "categoria": "rede",
+      "padroes": [
+        "*"
+      ],
+      "motivo": "m"
+    },
+    {
+      "id": "r",
+      "efeito": "negar",
+      "categoria": "segredos",
+      "padroes": [
+        "*"
+      ],
+      "motivo": "m"
+    }
+  ]
+}

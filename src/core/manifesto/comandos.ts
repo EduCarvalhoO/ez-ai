@@ -165,15 +165,54 @@ const INSTALADORES: Readonly<
   uv: { subcomandos: ['add', 'pip'], fixo: 'python' },
 };
 
+// Opções curtas do CPython sem valor e com valor (grudado ou no argumento seguinte).
+const PYTHON_SEM_VALOR = new Set('bBdEhiIOPqsSuvVxR?');
+const PYTHON_COM_VALOR = new Set('XWc');
+
+/**
+ * Módulo de `python -m mod`, inclusive grudado (`-mpip`), depois de opções combinadas (`-Im pip`) e pulando o valor
+ * de `-X`/`-W` (`-Wmodule -m pip`). Para no primeiro posicional (o script). Opção que não conhece devolve `incerto`:
+ * quem chama decide do lado seguro.
+ */
+export function moduloDoPython(
+  argumentos: readonly string[],
+): { modulo: string; resto: string[] } | 'incerto' | undefined {
+  for (let k = 0; k < argumentos.length; k++) {
+    const argumento = argumentos[k] ?? '';
+    if (argumento === '-' || !argumento.startsWith('-')) return undefined;
+    if (argumento.startsWith('--')) {
+      if (argumento === '--check-hash-based-pycs') k++;
+      continue;
+    }
+    for (let i = 1; i < argumento.length; i++) {
+      const letra = argumento[i] ?? '';
+      if (PYTHON_SEM_VALOR.has(letra)) continue;
+      if (letra === 'm') {
+        const grudado = argumento.slice(i + 1);
+        if (grudado !== '') return { modulo: grudado, resto: argumentos.slice(k + 1) };
+        const modulo = argumentos[k + 1];
+        return modulo === undefined ? undefined : { modulo, resto: argumentos.slice(k + 2) };
+      }
+      if (PYTHON_COM_VALOR.has(letra)) {
+        if (i === argumento.length - 1) k++;
+        break;
+      }
+      return 'incerto';
+    }
+  }
+  return undefined;
+}
+
 function problemaNoInstalador(programa: string, argumentos: readonly string[], aninhado: boolean): string | undefined {
-  // `python -m pip install x` instala como `pip install x`.
-  if (programa === 'python' && argumentos.includes('-m')) {
-    const modulo = argumentos[argumentos.indexOf('-m') + 1];
+  // `python -m pip install x` (ou `-mpip`, `-Im pip`) instala como `pip install x`.
+  const doPython = programa === 'python' ? moduloDoPython(argumentos) : undefined;
+  if (doPython === 'incerto') {
+    return '"python" com opção desconhecida antes do módulo; não dá para conferir o que roda (use -m <modulo> direto)';
+  }
+  if (doPython) {
+    const modulo = nomeCanonico(doPython.modulo.toLowerCase());
     if (modulo === 'pip' || modulo === 'pipx')
-      return problemaNoComando(
-        { programa: modulo, argumentos: argumentos.slice(argumentos.indexOf('-m') + 2) },
-        aninhado,
-      );
+      return problemaNoComando({ programa: modulo, argumentos: doPython.resto }, aninhado);
   }
   if (programa === 'uv' && argumentos.includes('run') && argumentos.some((a) => OPCOES_DE_ORIGEM.test(a))) {
     return '"uv run" com --with/--from baixa pacote sem passar pelas regras; não é permitido';
@@ -191,10 +230,11 @@ function problemaNoInstalador(programa: string, argumentos: readonly string[], a
 }
 
 /** Nome canônico: `bash.exe` → `bash`, `python3.12` → `python`, `nodejs` → `node`. */
-function nomeCanonico(programa: string): string {
+export function nomeCanonico(programa: string): string {
   const semExtensao = programa.replace(/\.(?:exe|cmd|bat|com)$/, '');
   if (/^python[0-9.]*$/.test(semExtensao) || semExtensao === 'py') return 'python';
   if (semExtensao === 'nodejs') return 'node';
+  if (/^pip[0-9.]*$/.test(semExtensao)) return 'pip';
   return semExtensao;
 }
 
@@ -202,6 +242,19 @@ function nomeCanonico(programa: string): string {
 export function problemaNoComando(comando: Comando, aninhado = false): string | undefined {
   const { argumentos } = comando;
   const programa = nomeCanonico(comando.programa);
+  // `corepack pnpm dlx x` roda o gerenciador indicado: confere o comando de dentro.
+  if (programa === 'corepack') {
+    const k = argumentos.findIndex((a) => !a.startsWith('-'));
+    // Opção antes do gerenciador poderia receber valor e esconder quem roda: recusada.
+    if (k > 0) return '"corepack" com opção antes do gerenciador; escreva "corepack <gerenciador> ..."';
+    const interno = argumentos[k];
+    // `corepack install`, `use`, `prepare`... baixam gerenciadores da rede: só o gerenciador direto passa.
+    if (interno === undefined || !/^(?:npm|npx|pnpm|pnpx|yarn)(?:@.*)?$/.test(interno)) {
+      return '"corepack" só pode rodar um gerenciador direto (corepack pnpm ...); install/use/prepare baixam da rede';
+    }
+    if (aninhado) return EXECUTOR_ANINHADO;
+    return problemaNoComando({ programa: interno.replace(/@.*$/, ''), argumentos: argumentos.slice(k + 1) }, true);
+  }
   if (PROGRAMAS_PROIBIDOS.has(programa)) {
     return `"${programa}" não é permitido: roda outro comando, baixa da rede ou troca de usuário`;
   }
@@ -262,10 +315,11 @@ export function problemaNoComando(comando: Comando, aninhado = false): string | 
   if (programa === 'find' && argumentos.some((a) => /^-(?:exec|execdir|ok|okdir)$/.test(a))) {
     return '"find -exec" roda outro comando; não é permitido';
   }
-  // `pnpm exec` e `yarn exec` rodam um binário local: o comando que vem depois passa pelas mesmas regras.
-  if ((programa === 'pnpm' || programa === 'yarn') && argumentos.includes('exec')) {
+  // `pnpm exec`, `yarn exec` e `uv run` rodam outro comando: o que vem depois passa pelas mesmas regras.
+  const sub = programa === 'uv' ? 'run' : 'exec';
+  if ((programa === 'pnpm' || programa === 'yarn' || programa === 'uv') && argumentos.includes(sub)) {
     if (aninhado) return EXECUTOR_ANINHADO;
-    const interno = problemaEmQualquerJanela(argumentos.slice(argumentos.indexOf('exec') + 1));
+    const interno = problemaEmQualquerJanela(argumentos.slice(argumentos.indexOf(sub) + 1));
     if (interno) return interno;
   }
   if (EXECUTORES_DIRETOS.has(programa)) return problemaNoExecutor(programa, argumentos, PACOTE_NPM_FIXO, aninhado);

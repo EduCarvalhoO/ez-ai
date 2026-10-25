@@ -1,0 +1,85 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/policy.v0.schema.json",
+  "versaoPolicy": 0,
+  "regras": [
+    {
+      "id": "sem-rede-externa",
+      "efeito": "negar",
+      "categoria": "rede",
+      "padroes": [
+        "*"
+      ],
+      "exceto": [
+        "api.github.com",
+        "*.npmjs.org"
+      ],
+      "critica": true,
+      "motivo": "Agentes não falam com a internet, salvo GitHub e npm"
+    },
+    {
+      "id": "scripts-npm",
+      "efeito": "negar",
+      "categoria": "escrever",
+      "marca": "executavel",
+      "pacotes": [
+        "terceiro/*"
+      ],
+      "motivo": "Pacote de fora da empresa não mexe em package.json"
+    },
+    {
+      "id": "hooks-com-cuidado",
+      "efeito": "exigir-aprovacao",
+      "categoria": "tipo",
+      "padroes": [
+        "hook",
+        "mcp"
+      ],
+      "motivo": "Hook e MCP rodam código"
+    },
+    {
+      "id": "sem-pip",
+      "efeito": "negar",
+      "categoria": "executar",
+      "padroes": [
+        "pip",
+        "curl.exe"
+      ],
+      "motivo": "Dependência Python só pelo time de plataforma"
+    },
+    {
+      "id": "segredos-de-nuvem",
+      "efeito": "negar",
+      "categoria": "segredos",
+      "padroes": [
+        "AWS_SECRET_ACCESS_KEY",
+        "gcp_key"
+      ],
+      "motivo": "Credenciais de nuvem ficam fora dos agentes"
+    },
+    {
+      "id": "pasta-financeira",
+      "efeito": "negar",
+      "categoria": "ler",
+      "padroes": [
+        "financeiro/**"
+      ],
+      "motivo": "Dados financeiros"
+    },
+    {
+      "id": "hooks-do-copilot",
+      "efeito": "avisar",
+      "categoria": "configurarAmbiente",
+      "padroes": [
+        ".github/hooks/*.json"
+      ],
+      "motivo": "Hooks do Copilot ainda em prévia"
+    },
+    {
+      "id": "leitura-ampla",
+      "efeito": "avisar",
+      "categoria": "ler",
+      "marca": "amplo",
+      "motivo": "Lê tudo"
+    }
+  ]
+}

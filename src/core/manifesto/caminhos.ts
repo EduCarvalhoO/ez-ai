@@ -69,6 +69,29 @@ export function globsSeCruzam(a: string, b: string): boolean {
   return cruzam(partes(a), 0, partes(b), 0);
 }
 
+function segmentoContido(dentro: string, fora: string): boolean {
+  if (!temCuringa(fora)) return dentro === fora;
+  if (!temCuringa(dentro)) return regexDoSegmento(fora).test(dentro);
+  return fora === '*' || fora === dentro;
+}
+
+function contido(d: readonly string[], i: number, f: readonly string[], j: number): boolean {
+  if (i === d.length && j === f.length) return true;
+  if (f[j] === '**') return contido(d, i, f, j + 1) || (i < d.length && contido(d, i + 1, f, j));
+  const sd = d[i];
+  const sf = f[j];
+  if (sd === undefined || sf === undefined || sd === '**') return false;
+  return segmentoContido(sd, sf) && contido(d, i + 1, f, j + 1);
+}
+
+/**
+ * Diz se todo caminho que `dentro` casa também é casado por `fora`. Diferencia maiúsculas (no Linux `SRC/` é outra
+ * pasta). Na dúvida, responde que não: serve para exceções de policy, onde um "sim" errado libera o que a regra nega.
+ */
+export function globContido(dentro: string, fora: string): boolean {
+  return contido(dentro.split('/'), 0, fora.split('/'), 0);
+}
+
 /** Destinos que nenhum `escrever` alcança: enforcement, Git, pastas de pacote e instruções da raiz (T2). */
 export const DESTINOS_PROTEGIDOS = [
   '.git/**',
@@ -91,8 +114,31 @@ export const DESTINOS_PROTEGIDOS = [
   '**/AGENTS.md',
 ] as const;
 
-/** Arquivos que viram execução quando outra ferramenta roda (scripts do npm, make, atalhos do Windows na raiz). */
-export const DESTINOS_EXECUTAVEIS = ['**/package.json', 'Makefile', '*.cmd', '*.bat', '*.ps1', '*.sh'] as const;
+/**
+ * Arquivos que viram execução quando outra ferramenta roda: scripts do npm, make, atalhos do Windows e configs que
+ * são código (vite, jest, eslint, pytest, pre-commit). Lista heurística; configs `*.config.*` e `.eslintrc.js` só na
+ * raiz, para um glob de código-fonte (`src/` + `**` + `*.ts`) não virar executável; config dentro de subpasta de
+ * monorepo fica sem marca (risco residual em T2 do modelo de ameaças).
+ */
+export const DESTINOS_EXECUTAVEIS = [
+  '**/package.json',
+  'Makefile',
+  'justfile',
+  'Taskfile.yml',
+  '*.cmd',
+  '*.bat',
+  '*.ps1',
+  '**/*.sh',
+  '*.config.js',
+  '*.config.cjs',
+  '*.config.mjs',
+  '*.config.ts',
+  '.eslintrc.js',
+  '**/conftest.py',
+  'setup.py',
+  'pyproject.toml',
+  '.pre-commit-config.yaml',
+] as const;
 
 /**
  * Padrões de arquivo com segredo; `ler` que os alcança é marcado `sensivel` para o `plan` (I2). Nomes literais de

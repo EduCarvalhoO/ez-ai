@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-> Status: Vivo · Atualizado: 2026-10-24 · Relacionados: [índice](../indice.md)
+> Status: Vivo · Atualizado: 2026-10-25 · Relacionados: [índice](../indice.md)
 >
 > Formato e regras: [padrão de documentação](../guias/padrao-de-documentacao.md#4-convenções). Template: [adr.md](../_templates/adr.md).
 
@@ -25,10 +25,10 @@
 | [0017](0017-propriedade-de-pacotes-por-identidade-github.md) | Propriedade de pacotes por identidade do GitHub | Aceito |
 | [0018](0018-invariantes-de-seguranca-da-instalacao.md) | Invariantes de segurança da instalação | Aceito |
 | [0019](0019-validacao-de-contratos-com-cfworker-json-schema.md) | Validação de contratos com JSON Schema e `@cfworker/json-schema` | Aceito |
+| [0020](0020-policy-declarativa-so-restritiva-com-precedencia.md) | Policy declarativa, só restritiva, com precedência por nível | Aceito |
 
 ## Decisões em aberto
 
 | Tema | Prazo | Observação |
 |---|---|---|
 | Nome do produto/CLI | Antes da F8 | Codinome `harness-ai`; checar npm, marca e domínio (colisão com Harness.io) |
-| Formato de policy (DSL própria, JSON/YAML, Rego/Cedar) | F1 | |
