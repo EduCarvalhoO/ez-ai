@@ -45,11 +45,11 @@ export function programasEfetivos(comando: Comando): readonly string[] {
   const programas = new Set([programa]);
   const { argumentos } = comando;
   if (programa === 'corepack') {
-    const k = argumentos.findIndex((a) => !a.startsWith('-'));
-    const interno = argumentos[k];
-    if (interno !== undefined) {
-      for (const p of programasEfetivos({ programa: interno, argumentos: argumentos.slice(k + 1) })) programas.add(p);
-    }
+    // Todo posicional pode ser o gerenciador (uma opção com valor esconderia qual é): conservador.
+    argumentos.forEach((a, k) => {
+      if (a.startsWith('-')) return;
+      for (const p of programasEfetivos({ programa: a, argumentos: argumentos.slice(k + 1) })) programas.add(p);
+    });
     return [...programas];
   }
   let inicio = -1;
@@ -74,7 +74,10 @@ export function programasEfetivos(comando: Comando): readonly string[] {
   // `uv pip install` é o pip embutido no uv.
   if (programa === 'uv' && argumentos.includes('pip')) programas.add('pip');
   const doPython = programa === 'python' ? moduloDoPython(argumentos) : undefined;
-  if (doPython) programas.add(nomeDoPrograma(doPython.modulo));
+  if (doPython === 'incerto') {
+    // Sem saber onde está o módulo, todo argumento que pode ser nome conta (conservador).
+    for (const a of argumentos) if (!a.startsWith('-')) programas.add(nomeDoPrograma(a));
+  } else if (doPython) programas.add(nomeDoPrograma(doPython.modulo));
   return [...programas];
 }
 

@@ -658,5 +658,30 @@
     "arquivo": "executar-corepack-pnpm-dlx.json",
     "regra": "comando",
     "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-python-w-grudado-m-pip.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-python-x-dev-m-pip.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-python-opcao-desconhecida.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-corepack-opcao-antes.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-corepack-install.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
   }
 ]

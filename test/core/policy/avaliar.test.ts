@@ -357,11 +357,21 @@ describe('programas efetivos: formas indiretas de rodar um programa (E4 do segur
     [['npm', 'create', 'vite@5.0.0'], 'create-vite'],
     [['yarn', 'create', 'vite@5.0.0'], 'create-vite'],
     [['corepack', 'pnpm', 'dlx', 'tsx@1.0.0'], 'tsx'],
+    [['corepack', '--opcao', 'valor', 'pnpm', 'dlx', 'tsx@1.0.0'], 'tsx'],
+    [['python', '-Wmodule', '-m', 'pip', 'install', 'x==1.0.0'], 'pip'],
+    [['python', '-Ximporttime', '-m', 'pip'], 'pip'],
+    [['python', '-X', 'dev', '-m', 'pip'], 'pip'],
+    [['python', '-W', 'ignore', '-m', 'pip'], 'pip'],
+    [['python', '--check-hash-based-pycs', 'always', '-m', 'pip'], 'pip'],
+    [['python', '-Z', 'pip'], 'pip'],
   ])('%j roda %s', ([programa = '', ...argumentos], esperado) => {
     expect(programasEfetivos({ programa, argumentos })).toContain(esperado);
   });
 
-  it('python -m sem módulo não inventa programa', () => {
+  it('python -m sem módulo, ou -m depois do script, não inventa programa', () => {
     expect(programasEfetivos({ programa: 'python', argumentos: ['-I', '-m'] })).toEqual(['python']);
+    expect(programasEfetivos({ programa: 'python', argumentos: ['app.py', '-m', 'pip'] })).toEqual(['python']);
+    expect(programasEfetivos({ programa: 'python', argumentos: ['-', '-m', 'pip'] })).toEqual(['python']);
+    expect(programasEfetivos({ programa: 'python', argumentos: ['--version'] })).toEqual(['python']);
   });
 });

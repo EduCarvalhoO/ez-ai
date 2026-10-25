@@ -165,18 +165,40 @@ const INSTALADORES: Readonly<
   uv: { subcomandos: ['add', 'pip'], fixo: 'python' },
 };
 
+// Opções curtas do CPython sem valor e com valor (grudado ou no argumento seguinte).
+const PYTHON_SEM_VALOR = new Set('bBdEhiIOPqsSuvVxR?');
+const PYTHON_COM_VALOR = new Set('XWc');
+
 /**
- * Módulo de `python -m mod`, inclusive grudado (`-mpip`) ou depois de opções curtas combinadas (`-Im pip`).
- * Devolve o módulo e os argumentos que vêm depois dele.
+ * Módulo de `python -m mod`, inclusive grudado (`-mpip`), depois de opções combinadas (`-Im pip`) e pulando o valor
+ * de `-X`/`-W` (`-Wmodule -m pip`). Para no primeiro posicional (o script). Opção que não conhece devolve `incerto`:
+ * quem chama decide do lado seguro.
  */
-export function moduloDoPython(argumentos: readonly string[]): { modulo: string; resto: string[] } | undefined {
+export function moduloDoPython(
+  argumentos: readonly string[],
+): { modulo: string; resto: string[] } | 'incerto' | undefined {
   for (let k = 0; k < argumentos.length; k++) {
-    const partes = /^-[A-Za-z]*?m(.*)$/.exec(argumentos[k] ?? '');
-    if (!partes) continue;
-    const grudado = partes[1] ?? '';
-    if (grudado !== '') return { modulo: grudado, resto: argumentos.slice(k + 1) };
-    const modulo = argumentos[k + 1];
-    return modulo === undefined ? undefined : { modulo, resto: argumentos.slice(k + 2) };
+    const argumento = argumentos[k] ?? '';
+    if (argumento === '-' || !argumento.startsWith('-')) return undefined;
+    if (argumento.startsWith('--')) {
+      if (argumento === '--check-hash-based-pycs') k++;
+      continue;
+    }
+    for (let i = 1; i < argumento.length; i++) {
+      const letra = argumento[i] ?? '';
+      if (PYTHON_SEM_VALOR.has(letra)) continue;
+      if (letra === 'm') {
+        const grudado = argumento.slice(i + 1);
+        if (grudado !== '') return { modulo: grudado, resto: argumentos.slice(k + 1) };
+        const modulo = argumentos[k + 1];
+        return modulo === undefined ? undefined : { modulo, resto: argumentos.slice(k + 2) };
+      }
+      if (PYTHON_COM_VALOR.has(letra)) {
+        if (i === argumento.length - 1) k++;
+        break;
+      }
+      return 'incerto';
+    }
   }
   return undefined;
 }
@@ -184,6 +206,9 @@ export function moduloDoPython(argumentos: readonly string[]): { modulo: string;
 function problemaNoInstalador(programa: string, argumentos: readonly string[], aninhado: boolean): string | undefined {
   // `python -m pip install x` (ou `-mpip`, `-Im pip`) instala como `pip install x`.
   const doPython = programa === 'python' ? moduloDoPython(argumentos) : undefined;
+  if (doPython === 'incerto') {
+    return '"python" com opção desconhecida antes do módulo; não dá para conferir o que roda (use -m <modulo> direto)';
+  }
   if (doPython) {
     const modulo = nomeCanonico(doPython.modulo.toLowerCase());
     if (modulo === 'pip' || modulo === 'pipx')
@@ -220,11 +245,15 @@ export function problemaNoComando(comando: Comando, aninhado = false): string | 
   // `corepack pnpm dlx x` roda o gerenciador indicado: confere o comando de dentro.
   if (programa === 'corepack') {
     const k = argumentos.findIndex((a) => !a.startsWith('-'));
+    // Opção antes do gerenciador poderia receber valor e esconder quem roda: recusada.
+    if (k > 0) return '"corepack" com opção antes do gerenciador; escreva "corepack <gerenciador> ..."';
     const interno = argumentos[k];
-    if (interno !== undefined && /^(?:npm|npx|pnpm|pnpx|yarn)(?:@.*)?$/.test(interno)) {
-      if (aninhado) return EXECUTOR_ANINHADO;
-      return problemaNoComando({ programa: interno.replace(/@.*$/, ''), argumentos: argumentos.slice(k + 1) }, true);
+    // `corepack install`, `use`, `prepare`... baixam gerenciadores da rede: só o gerenciador direto passa.
+    if (interno === undefined || !/^(?:npm|npx|pnpm|pnpx|yarn)(?:@.*)?$/.test(interno)) {
+      return '"corepack" só pode rodar um gerenciador direto (corepack pnpm ...); install/use/prepare baixam da rede';
     }
+    if (aninhado) return EXECUTOR_ANINHADO;
+    return problemaNoComando({ programa: interno.replace(/@.*$/, ''), argumentos: argumentos.slice(k + 1) }, true);
   }
   if (PROGRAMAS_PROIBIDOS.has(programa)) {
     return `"${programa}" não é permitido: roda outro comando, baixa da rede ou troca de usuário`;
