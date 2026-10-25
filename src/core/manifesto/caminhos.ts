@@ -85,11 +85,11 @@ function contido(d: readonly string[], i: number, f: readonly string[], j: numbe
 }
 
 /**
- * Diz se todo caminho que `dentro` casa também é casado por `fora`. Sem diferenciar maiúsculas. Na dúvida, responde
- * que não: serve para exceções de policy, onde um "sim" errado libera o que a regra nega.
+ * Diz se todo caminho que `dentro` casa também é casado por `fora`. Diferencia maiúsculas (no Linux `SRC/` é outra
+ * pasta). Na dúvida, responde que não: serve para exceções de policy, onde um "sim" errado libera o que a regra nega.
  */
 export function globContido(dentro: string, fora: string): boolean {
-  return contido(partes(dentro), 0, partes(fora), 0);
+  return contido(dentro.split('/'), 0, fora.split('/'), 0);
 }
 
 /** Destinos que nenhum `escrever` alcança: enforcement, Git, pastas de pacote e instruções da raiz (T2). */
@@ -116,8 +116,9 @@ export const DESTINOS_PROTEGIDOS = [
 
 /**
  * Arquivos que viram execução quando outra ferramenta roda: scripts do npm, make, atalhos do Windows e configs que
- * são código (vite, jest, eslint, pytest, pre-commit). Lista heurística; configs só na raiz, para um glob de
- * código-fonte (`src/` + `**` + `*.ts`) não virar executável (risco residual em T2 do modelo de ameaças).
+ * são código (vite, jest, eslint, pytest, pre-commit). Lista heurística; configs `*.config.*` e `.eslintrc.js` só na
+ * raiz, para um glob de código-fonte (`src/` + `**` + `*.ts`) não virar executável; config dentro de subpasta de
+ * monorepo fica sem marca (risco residual em T2 do modelo de ameaças).
  */
 export const DESTINOS_EXECUTAVEIS = [
   '**/package.json',
@@ -127,14 +128,13 @@ export const DESTINOS_EXECUTAVEIS = [
   '*.cmd',
   '*.bat',
   '*.ps1',
-  '*.sh',
-  'scripts/**/*.sh',
+  '**/*.sh',
   '*.config.js',
   '*.config.cjs',
   '*.config.mjs',
   '*.config.ts',
   '.eslintrc.js',
-  'conftest.py',
+  '**/conftest.py',
   'setup.py',
   'pyproject.toml',
   '.pre-commit-config.yaml',

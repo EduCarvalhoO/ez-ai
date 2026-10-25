@@ -174,7 +174,8 @@ describe('casamento (D7)', () => {
     expect(decidir([comp('a', { ler: ['src/**/*.ts'] })], negarLer(['**'], ['src/**'])).efeito).toBe('livre');
     expect(decidir([comp('a', { ler: ['src/*.ts'] })], negarLer(['**'], ['src/*'])).efeito).toBe('livre');
     expect(decidir([comp('a', { ler: ['src/*'] })], negarLer(['**'], ['src/*.ts'])).efeito).toBe('negar');
-    expect(decidir([comp('a', { ler: ['SRC/a.ts'] })], negarLer(['**'], ['src/*.ts'])).efeito).toBe('livre');
+    // Exceção diferencia caixa: no Linux SRC/ é outra pasta.
+    expect(decidir([comp('a', { ler: ['SRC/a.ts'] })], negarLer(['**'], ['src/*.ts'])).efeito).toBe('negar');
   });
 
   it('rede: *.dominio cobre o próprio domínio e subdomínios, nunca parecidos', () => {
@@ -222,6 +223,12 @@ describe('casamento (D7)', () => {
     const roda = (programa: string, argumentos: string[]) => comp('a', { executar: [{ programa, argumentos }] });
     expect(decidir([roda('npm', ['test'])], fontes).efeito).toBe('livre');
     expect(decidir([roda('npm', ['exec', 'tsx@1.0.0'])], fontes).efeito).toBe('negar');
+  });
+
+  it('tipo: casa por igualdade', () => {
+    const fontes = projeto([{ efeito: 'avisar', categoria: 'tipo', padroes: ['skill'] }]);
+    expect(decidir([comp('a')], fontes).efeito).toBe('livre');
+    expect(decidir([comp('a', {}, { tipo: 'skill' })], fontes).efeito).toBe('avisar');
   });
 
   it('tipo: casa pelo tipo do componente; "*" pega todos', () => {
@@ -314,8 +321,17 @@ describe('garantia por ambiente (D8, ADR-0016)', () => {
 
   it('regra crítica de pacote reprova só aquele pacote', () => {
     const critica = policy([{ efeito: 'negar', categoria: 'rede', padroes: ['*'], critica: true }], 'pacote');
-    expect(decidir([comp('a')], { pacote: [{ fonte: 'eduardo/x:regras', policy: critica }] }).falhaFechada).toBe(true);
-    expect(decidir([comp('a')], {}, 'ana/y').falhaFechada).toBe(false);
+    const fontesDe = (dono: string): FontesDePolicy => ({
+      pacote: dono === 'eduardo/x' ? [{ fonte: 'eduardo/x:regras', policy: critica }] : [],
+    });
+    expect(decidir([comp('a')], fontesDe('eduardo/x'), 'eduardo/x').falhaFechada).toBe(true);
+    expect(decidir([comp('a')], fontesDe('ana/y'), 'ana/y').falhaFechada).toBe(false);
+  });
+
+  it('regra crítica de projeto vale para todo pacote, mesmo sem item que case: o ambiente é que precisa bloquear', () => {
+    const fontes = projeto([{ efeito: 'negar', categoria: 'rede', padroes: ['*'], critica: true }]);
+    const d = avaliarPacote({ nome: 'ana/y', componentes: [comp('a')] }, fontes, { ambientes: ['copilot'] });
+    expect([d.efeito, d.falhaFechada]).toEqual(['livre', true]);
   });
 
   it('cada item decidido leva a garantia da regra vencedora', () => {
@@ -325,5 +341,27 @@ describe('garantia por ambiente (D8, ADR-0016)', () => {
       { ambientes: ['copilot'] },
     );
     expect(d.itens[0]?.decididoPor.garantia.execucao).toEqual({ copilot: 'so-aviso' });
+  });
+});
+
+describe('programas efetivos: formas indiretas de rodar um programa (E4 do seguranca)', () => {
+  it.each([
+    [['python', '-mpip', 'install', 'x==1.0.0'], 'pip'],
+    [['python3', '-Im', 'pip', 'install', 'x==1.0.0'], 'pip'],
+    [['pip3', 'install', 'x==1.0.0'], 'pip'],
+    [['pip3.12', 'install', 'x==1.0.0'], 'pip'],
+    [['uv', 'pip', 'install', 'x==1.0.0'], 'pip'],
+    [['yarn', 'tsx', 'a.ts'], 'tsx'],
+    [['pnpm', 'tsx', 'a.ts'], 'tsx'],
+    [['bun', 'run', 'tsx'], 'tsx'],
+    [['npm', 'create', 'vite@5.0.0'], 'create-vite'],
+    [['yarn', 'create', 'vite@5.0.0'], 'create-vite'],
+    [['corepack', 'pnpm', 'dlx', 'tsx@1.0.0'], 'tsx'],
+  ])('%j roda %s', ([programa = '', ...argumentos], esperado) => {
+    expect(programasEfetivos({ programa, argumentos })).toContain(esperado);
+  });
+
+  it('python -m sem módulo não inventa programa', () => {
+    expect(programasEfetivos({ programa: 'python', argumentos: ['-I', '-m'] })).toEqual(['python']);
   });
 });

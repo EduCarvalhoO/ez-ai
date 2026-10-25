@@ -1,7 +1,7 @@
 // Casamento de regra de policy com o que um componente declarou (D7 da ficha de policy). Conservador nos padrões
 // (globs que se cruzam) e estrito nas exceções (só o que está inteiro dentro), para nenhum dos dois virar bypass.
 import { globContido, globsSeCruzam } from '../manifesto/caminhos.js';
-import { type Comando, nomeCanonico } from '../manifesto/comandos.js';
+import { type Comando, moduloDoPython, nomeCanonico } from '../manifesto/comandos.js';
 import type { Componente } from '../manifesto/manifesto.js';
 import { marcarEscrita, marcarLeitura } from '../manifesto/permissoes.js';
 import type { CategoriaDePolicy, Marca, Regra } from './policy.js';
@@ -19,14 +19,14 @@ export interface ItemDeclarado {
 
 // Executores que rodam outro programa: o nome dele também é comparado (`npx tsx@1.0.0` roda `tsx`).
 const EXECUTORES_DIRETOS = new Set(['npx', 'bunx', 'pnpx', 'uvx']);
+// `yarn tsx`, `pnpm tsx` e `bun tsx` rodam o binário sem subcomando: todo posicional conta (conservador).
+const GERENCIADORES_SEM_SUBCOMANDO = new Set(['yarn', 'pnpm', 'bun']);
 const SUBCOMANDOS_DE_EXECUCAO: Readonly<Record<string, readonly string[]>> = {
   npm: ['exec', 'x', 'init', 'create'],
-  pnpm: ['dlx', 'create', 'exec'],
-  yarn: ['dlx', 'create', 'exec'],
-  bun: ['x', 'create'],
   pipx: ['run'],
-  uv: ['tool', 'run'],
+  uv: ['tool', 'run', 'pip'],
 };
+const SUBCOMANDOS_DE_CRIACAO = new Set(['create', 'init']);
 
 /** `@escopo/nome@1.2.3` → `nome`; `nome==1.2.3` → `nome`; depois o nome canônico do manifesto. */
 function nomeDoPrograma(texto: string): string {
@@ -36,31 +36,45 @@ function nomeDoPrograma(texto: string): string {
 
 /**
  * Programas que um comando roda: o externo e, conservadoramente, todo argumento que pode ser um programa depois de
- * um executor de pacote (inclusive `-p`/`--package`) e o módulo de `python -m`. A regra vale sobre o declarado, não
- * sobre o que um script faz por dentro (risco residual).
+ * um executor de pacote (inclusive `--package=`), todo posicional de `yarn`/`pnpm`/`bun`, `create-<nome>` de
+ * `npm create <nome>`, o comando de dentro de `corepack` e o módulo de `python -m` (também `-mpip` e `-Im pip`).
+ * A regra vale sobre o declarado, não sobre o que um script faz por dentro (risco residual).
  */
 export function programasEfetivos(comando: Comando): readonly string[] {
   const programa = nomeDoPrograma(comando.programa);
   const programas = new Set([programa]);
   const { argumentos } = comando;
+  if (programa === 'corepack') {
+    const k = argumentos.findIndex((a) => !a.startsWith('-'));
+    const interno = argumentos[k];
+    if (interno !== undefined) {
+      for (const p of programasEfetivos({ programa: interno, argumentos: argumentos.slice(k + 1) })) programas.add(p);
+    }
+    return [...programas];
+  }
   let inicio = -1;
-  if (EXECUTORES_DIRETOS.has(programa)) inicio = 0;
+  if (EXECUTORES_DIRETOS.has(programa) || GERENCIADORES_SEM_SUBCOMANDO.has(programa)) inicio = 0;
   const subcomandos = SUBCOMANDOS_DE_EXECUCAO[programa];
   if (subcomandos) {
     const i = argumentos.findIndex((a) => subcomandos.includes(a));
     if (i >= 0) inicio = i + 1;
   }
   if (inicio >= 0) {
+    let anterior = inicio > 0 ? (argumentos[inicio - 1] ?? '') : '';
     for (const argumento of argumentos.slice(inicio)) {
       const valor = argumento.startsWith('--package=') ? argumento.slice('--package='.length) : argumento;
-      if (!valor.startsWith('-')) programas.add(nomeDoPrograma(valor));
+      if (!valor.startsWith('-')) {
+        const nome = nomeDoPrograma(valor);
+        programas.add(nome);
+        if (SUBCOMANDOS_DE_CRIACAO.has(anterior)) programas.add(`create-${nome}`);
+        anterior = nome;
+      }
     }
   }
-  if (programa === 'python') {
-    const i = argumentos.indexOf('-m');
-    const modulo = argumentos[i + 1];
-    if (i >= 0 && modulo !== undefined) programas.add(nomeDoPrograma(modulo));
-  }
+  // `uv pip install` é o pip embutido no uv.
+  if (programa === 'uv' && argumentos.includes('pip')) programas.add('pip');
+  const doPython = programa === 'python' ? moduloDoPython(argumentos) : undefined;
+  if (doPython) programas.add(nomeDoPrograma(doPython.modulo));
   return [...programas];
 }
 

@@ -32,7 +32,8 @@ Escolha do Eduardo no G1 da ficha "Policy e precedência de regras" (2026-10-25)
 - E5 fica fechado por construção (schema recusa `permitir`; exceção só da própria regra; pacote só sobre si). O motor da F4 recebe pronto o formato da explicação ("por que bloqueou").
 - `.harness/policy.json` e `policyDaOrganizacao` entram na lista de arquivos de enforcement (CODEOWNERS e ruleset na F4). Até lá, o projeto pode apagar a policy da organização localmente; ela só é imposta com o job de servidor da F4.
 - Quem aprova a aprovação própria, e como ela fica fora do alcance do agente, é `Em aberto` (F2/F4, auditoria na ficha 7); até lá não conta como imposta.
-- A marca `executavel` passa a cobrir configs que são código (`*.config.*` na raiz, `pyproject.toml`, `conftest.py`...); a lista é heurística.
+- A marca `executavel` passa a cobrir configs que são código (`*.config.*` na raiz, `pyproject.toml`, `conftest.py` e `*.sh` em qualquer pasta...); a lista é heurística, e config `.js`/`.ts` em subpasta de monorepo fica sem marca para não pedir aprovação própria a todo pacote que escreve código.
+- Regra `critica` falha pela regra, não pelo item: até a F3 (sem tabela de capacidades), qualquer regra crítica de organização ou projeto reprova a instalação.
 
 ## Gatilhos de revisão
 Pedido real de auto-aprovação (`permitir`); fadiga de aprovação medida no benchmark da F6; motor de policies da F4 precisar de condição que o formato não expressa (argumentos de comando, horário, ator); papéis de aprovador do [ADR-0003](0003-controle-de-usuarios-faseado.md).

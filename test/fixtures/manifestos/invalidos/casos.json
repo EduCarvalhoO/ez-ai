@@ -638,5 +638,25 @@
     "arquivo": "policy-com-comando.json",
     "regra": "not",
     "caminho": "/componentes/0"
+  },
+  {
+    "arquivo": "executar-python-mpip-grudado.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-python-im-pip.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-pip3-12-sem-versao.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-corepack-pnpm-dlx.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
   }
 ]

@@ -43,15 +43,15 @@ Inclui formato, casamento com o que o manifesto declara, níveis, combinação, 
 Forma dos padrões por categoria:
 | Categoria | Padrão | Casa com o declarado se |
 |---|---|---|
-| `ler`, `escrever`, `configurarAmbiente` | Glob com as regras de caminho do manifesto | Os globs **se cruzam** (algum caminho casa com os dois), sem diferenciar caixa |
+| `ler`, `escrever`, `configurarAmbiente` | Glob com as regras de caminho do manifesto | Os globs **se cruzam** (algum caminho casa com os dois), sem diferenciar caixa (conservador) |
 | `rede` | Host minúsculo ASCII (punycode `xn--`), `*.dominio` ou `*` | Igual; `*.dominio` cobre o domínio e seus subdomínios por rótulo inteiro (`evilgithub.com` e `github.com.evil.io` não casam `*.github.com`) |
 | `segredos` | Nome de variável ou `*` | Igual, sem diferenciar caixa (Windows) |
 | `executar` | Nome de programa `a-z0-9._-` ou `*` | Algum programa efetivo do comando casa (abaixo); nome canônico e sufixos `.exe/.cmd/.bat/.com` ignorados dos dois lados |
 | `tipo` | Tipo de componente ou `*` | Igual |
 
-Exceção: em glob, só se o glob declarado estiver **contido** na exceção (`negar ler **` com `exceto src/**` continua negando o declarado `**`, e libera `src/**/*.ts`); nas outras categorias o declarado é um valor concreto e basta casar a exceção. Em `executar`, o item só escapa se todos os programas pegos pela regra estiverem na exceção.
+Exceção: em glob, só se o glob declarado estiver **contido** na exceção, diferenciando caixa (`negar ler **` com `exceto src/**` continua negando o declarado `**` e `SRC/**`, e libera `src/**/*.ts`); nas outras categorias o declarado é um valor concreto e basta casar a exceção. Em `executar`, o item só escapa se todos os programas pegos pela regra estiverem na exceção.
 
-Programas efetivos de um comando (`programasEfetivos`): os de `permissoes.executar` **e** o `comando` de `hook` e `mcp`; o programa externo; depois de executor de pacote (`npx`, `bunx`, `pnpx`, `uvx`, `npm exec/x/init/create`, `pnpm dlx/create/exec`, `yarn dlx/create/exec`, `bun x/create`, `pipx run`, `uv tool/run`), todo argumento que não é opção e o valor de `--package=`, sem escopo nem versão; o módulo de `python -m`. Risco residual: a regra vale sobre o declarado, não sobre o que um script faz por dentro.
+Programas efetivos de um comando (`programasEfetivos`): os de `permissoes.executar` **e** o `comando` de `hook` e `mcp`; o programa externo (nome canônico: `python3.12` → `python`, `pip3` → `pip`); depois de executor de pacote (`npx`, `bunx`, `pnpx`, `uvx`, `npm exec/x/init/create`, `pipx run`, `uv tool/run/pip`), todo argumento que não é opção e o valor de `--package=`, sem escopo nem versão; todo posicional de `yarn`, `pnpm` e `bun` (rodam binário sem subcomando: `yarn tsx`); `create-<nome>` depois de `create`/`init`; o comando de dentro de `corepack`; `pip` em `uv pip`; o módulo de `python -m`, inclusive grudado (`-mpip`) ou depois de opções combinadas (`-Im pip`). A validação do manifesto trata `-mpip`, `-Im pip`, `pip3.x` e `corepack` como as formas comuns (E7). Risco residual: a regra vale sobre o declarado, não sobre o que um script faz por dentro.
 
 ### Níveis
 | Nível | Fonte | Alcança |
@@ -76,7 +76,7 @@ Programas efetivos de um comando (`programasEfetivos`): os de `permissoes.execut
 | `pede-segredos` | `exigir-aprovacao` | Qualquer `segredos` |
 | `leitura-ampla` | `avisar` | `ler` com marca `amplo` |
 
-Organização e projeto podem subir qualquer uma para `negar`; nenhum nível desce. A marca `executavel` cobre `**/package.json`, `Makefile`, `justfile`, `Taskfile.yml`, `*.cmd`, `*.bat`, `*.ps1`, `*.sh`, `scripts/**/*.sh`, `*.config.{js,cjs,mjs,ts}`, `.eslintrc.js`, `conftest.py`, `setup.py`, `pyproject.toml` e `.pre-commit-config.yaml`, na raiz salvo onde há `**` (lista heurística).
+Organização e projeto podem subir qualquer uma para `negar`; nenhum nível desce. A marca `executavel` cobre, em qualquer pasta, `package.json`, `*.sh` e `conftest.py`, e, na raiz, `Makefile`, `justfile`, `Taskfile.yml`, `*.cmd`, `*.bat`, `*.ps1`, `*.config.{js,cjs,mjs,ts}`, `.eslintrc.js`, `setup.py`, `pyproject.toml` e `.pre-commit-config.yaml` (lista heurística). Configs `.js`/`.ts` ficam só na raiz porque `**/vite.config.ts` cruzaria com todo `src/**/*.ts` e pediria aprovação própria para qualquer pacote que escreve código; config dentro de subpasta de monorepo fica sem marca (risco residual em T2).
 
 ### Combinação e explicação
 `avaliarPacote(pacote, fontes, opcoes)` (puro):
@@ -90,7 +90,7 @@ Saída: `{ pacote, efeito, itens: [{ componente, categoria, item, efeito, decidi
 Cada regra aplicada leva `garantia` ([ADR-0016](../adr/0016-governanca-por-nivel-de-enforcement.md)):
 - `instalacao: "conferida-na-instalacao"`: o harness conferiu a declaração. Não conta como imposta, porque o agente pode gravar sem passar pelo harness, até o `validate --ci` da F4.
 - `execucao`, para cada ambiente da configuração (`garantiaEmExecucao`): `imposta-pelo-ambiente` só se, em **todos** os SOs do projeto, houver célula da categoria com nível `nativo`, sem ressalva, com revalidação em dia, mecanismo que falha fechado testado (condição 2) e arquivos de enforcement protegidos (condição 3); senão `imposta-por-validador` se um validador de servidor da categoria já existe (não só planejado); senão `so-aviso`. A tabela de capacidades e a data de hoje chegam como argumento (adapters na F3, porta de relógio na F2); sem tabela, tudo é `so-aviso`.
-- Regra `critica` com `so-aviso` em algum ambiente, ou sem ambiente informado, entra em `regrasNaoImpostas` e liga `falhaFechada`: o `plan` falha. Na policy de pacote, só aquele pacote é reprovado. Sem `critica`, a falta de garantia vira aviso explícito, nunca silêncio.
+- Regra `critica` com `so-aviso` em algum ambiente, ou sem ambiente informado, entra em `regrasNaoImpostas` e liga `falhaFechada`: o `plan` falha. A falha é da regra, não do item: `negar rede *` crítica existe para que o ambiente bloqueie em execução mesmo o pacote que não declarou rede, então, se o ambiente não bloqueia, todo pacote a que a regra se aplica é reprovado (até a F3, qualquer regra crítica de organização ou projeto reprova a instalação). Na policy de pacote, só aquele pacote é reprovado. Sem `critica`, a falta de garantia vira aviso explícito, nunca silêncio.
 
 ### Afrouxamento entre versões
 `afrouxamentosDePolicy(antes, depois)` lista, por id: `regra-removida` (id trocado conta como removida), `regra-alterada` (categoria ou marca), `efeito-rebaixado`, `padrao-removido`, `excecao-ampliada`, `pacotes-estreitados` e `critica-desligada`. O `plan` do `update` (F2) trata cada item como aprovação própria, igual a um aumento de permissão. Comparação conservadora: padrão trocado por outro maior também conta.

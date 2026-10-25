@@ -159,6 +159,8 @@ describe('marcarEscrita', () => {
     ['vite.config.ts', ['executavel']],
     ['pyproject.toml', ['executavel']],
     ['docs/*.md', []],
+    ['tests/conftest.py', ['executavel']],
+    ['tools/x.sh', ['executavel']],
     ['build.cmd', ['executavel']],
     ['src/**/*.ts', []],
   ])('%s → %j', (glob, marcas) => {

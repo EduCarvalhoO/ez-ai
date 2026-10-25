@@ -59,6 +59,11 @@ describe('afrouxamentosDePolicy (T-pol1, D10)', () => {
     expect(afrouxamentosDePolicy(policy([antesComPacotes]), policy([base]))).toEqual([]);
   });
 
+  it('regra por marca sem mudança não afrouxa', () => {
+    const marca: Partial<Regra> = { id: 'm', efeito: 'negar', categoria: 'ler', marca: 'sensivel' };
+    expect(afrouxamentosDePolicy(policy([marca]), policy([marca]))).toEqual([]);
+  });
+
   it('acusa troca de categoria ou de marca', () => {
     const marca: Partial<Regra> = { id: 'm', efeito: 'negar', categoria: 'ler', marca: 'sensivel' };
     expect(afrouxamentosDePolicy(policy([marca]), policy([{ ...marca, marca: 'amplo' }]))).toEqual([
