@@ -158,5 +158,15 @@
     "arquivo": "origem-com-query.json",
     "regra": "pattern",
     "caminho": "/origensPermitidas/1"
+  },
+  {
+    "arquivo": "policy-da-organizacao-ausente.json",
+    "regra": "policy-da-organizacao-ausente",
+    "caminho": "/policyDaOrganizacao"
+  },
+  {
+    "arquivo": "policy-da-organizacao-local.json",
+    "regra": "policy-da-organizacao-local",
+    "caminho": "/policyDaOrganizacao"
   }
 ]

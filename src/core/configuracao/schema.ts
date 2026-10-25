@@ -65,6 +65,7 @@ export const SCHEMA_DA_CONFIGURACAO = {
         },
       },
     },
+    policyDaOrganizacao: NOME_DE_PACOTE,
     limites: {
       type: 'object',
       additionalProperties: false,

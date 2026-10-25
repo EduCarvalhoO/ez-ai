@@ -1,0 +1,17 @@
+{
+  "versaoPolicy": 0,
+  "regras": [
+    {
+      "id": "r",
+      "efeito": "negar",
+      "categoria": "rede",
+      "padroes": [
+        "*"
+      ],
+      "motivo": "m",
+      "pacotes": [
+        "*"
+      ]
+    }
+  ]
+}

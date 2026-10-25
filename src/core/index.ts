@@ -29,3 +29,25 @@ export { hashDoConteudo } from './lockfile/hash.js';
 export type { Lockfile, PacoteTravado } from './lockfile/lockfile.js';
 export { validarLockfile } from './lockfile/lockfile.js';
 export { SCHEMA_DO_LOCKFILE } from './lockfile/schema.js';
+export type { Afrouxamento } from './policy/afrouxamentos.js';
+export { afrouxamentosDePolicy, conferirPacoteDaOrganizacao } from './policy/afrouxamentos.js';
+export type {
+  Capacidades,
+  CelulaDeCapacidade,
+  DecisaoDoPacote,
+  FonteDePolicy,
+  FontesDePolicy,
+  Garantia,
+  GarantiaEmExecucao,
+  ItemDecidido,
+  OpcoesDeAvaliacao,
+  RegraAplicada,
+  SistemaOperacional,
+} from './policy/avaliar.js';
+export { avaliarPacote, garantiaEmExecucao } from './policy/avaliar.js';
+export type { ItemDeclarado } from './policy/casamento.js';
+export { itensDoComponente, programasEfetivos } from './policy/casamento.js';
+export { carregarPolicyDoCodigo, POLICY_DO_NUCLEO, REGRAS_DO_NUCLEO } from './policy/nucleo.js';
+export type { CategoriaDePolicy, Efeito, Marca, NivelDePolicy, Policy, Regra } from './policy/policy.js';
+export { NIVEIS, validarPolicy } from './policy/policy.js';
+export { LIMITES_DA_POLICY, SCHEMA_DA_POLICY } from './policy/schema.js';

@@ -1,0 +1,11 @@
+{
+  "versaoPolicy": 0,
+  "regras": [
+    {
+      "id": "r",
+      "efeito": "negar",
+      "categoria": "ler",
+      "motivo": "m"
+    }
+  ]
+}

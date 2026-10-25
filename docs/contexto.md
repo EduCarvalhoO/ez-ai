@@ -1,6 +1,6 @@
 # Contexto do Projeto — AI Harness Extensível
 
-> Status: Vivo · Atualizado: 2026-10-24 · Relacionados: [roadmap](roadmap.md), [ADRs](adr/README.md)
+> Status: Vivo · Atualizado: 2026-10-25 · Relacionados: [roadmap](roadmap.md), [ADRs](adr/README.md)
 >
 > Este arquivo espelha o documento `AI_Harness_Contexto_Inicial.md` do Project no claude.ai. Ao alterar um, atualize o outro.
 
@@ -168,8 +168,8 @@ Agentes de IA tratam este documento como contexto e princípios, não como autor
 | Menor conjunto de componentes para validar a proposta | Em aberto — F1 |
 | Responsabilidades do núcleo vs. adapters | Decidido — [ADR-0015](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md), [mapa de módulos](arquitetura/mapa-de-modulos.md) |
 | Preservação de customizações | Em aberto — F2 |
-| Combinação e precedência de políticas de diferentes origens | Em aberto — F1 |
-| Operações que exigem aprovação explícita | Em aberto — F1/F4 |
+| Combinação e precedência de políticas de diferentes origens | Decidido — [ADR-0020](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md), [spec da policy](specs/policy.md) |
+| Operações que exigem aprovação explícita | Parcial — policy do núcleo ([ADR-0020](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md)); quem aprova e como na F2/F4 |
 | Representação de validações e evidências | Em aberto — F1 |
 | Garantias de compatibilidade | Em aberto — F8 |
 | Testes de pacotes antes do compartilhamento | Em aberto — F7 |
@@ -201,6 +201,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Segurança da instalação | O harness nunca executa código de pacote em `add`/`apply`/`update`; até a F7 só instala de origens permitidas; prompt injection tratada por contenção; ameaças no [modelo de ameaças](arquitetura/modelo-de-ameacas.md) | [0018](adr/0018-invariantes-de-seguranca-da-instalacao.md) |
 | Manifesto e permissões | `harness-pacote.json` em JSON validado por JSON Schema 2020-12 (`@cfworker/json-schema`, sem `eval`); permissões neutras por componente (`ler`, `escrever`, `executar`, `rede`, `segredos`, `configurarAmbiente`); limites fixos; aumento entre versões exige nova aprovação; [spec](specs/manifesto-de-pacote.md) | [0019](adr/0019-validacao-de-contratos-com-cfworker-json-schema.md) |
 | Configuração e lockfile | `.harness/config.json` (pacotes, `origensPermitidas` por repositório exato, `local:` dentro do projeto, limites só reduzíveis) e `.harness/lock.json` (versão, tag, commit, hash `sha256` da árvore inteira e retrato das permissões aprovadas, sem data); [spec](specs/configuracao-e-lockfile.md) | [0018](adr/0018-invariantes-de-seguranca-da-instalacao.md) |
+| Policy e precedência | Policy em JSON só com efeitos restritivos (`negar`, `exigir-aprovacao`, `avisar`); vence o mais restritivo entre núcleo, organização (pacote em `policyDaOrganizacao`), projeto (`.harness/policy.json`) e pacote (só sobre si); núcleo exige aprovação própria para escrita executável, leitura sensível, `configurarAmbiente` e segredos; garantia por ambiente e `critica` falha fechado; [spec](specs/policy.md) | [0020](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md) |
 | Pipeline agêntico | Etapas E0–E5 com gates G0 (revisão da documentação) a G3 (revisão humana da entrega), laços de volta com limite e rodadas de revisão humana até aprovar; pacote na F6 | [0011](adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md) |
 | Ferramental | Biome para lint e format (o typescript-eslint não suporta o TypeScript 7); Conventional Commits por script próprio sem dependência e hook `commit-msg` via `core.hooksPath`; cobertura V8 com 80% de linhas; changesets 3.0.3; dependências com idade mínima de 7 dias e sem scripts de instalação (`min-release-age=7` e `ignore-scripts=true` no `.npmrc`; idade conferida no CI por `scripts/verificar-idade-deps.mjs`) | [padrão de código](guias/padrao-de-codigo-e-testes.md) |
 | CI | GitHub Actions em Windows, macOS e Linux com Node 22, 24 e 26 (última correção) mais o piso 22.12.0; token só leitura, actions fixadas por SHA, sem cache | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [0007](adr/0007-suporte-multiplataforma.md) |

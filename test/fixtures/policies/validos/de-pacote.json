@@ -1,0 +1,14 @@
+{
+  "versaoPolicy": 0,
+  "regras": [
+    {
+      "id": "meu-agente-offline",
+      "efeito": "negar",
+      "categoria": "rede",
+      "padroes": [
+        "*"
+      ],
+      "motivo": "Este pacote nunca acessa a rede"
+    }
+  ]
+}

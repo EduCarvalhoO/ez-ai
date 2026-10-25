@@ -1,6 +1,6 @@
 # Índice da documentação
 
-> Status: Vivo · Atualizado: 2026-10-24 · Relacionados: [padrão de documentação](guias/padrao-de-documentacao.md)
+> Status: Vivo · Atualizado: 2026-10-25 · Relacionados: [padrão de documentação](guias/padrao-de-documentacao.md)
 >
 > Leia este índice primeiro e abra só os documentos de que precisar. Uma linha por documento; ao criar ou mudar um doc, atualize a linha no mesmo PR (a skill `validar-docs` confere).
 
@@ -28,6 +28,7 @@
 | [adr/0017-propriedade-de-pacotes-por-identidade-github.md](adr/0017-propriedade-de-pacotes-por-identidade-github.md) | ADR-0017: pacote de colaborador pertence a uma conta do GitHub, isolado do núcleo; só o dono publica |
 | [adr/0018-invariantes-de-seguranca-da-instalacao.md](adr/0018-invariantes-de-seguranca-da-instalacao.md) | ADR-0018: harness nunca executa código de pacote; só origens permitidas até a F7; prompt injection por contenção |
 | [adr/0019-validacao-de-contratos-com-cfworker-json-schema.md](adr/0019-validacao-de-contratos-com-cfworker-json-schema.md) | ADR-0019: contratos em JSON Schema 2020-12 como objeto TS no núcleo, validados por `@cfworker/json-schema` atrás de um wrapper |
+| [adr/0020-policy-declarativa-so-restritiva-com-precedencia.md](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md) | ADR-0020: policy em JSON declarativo, só restritiva; o mais restritivo vence entre núcleo, organização, projeto e pacote; garantia por ambiente |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [arquitetura/modelo-de-ameacas.md](arquitetura/modelo-de-ameacas.md) | Ameaças STRIDE com severidade, controle, fase e teste previsto; riscos residuais aceitos |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
@@ -39,4 +40,5 @@
 | [specs/configuracao-e-lockfile.md](specs/configuracao-e-lockfile.md) | Configuração do projeto e lockfile v0: origens permitidas, pastas locais, limites só reduzíveis, retrato de permissões e hash de conteúdo |
 | [specs/manifesto-de-pacote.md](specs/manifesto-de-pacote.md) | Manifesto de pacote v0: campos, tipos de componente, permissões declaradas, limites, regras de comando e diff de permissões |
 | [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |
+| [specs/policy.md](specs/policy.md) | Policy v0: regras só restritivas, casamento com as permissões, níveis e precedência, explicação da decisão, garantia por ambiente e policy do núcleo |
 | [_templates/](_templates/) | Modelos de ADR, spec e guia (fora da checagem do índice) |

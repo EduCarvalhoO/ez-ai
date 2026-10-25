@@ -1,0 +1,14 @@
+{
+  "versaoPolicy": 0,
+  "regras": [
+    {
+      "id": "r",
+      "efeito": "negar",
+      "categoria": "executar",
+      "padroes": [
+        "Node"
+      ],
+      "motivo": "m"
+    }
+  ]
+}

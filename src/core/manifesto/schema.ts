@@ -77,7 +77,7 @@ export const ARQUIVOS_DE_AMBIENTE = [
   '.github/hooks/*.json',
 ] as const;
 
-export const TIPOS_DE_COMPONENTE = ['instrucao', 'agente', 'skill', 'hook', 'mcp'] as const;
+export const TIPOS_DE_COMPONENTE = ['instrucao', 'agente', 'skill', 'hook', 'mcp', 'policy'] as const;
 export const EVENTOS_DE_HOOK = [
   'antes-de-ferramenta',
   'depois-de-ferramenta',
@@ -144,7 +144,10 @@ export const DEFS_DO_COMPONENTE = {
             },
             required: ['comando', 'permissoes'],
           },
-          { properties: { tipo: { enum: ['instrucao', 'agente', 'skill'] } }, not: { required: ['comando'] } },
+          {
+            properties: { tipo: { enum: ['instrucao', 'agente', 'skill', 'policy'] } },
+            not: { required: ['comando'] },
+          },
         ],
       },
     ],
