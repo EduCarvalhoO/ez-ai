@@ -1,0 +1,67 @@
+{
+  "versaoLockfile": 0,
+  "pacotes": {
+    "eduardo/revisao-ts": {
+      "versao": "1.2.0",
+      "origem": "https://github.com/eduardo/revisao-ts",
+      "tag": "v1.2.0",
+      "commit": "3f2a000000000000000000000000000000000000",
+      "hash": "sha512:abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab",
+      "componentes": [
+        {
+          "id": "revisor",
+          "tipo": "agente",
+          "arquivo": "agentes/revisor.md",
+          "permissoes": {
+            "ler": [
+              "src/**"
+            ],
+            "executar": [
+              {
+                "programa": "npm",
+                "argumentos": [
+                  "test"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "github",
+          "tipo": "mcp",
+          "arquivo": "mcp/github.json",
+          "comando": {
+            "programa": "npx",
+            "argumentos": [
+              "-y",
+              "@modelcontextprotocol/server-github@2025.4.8"
+            ]
+          },
+          "permissoes": {
+            "rede": [
+              "api.github.com"
+            ],
+            "segredos": [
+              "GITHUB_TOKEN"
+            ],
+            "configurarAmbiente": [
+              ".mcp.json"
+            ]
+          }
+        }
+      ]
+    },
+    "eduardo/rascunho": {
+      "versao": "0.1.0-beta.1",
+      "origem": "local:pacotes-locais/rascunho",
+      "hash": "sha256:9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b",
+      "componentes": [
+        {
+          "id": "nota",
+          "tipo": "instrucao",
+          "arquivo": "nota.md"
+        }
+      ]
+    }
+  }
+}

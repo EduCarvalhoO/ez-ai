@@ -120,4 +120,5 @@ export const PADROES_DE_SEGREDO = [
   '**/id_ecdsa',
   '**/.npmrc',
   '**/.netrc',
+  '**/.envrc',
 ] as const;

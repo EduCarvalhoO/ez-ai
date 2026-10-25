@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/lockfile.v0.schema.json",
+  "title": "Lockfile do harness-ai (v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["versaoLockfile", "pacotes"],
+  "properties": {
+    "versaoLockfile": {
+      "const": 0
+    },
+    "pacotes": {
+      "type": "object",
+      "maxProperties": 100,
+      "propertyNames": {
+        "type": "string",
+        "maxLength": 104,
+        "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["versao", "origem", "hash", "componentes"],
+        "properties": {
+          "versao": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+          },
+          "origem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160,
+                "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+              },
+              {
+                "type": "string",
+                "maxLength": 166,
+                "pattern": "^local:[A-Za-z0-9._/-]+$"
+              }
+            ]
+          },
+          "tag": {
+            "type": "string",
+            "maxLength": 65,
+            "pattern": "^v?(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+          },
+          "hash": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "componentes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/$defs/componente"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "comando": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["programa"],
+      "properties": {
+        "programa": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "argumentos": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "maxItems": 50
+        }
+      }
+    },
+    "permissoes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ler": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9._/*?-]+$"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "escrever": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9._/*?-]+$"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "executar": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comando"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "rede": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "segredos": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_][A-Z0-9_]{0,63}$"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "configurarAmbiente": {
+          "type": "array",
+          "items": {
+            "enum": [
+              ".claude/settings.json",
+              ".mcp.json",
+              ".vscode/mcp.json",
+              ".vscode/settings.json",
+              ".github/hooks/*.json"
+            ]
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        }
+      }
+    },
+    "componente": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "tipo", "arquivo"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "tipo": {
+          "enum": ["instrucao", "agente", "skill", "hook", "mcp"]
+        },
+        "arquivo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9._/-]+$"
+        },
+        "descricao": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "evento": {
+          "enum": [
+            "antes-de-ferramenta",
+            "depois-de-ferramenta",
+            "envio-de-prompt",
+            "inicio-de-sessao",
+            "fim-de-sessao"
+          ]
+        },
+        "comando": {
+          "$ref": "#/$defs/comando"
+        },
+        "permissoes": {
+          "$ref": "#/$defs/permissoes"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "tipo": {
+                  "const": "hook"
+                }
+              },
+              "required": ["evento", "comando"]
+            },
+            {
+              "properties": {
+                "tipo": {
+                  "not": {
+                    "const": "hook"
+                  }
+                }
+              },
+              "not": {
+                "required": ["evento"]
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "tipo": {
+                  "enum": ["hook", "mcp"]
+                },
+                "permissoes": {
+                  "required": ["configurarAmbiente"],
+                  "properties": {
+                    "configurarAmbiente": {
+                      "minItems": 1
+                    }
+                  }
+                }
+              },
+              "required": ["comando", "permissoes"]
+            },
+            {
+              "properties": {
+                "tipo": {
+                  "enum": ["instrucao", "agente", "skill"]
+                }
+              },
+              "not": {
+                "required": ["comando"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

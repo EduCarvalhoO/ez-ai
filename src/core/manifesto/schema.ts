@@ -21,7 +21,22 @@ export const LIMITES = {
   arquivosDoPacote: 500,
   bytesDoPacote: 5 * 1024 * 1024,
   bytesPorArquivo: 1024 * 1024,
+  // Configuração do projeto e lockfile (docs/specs/configuracao-e-lockfile.md).
+  bytesDaConfiguracao: 64 * 1024,
+  /** 100 pacotes com retrato de permissões, cada um menor que o próprio manifesto. */
+  bytesDoLockfile: 8 * 1024 * 1024,
+  pacotesNoProjeto: 100,
+  origensPermitidas: 100,
 } as const;
+
+/** Limites que a configuração do projeto pode reduzir (D5 da ficha de configuração); os outros são formato. */
+export const LIMITES_AJUSTAVEIS = [
+  'bytesDoManifesto',
+  'componentes',
+  'arquivosDoPacote',
+  'bytesDoPacote',
+  'bytesPorArquivo',
+] as const;
 
 export const ID_DO_SCHEMA =
   'https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/manifesto-pacote.v0.schema.json';
@@ -30,12 +45,12 @@ export const ID_DO_SCHEMA =
 export const PADRAO_LOGIN = '[a-z0-9](?:-?[a-z0-9]){0,38}';
 /** Nome do pacote: vira pasta em `.harness/pacotes/<login>/<pacote>/`. */
 export const PADRAO_PACOTE = '[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?';
-const PADRAO_REPO = '[A-Za-z0-9._-]{1,100}';
-const SEMVER = '(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)';
-const PRERELEASE = '(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?';
-const COMPARADOR = `(?:>=|<=|>|<|=|\\^|~)?${SEMVER}`;
+export const PADRAO_REPO = '[A-Za-z0-9._-]{1,100}';
+export const SEMVER = '(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)';
+export const PRERELEASE = '(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?';
+export const COMPARADOR = `(?:>=|<=|>|<|=|\\^|~)?${SEMVER}`;
 /** Caracteres aceitos em caminho relativo; regras de segmento ficam na validação semântica. */
-const CARACTERES_DE_CAMINHO = '^[A-Za-z0-9._/-]+$';
+export const CARACTERES_DE_CAMINHO = '^[A-Za-z0-9._/-]+$';
 const CARACTERES_DE_GLOB = '^[A-Za-z0-9._/*?-]+$';
 
 const texto = { type: 'string', minLength: 1, maxLength: LIMITES.texto } as const;
@@ -45,7 +60,12 @@ const lista = (itens: object) => ({
   maxItems: LIMITES.itensPorPermissao,
   uniqueItems: true,
 });
-const caminho = { type: 'string', minLength: 1, maxLength: LIMITES.caminho, pattern: CARACTERES_DE_CAMINHO } as const;
+export const caminho = {
+  type: 'string',
+  minLength: 1,
+  maxLength: LIMITES.caminho,
+  pattern: CARACTERES_DE_CAMINHO,
+} as const;
 const glob = { type: 'string', minLength: 1, maxLength: LIMITES.caminho, pattern: CARACTERES_DE_GLOB } as const;
 
 /** Arquivos de enforcement que um componente pode declarar que gera (T2, ADR-0016). */
@@ -66,6 +86,70 @@ export const EVENTOS_DE_HOOK = [
   'fim-de-sessao',
 ] as const;
 export const AMBIENTES = ['claude-code', 'copilot'] as const;
+
+/** Definições de componente, comando e permissões; o lockfile reusa para o retrato do que foi aprovado. */
+export const DEFS_DO_COMPONENTE = {
+  comando: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['programa'],
+    properties: {
+      programa: { type: 'string', maxLength: 64, pattern: '^[a-z0-9][a-z0-9._-]*$' },
+      argumentos: { type: 'array', items: texto, maxItems: LIMITES.argumentos },
+    },
+  },
+  permissoes: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      ler: lista(glob),
+      escrever: lista(glob),
+      executar: lista({ $ref: '#/$defs/comando' }),
+      rede: lista({
+        type: 'string',
+        maxLength: 253,
+        pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$',
+      }),
+      segredos: lista({ type: 'string', pattern: '^[A-Z_][A-Z0-9_]{0,63}$' }),
+      configurarAmbiente: lista({ enum: ARQUIVOS_DE_AMBIENTE }),
+    },
+  },
+  componente: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['id', 'tipo', 'arquivo'],
+    properties: {
+      id: { type: 'string', pattern: '^[a-z0-9][a-z0-9-]{0,63}$' },
+      tipo: { enum: TIPOS_DE_COMPONENTE },
+      arquivo: caminho,
+      descricao: { type: 'string', minLength: 1, maxLength: LIMITES.descricao },
+      evento: { enum: EVENTOS_DE_HOOK },
+      comando: { $ref: '#/$defs/comando' },
+      permissoes: { $ref: '#/$defs/permissoes' },
+    },
+    // Campos por tipo, com anyOf em vez de if/then (o Biome recusa propriedade `then` em objeto).
+    allOf: [
+      {
+        anyOf: [
+          { properties: { tipo: { const: 'hook' } }, required: ['evento', 'comando'] },
+          { properties: { tipo: { not: { const: 'hook' } } }, not: { required: ['evento'] } },
+        ],
+      },
+      {
+        anyOf: [
+          {
+            properties: {
+              tipo: { enum: ['hook', 'mcp'] },
+              permissoes: { required: ['configurarAmbiente'], properties: { configurarAmbiente: { minItems: 1 } } },
+            },
+            required: ['comando', 'permissoes'],
+          },
+          { properties: { tipo: { enum: ['instrucao', 'agente', 'skill'] } }, not: { required: ['comando'] } },
+        ],
+      },
+    ],
+  },
+} as const;
 
 export const SCHEMA_DO_MANIFESTO = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -118,66 +202,5 @@ export const SCHEMA_DO_MANIFESTO = {
       items: { $ref: '#/$defs/componente' },
     },
   },
-  $defs: {
-    comando: {
-      type: 'object',
-      additionalProperties: false,
-      required: ['programa'],
-      properties: {
-        programa: { type: 'string', maxLength: 64, pattern: '^[a-z0-9][a-z0-9._-]*$' },
-        argumentos: { type: 'array', items: texto, maxItems: LIMITES.argumentos },
-      },
-    },
-    permissoes: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        ler: lista(glob),
-        escrever: lista(glob),
-        executar: lista({ $ref: '#/$defs/comando' }),
-        rede: lista({
-          type: 'string',
-          maxLength: 253,
-          pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$',
-        }),
-        segredos: lista({ type: 'string', pattern: '^[A-Z_][A-Z0-9_]{0,63}$' }),
-        configurarAmbiente: lista({ enum: ARQUIVOS_DE_AMBIENTE }),
-      },
-    },
-    componente: {
-      type: 'object',
-      additionalProperties: false,
-      required: ['id', 'tipo', 'arquivo'],
-      properties: {
-        id: { type: 'string', pattern: '^[a-z0-9][a-z0-9-]{0,63}$' },
-        tipo: { enum: TIPOS_DE_COMPONENTE },
-        arquivo: caminho,
-        descricao: { type: 'string', minLength: 1, maxLength: LIMITES.descricao },
-        evento: { enum: EVENTOS_DE_HOOK },
-        comando: { $ref: '#/$defs/comando' },
-        permissoes: { $ref: '#/$defs/permissoes' },
-      },
-      // Campos por tipo, com anyOf em vez de if/then (o Biome recusa propriedade `then` em objeto).
-      allOf: [
-        {
-          anyOf: [
-            { properties: { tipo: { const: 'hook' } }, required: ['evento', 'comando'] },
-            { properties: { tipo: { not: { const: 'hook' } } }, not: { required: ['evento'] } },
-          ],
-        },
-        {
-          anyOf: [
-            {
-              properties: {
-                tipo: { enum: ['hook', 'mcp'] },
-                permissoes: { required: ['configurarAmbiente'], properties: { configurarAmbiente: { minItems: 1 } } },
-              },
-              required: ['comando', 'permissoes'],
-            },
-            { properties: { tipo: { enum: ['instrucao', 'agente', 'skill'] } }, not: { required: ['comando'] } },
-          ],
-        },
-      ],
-    },
-  },
+  $defs: DEFS_DO_COMPONENTE,
 } as const;

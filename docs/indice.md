@@ -36,6 +36,7 @@
 | [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs, definição de pronto e encerramento (agente `painel`) e decisões didáticas (agente `professor`) |
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
+| [specs/configuracao-e-lockfile.md](specs/configuracao-e-lockfile.md) | Configuração do projeto e lockfile v0: origens permitidas, pastas locais, limites só reduzíveis, retrato de permissões e hash de conteúdo |
 | [specs/manifesto-de-pacote.md](specs/manifesto-de-pacote.md) | Manifesto de pacote v0: campos, tipos de componente, permissões declaradas, limites, regras de comando e diff de permissões |
 | [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |
 | [_templates/](_templates/) | Modelos de ADR, spec e guia (fora da checagem do índice) |

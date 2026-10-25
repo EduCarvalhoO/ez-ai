@@ -1,0 +1,321 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/configuracao.v0.schema.json",
+  "versaoConfig": 0,
+  "ambientes": [
+    "claude-code",
+    "copilot"
+  ],
+  "origensPermitidas": [
+    "https://github.com/eduardo/revisao-ts",
+    "https://github.com/ana/Seguranca"
+  ],
+  "pacotes": {
+    "eduardo/p0": {
+      "origem": "local:pacotes/p0"
+    },
+    "eduardo/p1": {
+      "origem": "local:pacotes/p1"
+    },
+    "eduardo/p2": {
+      "origem": "local:pacotes/p2"
+    },
+    "eduardo/p3": {
+      "origem": "local:pacotes/p3"
+    },
+    "eduardo/p4": {
+      "origem": "local:pacotes/p4"
+    },
+    "eduardo/p5": {
+      "origem": "local:pacotes/p5"
+    },
+    "eduardo/p6": {
+      "origem": "local:pacotes/p6"
+    },
+    "eduardo/p7": {
+      "origem": "local:pacotes/p7"
+    },
+    "eduardo/p8": {
+      "origem": "local:pacotes/p8"
+    },
+    "eduardo/p9": {
+      "origem": "local:pacotes/p9"
+    },
+    "eduardo/p10": {
+      "origem": "local:pacotes/p10"
+    },
+    "eduardo/p11": {
+      "origem": "local:pacotes/p11"
+    },
+    "eduardo/p12": {
+      "origem": "local:pacotes/p12"
+    },
+    "eduardo/p13": {
+      "origem": "local:pacotes/p13"
+    },
+    "eduardo/p14": {
+      "origem": "local:pacotes/p14"
+    },
+    "eduardo/p15": {
+      "origem": "local:pacotes/p15"
+    },
+    "eduardo/p16": {
+      "origem": "local:pacotes/p16"
+    },
+    "eduardo/p17": {
+      "origem": "local:pacotes/p17"
+    },
+    "eduardo/p18": {
+      "origem": "local:pacotes/p18"
+    },
+    "eduardo/p19": {
+      "origem": "local:pacotes/p19"
+    },
+    "eduardo/p20": {
+      "origem": "local:pacotes/p20"
+    },
+    "eduardo/p21": {
+      "origem": "local:pacotes/p21"
+    },
+    "eduardo/p22": {
+      "origem": "local:pacotes/p22"
+    },
+    "eduardo/p23": {
+      "origem": "local:pacotes/p23"
+    },
+    "eduardo/p24": {
+      "origem": "local:pacotes/p24"
+    },
+    "eduardo/p25": {
+      "origem": "local:pacotes/p25"
+    },
+    "eduardo/p26": {
+      "origem": "local:pacotes/p26"
+    },
+    "eduardo/p27": {
+      "origem": "local:pacotes/p27"
+    },
+    "eduardo/p28": {
+      "origem": "local:pacotes/p28"
+    },
+    "eduardo/p29": {
+      "origem": "local:pacotes/p29"
+    },
+    "eduardo/p30": {
+      "origem": "local:pacotes/p30"
+    },
+    "eduardo/p31": {
+      "origem": "local:pacotes/p31"
+    },
+    "eduardo/p32": {
+      "origem": "local:pacotes/p32"
+    },
+    "eduardo/p33": {
+      "origem": "local:pacotes/p33"
+    },
+    "eduardo/p34": {
+      "origem": "local:pacotes/p34"
+    },
+    "eduardo/p35": {
+      "origem": "local:pacotes/p35"
+    },
+    "eduardo/p36": {
+      "origem": "local:pacotes/p36"
+    },
+    "eduardo/p37": {
+      "origem": "local:pacotes/p37"
+    },
+    "eduardo/p38": {
+      "origem": "local:pacotes/p38"
+    },
+    "eduardo/p39": {
+      "origem": "local:pacotes/p39"
+    },
+    "eduardo/p40": {
+      "origem": "local:pacotes/p40"
+    },
+    "eduardo/p41": {
+      "origem": "local:pacotes/p41"
+    },
+    "eduardo/p42": {
+      "origem": "local:pacotes/p42"
+    },
+    "eduardo/p43": {
+      "origem": "local:pacotes/p43"
+    },
+    "eduardo/p44": {
+      "origem": "local:pacotes/p44"
+    },
+    "eduardo/p45": {
+      "origem": "local:pacotes/p45"
+    },
+    "eduardo/p46": {
+      "origem": "local:pacotes/p46"
+    },
+    "eduardo/p47": {
+      "origem": "local:pacotes/p47"
+    },
+    "eduardo/p48": {
+      "origem": "local:pacotes/p48"
+    },
+    "eduardo/p49": {
+      "origem": "local:pacotes/p49"
+    },
+    "eduardo/p50": {
+      "origem": "local:pacotes/p50"
+    },
+    "eduardo/p51": {
+      "origem": "local:pacotes/p51"
+    },
+    "eduardo/p52": {
+      "origem": "local:pacotes/p52"
+    },
+    "eduardo/p53": {
+      "origem": "local:pacotes/p53"
+    },
+    "eduardo/p54": {
+      "origem": "local:pacotes/p54"
+    },
+    "eduardo/p55": {
+      "origem": "local:pacotes/p55"
+    },
+    "eduardo/p56": {
+      "origem": "local:pacotes/p56"
+    },
+    "eduardo/p57": {
+      "origem": "local:pacotes/p57"
+    },
+    "eduardo/p58": {
+      "origem": "local:pacotes/p58"
+    },
+    "eduardo/p59": {
+      "origem": "local:pacotes/p59"
+    },
+    "eduardo/p60": {
+      "origem": "local:pacotes/p60"
+    },
+    "eduardo/p61": {
+      "origem": "local:pacotes/p61"
+    },
+    "eduardo/p62": {
+      "origem": "local:pacotes/p62"
+    },
+    "eduardo/p63": {
+      "origem": "local:pacotes/p63"
+    },
+    "eduardo/p64": {
+      "origem": "local:pacotes/p64"
+    },
+    "eduardo/p65": {
+      "origem": "local:pacotes/p65"
+    },
+    "eduardo/p66": {
+      "origem": "local:pacotes/p66"
+    },
+    "eduardo/p67": {
+      "origem": "local:pacotes/p67"
+    },
+    "eduardo/p68": {
+      "origem": "local:pacotes/p68"
+    },
+    "eduardo/p69": {
+      "origem": "local:pacotes/p69"
+    },
+    "eduardo/p70": {
+      "origem": "local:pacotes/p70"
+    },
+    "eduardo/p71": {
+      "origem": "local:pacotes/p71"
+    },
+    "eduardo/p72": {
+      "origem": "local:pacotes/p72"
+    },
+    "eduardo/p73": {
+      "origem": "local:pacotes/p73"
+    },
+    "eduardo/p74": {
+      "origem": "local:pacotes/p74"
+    },
+    "eduardo/p75": {
+      "origem": "local:pacotes/p75"
+    },
+    "eduardo/p76": {
+      "origem": "local:pacotes/p76"
+    },
+    "eduardo/p77": {
+      "origem": "local:pacotes/p77"
+    },
+    "eduardo/p78": {
+      "origem": "local:pacotes/p78"
+    },
+    "eduardo/p79": {
+      "origem": "local:pacotes/p79"
+    },
+    "eduardo/p80": {
+      "origem": "local:pacotes/p80"
+    },
+    "eduardo/p81": {
+      "origem": "local:pacotes/p81"
+    },
+    "eduardo/p82": {
+      "origem": "local:pacotes/p82"
+    },
+    "eduardo/p83": {
+      "origem": "local:pacotes/p83"
+    },
+    "eduardo/p84": {
+      "origem": "local:pacotes/p84"
+    },
+    "eduardo/p85": {
+      "origem": "local:pacotes/p85"
+    },
+    "eduardo/p86": {
+      "origem": "local:pacotes/p86"
+    },
+    "eduardo/p87": {
+      "origem": "local:pacotes/p87"
+    },
+    "eduardo/p88": {
+      "origem": "local:pacotes/p88"
+    },
+    "eduardo/p89": {
+      "origem": "local:pacotes/p89"
+    },
+    "eduardo/p90": {
+      "origem": "local:pacotes/p90"
+    },
+    "eduardo/p91": {
+      "origem": "local:pacotes/p91"
+    },
+    "eduardo/p92": {
+      "origem": "local:pacotes/p92"
+    },
+    "eduardo/p93": {
+      "origem": "local:pacotes/p93"
+    },
+    "eduardo/p94": {
+      "origem": "local:pacotes/p94"
+    },
+    "eduardo/p95": {
+      "origem": "local:pacotes/p95"
+    },
+    "eduardo/p96": {
+      "origem": "local:pacotes/p96"
+    },
+    "eduardo/p97": {
+      "origem": "local:pacotes/p97"
+    },
+    "eduardo/p98": {
+      "origem": "local:pacotes/p98"
+    },
+    "eduardo/p99": {
+      "origem": "local:pacotes/p99"
+    },
+    "eduardo/p100": {
+      "origem": "local:pacotes/p100"
+    }
+  },
+  "limites": {
+    "bytesDoPacote": 1048576,
+    "componentes": 20
+  }
+}

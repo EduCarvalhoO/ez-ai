@@ -93,7 +93,7 @@ const PREFIXOS_DE_SEGREDO_PROIBIDOS = ['DYLD_', 'GIT_', 'NPM_CONFIG_'];
 
 type Json = Record<string, unknown>;
 
-function procurarInvisiveis(valor: unknown, caminho: string, erros: ErroDeContrato[]): void {
+export function procurarInvisiveis(valor: unknown, caminho: string, erros: ErroDeContrato[]): void {
   if (typeof valor === 'string') {
     if (INVISIVEL.test(valor)) {
       erros.push({
@@ -105,11 +105,14 @@ function procurarInvisiveis(valor: unknown, caminho: string, erros: ErroDeContra
   } else if (Array.isArray(valor)) {
     for (const [i, item] of valor.entries()) procurarInvisiveis(item, `${caminho}/${i}`, erros);
   } else if (typeof valor === 'object' && valor !== null) {
-    for (const [chave, item] of Object.entries(valor)) procurarInvisiveis(item, `${caminho}/${chave}`, erros);
+    for (const [chave, item] of Object.entries(valor)) {
+      // JSON Pointer (RFC 6901): `~` vira `~0` e `/` vira `~1` (`/pacotes/eduardo~1x`).
+      procurarInvisiveis(item, `${caminho}/${chave.replaceAll('~', '~0').replaceAll('/', '~1')}`, erros);
+    }
   }
 }
 
-function lista<T>(valor: unknown): T[] {
+export function lista<T>(valor: unknown): T[] {
   return Array.isArray(valor) ? [...(valor as T[])] : [];
 }
 
@@ -130,7 +133,7 @@ function permissoesDe(valor: unknown): Permissoes {
   };
 }
 
-function componenteDe(valor: unknown): Componente {
+export function componenteDe(valor: unknown): Componente {
   const c = valor as Json;
   return {
     id: String(c.id),
@@ -172,23 +175,38 @@ function manifestoDe(dado: Json): Manifesto {
   };
 }
 
+/** Função que registra um erro; as regras recebem a mesma, para o erro guardar o caminho no arquivo certo. */
+export type Falha = (caminho: string, regra: string, mensagem: string) => void;
+
+/** Nome de pacote que não pode virar pasta (nome reservado do Windows ou sufixo `.git`). */
+export function problemaNoNomeDoPacote(pacote: string): string | undefined {
+  if (/^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])(?:\.|$)/.test(pacote) || pacote.endsWith('.git')) {
+    return `"${pacote}" não pode virar pasta (nome reservado do Windows ou sufixo .git)`;
+  }
+  return undefined;
+}
+
+/** Separa `https://github.com/<login>/<repo>` (já aceito pelo schema) e confere a forma canônica. */
+export function partesDoRepositorio(url: string): { login: string; repo: string; problema?: string } {
+  const partes = /^https:\/\/github\.com\/([a-z0-9-]+)\/([A-Za-z0-9._-]+)$/.exec(url);
+  if (!partes) return { login: '', repo: '', problema: 'use exatamente https://github.com/<login>/<repo>' };
+  const [, login = '', repo = ''] = partes;
+  if (repo === '.' || repo === '..') return { login, repo, problema: 'nome de repositório inválido' };
+  if (repo.toLowerCase().endsWith('.git')) return { login, repo, problema: 'use a URL sem o sufixo .git' };
+  return { login, repo };
+}
+
 function regrasSemanticas(m: Manifesto): ErroDeContrato[] {
   const erros: ErroDeContrato[] = [];
-  const falha = (caminho: string, regra: string, mensagem: string) => erros.push({ caminho, regra, mensagem });
+  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, regra, mensagem });
 
-  if (/^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])(?:\.|$)/.test(m.pacote) || m.pacote.endsWith('.git')) {
-    falha('/nome', 'nome-de-pasta', `"${m.pacote}" não pode virar pasta (nome reservado do Windows ou sufixo .git)`);
-  }
-  const [, donoRepo = '', repo = ''] = /^https:\/\/github\.com\/([^/]+)\/([^/]+)$/.exec(m.repositorio) ?? [];
+  const noNome = problemaNoNomeDoPacote(m.pacote);
+  if (noNome) falha('/nome', 'nome-de-pasta', noNome);
+  const { login: donoRepo, repo, problema } = partesDoRepositorio(m.repositorio);
   if (donoRepo !== m.login) {
     falha('/repositorio', 'mesmo-dono', `o repositório precisa ser da conta "${m.login}", dona do pacote (ADR-0017)`);
   }
-  if (repo === '.' || repo === '..') {
-    falha('/repositorio', 'url-canonica', 'nome de repositório inválido');
-  }
-  if (repo.toLowerCase().endsWith('.git')) {
-    falha('/repositorio', 'url-canonica', 'use a URL sem o sufixo .git');
-  }
+  if (problema) falha('/repositorio', 'url-canonica', problema);
   if (
     m.assinatura &&
     !m.assinatura.identidade.startsWith(`https://github.com/${donoRepo}/${repo}/.github/workflows/`)
@@ -199,10 +217,15 @@ function regrasSemanticas(m: Manifesto): ErroDeContrato[] {
       'a identidade de assinatura precisa ser um workflow do próprio repositório do pacote',
     );
   }
+  regrasDosComponentes(m.componentes, '/componentes', falha);
+  return erros;
+}
 
+/** Regras semânticas dos componentes, comuns ao manifesto e ao retrato do lockfile. */
+export function regrasDosComponentes(componentes: readonly Componente[], raiz: string, falha: Falha): void {
   const ids = new Set<string>();
-  m.componentes.forEach((c, i) => {
-    const base = `/componentes/${i}`;
+  componentes.forEach((c, i) => {
+    const base = `${raiz}/${i}`;
     if (ids.has(c.id))
       falha(`${base}/id`, 'id-unico', `id "${c.id}" repetido; cada componente precisa de um id próprio`);
     ids.add(c.id);
@@ -257,7 +280,6 @@ function regrasSemanticas(m: Manifesto): ErroDeContrato[] {
       }
     });
   });
-  return erros;
 }
 
 /** Valida o texto de um `harness-pacote.json`. Devolve o manifesto tipado ou todos os erros encontrados. */
