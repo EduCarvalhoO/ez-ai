@@ -1,12 +1,12 @@
 # Manifesto de pacote e permissões declaradas
 
-> Status: Estável · Atualizado: 2026-10-24 · Relacionados: [ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md), [ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-github.md), [ADR-0018](../adr/0018-invariantes-de-seguranca-da-instalacao.md), [ADR-0016](../adr/0016-governanca-por-nivel-de-enforcement.md), [ADR-0015](../adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md), [ADR-0005](../adr/0005-distribuicao-git-lockfile.md), [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), [roadmap F1](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5)
+> Status: Estável · Atualizado: 2026-10-25 · Relacionados: [ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md), [ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-github.md), [ADR-0018](../adr/0018-invariantes-de-seguranca-da-instalacao.md), [ADR-0016](../adr/0016-governanca-por-nivel-de-enforcement.md), [ADR-0015](../adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md), [ADR-0005](../adr/0005-distribuicao-git-lockfile.md), [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), [roadmap F1](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5)
 
 ## Objetivo
 Definir o `harness-pacote.json`, arquivo na raiz de todo pacote que diz quem é o dono, a versão, os componentes e o que cada componente pode fazer. É a primeira coisa que o harness lê de um pacote baixado e é entrada não confiável. Serve a autores de pacote, ao núcleo (F2) e aos adapters (F3).
 
 ## Escopo
-Inclui campos, tipos de componente, modelo de permissões, comparação entre versões, limites, regras semânticas e versionamento. Não inclui ler o arquivo do disco ou do Git (F2), verificar a assinatura (F7), traduzir permissões para o formato de cada ambiente (F3/F4), configuração do projeto e lockfile ([spec](configuracao-e-lockfile.md)), policy (ficha 6) nem evidência e auditoria (ficha 7).
+Inclui campos, tipos de componente, modelo de permissões, comparação entre versões, limites, regras semânticas e versionamento. Não inclui ler o arquivo do disco ou do Git (F2), verificar a assinatura (F7), traduzir permissões para o formato de cada ambiente (F3/F4), configuração do projeto e lockfile ([spec](configuracao-e-lockfile.md)), policy ([spec](policy.md)) nem evidência e auditoria (ficha 7).
 
 ## Especificação
 
@@ -60,8 +60,9 @@ Componente: `id` (`a-z0-9-`, único no manifesto), `tipo`, `arquivo` (caminho re
 | `instrucao`, `agente`, `skill` | nenhum (`evento` e `comando` são recusados) | — |
 | `hook` | `evento`: `antes-de-ferramenta`, `depois-de-ferramenta`, `envio-de-prompt`, `inicio-de-sessao`, `fim-de-sessao`; `comando` | `evento`, `comando`, `permissoes.configurarAmbiente` não vazio |
 | `mcp` | `comando` | `comando`, `permissoes.configurarAmbiente` não vazio |
+| `policy` | nenhum (`evento`, `comando` e qualquer permissão são recusados) | — |
 
-`policy`, `validador` e `workflow` entram em versão menor do schema, nas fichas e fases que os definem. O nome neutro dos eventos é traduzido pelo adapter (F3).
+O arquivo de um componente `policy` segue a [spec da policy](policy.md) e só restringe o próprio pacote. `validador` e `workflow` entram em versão menor do schema, nas fases que os definem. O nome neutro dos eventos é traduzido pelo adapter (F3).
 
 ### Permissões
 Todas opcionais; lista ausente é lista vazia (nada permitido). Até 50 itens por lista, sem repetição. A permissão do pacote é a união das dos componentes, calculada pelo núcleo (`permissoesDoPacote`), nunca declarada.
@@ -69,7 +70,7 @@ Todas opcionais; lista ausente é lista vazia (nada permitido). Até 50 itens po
 | Categoria | Item | Regras |
 |---|---|---|
 | `ler` | Glob relativo ao projeto | Só `A-Za-z0-9._/-` e os curingas `*`, `**` (segmento inteiro) e `?`; sem `{}`, `!`, `[]`; mesmas regras de caminho abaixo. Marcado `amplo` se começa em `**` e `sensivel` se pode alcançar arquivo de segredo (`.env`, `*.pem`, `*.key`, `id_rsa`, `.npmrc`, `.aws/credentials`, `.git-credentials`…), para destaque no `plan` (I2) |
-| `escrever` | Glob | Como `ler`, e recusado se pode alcançar `.git/`, `.harness/`, `.claude/`, `.github/`, `.vscode/`, `.githooks/`, `.husky/`, `.devcontainer/`, `.mcp.json`, `.envrc`, `.npmrc`, `.gitmodules`, `.gitattributes`, `CODEOWNERS`, `docs/CODEOWNERS` ou `CLAUDE.md`, `CLAUDE.local.md` e `AGENTS.md` em qualquer pasta (T2). Por isso `src/**` é recusado e `src/**/*.ts` não. Marcado `executavel` se pode alcançar arquivo que outra ferramenta executa (`package.json`, `Makefile`, `*.cmd`, `*.bat`, `*.ps1`, `*.sh` da raiz); o `plan` (F2) destaca as marcas `amplo`, `sensivel` e `executavel` para a aprovação humana. Comparação sem diferenciar maiúsculas |
+| `escrever` | Glob | Como `ler`, e recusado se pode alcançar `.git/`, `.harness/`, `.claude/`, `.github/`, `.vscode/`, `.githooks/`, `.husky/`, `.devcontainer/`, `.mcp.json`, `.envrc`, `.npmrc`, `.gitmodules`, `.gitattributes`, `CODEOWNERS`, `docs/CODEOWNERS` ou `CLAUDE.md`, `CLAUDE.local.md` e `AGENTS.md` em qualquer pasta (T2). Por isso `src/**` é recusado e `src/**/*.ts` não. Marcado `executavel` se pode alcançar arquivo que outra ferramenta executa (`package.json` em qualquer pasta; na raiz, `Makefile`, `justfile`, `Taskfile.yml`, `*.cmd`, `*.bat`, `*.ps1`, `*.sh`, configs que são código como `*.config.ts`, `.eslintrc.js`, `conftest.py`, `setup.py`, `pyproject.toml`, `.pre-commit-config.yaml`; e `scripts/**/*.sh`); o `plan` (F2) destaca as marcas `amplo`, `sensivel` e `executavel`, e a [policy do núcleo](policy.md#policy-do-núcleo) exige aprovação própria para `executavel` e `sensivel`. Comparação sem diferenciar maiúsculas |
 | `executar` | `{ "programa", "argumentos" }` | Casamento exato dos argumentos, não prefixo. Ver [comandos](#comandos) |
 | `rede` | Hostname | Minúsculo, letras, dígitos e hífen, com ao menos um ponto; punycode (`xn--`) explícito; sem `*`, porta, userinfo, ponto final nem IP literal; recusa `localhost` e domínios internos (`.local`, `.internal`, `.lan`, `.corp`, `.svc`, `home.arpa`, `nip.io` e afins). Um host público que resolve para IP privado fica para o enforcement de rede (F4) |
 | `segredos` | Nome de variável de ambiente | `^[A-Z_][A-Z0-9_]{0,63}$`, sem curinga; nunca valores. Recusa variáveis que mudam a execução: `PATH`, `HOME`, `SHELL`, `NODE_OPTIONS`, `LD_PRELOAD`, `PYTHONPATH`, `BASH_ENV` e afins, e prefixos `DYLD_`, `GIT_`, `NPM_CONFIG_` |
@@ -133,5 +134,4 @@ Mudança de conteúdo de um arquivo com o mesmo caminho não aparece aqui: o dif
 
 ## Em aberto
 - Lista de destinos permitidos por tipo de componente (T2) e tradução de eventos e permissões por ambiente: contrato de adapter (F3).
-- Arquivos `executavel` (`package.json`, `Makefile`, scripts da raiz) só são marcados, não recusados: escrever neles é trabalho normal de desenvolvimento, mas vira execução quando outra ferramenta roda. Decidir com a policy (ficha 6) se exigem aprovação própria.
 - Lista de permissão de programas (em vez de bloqueio) para pacotes de nível "comunidade": F7.

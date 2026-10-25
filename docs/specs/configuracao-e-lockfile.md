@@ -1,12 +1,12 @@
 # Configuração do projeto e lockfile
 
-> Status: Estável · Atualizado: 2026-10-24 · Relacionados: [spec do manifesto](manifesto-de-pacote.md), [ADR-0018](../adr/0018-invariantes-de-seguranca-da-instalacao.md), [ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-github.md), [ADR-0016](../adr/0016-governanca-por-nivel-de-enforcement.md), [ADR-0005](../adr/0005-distribuicao-git-lockfile.md), [ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md), [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), [roadmap F1](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5)
+> Status: Estável · Atualizado: 2026-10-25 · Relacionados: [spec do manifesto](manifesto-de-pacote.md), [ADR-0018](../adr/0018-invariantes-de-seguranca-da-instalacao.md), [ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-github.md), [ADR-0016](../adr/0016-governanca-por-nivel-de-enforcement.md), [ADR-0005](../adr/0005-distribuicao-git-lockfile.md), [ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md), [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), [roadmap F1](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5)
 
 ## Objetivo
 Definir os dois arquivos que o harness mantém no projeto que o usa: a **configuração** (`.harness/config.json`, editada pela pessoa: quais pacotes, de onde podem vir, quais limites) e o **lockfile** (`.harness/lock.json`, gravado pelo harness: versão exata, commit, hash e retrato das permissões aprovadas de cada pacote). Serve ao núcleo (F2), ao `validate --ci` (F4) e a quem revisa PRs do projeto.
 
 ## Escopo
-Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algoritmo do hash de conteúdo e obrigações da F2. Não inclui ler e gravar os arquivos, resolver intervalo semver para tag e commit, nem conferir configuração × lockfile (F2); assinatura e identidade do dono no lockfile (F7, campo opcional em versão menor); policy e precedência (ficha 6); auditoria, data e autor da aprovação (ficha 7); telemetria (F5); lista de pacotes oficiais (F3).
+Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algoritmo do hash de conteúdo e obrigações da F2. Não inclui ler e gravar os arquivos, resolver intervalo semver para tag e commit, nem conferir configuração × lockfile (F2); assinatura e identidade do dono no lockfile (F7, campo opcional em versão menor); policy e precedência ([spec](policy.md)); auditoria, data e autor da aprovação (ficha 7); telemetria (F5); lista de pacotes oficiais (F3).
 
 ## Especificação
 
@@ -36,6 +36,7 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 | `pacotes` | não | Até 100; chave `<login>/<pacote>` com as regras do `nome` do manifesto |
 | `pacotes.*.origem` | sim | URL do GitHub ou `local:<caminho>` |
 | `pacotes.*.versao` | GitHub: sim; local: proibido | Intervalo com até dois comparadores (`^1.2.0`, `>=0.3.0 <1.0.0`); o lockfile fixa a exata. Pacote local usa a versão do manifesto da pasta |
+| `policyDaOrganizacao` | não | Chave de `pacotes` com origem do GitHub (pasta `local:` é recusada) cujos componentes `policy` formam o nível organização ([spec da policy](policy.md#níveis)) |
 | `limites` | não | Só `bytesDoManifesto`, `componentes`, `arquivosDoPacote`, `bytesDoPacote`, `bytesPorArquivo`; inteiro de 1 até o valor do núcleo |
 
 **Origens permitidas** ([ADR-0018](../adr/0018-invariantes-de-seguranca-da-instalacao.md) D2):
