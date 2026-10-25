@@ -315,10 +315,11 @@ export function problemaNoComando(comando: Comando, aninhado = false): string | 
   if (programa === 'find' && argumentos.some((a) => /^-(?:exec|execdir|ok|okdir)$/.test(a))) {
     return '"find -exec" roda outro comando; não é permitido';
   }
-  // `pnpm exec` e `yarn exec` rodam um binário local: o comando que vem depois passa pelas mesmas regras.
-  if ((programa === 'pnpm' || programa === 'yarn') && argumentos.includes('exec')) {
+  // `pnpm exec`, `yarn exec` e `uv run` rodam outro comando: o que vem depois passa pelas mesmas regras.
+  const sub = programa === 'uv' ? 'run' : 'exec';
+  if ((programa === 'pnpm' || programa === 'yarn' || programa === 'uv') && argumentos.includes(sub)) {
     if (aninhado) return EXECUTOR_ANINHADO;
-    const interno = problemaEmQualquerJanela(argumentos.slice(argumentos.indexOf('exec') + 1));
+    const interno = problemaEmQualquerJanela(argumentos.slice(argumentos.indexOf(sub) + 1));
     if (interno) return interno;
   }
   if (EXECUTORES_DIRETOS.has(programa)) return problemaNoExecutor(programa, argumentos, PACOTE_NPM_FIXO, aninhado);

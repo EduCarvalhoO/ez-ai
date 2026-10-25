@@ -40,7 +40,7 @@ function nomeDoPrograma(texto: string): string {
  * `npm create <nome>`, o comando de dentro de `corepack` e o módulo de `python -m` (também `-mpip` e `-Im pip`).
  * A regra vale sobre o declarado, não sobre o que um script faz por dentro (risco residual).
  */
-export function programasEfetivos(comando: Comando): readonly string[] {
+export function programasEfetivos(comando: Comando, profundidade = 0): readonly string[] {
   const programa = nomeDoPrograma(comando.programa);
   const programas = new Set([programa]);
   const { argumentos } = comando;
@@ -48,7 +48,9 @@ export function programasEfetivos(comando: Comando): readonly string[] {
     // Todo posicional pode ser o gerenciador (uma opção com valor esconderia qual é): conservador.
     argumentos.forEach((a, k) => {
       if (a.startsWith('-')) return;
-      for (const p of programasEfetivos({ programa: a, argumentos: argumentos.slice(k + 1) })) programas.add(p);
+      for (const p of programasEfetivos({ programa: a, argumentos: argumentos.slice(k + 1) }, profundidade + 1)) {
+        programas.add(p);
+      }
     });
     return [...programas];
   }
@@ -61,22 +63,30 @@ export function programasEfetivos(comando: Comando): readonly string[] {
   }
   if (inicio >= 0) {
     let anterior = inicio > 0 ? (argumentos[inicio - 1] ?? '') : '';
-    for (const argumento of argumentos.slice(inicio)) {
+    argumentos.slice(inicio).forEach((argumento, j) => {
       const valor = argumento.startsWith('--package=') ? argumento.slice('--package='.length) : argumento;
-      if (!valor.startsWith('-')) {
-        const nome = nomeDoPrograma(valor);
-        programas.add(nome);
-        if (SUBCOMANDOS_DE_CRIACAO.has(anterior)) programas.add(`create-${nome}`);
-        anterior = nome;
+      if (valor.startsWith('-')) return;
+      const nome = nomeDoPrograma(valor);
+      programas.add(nome);
+      if (SUBCOMANDOS_DE_CRIACAO.has(anterior)) programas.add(`create-${nome}`);
+      anterior = nome;
+      // O comando de dentro é analisado de novo (`pnpm exec python -mpip`); um nível só, para ficar linear (D1).
+      if (profundidade === 0) {
+        const resto = argumentos.slice(inicio + j + 1);
+        for (const p of programasEfetivos({ programa: valor, argumentos: resto }, 1)) programas.add(p);
       }
-    }
+    });
   }
   // `uv pip install` é o pip embutido no uv.
   if (programa === 'uv' && argumentos.includes('pip')) programas.add('pip');
   const doPython = programa === 'python' ? moduloDoPython(argumentos) : undefined;
   if (doPython === 'incerto') {
-    // Sem saber onde está o módulo, todo argumento que pode ser nome conta (conservador).
-    for (const a of argumentos) if (!a.startsWith('-')) programas.add(nomeDoPrograma(a));
+    // Sem saber onde está o módulo, todo argumento que pode ser nome conta, e o texto depois de `m` em opção curta.
+    for (const a of argumentos) {
+      if (!a.startsWith('-')) programas.add(nomeDoPrograma(a));
+      const grudado = /^-[A-Za-z]*m(.+)$/.exec(a)?.[1];
+      if (grudado) programas.add(nomeDoPrograma(grudado));
+    }
   } else if (doPython) programas.add(nomeDoPrograma(doPython.modulo));
   return [...programas];
 }

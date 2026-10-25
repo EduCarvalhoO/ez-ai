@@ -683,5 +683,15 @@
     "arquivo": "executar-corepack-install.json",
     "regra": "comando",
     "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-uv-run-python-mpip.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "executar-uv-run-pip3.json",
+    "regra": "comando",
+    "caminho": "/componentes/0/permissoes/executar/0"
   }
 ]

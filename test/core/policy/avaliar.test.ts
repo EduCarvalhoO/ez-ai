@@ -364,6 +364,10 @@ describe('programas efetivos: formas indiretas de rodar um programa (E4 do segur
     [['python', '-W', 'ignore', '-m', 'pip'], 'pip'],
     [['python', '--check-hash-based-pycs', 'always', '-m', 'pip'], 'pip'],
     [['python', '-Z', 'pip'], 'pip'],
+    [['py', '-3', '-mpip', 'install', 'x==1.0.0'], 'pip'],
+    [['pnpm', 'exec', 'python', '-mpip', 'install', 'x==1.0.0'], 'pip'],
+    [['npx', '-p', 'a@1.0.0', 'python', '-Im', 'pip', 'install', 'x==1.0.0'], 'pip'],
+    [['uv', 'run', 'python', '-mpip', 'install', 'x==1.0.0'], 'pip'],
   ])('%j roda %s', ([programa = '', ...argumentos], esperado) => {
     expect(programasEfetivos({ programa, argumentos })).toContain(esperado);
   });
