@@ -25,7 +25,7 @@
 | [0017](0017-propriedade-de-pacotes-por-identidade-github.md) | Propriedade de pacotes por identidade do GitHub | Aceito |
 | [0018](0018-invariantes-de-seguranca-da-instalacao.md) | Invariantes de segurança da instalação | Aceito |
 | [0019](0019-validacao-de-contratos-com-cfworker-json-schema.md) | Validação de contratos com JSON Schema e `@cfworker/json-schema` | Aceito |
-| [0020](0020-policy-declarativa-so-restritiva-com-precedencia.md) | Policy declarativa, só restritiva, com precedência por nível | Proposto |
+| [0020](0020-policy-declarativa-so-restritiva-com-precedencia.md) | Policy declarativa, só restritiva, com precedência por nível | Aceito |
 
 ## Decisões em aberto
 

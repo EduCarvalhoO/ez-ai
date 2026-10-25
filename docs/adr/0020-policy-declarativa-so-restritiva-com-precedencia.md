@@ -1,6 +1,6 @@
 # ADR-0020: Policy declarativa, só restritiva, com precedência por nível
 
-> Status: Proposto · Data: 2026-10-25 · Relacionados: [spec da policy](../specs/policy.md), [ADR-0016](0016-governanca-por-nivel-de-enforcement.md), [ADR-0017](0017-propriedade-de-pacotes-por-identidade-github.md), [ADR-0018](0018-invariantes-de-seguranca-da-instalacao.md), [ADR-0003](0003-controle-de-usuarios-faseado.md), [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), [roadmap F1](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5)
+> Status: Aceito · Data: 2026-10-25 · Relacionados: [spec da policy](../specs/policy.md), [ADR-0016](0016-governanca-por-nivel-de-enforcement.md), [ADR-0017](0017-propriedade-de-pacotes-por-identidade-github.md), [ADR-0018](0018-invariantes-de-seguranca-da-instalacao.md), [ADR-0003](0003-controle-de-usuarios-faseado.md), [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), [roadmap F1](../roadmap.md#f1--contratos-e-modelo-de-ameaças-s3s5)
 
 ## Contexto
 O roadmap pede na F1 o formato e a precedência de policies (núcleo > organização > projeto > pacote). O modelo de ameaças tem E5 (policy de pacote afrouxa regra de nível acima) como `Alta`. A spec do manifesto deixou em aberto se escrever em arquivo `executavel` exige aprovação própria, e o [ADR-0016](0016-governanca-por-nivel-de-enforcement.md) exige distinguir regra imposta pelo ambiente, por validador ou só pedida. O harness nunca executa código de pacote ([ADR-0018](0018-invariantes-de-seguranca-da-instalacao.md)).
@@ -19,7 +19,7 @@ O roadmap pede na F1 o formato e a precedência de policies (núcleo > organiza�
 | Limites (D9) | **"Cada nível só restringe"; limites numéricos seguem na configuração** | Mover limites para a policy |
 | Afrouxamento (D10) | **Diff de policy entre versões exige aprovação própria** | Atualização comum; proibir afrouxar |
 
-Proposta para o G1 da ficha "Policy e precedência de regras" (2026-10-25): as opções em negrito. D10 e os ajustes de D4, D5, D7 e D8 vieram da revisão do `seguranca` no G0.
+Escolha do Eduardo no G1 da ficha "Policy e precedência de regras" (2026-10-25): as opções em negrito. D10 e os ajustes de D4, D5, D7 e D8 vieram da revisão do `seguranca` no G0.
 
 ## Decisão
 - Policy é JSON (`versaoPolicy: 0`) com regras `{ id, efeito, categoria, padroes | marca, exceto?, pacotes?, critica?, motivo }`, validado por `validarPolicy` com a mesma leitura segura dos outros contratos ([spec](../specs/policy.md)). Não existe efeito que libere.
