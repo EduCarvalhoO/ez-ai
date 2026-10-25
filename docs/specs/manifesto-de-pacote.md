@@ -6,7 +6,7 @@
 Definir o `harness-pacote.json`, arquivo na raiz de todo pacote que diz quem é o dono, a versão, os componentes e o que cada componente pode fazer. É a primeira coisa que o harness lê de um pacote baixado e é entrada não confiável. Serve a autores de pacote, ao núcleo (F2) e aos adapters (F3).
 
 ## Escopo
-Inclui campos, tipos de componente, modelo de permissões, comparação entre versões, limites, regras semânticas e versionamento. Não inclui ler o arquivo do disco ou do Git (F2), verificar a assinatura (F7), traduzir permissões para o formato de cada ambiente (F3/F4), configuração do projeto e lockfile (ficha 5), policy (ficha 6) nem evidência e auditoria (ficha 7).
+Inclui campos, tipos de componente, modelo de permissões, comparação entre versões, limites, regras semânticas e versionamento. Não inclui ler o arquivo do disco ou do Git (F2), verificar a assinatura (F7), traduzir permissões para o formato de cada ambiente (F3/F4), configuração do projeto e lockfile ([spec](configuracao-e-lockfile.md)), policy (ficha 6) nem evidência e auditoria (ficha 7).
 
 ## Especificação
 
@@ -92,7 +92,7 @@ Para `arquivo` e para cada glob: relativo (sem `/` inicial), até 160 caracteres
 Na ordem: tamanho até 64 KiB **em bytes UTF-8**; varredura linear que recusa chave repetida no mesmo objeto (inclusive escrita com escape, como `"a"` e `"a"`) e aninhamento acima de 32 níveis; `JSON.parse`; schema; caracteres invisíveis; regras semânticas. Chave repetida é recusada porque quem aprova lendo o diff no GitHub vê a primeira e o `JSON.parse` usa a última (D8). Toda string, em qualquer campo, recusa caracteres de controle e de formato Unicode (categorias Cc, Cf, Zl, Zp: ANSI, bidi, largura zero, tags), ignoráveis por padrão (seletores de variação, CGJ), de uso privado, não atribuídos e brancos que parecem letra (U+2800, U+3164). Consequências: emoji com seletor de variação (`❤️`) é recusado; e "não atribuído" depende da versão de Unicode do Node, então um caractere novo pode passar num Node mais recente e falhar num mais antigo (fica do lado seguro), para o `plan` mostrar o mesmo que o agente lê (T5). O objeto tipado é montado campo a campo, nunca por cópia do JSON (`__proto__` e `constructor` nunca chegam ao modelo).
 
 ### Limites
-Fixos no núcleo (`LIMITES` em `src/core/manifesto/schema.ts`); a configuração do projeto só pode reduzi-los (ficha 5). Fecham o Em aberto de D1 do [modelo de ameaças](../arquitetura/modelo-de-ameacas.md).
+Fixos no núcleo (`LIMITES` em `src/core/manifesto/schema.ts`); a configuração do projeto só pode reduzir os de volume ([spec da configuração](configuracao-e-lockfile.md#configuração)). Fecham o Em aberto de D1 do [modelo de ameaças](../arquitetura/modelo-de-ameacas.md).
 
 | Limite | Valor | Quem confere |
 |---|---|---|

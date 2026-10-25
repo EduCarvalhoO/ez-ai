@@ -3,6 +3,9 @@ import { DESTINOS_EXECUTAVEIS, globsSeCruzam, PADROES_DE_SEGREDO } from './camin
 import type { Comando, Componente, Manifesto, Permissoes } from './manifesto.js';
 
 type Categoria = keyof Permissoes;
+
+/** Manifesto ou retrato do lockfile: o diff só olha os componentes. */
+export type ComComponentes = Pick<Manifesto, 'componentes'>;
 const CATEGORIAS: readonly Categoria[] = ['ler', 'escrever', 'executar', 'rede', 'segredos', 'configurarAmbiente'];
 
 /** Algo que a versão nova pode fazer e a anterior não podia. */
@@ -65,7 +68,7 @@ function alteracoesDeExecucao(antes: Componente, depois: Componente): Aumento[] 
  * um componente executável roda. Comparação conservadora: glob novo conta como aumento mesmo se um antigo o cobria.
  * Mudança de conteúdo de um arquivo com o mesmo caminho não aparece aqui; o diff do `update` mostra (F2).
  */
-export function diferencaDePermissoes(antes: Manifesto, depois: Manifesto): readonly Aumento[] {
+export function diferencaDePermissoes(antes: ComComponentes, depois: ComComponentes): readonly Aumento[] {
   const anteriores = new Map(antes.componentes.map((c) => [c.id, c]));
   const aumentos: Aumento[] = [];
   for (const atual of depois.componentes) {

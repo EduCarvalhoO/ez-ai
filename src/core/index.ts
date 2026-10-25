@@ -11,6 +11,21 @@ export type {
   TipoDeComponente,
 } from './manifesto/manifesto.js';
 export { validarManifesto } from './manifesto/manifesto.js';
-export type { Aumento, MarcaDeEscrita, MarcaDeLeitura } from './manifesto/permissoes.js';
+export type { Aumento, ComComponentes, MarcaDeEscrita, MarcaDeLeitura } from './manifesto/permissoes.js';
 export { diferencaDePermissoes, marcarEscrita, marcarLeitura, permissoesDoPacote } from './manifesto/permissoes.js';
-export { LIMITES, SCHEMA_DO_MANIFESTO } from './manifesto/schema.js';
+export { LIMITES, LIMITES_AJUSTAVEIS, SCHEMA_DO_MANIFESTO } from './manifesto/schema.js';
+export type {
+  Configuracao,
+  LimiteAjustavel,
+  Limites,
+  PacoteDaConfiguracao,
+} from './configuracao/configuracao.js';
+export { limitesEfetivos, origemPermitida, validarConfiguracao } from './configuracao/configuracao.js';
+export type { Origem } from './configuracao/origem.js';
+export { ORIGENS_OFICIAIS } from './configuracao/origem.js';
+export { SCHEMA_DA_CONFIGURACAO } from './configuracao/schema.js';
+export type { ArquivoDoPacote } from './lockfile/hash.js';
+export { hashDoConteudo } from './lockfile/hash.js';
+export type { Lockfile, PacoteTravado } from './lockfile/lockfile.js';
+export { validarLockfile } from './lockfile/lockfile.js';
+export { SCHEMA_DO_LOCKFILE } from './lockfile/schema.js';

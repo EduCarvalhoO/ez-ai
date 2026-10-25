@@ -1,0 +1,162 @@
+[
+  {
+    "arquivo": "origem-nao-permitida.json",
+    "regra": "origem-nao-permitida",
+    "caminho": "/pacotes/eduardo~1revisao-ts/origem"
+  },
+  {
+    "arquivo": "origem-prefixo.json",
+    "regra": "origem-nao-permitida",
+    "caminho": "/pacotes/eduardo~1revisao-ts/origem"
+  },
+  {
+    "arquivo": "origem-de-outro-dono.json",
+    "regra": "mesmo-dono",
+    "caminho": "/pacotes/eduardo~1revisao-ts/origem"
+  },
+  {
+    "arquivo": "origem-com-git.json",
+    "regra": "url-canonica",
+    "caminho": "/origensPermitidas/2"
+  },
+  {
+    "arquivo": "origem-com-credencial.json",
+    "regra": "pattern",
+    "caminho": "/origensPermitidas/2"
+  },
+  {
+    "arquivo": "origem-com-barra-final.json",
+    "regra": "pattern",
+    "caminho": "/origensPermitidas/2"
+  },
+  {
+    "arquivo": "origem-repetida-por-caixa.json",
+    "regra": "origem-repetida",
+    "caminho": "/origensPermitidas/2"
+  },
+  {
+    "arquivo": "nome-maiusculo.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/Eduardo~1x"
+  },
+  {
+    "arquivo": "nome-proto.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/__proto__"
+  },
+  {
+    "arquivo": "nome-reservado-windows.json",
+    "regra": "nome-de-pasta",
+    "caminho": "/pacotes/eduardo~1con"
+  },
+  {
+    "arquivo": "github-sem-versao.json",
+    "regra": "versao-obrigatoria",
+    "caminho": "/pacotes/eduardo~1revisao-ts/versao"
+  },
+  {
+    "arquivo": "local-com-versao.json",
+    "regra": "versao-em-local",
+    "caminho": "/pacotes/eduardo~1rascunho/versao"
+  },
+  {
+    "arquivo": "local-ponto-ponto.json",
+    "regra": "caminho",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "local-absoluto.json",
+    "regra": "caminho",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "local-barra-invertida.json",
+    "regra": "pattern",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "local-git-maiusculo.json",
+    "regra": "caminho",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "local-harness.json",
+    "regra": "caminho",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "local-claude.json",
+    "regra": "caminho",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "local-raiz.json",
+    "regra": "caminho",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "local-node-modules.json",
+    "regra": "caminho",
+    "caminho": "/pacotes/eduardo~1rascunho/origem"
+  },
+  {
+    "arquivo": "local-aninhado.json",
+    "regra": "pasta-local-repetida",
+    "caminho": "/pacotes/eduardo~1rascunho2/origem"
+  },
+  {
+    "arquivo": "limite-acima.json",
+    "regra": "limite-acima-do-nucleo",
+    "caminho": "/limites/bytesDoPacote"
+  },
+  {
+    "arquivo": "limite-zero.json",
+    "regra": "minimum",
+    "caminho": "/limites/componentes"
+  },
+  {
+    "arquivo": "limite-nao-ajustavel.json",
+    "regra": "additionalProperties",
+    "caminho": "/limites"
+  },
+  {
+    "arquivo": "campo-desconhecido.json",
+    "regra": "additionalProperties",
+    "caminho": ""
+  },
+  {
+    "arquivo": "ambiente-desconhecido.json",
+    "regra": "enum",
+    "caminho": "/ambientes/0"
+  },
+  {
+    "arquivo": "invisivel-na-versao.json",
+    "regra": "caractere-invisivel",
+    "caminho": "/pacotes/eduardo~1revisao-ts/versao"
+  },
+  {
+    "arquivo": "chave-duplicada.json",
+    "regra": "chave-duplicada",
+    "caminho": "/ambientes"
+  },
+  {
+    "arquivo": "versao-errada.json",
+    "regra": "const",
+    "caminho": "/versaoConfig"
+  },
+  {
+    "arquivo": "muitos-pacotes.json",
+    "regra": "maxProperties",
+    "caminho": "/pacotes"
+  },
+  {
+    "arquivo": "origem-com-porta.json",
+    "regra": "pattern",
+    "caminho": "/origensPermitidas/1"
+  },
+  {
+    "arquivo": "origem-com-query.json",
+    "regra": "pattern",
+    "caminho": "/origensPermitidas/1"
+  }
+]

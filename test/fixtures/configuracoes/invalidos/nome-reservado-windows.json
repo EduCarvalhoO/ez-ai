@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/configuracao.v0.schema.json",
+  "versaoConfig": 0,
+  "ambientes": [
+    "claude-code",
+    "copilot"
+  ],
+  "origensPermitidas": [
+    "https://github.com/eduardo/revisao-ts",
+    "https://github.com/ana/Seguranca"
+  ],
+  "pacotes": {
+    "eduardo/revisao-ts": {
+      "origem": "https://github.com/eduardo/revisao-ts",
+      "versao": "^1.2.0"
+    },
+    "ana/seguranca": {
+      "origem": "https://github.com/ana/seguranca",
+      "versao": ">=0.3.0 <1.0.0"
+    },
+    "eduardo/rascunho": {
+      "origem": "local:pacotes-locais/rascunho"
+    },
+    "eduardo/con": {
+      "origem": "local:pacotes/con-pkg"
+    }
+  },
+  "limites": {
+    "bytesDoPacote": 1048576,
+    "componentes": 20
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "versaoConfig": 0,
+  "ambientes": [
+    "copilot"
+  ],
+  "pacotes": {
+    "eduardo/a": {
+      "origem": "local:pacotes/a"
+    },
+    "eduardo/b": {
+      "origem": "local:pacotes/b"
+    }
+  }
+}
