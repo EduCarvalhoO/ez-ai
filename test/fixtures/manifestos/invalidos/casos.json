@@ -628,5 +628,15 @@
     "arquivo": "executar-pnpm-exec-aninhado.json",
     "regra": "comando",
     "caminho": "/componentes/0/permissoes/executar/0"
+  },
+  {
+    "arquivo": "policy-com-permissoes.json",
+    "regra": "policy-sem-permissoes",
+    "caminho": "/componentes/0/permissoes"
+  },
+  {
+    "arquivo": "policy-com-comando.json",
+    "regra": "not",
+    "caminho": "/componentes/0"
   }
 ]

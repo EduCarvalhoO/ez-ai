@@ -35,6 +35,8 @@ export interface Configuracao {
   /** Em ordem de nome. */
   readonly pacotes: readonly PacoteDaConfiguracao[];
   readonly limites: Readonly<Partial<Record<LimiteAjustavel, number>>>;
+  /** Pacote (origem GitHub) cujos componentes `policy` são o nível organização (docs/specs/policy.md). */
+  readonly policyDaOrganizacao?: string;
 }
 
 type Json = Record<string, unknown>;
@@ -68,6 +70,7 @@ function configuracaoDe(dado: Json): Configuracao {
     limites: Object.fromEntries(
       LIMITES_AJUSTAVEIS.filter((nome) => typeof limites[nome] === 'number').map((nome) => [nome, limites[nome]]),
     ),
+    ...(typeof dado.policyDaOrganizacao === 'string' ? { policyDaOrganizacao: dado.policyDaOrganizacao } : {}),
   };
 }
 
@@ -130,6 +133,23 @@ function regrasSemanticas(dado: Json, config: Configuracao): ErroDeContrato[] {
         falha(`${base}/origem`, 'pasta-local-repetida', `a pasta "${caminho}" coincide com a de "${outra.nome}"`);
       }
       pastasLocais.push({ nome: pacote.nome, caminho });
+    }
+  }
+
+  if (config.policyDaOrganizacao !== undefined) {
+    const daOrganizacao = config.pacotes.find((p) => p.nome === config.policyDaOrganizacao);
+    if (!daOrganizacao) {
+      falha(
+        '/policyDaOrganizacao',
+        'policy-da-organizacao-ausente',
+        `"${config.policyDaOrganizacao}" precisa estar em "pacotes" para ser instalado e travado no lockfile`,
+      );
+    } else if (daOrganizacao.origem.tipo !== 'github') {
+      falha(
+        '/policyDaOrganizacao',
+        'policy-da-organizacao-local',
+        'a policy da organização vem de uma origem do GitHub permitida, nunca de pasta local (editável no projeto)',
+      );
     }
   }
 

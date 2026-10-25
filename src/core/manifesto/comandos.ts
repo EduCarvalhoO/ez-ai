@@ -191,7 +191,7 @@ function problemaNoInstalador(programa: string, argumentos: readonly string[], a
 }
 
 /** Nome canônico: `bash.exe` → `bash`, `python3.12` → `python`, `nodejs` → `node`. */
-function nomeCanonico(programa: string): string {
+export function nomeCanonico(programa: string): string {
   const semExtensao = programa.replace(/\.(?:exe|cmd|bat|com)$/, '');
   if (/^python[0-9.]*$/.test(semExtensao) || semExtensao === 'py') return 'python';
   if (semExtensao === 'nodejs') return 'node';

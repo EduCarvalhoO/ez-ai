@@ -155,7 +155,10 @@ describe('marcarEscrita', () => {
   it.each([
     ['package.json', ['executavel']],
     ['pacotes/*/package.json', ['executavel']],
-    ['scripts/*.sh', []],
+    ['scripts/*.sh', ['executavel']],
+    ['vite.config.ts', ['executavel']],
+    ['pyproject.toml', ['executavel']],
+    ['docs/*.md', []],
     ['build.cmd', ['executavel']],
     ['src/**/*.ts', []],
   ])('%s → %j', (glob, marcas) => {

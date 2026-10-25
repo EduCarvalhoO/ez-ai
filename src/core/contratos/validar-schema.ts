@@ -19,7 +19,7 @@ const mensagens: Readonly<Record<string, string>> = {
   uniqueItems: 'lista com itens repetidos',
   minimum: 'número abaixo do mínimo',
   maximum: 'número acima do máximo',
-  not: 'campo não permitido para este tipo de componente',
+  not: 'combinação de campos não permitida (ex.: campo de outro tipo de componente, "padroes" junto de "marca"); confira a spec',
   propertyNames: 'nome de chave inválido',
   maxProperties: 'objeto com chaves demais',
   false: 'campo não permitido neste lugar',

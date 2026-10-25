@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/policy.v0.schema.json",
+  "title": "Policy do harness-ai (v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["versaoPolicy", "regras"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^https://"
+    },
+    "versaoPolicy": {
+      "const": 0
+    },
+    "regras": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "$ref": "#/$defs/regra"
+      }
+    }
+  },
+  "$defs": {
+    "regra": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "efeito", "categoria", "motivo"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "efeito": {
+          "enum": ["avisar", "exigir-aprovacao", "negar"]
+        },
+        "categoria": {
+          "enum": ["ler", "escrever", "executar", "rede", "segredos", "configurarAmbiente", "tipo"]
+        },
+        "padroes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253,
+            "pattern": "^[A-Za-z0-9._/*?-]+$"
+          },
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "marca": {
+          "enum": ["amplo", "sensivel", "executavel"]
+        },
+        "exceto": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253,
+            "pattern": "^[A-Za-z0-9._/*?-]+$"
+          },
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "pacotes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 104,
+            "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/(?:\\*|[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?)$"
+          },
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "critica": {
+          "type": "boolean"
+        },
+        "motivo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": ["padroes"],
+              "not": {
+                "required": ["marca"]
+              }
+            },
+            {
+              "required": ["marca"],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": ["padroes"]
+                  },
+                  {
+                    "required": ["exceto"]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "efeito": {
+                  "const": "negar"
+                }
+              }
+            },
+            {
+              "not": {
+                "required": ["critica"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

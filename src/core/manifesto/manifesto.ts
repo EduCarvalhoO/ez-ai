@@ -238,6 +238,13 @@ export function regrasDosComponentes(componentes: readonly Componente[], raiz: s
       if (noComando) falha(`${base}/comando`, 'comando', noComando);
     }
     const p = c.permissoes;
+    if (c.tipo === 'policy' && Object.values(p).some((itens) => itens.length > 0)) {
+      falha(
+        `${base}/permissoes`,
+        'policy-sem-permissoes',
+        'componente policy só restringe: não declara permissões (docs/specs/policy.md)',
+      );
+    }
     for (const [campo, globs] of [
       ['ler', p.ler],
       ['escrever', p.escrever],

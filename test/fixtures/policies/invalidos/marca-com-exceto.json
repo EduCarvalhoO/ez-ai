@@ -1,0 +1,15 @@
+{
+  "versaoPolicy": 0,
+  "regras": [
+    {
+      "id": "r",
+      "efeito": "negar",
+      "categoria": "ler",
+      "marca": "sensivel",
+      "exceto": [
+        ".env"
+      ],
+      "motivo": "m"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "versaoPolicy": 0,
+  "regras": [
+    {
+      "id": "r",
+      "efeito": "permitir",
+      "categoria": "rede",
+      "padroes": [
+        "*"
+      ],
+      "motivo": "m"
+    }
+  ]
+}
