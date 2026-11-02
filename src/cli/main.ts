@@ -65,6 +65,8 @@ interface Argumentos {
   readonly aprovar: readonly string[];
   readonly forcar: boolean;
   readonly aceitarPermissoes: boolean;
+  readonly ci: boolean;
+  readonly exigirEvidencias: boolean;
 }
 
 /** Quantos argumentos soltos (sem `--`) cada comando aceita; `undefined` = qualquer quantidade. */
@@ -91,6 +93,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
   let dryRun = false;
   let forcar = false;
   let aceitarPermissoes = false;
+  let ci = false;
+  let exigirEvidencias = false;
   let ambientes: string[] | undefined;
   let versao: string | undefined;
   const aprovar: string[] = [];
@@ -105,6 +109,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     else if (a === '--versao' && valor !== undefined && cmd === 'add') versao = resto[++i];
     else if (a === '--aprovar' && valor !== undefined && instala) aprovar.push(resto[++i] ?? '');
     else if (a === '--forcar' && (instala || cmd === 'remove')) forcar = true;
+    else if (a === '--ci' && cmd === 'validate') ci = true;
+    else if (a === '--exigir-evidencias' && cmd === 'validate') exigirEvidencias = true;
     else if (a === '--aceitar-permissoes' && instala) aceitarPermissoes = true;
     else if (!a.startsWith('--')) posicionais.push(a);
     else return `argumento(s) não reconhecido(s): ${resto.slice(i).join(' ')}`;
@@ -126,6 +132,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     aprovar,
     forcar,
     aceitarPermissoes,
+    ci,
+    exigirEvidencias,
     ...(ambientes ? { ambientes } : {}),
     ...(versao ? { versao } : {}),
   };
@@ -202,7 +210,7 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
     case 'list':
       return listar(ctx);
     case 'validate':
-      return validar(ctx);
+      return validar(ctx, { ci: a.ci, exigirEvidencias: a.exigirEvidencias });
     case 'plan':
       return planejar(ctx);
     case 'doctor':

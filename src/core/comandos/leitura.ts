@@ -1,9 +1,13 @@
 // Comandos somente leitura: `list`, `validate`, `plan` e `doctor`. Nenhum grava arquivo do projeto (o log de
 // auditoria é gravado por `executarComAuditoria`). Nenhum código do pacote roda: só texto é lido e validado (ADR-0018).
 
+import { itensDeAprovacaoPropria, pendentesDeAprovacao } from '../auditoria/aprovacoes.js';
+import { resumirEvidencias } from '../auditoria/evidencias.js';
 import { lerAuditoria, PASTA_DA_AUDITORIA } from '../auditoria/registro.js';
+import type { Configuracao } from '../configuracao/configuracao.js';
 import { origemPermitida } from '../configuracao/configuracao.js';
 import { conferirManifesto, diferencaDeConfiguracao, verificarIntegridade } from '../lockfile/integridade.js';
+import type { Lockfile, PacoteTravado } from '../lockfile/lockfile.js';
 import { diferencaDePermissoes } from '../manifesto/permissoes.js';
 import { diffDoPacote } from '../plano/diff.js';
 import { avaliarPacote } from '../policy/avaliar.js';
@@ -17,6 +21,7 @@ import {
   executarComAuditoria,
   lerPastaLocal,
   obterPacote,
+  type PacoteLido,
   pastaDoPacote,
   type ResultadoDoComando,
 } from './base.js';
@@ -49,8 +54,15 @@ export function listar(ctx: Contexto): Promise<ResultadoDoComando> {
   });
 }
 
+export interface OpcoesDeValidacao {
+  /** Modo CI: recalcula a policy e as aprovações próprias a partir do commit travado e recusa o que estiver pendente. */
+  readonly ci?: boolean;
+  /** Gate de evidências (ficha 7): falha se o resumo do log local não estiver `confirmado`. */
+  readonly exigirEvidencias?: boolean;
+}
+
 /** `validate`: contratos, origens permitidas e integridade de cada pacote travado, lido do commit travado. */
-export function validar(ctx: Contexto): Promise<ResultadoDoComando> {
+export function validar(ctx: Contexto, opcoes: OpcoesDeValidacao = {}): Promise<ResultadoDoComando> {
   return executarComAuditoria(ctx, 'validate', false, async () => {
     const config = await carregarConfiguracao(ctx.arquivos);
     const lock = await carregarLockfile(ctx.arquivos);
@@ -64,6 +76,7 @@ export function validar(ctx: Contexto): Promise<ResultadoDoComando> {
       }
     }
     const pacotes: { chave: string; versao?: string; commit?: string }[] = [];
+    const cacheCi: CacheDaOrganizacao = new Map();
     for (const t of lock.valor.pacotes) {
       const origemTexto = t.origem.tipo === 'local' ? `local:${t.origem.caminho}` : t.origem.url;
       if (!origemPermitida(config.valor, origemTexto)) {
@@ -81,19 +94,59 @@ export function validar(ctx: Contexto): Promise<ResultadoDoComando> {
         if (p.manifesto.versao !== t.versao) {
           problemas.push(`${e(t.nome)}: o manifesto declara ${e(p.manifesto.versao)} e o lockfile ${e(t.versao)}.`);
         }
+        if (opcoes.ci)
+          problemas.push(...(await conferirPoliticaDoTravado(ctx, config.valor, lock.valor, t, p, cacheCi)));
         pacotes.push({ chave: t.nome, versao: t.versao, ...(t.commit ? { commit: t.commit } : {}) });
       } catch (erro: unknown) {
         problemas.push(e(erro instanceof Error ? erro.message : String(erro)));
       }
     }
-    if (problemas.length > 0) return { codigo: 1, saida: [], erros: problemas, pacotes };
-    return {
-      codigo: 0,
-      saida: [`OK: configuração, lockfile e ${lock.valor.pacotes.length} pacote(s) verificados.`],
-      erros: [],
-      pacotes,
-    };
+    const saida: string[] = [];
+    if (opcoes.exigirEvidencias) {
+      const auditoria = await lerAuditoria(ctx.arquivos);
+      if (!auditoria.ok) problemas.push(`evidências: ${e(auditoria.mensagem)}`);
+      else {
+        const resumo = resumirEvidencias(auditoria.eventos);
+        if (!resumo.confirmado) {
+          problemas.push(
+            resumo.verificacoes.length === 0
+              ? 'evidências: nenhuma verificação registrada; um gate não pode aprovar sem prova.'
+              : 'evidências: não confirmado (há verificação falha, ignorada, só pedida ou sem validador externo conferido).',
+          );
+          for (const v of resumo.pendencias) problemas.push(`evidências: ${e(v.nome)} está ${v.estado}`);
+          for (const nome of resumo.porNivel['so-pedido']) problemas.push(`evidências: ${e(nome)} é só pedido`);
+        } else saida.push(`evidências: ${resumo.verificacoes.length} verificação(ões) confirmada(s).`);
+      }
+    }
+    if (problemas.length > 0) return { codigo: 1, saida, erros: problemas, pacotes };
+    saida.unshift(
+      `OK: configuração, lockfile e ${lock.valor.pacotes.length} pacote(s) verificados${opcoes.ci ? ', policy e aprovações conferidas' : ''}.`,
+    );
+    return { codigo: 0, saida, erros: [], pacotes };
   });
+}
+
+/** Modo CI: recalcula a decisão de policy do pacote travado e confere as aprovações próprias gravadas no lockfile. */
+async function conferirPoliticaDoTravado(
+  ctx: Contexto,
+  config: Configuracao,
+  lock: Lockfile,
+  t: PacoteTravado,
+  lido: PacoteLido,
+  cache: CacheDaOrganizacao,
+): Promise<string[]> {
+  const politicas = await carregarPoliticas(ctx, config, lock, t.nome, lido, new Map(), cache);
+  if (politicas.erros.length > 0) return politicas.erros.map((m) => `${e(t.nome)}: policy inválida: ${m}`);
+  const decisao = avaliarPacote(lido.manifesto, politicas.fontes, { ambientes: config.ambientes });
+  const problemas = explicarDecisao(decisao).map((m) => `${e(t.nome)}: bloqueado pela policy: ${m}`);
+  if (decisao.falhaFechada) problemas.push(`${e(t.nome)}: policy falha fechada (regra crítica sem garantia).`);
+  const exigidas = itensDeAprovacaoPropria({ chave: t.nome, componentes: lido.manifesto.componentes, decisao });
+  // Afrouxamento de policy depende da versão anterior, que o CI não tem; esses ids não são recalculáveis aqui.
+  const aprovadas = t.aprovacoesProprias.filter((a) => !a.id.startsWith('policy/'));
+  for (const x of pendentesDeAprovacao(exigidas, aprovadas).pendentes) {
+    problemas.push(`${e(t.nome)}: aprovação própria ausente ou desatualizada para ${e(x.id)}.`);
+  }
+  return problemas;
 }
 
 /** `plan`: o que um `apply` faria, sem gravar nada. Recalcula tudo a partir da origem. */

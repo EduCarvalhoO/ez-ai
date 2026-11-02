@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { adicionar, aplicar, type Contexto, init, planejar } from '../../../src/core/index.js';
+import {
+  adicionar,
+  aplicar,
+  type Contexto,
+  init,
+  planejar,
+  registrarEvento,
+  validar,
+} from '../../../src/core/index.js';
 import { arquivosEmMemoria, gitEmMemoria, identidadeFixa, relogioFixo } from '../../helpers/memoria.js';
 
 const REPO = 'https://github.com/eduardo/revisao-ts';
@@ -123,5 +131,42 @@ describe('policy no plan e no apply', () => {
     await adicionar(ctx, { origem: ORG, versao: '^1.0.0', dryRun: false });
     const r = await aplicar(ctx, SEM_OPCOES);
     expect(r.codigo).toBe(1);
+  });
+});
+
+describe('validate --ci e --exigir-evidencias', () => {
+  it('--ci passa quando a instalação respeita a policy e recusa a aprovação própria ausente', async () => {
+    const ctx = await projeto({ [SHA1]: comInstrucao });
+    await adicionar(ctx, { origem: REPO, versao: '^1.0.0', dryRun: false });
+    expect((await aplicar(ctx, SEM_OPCOES)).codigo).toBe(0);
+    const ok = await validar(ctx, { ci: true });
+    expect(ok.erros).toEqual([]);
+    expect(ok.saida.join()).toContain('policy e aprovações conferidas');
+    await ctx.arquivos.gravar(
+      '.harness/policy.json',
+      JSON.stringify({
+        versaoPolicy: 0,
+        regras: [{ id: 'sem-instrucao', efeito: 'negar', categoria: 'tipo', padroes: ['instrucao'], motivo: 'Nada' }],
+      }),
+    );
+    const barrado = await validar(ctx, { ci: true });
+    expect(barrado.codigo).toBe(1);
+    expect(barrado.erros.join('\n')).toContain('sem-instrucao');
+    expect((await validar(ctx)).codigo).toBe(0);
+  });
+
+  it('--exigir-evidencias recusa sem verificação e a que é só pedido (log local)', async () => {
+    const ctx = await projeto({ [SHA1]: comInstrucao });
+    const vazio = await validar(ctx, { exigirEvidencias: true });
+    expect(vazio.codigo).toBe(1);
+    expect(vazio.erros.join('\n')).toContain('nenhuma verificação');
+    await registrarEvento(ctx, {
+      tipo: 'verificacao',
+      resultado: 'verificado',
+      dados: { nome: 'testes', codigoDeSaida: 0, hashDaSaida: `sha256:${'a'.repeat(64)}`, nivel: 'so-pedido' },
+    });
+    const soPedido = await validar(ctx, { exigirEvidencias: true });
+    expect(soPedido.codigo).toBe(1);
+    expect(soPedido.erros.join('\n')).toContain('só pedido');
   });
 });
