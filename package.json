@@ -18,6 +18,7 @@
     "format": "biome format --write",
     "format:check": "biome format",
     "commits:check": "node scripts/validar-commits.mjs",
+    "prepare": "node scripts/ativar-hooks.mjs",
     "schemas": "npm run build && node scripts/gerar-schemas.mjs && biome format --write schemas"
   },
   "devDependencies": {
