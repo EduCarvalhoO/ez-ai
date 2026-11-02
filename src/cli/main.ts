@@ -48,8 +48,8 @@ const USO = [
   '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
   '  --dry-run              mostra o que seria feito sem gravar',
   '  --aprovar <id>         (apply/update) aprova um item de aprovação própria pelo id; repita a flag por item',
-  '  --forcar               (apply/update) sobrescreve arquivo instalado editado à mão, guardando cópia em .harness/local/',
-  '  --aceitar-permissoes   (update) aceita permissões novas da versão nova',
+  '  --forcar               (apply/update/remove) sobrescreve ou apaga arquivo instalado editado à mão, guardando cópia em .harness/local/',
+  '  --aceitar-permissoes   (apply/update) aceita permissões novas da versão resolvida',
   '',
 ].join('\n');
 
@@ -102,8 +102,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     else if (a === '--ambientes' && valor !== undefined && cmd === 'init') ambientes = (resto[++i] ?? '').split(',');
     else if (a === '--versao' && valor !== undefined && cmd === 'add') versao = resto[++i];
     else if (a === '--aprovar' && valor !== undefined && instala) aprovar.push(resto[++i] ?? '');
-    else if (a === '--forcar' && instala) forcar = true;
-    else if (a === '--aceitar-permissoes' && cmd === 'update') aceitarPermissoes = true;
+    else if (a === '--forcar' && (instala || cmd === 'remove')) forcar = true;
+    else if (a === '--aceitar-permissoes' && instala) aceitarPermissoes = true;
     else if (!a.startsWith('--')) posicionais.push(a);
     else return `argumento(s) não reconhecido(s): ${resto.slice(i).join(' ')}`;
   }
@@ -211,7 +211,7 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
         ...(a.versao ? { versao: a.versao } : {}),
       });
     case 'remove':
-      return remover(ctx, { nome: a.posicionais[0] ?? '', dryRun: a.dryRun });
+      return remover(ctx, { nome: a.posicionais[0] ?? '', forcar: a.forcar, dryRun: a.dryRun });
     case 'apply':
       return aplicar(ctx, opcoesDeInstalacao(a));
     case 'update':

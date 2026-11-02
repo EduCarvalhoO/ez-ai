@@ -169,6 +169,8 @@ export function adicionar(ctx: Contexto, opcoes: OpcoesDeAdd): Promise<Resultado
 
 export interface OpcoesDeRemove {
   readonly nome: string;
+  /** Apaga mesmo com arquivo instalado editado à mão, depois de guardar cópia em `.harness/local/`. */
+  readonly forcar?: boolean;
   readonly dryRun: boolean;
 }
 
@@ -185,6 +187,13 @@ export function remover(ctx: Contexto, opcoes: OpcoesDeRemove): Promise<Resultad
     if (!naConfig && !noLock) return falha([`${e(nome)} não está na configuração nem no lockfile.`]);
     if (config.valor.policyDaOrganizacao === nome) {
       return falha([`${e(nome)} traz a policy da organização; tire "policyDaOrganizacao" da configuração antes.`]);
+    }
+    const travado = lock.valor.pacotes.find((p) => p.nome === nome);
+    const lido = travado ? await lerInstalado(ctx, travado) : undefined;
+    if (lido?.editado && !opcoes.forcar) {
+      return falha([
+        `${e(nome)}: arquivos instalados foram editados à mão; use --forcar para guardar uma cópia em ${pastaLocalDoPacote(nome)}/anterior/ e remover.`,
+      ]);
     }
     const instalados = (await ctx.arquivos.listar(pastaDoPacote(nome))).length;
     const locais = await contarLocal(ctx, nome);
@@ -204,6 +213,7 @@ export function remover(ctx: Contexto, opcoes: OpcoesDeRemove): Promise<Resultad
     const lock2: Lockfile = { ...lock.valor, pacotes: lock.valor.pacotes.filter((p) => p.nome !== nome) };
     // Primeiro a configuração e o lockfile (o que manda), depois os arquivos: uma falha no meio deixa sobras
     // visíveis ao `doctor`, nunca um pacote "instalado" sem registro de que foi pedido.
+    if (lido?.editado) await guardarCopias(ctx, nome, [...lido.arquivos.keys()]);
     await ctx.arquivos.gravar(CAMINHO_DA_CONFIGURACAO, serializarConfiguracao(config2));
     await ctx.arquivos.gravar(CAMINHO_DO_LOCKFILE, serializarLockfile(lock2));
     const apagados = await apagarInstalado(ctx, nome);
@@ -224,9 +234,9 @@ export interface OpcoesDeInstalacao {
   readonly nomes: readonly string[];
   /** Ids de aprovação própria que a pessoa nomeou (`--aprovar <id>`); nunca "aprovar tudo". */
   readonly aprovar: readonly string[];
-  /** Sobrescreve arquivos instalados que foram editados à mão, depois de guardar cópia em `.harness/local/`. */
+  /** Sobrescreve ou apaga arquivos instalados que foram editados à mão, depois de guardar cópia em `.harness/local/`. */
   readonly forcar: boolean;
-  /** `update`: aceita permissões novas do pacote. */
+  /** Aceita permissões novas do pacote (vale para `update` e para `apply` que resolve versão nova). */
   readonly aceitarPermissoes: boolean;
   readonly dryRun: boolean;
 }
@@ -236,12 +246,44 @@ interface Acao {
   readonly arquivos: ReadonlyMap<string, string>;
   readonly linhas: string[];
   /** Arquivos instalados editados à mão, a guardar antes de sobrescrever. */
-  readonly editados: string[];
+  readonly copiar: string[];
   readonly mudou: boolean;
+}
+
+interface Remocao {
+  readonly travado: PacoteTravado;
+  readonly copiar: string[];
 }
 
 function igual(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** Cada execução guarda suas cópias numa pasta nova; uma cópia anterior nunca é pisada. */
+function pastaDeCopia(ctx: Contexto, nome: string): string {
+  const instante = ctx.relogio.agora().toISOString().replace(/[-:.]/g, '');
+  return `${pastaLocalDoPacote(nome)}/anterior/${instante}`;
+}
+
+async function guardarCopias(ctx: Contexto, nome: string, caminhos: readonly string[]): Promise<void> {
+  const base = pastaDeCopia(ctx, nome);
+  for (const caminho of caminhos) {
+    await ctx.arquivos.gravar(`${base}/${caminho}`, await ctx.arquivos.ler(`${pastaDoPacote(nome)}/${caminho}`));
+  }
+}
+
+/**
+ * Lê o instalado e diz se foi editado à mão (hash diferente do lockfile). Falha de leitura sobe como erro: sem ler,
+ * não há como afirmar que nada foi editado (falha fechada).
+ */
+async function lerInstalado(
+  ctx: Contexto,
+  t: PacoteTravado,
+): Promise<{ arquivos: ReadonlyMap<string, string>; editado: boolean }> {
+  const arquivos = await lerPastaLocal(ctx.arquivos, pastaDoPacote(t.nome));
+  if (arquivos.size === 0) return { arquivos, editado: false };
+  const h = hashDoConteudo(arquivosParaHash(arquivos));
+  return { arquivos, editado: !h.ok || h.valor !== t.hash };
 }
 
 async function preparar(
@@ -250,7 +292,7 @@ async function preparar(
   lock: Lockfile,
   opcoes: OpcoesDeInstalacao,
   atualizar: boolean,
-): Promise<{ acoes: Acao[]; remocoes: PacoteTravado[]; erros: string[] }> {
+): Promise<{ acoes: Acao[]; remocoes: Remocao[]; erros: string[] }> {
   const acoes: Acao[] = [];
   const erros: string[] = [];
   const quer = (nome: string) => opcoes.nomes.length === 0 || opcoes.nomes.includes(nome);
@@ -258,7 +300,7 @@ async function preparar(
     if (!config.pacotes.some((p) => p.nome === nome)) erros.push(`${e(nome)}: não está na configuração.`);
   }
   const travados = new Map(lock.pacotes.map((p) => [p.nome, p]));
-  const aprovarRestantes = new Set(opcoes.aprovar);
+  const aprovacoesUsadas = new Set<string>();
 
   for (const p of config.pacotes.filter((c) => quer(c.nome))) {
     const t = travados.get(p.nome);
@@ -303,19 +345,19 @@ async function preparar(
         erros.push(`${e(p.nome)}: policy falha fechada (regra crítica sem garantia); resolva antes de instalar.`);
         continue;
       }
-      // Aprovação própria: só o que a pessoa nomeou, e só se a impressão do que foi aprovado ainda vale.
+      // Aprovação própria: só o que a pessoa nomeou para ESTE pacote, e só se a impressão ainda vale.
       const exigidas = itensDeAprovacaoPropria({ chave: p.nome, componentes: lido.manifesto.componentes, decisao });
-      const anteriores = t?.aprovacoesProprias ?? [];
-      const nomeadas: EntradaDeAprovacao[] = exigidas.filter((x) => aprovarRestantes.delete(x.id));
-      const conf = pendentesDeAprovacao(exigidas, [...anteriores, ...nomeadas]);
+      const nomeadas: EntradaDeAprovacao[] = exigidas.filter((x) => opcoes.aprovar.includes(x.id));
+      for (const x of nomeadas) aprovacoesUsadas.add(x.id);
+      const conf = pendentesDeAprovacao(exigidas, [...(t?.aprovacoesProprias ?? []), ...nomeadas]);
       if (conf.pendentes.length > 0) {
         erros.push(
           `${e(p.nome)}: aprovação própria pendente. Rode de novo com ${conf.pendentes.map((x) => `--aprovar ${e(x.id)}`).join(' ')}`,
         );
         continue;
       }
-      const aprovadasFinal = exigidas;
-      if (t && atualizar) {
+      // Qualquer instalação que troca a versão resolvida mostra permissão a mais, não só o `update`.
+      if (t && !reproduzindo) {
         const aumentos = diferencaDePermissoes(t, lido.manifesto);
         if (aumentos.length > 0 && !opcoes.aceitarPermissoes) {
           erros.push(
@@ -332,45 +374,60 @@ async function preparar(
         ...(lido.tag ? { tag: lido.tag } : {}),
         ...(lido.commit ? { commit: lido.commit } : {}),
         hash: lido.hash,
-        aprovacoesProprias: aprovadasFinal,
+        aprovacoesProprias: exigidas,
         componentes: lido.manifesto.componentes,
       };
       // Edição à mão: o que está instalado precisa bater com o hash travado; senão há trabalho do usuário ali.
-      const pasta = pastaDoPacote(p.nome);
-      const instalados = t
-        ? await lerPastaLocal(ctx.arquivos, pasta).catch(() => new Map<string, string>())
-        : new Map();
-      let editados: string[] = [];
-      if (t && instalados.size > 0) {
-        const h = hashDoConteudo(arquivosParaHash(instalados));
-        if (!h.ok || h.valor !== t.hash) {
-          editados = [...instalados.keys()].filter((c) => lido.arquivos.get(c) !== instalados.get(c));
-          if (!opcoes.forcar) {
-            erros.push(
-              `${e(p.nome)}: arquivos instalados foram editados à mão (${editados.length} diferem do pacote). Customização vai em ${pastaLocalDoPacote(p.nome)}; use --forcar para guardar uma cópia lá e sobrescrever.`,
-            );
-            continue;
-          }
+      const instalado = t ? await lerInstalado(ctx, t) : { arquivos: new Map<string, string>(), editado: false };
+      let copiar: string[] = [];
+      if (instalado.editado) {
+        copiar = [...instalado.arquivos.keys()].filter((c) => lido.arquivos.get(c) !== instalado.arquivos.get(c));
+        if (!opcoes.forcar) {
+          erros.push(
+            `${e(p.nome)}: arquivos instalados foram editados à mão (${copiar.length} diferem do pacote). Customização vai em ${pastaLocalDoPacote(p.nome)}; use --forcar para guardar uma cópia lá e sobrescrever.`,
+          );
+          continue;
         }
       }
       const mudou =
-        !t || t.hash !== lido.hash || t.commit !== lido.commit || editados.length > 0 || instalados.size === 0;
+        !t || t.hash !== lido.hash || t.commit !== lido.commit || instalado.editado || instalado.arquivos.size === 0;
       const linhas: string[] = [];
       if (!t) linhas.push(`+ ${e(p.nome)}@${e(travado.versao)}  instalar`);
-      else if (!mudou) linhas.push(`= ${e(p.nome)}@${e(travado.versao)}  inalterado${reproduzindo ? '' : ''}`);
+      else if (!mudou) linhas.push(`= ${e(p.nome)}@${e(travado.versao)}  inalterado`);
       else linhas.push(`~ ${e(p.nome)}  ${e(t.versao)} -> ${e(travado.versao)}`);
-      if (editados.length > 0) linhas.push(`    cópia das edições à mão em ${pastaLocalDoPacote(p.nome)}/anterior/`);
+      if (copiar.length > 0) linhas.push(`    cópia das edições à mão em ${pastaLocalDoPacote(p.nome)}/anterior/`);
       const locais = await contarLocal(ctx, p.nome);
       if (locais > 0) linhas.push(`    customização local preservada: ${locais} arquivo(s)`);
-      acoes.push({ travado, arquivos: lido.arquivos, linhas, editados, mudou });
+      acoes.push({ travado, arquivos: lido.arquivos, linhas, copiar, mudou });
     } catch (erro: unknown) {
       erros.push(e(erro instanceof Error ? erro.message : String(erro)));
     }
   }
-  for (const id of aprovarRestantes)
-    erros.push(`--aprovar ${e(id)}: nenhum pacote exige esse item (aprovação antecipada é recusada).`);
-  const remocoes =
+  // Pacotes que saíram da configuração: mesma proteção de edição à mão do `remove`.
+  const remocoes: Remocao[] = [];
+  const saiu =
     opcoes.nomes.length === 0 ? lock.pacotes.filter((t) => !config.pacotes.some((c) => c.nome === t.nome)) : [];
+  for (const t of saiu) {
+    try {
+      const instalado = await lerInstalado(ctx, t);
+      if (instalado.editado && !opcoes.forcar) {
+        erros.push(
+          `${e(t.nome)}: arquivos instalados foram editados à mão e o pacote vai ser removido; use --forcar para guardar uma cópia em ${pastaLocalDoPacote(t.nome)}/anterior/.`,
+        );
+        continue;
+      }
+      remocoes.push({ travado: t, copiar: instalado.editado ? [...instalado.arquivos.keys()] : [] });
+    } catch (erro: unknown) {
+      erros.push(e(erro instanceof Error ? erro.message : String(erro)));
+    }
+  }
+  if (erros.length === 0) {
+    for (const id of opcoes.aprovar) {
+      if (!aprovacoesUsadas.has(id)) {
+        erros.push(`--aprovar ${e(id)}: nenhum pacote exige esse item (aprovação antecipada é recusada).`);
+      }
+    }
+  }
   return { acoes, remocoes, erros };
 }
 
@@ -384,7 +441,7 @@ function instalar(ctx: Contexto, comando: 'apply' | 'update', opcoes: OpcoesDeIn
     const { acoes, remocoes, erros } = await preparar(ctx, config.valor, lock.valor, opcoes, comando === 'update');
     if (erros.length > 0) return { codigo: 1, saida: [], erros };
     const saida = acoes.flatMap((a) => a.linhas);
-    for (const r of remocoes) saida.push(`- ${e(r.nome)}  remover (saiu da configuração)`);
+    for (const r of remocoes) saida.push(`- ${e(r.travado.nome)}  remover (saiu da configuração)`);
     if (saida.length === 0) saida.push('Nada a fazer.');
     const pacotes = acoes.map((a) => ({
       chave: a.travado.nome,
@@ -393,19 +450,8 @@ function instalar(ctx: Contexto, comando: 'apply' | 'update', opcoes: OpcoesDeIn
     }));
     if (opcoes.dryRun) return { codigo: 0, saida: ['dry-run: nada foi gravado.', ...saida], erros: [], pacotes };
 
-    for (const a of acoes.filter((x) => x.mudou)) {
-      const pasta = pastaDoPacote(a.travado.nome);
-      // Guarda as edições à mão antes de qualquer sobrescrita; o que já existe na cópia anterior não é pisado.
-      for (const caminho of a.editados) {
-        const destino = `${pastaLocalDoPacote(a.travado.nome)}/anterior/${caminho}`;
-        if (!(await ctx.arquivos.existe(destino)))
-          await ctx.arquivos.gravar(destino, await ctx.arquivos.ler(`${pasta}/${caminho}`));
-      }
-      await apagarInstalado(ctx, a.travado.nome, new Set(a.arquivos.keys()));
-      for (const [caminho, conteudo] of a.arquivos) await ctx.arquivos.gravar(`${pasta}/${caminho}`, conteudo);
-    }
-    for (const r of remocoes) await apagarInstalado(ctx, r.nome);
-    const nomesTratados = new Set([...acoes.map((a) => a.travado.nome), ...remocoes.map((r) => r.nome)]);
+    // O lockfile novo é montado e validado ANTES de tocar em qualquer arquivo: se for recusado, nada mudou.
+    const nomesTratados = new Set([...acoes.map((a) => a.travado.nome), ...remocoes.map((r) => r.travado.nome)]);
     const proximo: Lockfile = {
       versaoLockfile: 0,
       pacotes: [...lock.valor.pacotes.filter((p) => !nomesTratados.has(p.nome)), ...acoes.map((a) => a.travado)],
@@ -413,6 +459,17 @@ function instalar(ctx: Contexto, comando: 'apply' | 'update', opcoes: OpcoesDeIn
     const texto = serializarLockfile(proximo);
     const conferido = validarLockfile(texto);
     if (!conferido.ok) return falha(formatarErros(CAMINHO_DO_LOCKFILE, conferido.erros));
+
+    for (const a of acoes.filter((x) => x.mudou)) {
+      const pasta = pastaDoPacote(a.travado.nome);
+      await guardarCopias(ctx, a.travado.nome, a.copiar);
+      await apagarInstalado(ctx, a.travado.nome, new Set(a.arquivos.keys()));
+      for (const [caminho, conteudo] of a.arquivos) await ctx.arquivos.gravar(`${pasta}/${caminho}`, conteudo);
+    }
+    for (const r of remocoes) {
+      await guardarCopias(ctx, r.travado.nome, r.copiar);
+      await apagarInstalado(ctx, r.travado.nome);
+    }
     await ctx.arquivos.gravar(CAMINHO_DO_LOCKFILE, texto);
     return { codigo: 0, saida, erros: [], pacotes };
   });

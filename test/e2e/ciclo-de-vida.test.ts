@@ -1,6 +1,6 @@
 // E2E (ponta a ponta) no disco de verdade, sem rede: instala, atualiza e remove um pacote de exemplo local pela CLI.
 // Roda em ubuntu e windows no CI (a matriz do workflow).
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -44,7 +44,7 @@ async function escreverPacote(versao: string, corpo: string): Promise<void> {
 }
 
 const INSTALADO = ['.harness', 'pacotes', 'eduardo', 'exemplo', 'instrucoes', 'c.md'];
-const COPIA = ['.harness', 'local', 'eduardo', 'exemplo', 'anterior', 'instrucoes', 'c.md'];
+const ANTERIOR = ['.harness', 'local', 'eduardo', 'exemplo', 'anterior'];
 
 describe('ciclo de vida de um pacote pela CLI', () => {
   it('init, add, apply, update, edição à mão, remove e validate', async () => {
@@ -73,7 +73,10 @@ describe('ciclo de vida de um pacote pela CLI', () => {
     expect(recusa.erro).toContain('editados à mão');
     expect(await readFile(join(raiz, ...INSTALADO), 'utf8')).toBe('minha edição');
     expect((await cli('update', '--forcar')).codigo).toBe(0);
-    expect(await readFile(join(raiz, ...COPIA), 'utf8')).toBe('minha edição');
+    const [pastaDaCopia] = await readdir(join(raiz, ...ANTERIOR));
+    expect(await readFile(join(raiz, ...ANTERIOR, pastaDaCopia ?? '', 'instrucoes', 'c.md'), 'utf8')).toBe(
+      'minha edição',
+    );
     expect((await cli('validate')).codigo).toBe(0);
 
     const remove = await cli('remove', 'eduardo/exemplo');

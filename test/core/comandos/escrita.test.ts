@@ -181,7 +181,7 @@ describe('update', () => {
     expect(await ctx.arquivos.ler(`${INSTALADO}/instrucoes/c.md`)).toBe('minha edição');
     const ok = await atualizar(ctx, { ...SEM_OPCOES, forcar: true });
     expect(ok.codigo).toBe(0);
-    expect(await ctx.arquivos.ler(`${LOCAL}/anterior/instrucoes/c.md`)).toBe('minha edição');
+    expect(await ctx.arquivos.ler(`${LOCAL}/anterior/20261102T120000000Z/instrucoes/c.md`)).toBe('minha edição');
   });
 
   it('não mexe na customização local e avisa que ela existe', async () => {
@@ -233,5 +233,85 @@ describe('remove', () => {
   it('recusa nome que não existe', async () => {
     const ctx = await projeto();
     expect((await remover(ctx, { nome: 'eduardo/nada', dryRun: false })).codigo).toBe(1);
+  });
+});
+
+describe('achados da revisão de segurança', () => {
+  it('apply que resolve versão nova também exige --aceitar-permissoes', async () => {
+    const v1 = { 'harness-pacote.json': manifesto('1.0.0'), 'instrucoes/c.md': 'a' };
+    const v2 = {
+      'harness-pacote.json': manifesto('2.0.0', {
+        componentes: [
+          { id: 'conv', tipo: 'instrucao', arquivo: 'instrucoes/c.md', permissoes: { rede: ['exemplo.com'] } },
+        ],
+      }),
+      'instrucoes/c.md': 'a',
+    };
+    const git = { [REPO]: { tags: { 'v1.0.0': SHA1, 'v2.0.0': SHA2 }, commits: { [SHA1]: v1, [SHA2]: v2 } } };
+    const ctx = await projeto(git);
+    await adicionar(ctx, { origem: REPO, versao: '^1.0.0', dryRun: false });
+    await aplicar(ctx, SEM_OPCOES);
+    const config = JSON.parse(await ctx.arquivos.ler('.harness/config.json'));
+    config.pacotes['eduardo/revisao-ts'].versao = '^2.0.0';
+    await ctx.arquivos.gravar('.harness/config.json', JSON.stringify(config));
+    const recusa = await aplicar(ctx, SEM_OPCOES);
+    expect(recusa.codigo).toBe(1);
+    expect(recusa.erros.join()).toContain('--aceitar-permissoes');
+    expect((await aplicar(ctx, { ...SEM_OPCOES, aceitarPermissoes: true })).codigo).toBe(0);
+  });
+
+  it('segunda edição à mão não apaga a cópia da primeira', async () => {
+    const velho = { [REPO]: { tags: { 'v1.0.0': SHA1 }, commits: { [SHA1]: pacote('1.0.0') } } };
+    const ctx = await projeto(velho);
+    await instalado(ctx);
+    await ctx.arquivos.gravar(`${INSTALADO}/instrucoes/c.md`, 'edição 1');
+    await atualizar({ ...ctx, relogio: relogioFixo('2026-11-02T12:00:00.000Z') }, { ...SEM_OPCOES, forcar: true });
+    await ctx.arquivos.gravar(`${INSTALADO}/instrucoes/c.md`, 'edição 2');
+    await atualizar({ ...ctx, relogio: relogioFixo('2026-11-02T13:00:00.000Z') }, { ...SEM_OPCOES, forcar: true });
+    expect(await ctx.arquivos.ler(`${LOCAL}/anterior/20261102T120000000Z/instrucoes/c.md`)).toBe('edição 1');
+    expect(await ctx.arquivos.ler(`${LOCAL}/anterior/20261102T130000000Z/instrucoes/c.md`)).toBe('edição 2');
+  });
+
+  it('falha de leitura do instalado falha fechado e não apaga nada', async () => {
+    const ctx = await projeto();
+    await instalado(ctx);
+    const quebrado = {
+      ...ctx,
+      arquivos: {
+        ...ctx.arquivos,
+        listar: async (pasta: string) => {
+          if (pasta.startsWith('.harness/pacotes')) throw new Error('sem permissão');
+          return ctx.arquivos.listar(pasta);
+        },
+      },
+    };
+    const r = await atualizar(quebrado, SEM_OPCOES);
+    expect(r.codigo).toBe(1);
+    expect(r.erros.join()).toContain('sem permissão');
+    expect(await ctx.arquivos.existe(`${INSTALADO}/instrucoes/c.md`)).toBe(true);
+  });
+
+  it('remove recusa edição à mão e com --forcar guarda a cópia', async () => {
+    const ctx = await projeto();
+    await instalado(ctx);
+    await ctx.arquivos.gravar(`${INSTALADO}/instrucoes/c.md`, 'minha edição');
+    const recusa = await remover(ctx, { nome: 'eduardo/revisao-ts', dryRun: false });
+    expect(recusa.codigo).toBe(1);
+    expect(await ctx.arquivos.existe(`${INSTALADO}/instrucoes/c.md`)).toBe(true);
+    const ok = await remover(ctx, { nome: 'eduardo/revisao-ts', forcar: true, dryRun: false });
+    expect(ok.codigo).toBe(0);
+    expect(await ctx.arquivos.ler(`${LOCAL}/anterior/20261102T120000000Z/instrucoes/c.md`)).toBe('minha edição');
+  });
+
+  it('apply recusa remover pacote que saiu da configuração se há edição à mão', async () => {
+    const ctx = await projeto();
+    await instalado(ctx);
+    await ctx.arquivos.gravar(`${INSTALADO}/instrucoes/c.md`, 'minha edição');
+    const config = JSON.parse(await ctx.arquivos.ler('.harness/config.json'));
+    config.pacotes = {};
+    await ctx.arquivos.gravar('.harness/config.json', JSON.stringify(config));
+    const recusa = await aplicar(ctx, SEM_OPCOES);
+    expect(recusa.codigo).toBe(1);
+    expect(await ctx.arquivos.existe(`${INSTALADO}/instrucoes/c.md`)).toBe(true);
   });
 });

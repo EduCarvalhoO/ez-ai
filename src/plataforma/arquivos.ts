@@ -104,6 +104,14 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
     },
     async remover(caminho) {
       const destino = await resolver(caminho);
+      // Reconfere a pasta-mãe logo antes: o unlink segue a pasta-mãe, então ela não pode ter virado link depois do
+      // `resolver`. Se a pasta não existe, não há o que apagar.
+      const pai = await realpath(dirname(destino)).catch((erro: unknown) => {
+        if (ehErroDe(erro, 'ENOENT') || ehErroDe(erro, 'ENOTDIR')) return undefined;
+        throw erro;
+      });
+      if (pai === undefined) return;
+      if (foraDe(real, pai) && pai !== real) throw new Error(`"${escaparInvisiveis(caminho)}" sai da raiz do projeto.`);
       // Uma só chamada, sem checar antes: unlink não segue link (apaga o próprio link) e o SO recusa pasta
       // (EISDIR/EPERM). Caminho que não existe é ignorado.
       await unlink(destino).catch((erro: unknown) => {
