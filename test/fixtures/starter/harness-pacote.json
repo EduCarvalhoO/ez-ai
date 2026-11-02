@@ -1,0 +1,21 @@
+{
+  "versaoManifesto": 0,
+  "nome": "eduardo/starter",
+  "versao": "1.0.0",
+  "descricao": "Pacote starter de exemplo: instrução, agente e skill",
+  "licenca": "MIT",
+  "repositorio": "https://github.com/eduardo/starter",
+  "componentes": [
+    { "id": "convencoes", "tipo": "instrucao", "arquivo": "instrucoes/convencoes.md" },
+    {
+      "id": "revisor",
+      "tipo": "agente",
+      "arquivo": "agentes/revisor.md"
+    },
+    {
+      "id": "revisao",
+      "tipo": "skill",
+      "arquivo": "skills/revisao/SKILL.md"
+    }
+  ]
+}

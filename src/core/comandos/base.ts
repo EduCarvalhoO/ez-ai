@@ -1,16 +1,17 @@
 // Base dos comandos (ADR-0015): o núcleo recebe as portas e devolve um resultado com as linhas de saída e o código;
 // quem imprime e liga o mundo real é src/cli. Nenhum comando aqui grava fora da porta de arquivos.
+import type { Adapter } from '../adaptadores/contrato.js';
+import { type ContextoDeAuditoria, registrarEvento } from '../auditoria/registro.js';
+import type { COMANDOS_DA_CLI } from '../auditoria/schema.js';
 import { type Configuracao, validarConfiguracao } from '../configuracao/configuracao.js';
 import type { ErroDeContrato } from '../contratos/resultado.js';
-import { arquivosParaHash } from '../lockfile/integridade.js';
 import { hashDoConteudo } from '../lockfile/hash.js';
+import { arquivosParaHash } from '../lockfile/integridade.js';
 import { type Lockfile, validarLockfile } from '../lockfile/lockfile.js';
 import { type Manifesto, validarManifesto } from '../manifesto/manifesto.js';
-import { resolverVersao } from '../resolucao/semver.js';
-import { type ContextoDeAuditoria, registrarEvento } from '../auditoria/registro.js';
 import type { Git, SistemaDeArquivos } from '../portas/index.js';
+import { resolverVersao } from '../resolucao/semver.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
-import type { COMANDOS_DA_CLI } from '../auditoria/schema.js';
 
 export const CAMINHO_DA_CONFIGURACAO = '.harness/config.json';
 export const CAMINHO_DO_LOCKFILE = '.harness/lock.json';
@@ -18,7 +19,15 @@ export const CAMINHO_DO_LOCKFILE = '.harness/lock.json';
 /** Tudo o que um comando precisa do mundo, por portas. */
 export interface Contexto extends ContextoDeAuditoria {
   readonly git: Git;
+  /** Adapters de ambiente (ADR-0025), compostos pela CLI. Sem eles, `apply` só instala em `.harness/pacotes/`. */
+  readonly adapters?: readonly Adapter[];
 }
+
+export const PASTA_DOS_PACOTES = '.harness/pacotes';
+export const PASTA_LOCAL = '.harness/local';
+
+export const pastaDoPacote = (nome: string): string => `${PASTA_DOS_PACOTES}/${nome}`;
+export const pastaLocalDoPacote = (nome: string): string => `${PASTA_LOCAL}/${nome}`;
 
 /** Resultado de um comando: linhas para o stdout, avisos e erros para o stderr, e o código de saída. */
 export interface ResultadoDoComando {

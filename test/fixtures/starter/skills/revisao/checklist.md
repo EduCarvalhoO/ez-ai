@@ -1,0 +1,2 @@
+- Há testes?
+- Há segredo no diff?

@@ -68,4 +68,4 @@ Revalidação: itens `Preview`, `Experimental` ou `Beta` a cada 30 dias (próxim
 ## Em aberto
 - Tabela completa de códigos de saída e esquema de `permissionDecision` dos hooks do Copilot (páginas truncadas na pesquisa): `Hipótese` até o spike da F3.
 - Se o harness Local do VS Code lê hooks de `.claude/settings.json` (confirmado só para o harness Copilot) e se agentes de `.claude/agents` e `.github/agents` aparecem duplicados no VS Code: conferir no spike da F3 ([ADR-0008](../adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md)).
-- Qual harness do VS Code (Local ou Copilot) o adapter mira por padrão: decidir na F3.
+- Qual harness do VS Code o adapter mira por padrão: decidido em 2026-11-02, Local ([ADR-0025](../adr/0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md)). Os adapters declaram as capacidades em código e o teste de conformidade compara com esta matriz.

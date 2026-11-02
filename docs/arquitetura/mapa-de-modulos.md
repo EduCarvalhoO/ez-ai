@@ -92,5 +92,5 @@ sequenceDiagram
 Mudança de camada ou de regra de dependência exige ADR novo. Criar módulo do núcleo dentro desta tabela não exige.
 
 ## Em aberto
-- Contrato de adapter e testes de conformidade — F3.
+- Contrato de adapter e testes de conformidade: entregues na F3 ([ADR-0025](../adr/0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md)); o contrato mora em `src/core/adaptadores/` e o diff de instruções em `src/core/plano/`.
 - Formato exato de "arquivo em memória" (caminho relativo, conteúdo, modo) — ficha do manifesto ou F2.

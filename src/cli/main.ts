@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { adapterClaudeCode } from '../adapters/claude-code/index.js';
+import { adapterCopilot } from '../adapters/copilot/index.js';
+import type { Contexto } from '../core/index.js';
 import {
   adicionar,
   aplicar,
@@ -10,11 +13,10 @@ import {
   listar,
   type OpcoesDeInstalacao,
   planejar,
-  remover,
   type ResultadoDoComando,
+  remover,
   validar,
 } from '../core/index.js';
-import type { Contexto } from '../core/index.js';
 import { criarArquivos, criarGit, criarIdentidade, relogioDoSistema } from '../plataforma/index.js';
 
 // dist/cli/main.js (ou src/cli/main.ts nos testes) -> ../../package.json (raiz do pacote).
@@ -145,6 +147,7 @@ export async function criarContexto(projeto: string, ator: 'humano' | 'agente' |
   return {
     arquivos: await criarArquivos(raiz),
     git: criarGit(),
+    adapters: [adapterClaudeCode, adapterCopilot],
     relogio: relogioDoSistema,
     identidade: criarIdentidade(undefined, raiz),
     harness: lerVersao(),
