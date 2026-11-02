@@ -37,6 +37,8 @@ export interface Configuracao {
   readonly limites: Readonly<Partial<Record<LimiteAjustavel, number>>>;
   /** Pacote (origem GitHub) cujos componentes `policy` são o nível organização (docs/specs/policy.md). */
   readonly policyDaOrganizacao?: string;
+  /** Logins ou `@org/time` que aprovam a aprovação própria no PR; vazio = o que a proteção de branch exigir. */
+  readonly aprovadores: readonly string[];
 }
 
 type Json = Record<string, unknown>;
@@ -71,6 +73,7 @@ function configuracaoDe(dado: Json): Configuracao {
       LIMITES_AJUSTAVEIS.filter((nome) => typeof limites[nome] === 'number').map((nome) => [nome, limites[nome]]),
     ),
     ...(typeof dado.policyDaOrganizacao === 'string' ? { policyDaOrganizacao: dado.policyDaOrganizacao } : {}),
+    aprovadores: lista<unknown>(dado.aprovadores).map(String),
   };
 }
 
