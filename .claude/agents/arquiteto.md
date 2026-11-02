@@ -2,7 +2,7 @@
 name: arquiteto
 description: Transforma uma entrega do roadmap em ficha com critérios de aceite verificáveis, plano e alternativas para decisões. Use no início de qualquer item do roadmap, antes de implementar.
 tools: Read, Grep, Glob, Write, Edit, Bash
-model: inherit
+model: opus
 skills:
   - ficha-de-tarefa
   - localizar-documento
