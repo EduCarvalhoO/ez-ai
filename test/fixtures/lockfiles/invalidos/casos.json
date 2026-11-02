@@ -83,5 +83,20 @@
     "arquivo": "invisivel-no-retrato.json",
     "regra": "caractere-invisivel",
     "caminho": "/pacotes/eduardo~1revisao-ts/componentes/0/descricao"
+  },
+  {
+    "arquivo": "aprovacao-com-curinga.json",
+    "regra": "id-de-item",
+    "caminho": "/pacotes/eduardo~1revisao-ts/aprovacoesProprias/0/id"
+  },
+  {
+    "arquivo": "aprovacao-id-repetido.json",
+    "regra": "id-repetido",
+    "caminho": "/pacotes/eduardo~1revisao-ts/aprovacoesProprias/1/id"
+  },
+  {
+    "arquivo": "aprovacao-sem-impressao.json",
+    "regra": "required",
+    "caminho": "/pacotes/eduardo~1revisao-ts/aprovacoesProprias/0"
   }
 ]

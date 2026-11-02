@@ -9,6 +9,15 @@ export const ID_DO_SCHEMA_DO_LOCKFILE =
 /** Único algoritmo aceito; prefixo desconhecido é erro, nunca pula a verificação. */
 export const PADRAO_HASH = '^sha256:[0-9a-f]{64}$';
 
+/** Id de item de aprovação própria; a gramática completa fica na validação semântica (`problemaNoId`). */
+export const ID_DE_ITEM = { type: 'string', maxLength: 512, pattern: '^(?:comp|policy|dono)/[!-~]+$' } as const;
+export const ENTRADA_DE_APROVACAO = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['id', 'impressao'],
+  properties: { id: ID_DE_ITEM, impressao: { type: 'string', pattern: PADRAO_HASH } },
+} as const;
+
 export const SCHEMA_DO_LOCKFILE = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   $id: ID_DO_SCHEMA_DO_LOCKFILE,
@@ -33,6 +42,12 @@ export const SCHEMA_DO_LOCKFILE = {
           // SHA-1 (40) ou SHA-256 (64) do Git, em minúsculas.
           commit: { type: 'string', pattern: '^(?:[0-9a-f]{40}|[0-9a-f]{64})$' },
           hash: { type: 'string', pattern: PADRAO_HASH },
+          // Aprovação própria (docs/specs/auditoria-e-evidencias.md): precisa ser igual à lista que a policy exige.
+          aprovacoesProprias: {
+            type: 'array',
+            maxItems: LIMITES.componentes * 10,
+            items: ENTRADA_DE_APROVACAO,
+          },
           componentes: {
             type: 'array',
             minItems: 1,

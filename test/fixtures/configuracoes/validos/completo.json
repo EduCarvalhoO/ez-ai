@@ -25,5 +25,9 @@
   "limites": {
     "bytesDoPacote": 1048576,
     "componentes": 20
-  }
+  },
+  "aprovadores": [
+    "eduardo",
+    "@minha-org/revisores"
+  ]
 }

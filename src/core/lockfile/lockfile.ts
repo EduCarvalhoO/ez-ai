@@ -1,5 +1,6 @@
 // Validação do lockfile v0 (docs/specs/configuracao-e-lockfile.md). O harness grava o lockfile, mas qualquer pessoa
 // ou agente pode editá-lo (T4), então ele é lido como entrada não confiável, com a mesma leitura segura do manifesto.
+import { type EntradaDeAprovacao, problemaNoId } from '../auditoria/aprovacoes.js';
 import { partesDoNome, regrasDoNome } from '../configuracao/configuracao.js';
 import { lerOrigem, type Origem } from '../configuracao/origem.js';
 import { lerJsonSeguro } from '../contratos/json-seguro.js';
@@ -29,6 +30,8 @@ export interface PacoteTravado {
   readonly commit?: string;
   /** `sha256:<hex>` de `hashDoConteudo`. Aqui só o formato é conferido; a F2 recalcula. */
   readonly hash: string;
+  /** Itens de aprovação própria aprovados nominalmente; igual à lista que a policy exige (`pendentesDeAprovacao`). */
+  readonly aprovacoesProprias: readonly EntradaDeAprovacao[];
   /** Retrato do que foi aprovado; base de `diferencaDePermissoes` no `update`. */
   readonly componentes: readonly Componente[];
 }
@@ -59,6 +62,10 @@ function lockfileDe(dado: Json): Lockfile {
           ...(typeof e.tag === 'string' ? { tag: e.tag } : {}),
           ...(typeof e.commit === 'string' ? { commit: e.commit } : {}),
           hash: String(e.hash),
+          aprovacoesProprias: lista<Json>(e.aprovacoesProprias).map((a) => ({
+            id: String(a.id),
+            impressao: String(a.impressao),
+          })),
           componentes: lista<unknown>(e.componentes).map(componenteDe),
         };
       }),
@@ -85,6 +92,14 @@ function regrasSemanticas(dado: Json, lock: Lockfile): ErroDeContrato[] {
     } else if (p.tag !== undefined || p.commit !== undefined) {
       falha(base, 'local-sem-git', 'pacote local não tem "tag" nem "commit"; só o hash do conteúdo');
     }
+    const vistos = new Set<string>();
+    p.aprovacoesProprias.forEach((a, i) => {
+      const caminho = `${base}/aprovacoesProprias/${i}`;
+      const problemaDoId = problemaNoId(a.id);
+      if (problemaDoId) falha(`${caminho}/id`, 'id-de-item', problemaDoId);
+      if (vistos.has(a.id)) falha(`${caminho}/id`, 'id-repetido', `o id "${a.id}" aparece mais de uma vez`);
+      vistos.add(a.id);
+    });
     regrasDosComponentes(p.componentes, `${base}/componentes`, falha);
   }
   return erros;

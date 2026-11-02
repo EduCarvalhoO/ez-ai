@@ -66,6 +66,18 @@ export const SCHEMA_DA_CONFIGURACAO = {
       },
     },
     policyDaOrganizacao: NOME_DE_PACOTE,
+    // Quem aprova a aprovação própria no PR (docs/specs/auditoria-e-evidencias.md): login ou `@org/time`.
+    // O job da F4 lê esta lista da branch base, nunca da head.
+    aprovadores: {
+      type: 'array',
+      maxItems: 50,
+      uniqueItems: true,
+      items: {
+        type: 'string',
+        maxLength: 141,
+        pattern: `^(?:${PADRAO_LOGIN}|@${PADRAO_LOGIN}/[a-z0-9][a-z0-9._-]{0,99})$`,
+      },
+    },
     limites: {
       type: 'object',
       additionalProperties: false,
