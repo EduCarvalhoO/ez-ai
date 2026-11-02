@@ -1,6 +1,7 @@
 // Porta de arquivos com Node (ADR-0015): única via de escrita do harness. Presa a uma raiz real; recusa caminho fora
 // do escopo, symlink e junction em qualquer segmento (T1, T2). Reconfere o caminho real depois de gravar.
-import { lstat, mkdir, readdir, readFile, realpath, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { lstat, mkdir, open, readdir, realpath } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import type { SistemaDeArquivos } from '../core/portas/index.js';
 import { escaparInvisiveis, exigirCaminhoDoProjeto } from '../core/seguranca/caminhos.js';
@@ -64,9 +65,16 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
     raiz: real,
     async ler(caminho) {
       const destino = await resolver(caminho);
-      const info = await lstat(destino);
-      if (info.size > BYTES_MAXIMOS) throw new Error(`"${caminho}" passa de ${BYTES_MAXIMOS} bytes.`);
-      return readFile(destino, 'utf8');
+      // Um só handle: o tamanho e o conteúdo vêm do mesmo arquivo aberto (sem janela entre checar e ler), e
+      // O_NOFOLLOW recusa symlink no último segmento onde o SO suporta.
+      const arquivo = await open(destino, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+      try {
+        const info = await arquivo.stat();
+        if (info.size > BYTES_MAXIMOS) throw new Error(`"${caminho}" passa de ${BYTES_MAXIMOS} bytes.`);
+        return await arquivo.readFile('utf8');
+      } finally {
+        await arquivo.close();
+      }
     },
     async gravar(caminho, conteudo) {
       const destino = await resolver(caminho);
@@ -76,7 +84,16 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
       await mkdir(dirname(destino), { recursive: true });
       // Reconfere depois de criar as pastas: um link criado entre a checagem e o mkdir não pode redirecionar a escrita.
       await resolver(caminho);
-      await writeFile(destino, conteudo, { encoding: 'utf8', flag: 'w' });
+      const arquivo = await open(
+        destino,
+        constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | (constants.O_NOFOLLOW ?? 0),
+        0o644,
+      );
+      try {
+        await arquivo.writeFile(conteudo, 'utf8');
+      } finally {
+        await arquivo.close();
+      }
     },
     async listar(pasta) {
       const raizDaBusca = pasta === '' || pasta === '.';
