@@ -117,7 +117,7 @@ Toda etapa, gate, ciclo e rodada gera um evento:
 Gargalos a medir: tempo por etapa; ciclos por laço; rodadas humanas por item; taxa de aprovação na 1ª tentativa por gate; custo por etapa e por agente. Alimentam as [métricas de sucesso](../roadmap.md#métricas-de-sucesso).
 
 - Eventos locais sempre; exportação opt-in na F5 ([ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md)). O caminho de referência, e o único exigido, é o Langfuse self-hosted sem `ee/`, sem hospedagem ou banco pagos obrigatórios; o Langfuse Cloud continua opcional por configuração (ADR-0004), nunca exigido. Licença do Langfuse: núcleo sob MIT (Expat); os diretórios `ee/` têm licença própria ([LICENSE](https://github.com/langfuse/langfuse/blob/main/LICENSE), acessado em 2026-10-24).
-- Captura de tokens por agente em Claude Code e Copilot: `Hipótese` até pesquisa do `pesquisador` (`Em aberto`).
+- Captura de tokens por agente: o adapter de cada ambiente (F3) lê o OpenTelemetry que o ambiente já emite pela porta `LeitorDeConsumo`, e o evento `etapa` guarda `consumo` com `fonte` e `fonteDoCusto`; desconhecido é `indisponivel`, nunca zero. Consumo é métrica, não evidência ([spec de auditoria e evidências](auditoria-e-evidencias.md#consumo), [ADR-0022](../adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md)).
 - Até a F5, a ficha registra as datas por gate; não há evento automático.
 
 ### Painel
@@ -196,7 +196,7 @@ Spec v0: muda livremente até a F6, quando vira o schema do pacote de workflow.
 
 ## Em aberto
 - Nome e local do agente da E0 (provisório `cartografo`); implementação em ficha seguinte.
-- Captura de tokens por agente em Claude Code e Copilot.
+- Implementação da captura de tokens nos adapters (F3) e no Copilot coding agent na nuvem, sem forma documentada.
 - Formato da configuração de customização (F1/F6), incluindo modelo por etapa e caminhos do índice e do registro de encerramento.
 - Enforcement dos gates por hook e CI (F4).
 - Quais visões do painel dependeriam de recursos `ee/` do Langfuse (F5).

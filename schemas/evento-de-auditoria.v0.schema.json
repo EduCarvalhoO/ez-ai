@@ -1,0 +1,482 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/evento-de-auditoria.v0.schema.json",
+  "title": "Evento de auditoria do harness-ai (v0), uma linha do JSONL",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["versaoEvento", "seq", "em", "tipo", "ator", "harness", "resultado", "dados", "anterior", "hash"],
+  "properties": {
+    "versaoEvento": {
+      "const": 0
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "em": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "tipo": {
+      "enum": ["operacao", "decisao-de-policy", "aprovacao", "troca-de-dono", "verificacao", "etapa"]
+    },
+    "ator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tipo", "id"],
+      "properties": {
+        "tipo": {
+          "enum": ["humano", "agente", "ci"]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      }
+    },
+    "harness": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "resultado": {
+      "enum": ["solicitado", "executado", "verificado", "falhou", "ignorado"]
+    },
+    "codigoDoMotivo": {
+      "enum": [
+        "pulado-pelo-usuario",
+        "sem-package-json",
+        "ferramenta-ausente",
+        "git-indisponivel",
+        "rede-indisponivel",
+        "validacao-recusou",
+        "policy-negou",
+        "aprovacao-pendente",
+        "conflito-local",
+        "tempo-esgotado",
+        "comando-falhou",
+        "erro-interno"
+      ]
+    },
+    "detalhe": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "dados": {
+      "type": "object"
+    },
+    "anterior": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      ]
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "tipo": {
+            "const": "operacao"
+          }
+        },
+        "required": ["tipo"]
+      },
+      "then": {
+        "properties": {
+          "dados": {
+            "$ref": "#/$defs/operacao"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tipo": {
+            "const": "decisao-de-policy"
+          }
+        },
+        "required": ["tipo"]
+      },
+      "then": {
+        "properties": {
+          "dados": {
+            "$ref": "#/$defs/decisao-de-policy"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tipo": {
+            "const": "aprovacao"
+          }
+        },
+        "required": ["tipo"]
+      },
+      "then": {
+        "properties": {
+          "dados": {
+            "$ref": "#/$defs/aprovacao"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tipo": {
+            "const": "troca-de-dono"
+          }
+        },
+        "required": ["tipo"]
+      },
+      "then": {
+        "properties": {
+          "dados": {
+            "$ref": "#/$defs/troca-de-dono"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tipo": {
+            "const": "verificacao"
+          }
+        },
+        "required": ["tipo"]
+      },
+      "then": {
+        "properties": {
+          "dados": {
+            "$ref": "#/$defs/verificacao"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tipo": {
+            "const": "etapa"
+          }
+        },
+        "required": ["tipo"]
+      },
+      "then": {
+        "properties": {
+          "dados": {
+            "$ref": "#/$defs/etapa"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "operacao": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comando", "dryRun", "pacotes"],
+      "properties": {
+        "comando": {
+          "enum": ["init", "add", "remove", "update", "list", "plan", "apply", "validate", "doctor"]
+        },
+        "dryRun": {
+          "type": "boolean"
+        },
+        "pacotes": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["chave"],
+            "properties": {
+              "chave": {
+                "type": "string",
+                "maxLength": 104,
+                "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+              },
+              "versao": {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+              },
+              "commit": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "decisao-de-policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pacote", "efeito", "itens"],
+      "properties": {
+        "pacote": {
+          "type": "string",
+          "maxLength": 104,
+          "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "efeito": {
+          "enum": ["avisar", "exigir-aprovacao", "negar", "livre"]
+        },
+        "itens": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "nivel", "regra"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512,
+                "pattern": "^(?:comp|policy|dono)/[!-~]+$"
+              },
+              "nivel": {
+                "enum": ["nucleo", "organizacao", "projeto", "pacote"]
+              },
+              "regra": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "aprovacao": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pacote", "entradas"],
+      "properties": {
+        "pacote": {
+          "type": "string",
+          "maxLength": 104,
+          "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "entradas": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "impressao"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512,
+                "pattern": "^(?:comp|policy|dono)/[!-~]+$"
+              },
+              "impressao": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "troca-de-dono": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pacote", "origemAntiga", "origemNova"],
+      "properties": {
+        "pacote": {
+          "type": "string",
+          "maxLength": 104,
+          "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+        },
+        "origemAntiga": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 160,
+              "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+            },
+            {
+              "type": "string",
+              "maxLength": 166,
+              "pattern": "^local:[A-Za-z0-9._/-]+$"
+            }
+          ]
+        },
+        "origemNova": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 160,
+              "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+            },
+            {
+              "type": "string",
+              "maxLength": 166,
+              "pattern": "^local:[A-Za-z0-9._/-]+$"
+            }
+          ]
+        }
+      }
+    },
+    "verificacao": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nome", "nivel"],
+      "properties": {
+        "nome": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._/-]{0,63}$"
+        },
+        "comando": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["programa", "argumentos"],
+          "properties": {
+            "programa": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+            },
+            "argumentos": {
+              "type": "array",
+              "maxItems": 30,
+              "items": {
+                "type": "string",
+                "maxLength": 200
+              }
+            }
+          }
+        },
+        "codigoDeSaida": {
+          "type": "integer",
+          "minimum": -255,
+          "maximum": 255
+        },
+        "hashDaSaida": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "duracaoMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nivel": {
+          "enum": ["ambiente", "validador-externo", "so-pedido"]
+        },
+        "execucaoDoCi": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        }
+      }
+    },
+    "etapa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "etapa", "agente", "ciclo", "rodada", "inicio", "fim"],
+      "properties": {
+        "item": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._/-]{0,63}$"
+        },
+        "etapa": {
+          "enum": ["E0", "E1", "E2", "E3", "E4", "E5", "G0", "G1", "G2", "G3"]
+        },
+        "agente": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._/-]{0,63}$"
+        },
+        "ciclo": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "rodada": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "inicio": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+        },
+        "fim": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+        },
+        "consumo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fonte"],
+          "properties": {
+            "fonte": {
+              "enum": ["medido-pelo-ambiente", "estimado", "indisponivel"]
+            },
+            "modelo": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9._/-]{0,63}$"
+            },
+            "agente": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9._/-]{0,63}$"
+            },
+            "tokensEntrada": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "tokensSaida": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "tokensCacheLeitura": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "tokensCacheEscrita": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "custoMicroUsd": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "fonteDoCusto": {
+              "enum": ["informado-pelo-ambiente", "estimado"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
