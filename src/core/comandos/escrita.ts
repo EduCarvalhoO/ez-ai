@@ -5,12 +5,12 @@
 import { type EntradaDeAprovacao, itensDeAprovacaoPropria, pendentesDeAprovacao } from '../auditoria/aprovacoes.js';
 import { type Configuracao, origemPermitida, partesDoNome, validarConfiguracao } from '../configuracao/configuracao.js';
 import { lerOrigem, type Origem } from '../configuracao/origem.js';
-import { verificarIntegridade, conferirManifesto } from '../lockfile/integridade.js';
-import { arquivosParaHash } from '../lockfile/integridade.js';
 import { hashDoConteudo } from '../lockfile/hash.js';
+import { arquivosParaHash, conferirManifesto, verificarIntegridade } from '../lockfile/integridade.js';
 import type { Lockfile, PacoteTravado } from '../lockfile/lockfile.js';
 import { validarLockfile } from '../lockfile/lockfile.js';
 import { diferencaDePermissoes } from '../manifesto/permissoes.js';
+import { diffDoPacote } from '../plano/diff.js';
 import { avaliarPacote } from '../policy/avaliar.js';
 import { resolverVersao } from '../resolucao/semver.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
@@ -24,17 +24,24 @@ import {
   formatarErros,
   lerPastaLocal,
   obterPacote,
+  PASTA_DOS_PACOTES,
+  PASTA_LOCAL,
   type PacoteLido,
+  pastaDoPacote,
+  pastaLocalDoPacote,
   type ResultadoDoComando,
 } from './base.js';
+import {
+  aplicarProjecao,
+  avisosGeraisDosAmbientes,
+  type PlanoDeProjecao,
+  pacoteInstalado,
+  planejarProjecao,
+} from './projecao.js';
 
 const e = escaparInvisiveis;
 
-export const PASTA_DOS_PACOTES = '.harness/pacotes';
-export const PASTA_LOCAL = '.harness/local';
-
-export const pastaDoPacote = (nome: string): string => `${PASTA_DOS_PACOTES}/${nome}`;
-export const pastaLocalDoPacote = (nome: string): string => `${PASTA_LOCAL}/${nome}`;
+export { PASTA_DOS_PACOTES, PASTA_LOCAL, pastaDoPacote, pastaLocalDoPacote };
 
 function falha(erros: readonly string[]): ResultadoDoComando {
   return { codigo: 1, saida: [], erros };
@@ -195,6 +202,20 @@ export function remover(ctx: Contexto, opcoes: OpcoesDeRemove): Promise<Resultad
         `${e(nome)}: arquivos instalados foram editados à mão; use --forcar para guardar uma cópia em ${pastaLocalDoPacote(nome)}/anterior/ e remover.`,
       ]);
     }
+    let antigo: ReturnType<typeof pacoteInstalado>;
+    try {
+      antigo = lido ? pacoteInstalado(nome, lido.arquivos) : undefined;
+    } catch (erro: unknown) {
+      return falha([e(erro instanceof Error ? erro.message : String(erro))]);
+    }
+    const projecao = await planejarProjecao(ctx, {
+      nome,
+      ambientes: config.valor.ambientes,
+      ...(antigo ? { antigo } : {}),
+      forcar: opcoes.forcar === true,
+      reservados: new Map(),
+    });
+    if (projecao.erros.length > 0) return falha(projecao.erros);
     const instalados = (await ctx.arquivos.listar(pastaDoPacote(nome))).length;
     const locais = await contarLocal(ctx, nome);
     const aviso =
@@ -204,6 +225,7 @@ export function remover(ctx: Contexto, opcoes: OpcoesDeRemove): Promise<Resultad
         codigo: 0,
         saida: [
           `dry-run: nada foi gravado. O remove tiraria ${e(nome)} e apagaria ${instalados} arquivo(s) instalado(s).`,
+          ...projecao.linhas,
           ...aviso,
         ],
         erros: [],
@@ -216,6 +238,7 @@ export function remover(ctx: Contexto, opcoes: OpcoesDeRemove): Promise<Resultad
     if (lido?.editado) await guardarCopias(ctx, nome, [...lido.arquivos.keys()]);
     await ctx.arquivos.gravar(CAMINHO_DA_CONFIGURACAO, serializarConfiguracao(config2));
     await ctx.arquivos.gravar(CAMINHO_DO_LOCKFILE, serializarLockfile(lock2));
+    await aplicarProjecao(ctx, nome, projecao);
     const apagados = await apagarInstalado(ctx, nome);
     return {
       codigo: 0,
@@ -248,11 +271,13 @@ interface Acao {
   /** Arquivos instalados editados à mão, a guardar antes de sobrescrever. */
   readonly copiar: string[];
   readonly mudou: boolean;
+  readonly projecao: PlanoDeProjecao;
 }
 
 interface Remocao {
   readonly travado: PacoteTravado;
   readonly copiar: string[];
+  readonly projecao: PlanoDeProjecao;
 }
 
 function igual(a: unknown, b: unknown): boolean {
@@ -301,6 +326,7 @@ async function preparar(
   }
   const travados = new Map(lock.pacotes.map((p) => [p.nome, p]));
   const aprovacoesUsadas = new Set<string>();
+  const reservados = new Map<string, string>();
 
   for (const p of config.pacotes.filter((c) => quer(c.nome))) {
     const t = travados.get(p.nome);
@@ -398,7 +424,23 @@ async function preparar(
       if (copiar.length > 0) linhas.push(`    cópia das edições à mão em ${pastaLocalDoPacote(p.nome)}/anterior/`);
       const locais = await contarLocal(ctx, p.nome);
       if (locais > 0) linhas.push(`    customização local preservada: ${locais} arquivo(s)`);
-      acoes.push({ travado, arquivos: lido.arquivos, linhas, copiar, mudou });
+      // Diff das instruções (ADR-0018): a pessoa vê o texto que muda antes de aceitar.
+      if (mudou) linhas.push(...diffDoPacote(instalado.arquivos, lido.arquivos, lido.manifesto));
+      const antigo = pacoteInstalado(p.nome, instalado.arquivos);
+      const projecao = await planejarProjecao(ctx, {
+        nome: p.nome,
+        ambientes: config.ambientes,
+        ...(antigo ? { antigo } : {}),
+        novo: { manifesto: lido.manifesto, arquivos: lido.arquivos },
+        forcar: opcoes.forcar,
+        reservados,
+      });
+      if (projecao.erros.length > 0) {
+        erros.push(...projecao.erros);
+        continue;
+      }
+      linhas.push(...projecao.linhas);
+      acoes.push({ travado, arquivos: lido.arquivos, linhas, copiar, mudou, projecao });
     } catch (erro: unknown) {
       erros.push(e(erro instanceof Error ? erro.message : String(erro)));
     }
@@ -416,7 +458,19 @@ async function preparar(
         );
         continue;
       }
-      remocoes.push({ travado: t, copiar: instalado.editado ? [...instalado.arquivos.keys()] : [] });
+      const antigo = pacoteInstalado(t.nome, instalado.arquivos);
+      const projecao = await planejarProjecao(ctx, {
+        nome: t.nome,
+        ambientes: config.ambientes,
+        ...(antigo ? { antigo } : {}),
+        forcar: opcoes.forcar,
+        reservados,
+      });
+      if (projecao.erros.length > 0) {
+        erros.push(...projecao.erros);
+        continue;
+      }
+      remocoes.push({ travado: t, copiar: instalado.editado ? [...instalado.arquivos.keys()] : [], projecao });
     } catch (erro: unknown) {
       erros.push(e(erro instanceof Error ? erro.message : String(erro)));
     }
@@ -441,8 +495,12 @@ function instalar(ctx: Contexto, comando: 'apply' | 'update', opcoes: OpcoesDeIn
     const { acoes, remocoes, erros } = await preparar(ctx, config.valor, lock.valor, opcoes, comando === 'update');
     if (erros.length > 0) return { codigo: 1, saida: [], erros };
     const saida = acoes.flatMap((a) => a.linhas);
-    for (const r of remocoes) saida.push(`- ${e(r.travado.nome)}  remover (saiu da configuração)`);
+    for (const r of remocoes)
+      saida.push(`- ${e(r.travado.nome)}  remover (saiu da configuração)`, ...r.projecao.linhas);
     if (saida.length === 0) saida.push('Nada a fazer.');
+    for (const a of acoes) saida.push(...a.projecao.avisos.map((m) => `aviso  ${e(a.travado.nome)}: ${m}`));
+    if (acoes.length > 0)
+      saida.push(...avisosGeraisDosAmbientes(ctx, config.valor.ambientes).map((m) => `aviso  ${m}`));
     const pacotes = acoes.map((a) => ({
       chave: a.travado.nome,
       versao: a.travado.versao,
@@ -466,8 +524,10 @@ function instalar(ctx: Contexto, comando: 'apply' | 'update', opcoes: OpcoesDeIn
       await apagarInstalado(ctx, a.travado.nome, new Set(a.arquivos.keys()));
       for (const [caminho, conteudo] of a.arquivos) await ctx.arquivos.gravar(`${pasta}/${caminho}`, conteudo);
     }
+    for (const a of acoes) await aplicarProjecao(ctx, a.travado.nome, a.projecao);
     for (const r of remocoes) {
       await guardarCopias(ctx, r.travado.nome, r.copiar);
+      await aplicarProjecao(ctx, r.travado.nome, r.projecao);
       await apagarInstalado(ctx, r.travado.nome);
     }
     await ctx.arquivos.gravar(CAMINHO_DO_LOCKFILE, texto);

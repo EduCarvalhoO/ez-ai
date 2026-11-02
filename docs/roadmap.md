@@ -98,6 +98,8 @@ Entregas:
 - Spike: nível de enforcement possível no Copilot (resolver a hipótese do ADR-0001).
 - Pacote "starter" oficial usado como fixture.
 
+**Andamento (sprint 04, 2026-11-02):** contrato de adapter com testes de conformidade compartilhados, adapters Claude Code e Copilot (instruções, agentes e skills em arquivos do harness, sem tocar arquivos compartilhados), diff de instruções no `plan`/`update` e avisos de capacidade não suportada ([ADR-0025](adr/0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md)). Pendente: hooks, MCP e settings de pacote (F4), o [spike do Copilot](arquitetura/spike-enforcement-copilot.md) e a instalação real validada à mão nos dois ambientes (fecham o M2).
+
 Critérios de saída (**M2**): snapshot tests da saída de cada adapter; capacidade não suportada gera aviso explícito; instalação real validada manualmente nos dois ambientes.
 
 ## F4 — Governança e evidências (S15–S17)
