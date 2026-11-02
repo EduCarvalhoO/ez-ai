@@ -179,6 +179,7 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
     const saida: string[] = [];
     const erros: string[] = [];
     const reservados = new Map<string, string>();
+    const compartilhados = new Map<string, string>();
     const cacheDaOrganizacao: CacheDaOrganizacao = new Map();
     for (const p of config.valor.pacotes) {
       const origemTexto = p.origem.tipo === 'local' ? `local:${p.origem.caminho}` : p.origem.url;
@@ -260,6 +261,7 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
           novo: { manifesto: lido.manifesto, arquivos: lido.arquivos },
           forcar: false,
           reservados,
+          compartilhados,
         });
         saida.push(...projecao.linhas);
         saida.push(...projecao.avisos.map((m) => `    aviso: ${m}`));
