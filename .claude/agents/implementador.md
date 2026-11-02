@@ -2,7 +2,7 @@
 name: implementador
 description: Implementa uma ficha aprovada com testes primeiro, seguindo o padrão de código, até a skill verificar passar. Use depois que o plano da ficha foi aprovado.
 tools: Read, Grep, Glob, Write, Edit, Bash
-model: inherit
+model: sonnet
 skills:
   - verificar
   - escopo-da-mudanca
