@@ -40,6 +40,7 @@
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
 | [specs/auditoria-e-evidencias.md](specs/auditoria-e-evidencias.md) | Evento de auditoria v0: envelope, tipos, evidência, consumo, encadeamento, aprovação própria e recusa de segredo |
+| [specs/base-de-conhecimento.md](specs/base-de-conhecimento.md) | Base de conhecimento (RAG) v0: fontes declaradas, chunk, resultado, limites, avaliação e 30 perguntas de referência |
 | [specs/configuracao-e-lockfile.md](specs/configuracao-e-lockfile.md) | Configuração do projeto e lockfile v0: origens permitidas, pastas locais, limites só reduzíveis, retrato de permissões e hash de conteúdo |
 | [specs/manifesto-de-pacote.md](specs/manifesto-de-pacote.md) | Manifesto de pacote v0: campos, tipos de componente, permissões declaradas, limites, regras de comando e diff de permissões |
 | [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |

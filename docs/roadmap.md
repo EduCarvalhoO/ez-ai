@@ -64,7 +64,7 @@ Entregas (em `docs/specs/` e `docs/arquitetura/`):
 - Modelo de ameaças (STRIDE) cobrindo pacotes maliciosos, path traversal, execução de scripts, vazamento de segredos, prompt injection via pacote.
 - Modelo de permissões declaradas por componente.
 - Propriedade e isolamento de pacotes ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)): entrada para o modelo de ameaças e para o manifesto (campos de dono, identidade esperada e permissões comparáveis entre versões).
-- Spec v0 da base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): fontes declaradas por pacote e projeto, formato do chunk e do resultado com fonte, perguntas de referência.
+- Spec v0 da base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): fontes declaradas por pacote e projeto, formato do chunk e do resultado com fonte, perguntas de referência. Spec v0 entregue: [base-de-conhecimento](specs/base-de-conhecimento.md).
 
 Critérios de saída: schemas com testes de exemplos válidos/inválidos; cada ameaça alta tem controle planejado em uma fase.
 
