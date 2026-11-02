@@ -1,6 +1,6 @@
 # Time de agentes
 
-> Status: Rascunho · Atualizado: 2026-10-24 · Relacionados: [ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md), [spec do pipeline](../specs/pipeline-agentico.md), [roadmap](../roadmap.md), [ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md), [padrão de agentes e skills](padrao-de-agentes-e-skills.md)
+> Status: Rascunho · Atualizado: 2026-11-02 · Relacionados: [ADR-0009](../adr/0009-time-de-agentes-para-executar-o-roadmap.md), [ADR-0011](../adr/0011-pipeline-agentico-com-laco-de-revisao-humana.md), [spec do pipeline](../specs/pipeline-agentico.md), [roadmap](../roadmap.md), [ADR-0006](../adr/0006-workflow-mvp-feature-com-gates.md), [padrão de agentes e skills](padrao-de-agentes-e-skills.md)
 >
 > Fonte única de como o time de agentes executa os itens do roadmap. Os arquivos dos agentes apontam para cá e não repetem estas regras.
 
@@ -22,7 +22,7 @@ Ao executar qualquer entrega do [roadmap](../roadmap.md) com apoio de agentes, e
 | `seguranca` | Papel de DevSecOps (segurança em todo o fluxo, não só no fim): revisa o plano de fichas sensíveis antes do G1 e a mudança no E4 contra o [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), e mantém o modelo vivo; apoia a supply chain (F7) | Nada (só relatório) | Leitura + skill `escopo-da-mudanca` |
 | `doc-writer` | Registra ADRs, specs, guias e runbooks a partir do que os outros produziram | `docs/` | Ver [padrão de documentação](padrao-de-documentacao.md) |
 | `painel` | Atualiza e republica o painel do roadmap no encerramento da entrega | Só a cópia do painel em `.tmp/` e o artifact do painel | Leitura, edição, publicação de artifact; banco do artifact só leitura |
-| `professor` | Redige a explicação didática das decisões levadas ao Eduardo | Nada (só devolve texto) | Só leitura |
+| `professor` | Sob demanda: redige o relatório didático quando o Eduardo pede, tem uma dúvida ou precisa tomar uma decisão importante | Nada (só devolve texto) | Só leitura |
 
 A sessão principal (você + o assistente do ambiente) é o **orquestrador**: escolhe o agente de cada etapa, passa a ficha adiante e decide nos pontos de aprovação. Subagentes não chamam outros subagentes.
 
@@ -86,8 +86,9 @@ Sem achado bloqueante e com todos os critérios atendidos por evidência, o vere
 
 Toda decisão levada ao Eduardo (escolha de arquitetura, G1, cartão de decisão) traz, nesta ordem: (1) a opção recomendada; (2) o que ela impacta no projeto, em linguagem simples; (3) as outras formas de fazer, mesmo as não recomendadas; (4) por que cada uma foi ou não recomendada. Siglas e termos técnicos ganham legenda curta entre parênteses na primeira aparição.
 
-- **Quem escreve:** o agente `professor`, não os executores. O `arquiteto` continua listando as alternativas cruas (prós, contras, recomendação `Proposto`).
-- **Quem chama:** o orquestrador, antes de apresentar a decisão. Subagentes não chamam subagentes, então o `arquiteto` não chama o `professor`.
+- **Quem escreve:** o orquestrador, em texto curto nos 4 blocos, a partir das alternativas cruas do `arquiteto` (prós, contras, recomendação `Proposto`).
+- **Quando chamar o `professor` (só sob demanda):** (a) o Eduardo pede um relatório explicativo; (b) o Eduardo tem uma dúvida sobre a decisão ou o conceito; (c) a decisão é importante: muda a arquitetura ou um ADR, é difícil de desfazer, ou afeta segurança, custo ou licença. Fora desses casos, o orquestrador não chama o `professor` (economia de tokens, [ADR-0014](../adr/0014-economia-de-tokens-no-pipeline-agentico.md)).
+- **Quem chama:** o orquestrador. Subagentes não chamam subagentes, então o `arquiteto` não chama o `professor`.
 - **Entrada:** pergunta, opções com prós e contras, recomendação e contexto mínimo. **Saída:** o texto nos 4 blocos, para colar no cartão, ficha ou PR (seção "Decisões explicadas").
 - **Limites:** só leitura; não decide nem registra como decidido ([princípio 6](#8-princípios-do-time)).
 
