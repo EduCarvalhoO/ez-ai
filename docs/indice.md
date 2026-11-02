@@ -31,6 +31,9 @@
 | [adr/0020-policy-declarativa-so-restritiva-com-precedencia.md](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md) | ADR-0020: policy em JSON declarativo, só restritiva; o mais restritivo vence entre núcleo, organização, projeto e pacote; garantia por ambiente |
 | [adr/0021-rag-em-camadas-local-first-e-medido.md](adr/0021-rag-em-camadas-local-first-e-medido.md) | ADR-0021: base de conhecimento (RAG) do harness em camadas C0–C3, local e sem custo, cada camada ligada só com ganho medido |
 | [adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md](adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md) | ADR-0022: log JSONL encadeado e local, evidência com nível, aprovação própria presa ao conteúdo no lockfile |
+| [adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md](adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md) | ADR-0023: comandos `init`, `list`, `validate`, `plan` e `doctor` como funções do núcleo sobre portas; conteúdo de pacote em texto UTF-8 |
+| [adr/0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md](adr/0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md) | ADR-0024: `add`, `remove`, `update` e `apply`; pacote somente leitura em `.harness/pacotes/`, customização em `.harness/local/`, edição à mão nunca sobrescrita sem `--forcar`, aprovação nominal |
+| [arquitetura/spike-node-sqlite.md](arquitetura/spike-node-sqlite.md) | Spike: `node:sqlite` com FTS5 serve para a camada C1 do RAG; vetores não vêm embutidos |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [arquitetura/modelo-de-ameacas.md](arquitetura/modelo-de-ameacas.md) | Ameaças STRIDE com severidade, controle, fase e teste previsto; riscos residuais aceitos |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
@@ -40,6 +43,7 @@
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
 | [specs/auditoria-e-evidencias.md](specs/auditoria-e-evidencias.md) | Evento de auditoria v0: envelope, tipos, evidência, consumo, encadeamento, aprovação própria e recusa de segredo |
+| [specs/base-de-conhecimento.md](specs/base-de-conhecimento.md) | Base de conhecimento (RAG) v0: fontes declaradas, chunk, resultado, limites, avaliação e 30 perguntas de referência |
 | [specs/configuracao-e-lockfile.md](specs/configuracao-e-lockfile.md) | Configuração do projeto e lockfile v0: origens permitidas, pastas locais, limites só reduzíveis, retrato de permissões e hash de conteúdo |
 | [specs/manifesto-de-pacote.md](specs/manifesto-de-pacote.md) | Manifesto de pacote v0: campos, tipos de componente, permissões declaradas, limites, regras de comando e diff de permissões |
 | [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |

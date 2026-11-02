@@ -44,7 +44,7 @@ Uma linha JSONL por evento, até 16 KiB, lida com a mesma leitura segura dos out
 ### Registro de evidência
 - `verificado` exige `codigoDeSaida: 0` e `hashDaSaida`; `falhou` não combina com código 0 e exige `codigoDoMotivo`; `ignorado` exige `codigoDoMotivo`. `executado` sem conferência nunca vira `verificado`.
 - `nivel` ([ADR-0016](../adr/0016-governanca-por-nivel-de-enforcement.md)): `ambiente`, `validador-externo` ou `so-pedido`. **Evento do log local nunca passa de `so-pedido`**: o agente consegue acrescentar uma linha válida e bem encadeada. `validador-externo` só com `ator.tipo: ci` e `execucaoDoCi` (o validador recusa sem isso); a F4 confere a execução na API do provedor e passa as conferidas a `resumirEvidencias`. Sem isso, o resumo rebaixa para `so-pedido`. `ambiente` vem do hook do ambiente, não do log.
-- `resumirEvidencias(eventos, { execucoesConferidas? })` usa o último evento (maior `seq`) de cada nome. `aprovado: true` só se há verificações e todas terminam `verificado`. O resumo separa por nível; `falhou`, `ignorado`, `solicitado` e `executado` ficam em `pendencias` com o motivo e nunca somem.
+- `resumirEvidencias(eventos, { execucoesConferidas? })` usa o último evento (maior `seq`) de cada nome. `aprovado: true` só se há verificações e todas terminam `verificado`. `confirmado: true` exige `aprovado` e nenhuma verificação em `so-pedido`; é o campo que um gate (F4) deve usar, porque `aprovado` sozinho pode vir de linhas escritas pelo próprio agente. O resumo separa por nível; `falhou`, `ignorado`, `solicitado` e `executado` ficam em `pendencias` com o motivo e nunca somem.
 
 ### Consumo
 ```json

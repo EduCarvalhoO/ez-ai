@@ -15,10 +15,14 @@ export interface SistemaDeArquivos {
   listar(pasta: string): Promise<readonly string[]>;
   /** Diz se o caminho existe. */
   existe(caminho: string): Promise<boolean>;
+  /** Apaga um arquivo comum (nunca pasta nem link). Caminho inexistente não é erro. */
+  remover(caminho: string): Promise<void>;
 }
 
 /** Acesso de leitura a repositórios Git de pacotes (ADR-0005). */
 export interface Git {
+  /** Lista as tags do repositório. */
+  listarTags(repositorio: string): Promise<readonly string[]>;
   /** Resolve uma tag ou ref de um repositório para o SHA do commit. */
   resolverTag(repositorio: string, tag: string): Promise<string>;
   /** Lê os arquivos de um commit, indexados por caminho relativo. */

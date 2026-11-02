@@ -43,6 +43,8 @@ describe('resumirEvidencias', () => {
       serie({ nome: 'b', resultado: 'verificado', nivel: 'ambiente' }, { nome: 'a', resultado: 'verificado' }),
     );
     expect(r.aprovado).toBe(true);
+    // Linhas do próprio agente não bastam para um gate: confirmado exige nível acima de so-pedido.
+    expect(r.confirmado).toBe(false);
     // Evento do log local nunca passa de so-pedido: nem "ambiente" declarado vale.
     expect(r.porNivel).toEqual({ ambiente: [], 'validador-externo': [], 'so-pedido': ['a', 'b'] });
     expect(r.pendencias).toEqual([]);

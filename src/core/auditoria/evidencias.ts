@@ -17,6 +17,11 @@ export interface VerificacaoResumida {
 export interface ResumoDeEvidencias {
   /** Verdadeiro só se há verificações e todas terminam `verificado`. */
   readonly aprovado: boolean;
+  /**
+   * `aprovado` e nenhuma verificação ficou em `so-pedido`. É este o campo que um gate pode usar: `aprovado` sozinho
+   * pode vir de linhas que o próprio agente escreveu no log local.
+   */
+  readonly confirmado: boolean;
   readonly verificacoes: readonly VerificacaoResumida[];
   /** Nomes das verificações `verificado`, por quem garante. */
   readonly porNivel: Readonly<Record<NivelDeEvidencia, readonly string[]>>;
@@ -61,8 +66,10 @@ export function resumirEvidencias(
     .sort((a, b) => (a.nome < b.nome ? -1 : 1));
   const verificadas = verificacoes.filter((v) => v.estado === 'verificado');
   const nomesDo = (nivel: NivelDeEvidencia) => verificadas.filter((v) => v.nivel === nivel).map((v) => v.nome);
+  const aprovado = verificacoes.length > 0 && verificadas.length === verificacoes.length;
   return {
-    aprovado: verificacoes.length > 0 && verificadas.length === verificacoes.length,
+    aprovado,
+    confirmado: aprovado && verificadas.every((v) => v.nivel !== 'so-pedido'),
     verificacoes,
     porNivel: {
       ambiente: nomesDo('ambiente'),

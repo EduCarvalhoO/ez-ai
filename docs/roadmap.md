@@ -46,7 +46,7 @@ gantt
 Entregas:
 - Estrutura TS estrita, Node LTS; decisão monorepo vs. pacote único (ADR).
 - Ferramental: lint/format, Vitest, cobertura, Conventional Commits, changesets.
-- CI (GitHub Actions) em Windows/macOS/Linux ([ADR-0007](adr/0007-suporte-multiplataforma.md)).
+- CI (GitHub Actions) em Windows/Linux, com macOS suspenso temporariamente desde 2026-11-02 ([ADR-0007](adr/0007-suporte-multiplataforma.md)).
 - Baseline de segurança: Renovate/Dependabot, CodeQL, secret scanning, `npm audit` no CI, branch protection, `SECURITY.md`.
 - Padrão de documentação e agente `doc-writer` ([guia](guias/padrao-de-documentacao.md)).
 
@@ -64,7 +64,7 @@ Entregas (em `docs/specs/` e `docs/arquitetura/`):
 - Modelo de ameaças (STRIDE) cobrindo pacotes maliciosos, path traversal, execução de scripts, vazamento de segredos, prompt injection via pacote.
 - Modelo de permissões declaradas por componente.
 - Propriedade e isolamento de pacotes ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)): entrada para o modelo de ameaças e para o manifesto (campos de dono, identidade esperada e permissões comparáveis entre versões).
-- Spec v0 da base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): fontes declaradas por pacote e projeto, formato do chunk e do resultado com fonte, perguntas de referência.
+- Spec v0 da base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): fontes declaradas por pacote e projeto, formato do chunk e do resultado com fonte, perguntas de referência. Spec v0 entregue: [base-de-conhecimento](specs/base-de-conhecimento.md).
 
 Critérios de saída: schemas com testes de exemplos válidos/inválidos; cada ameaça alta tem controle planejado em uma fase.
 
@@ -82,6 +82,8 @@ Entregas:
 - Invariantes do [ADR-0018](adr/0018-invariantes-de-seguranca-da-instalacao.md): nenhum código de pacote roda na instalação; recusa de origem fora da lista permitida; diff de instruções no `plan`/`update`.
 - Controles F2 do [modelo de ameaças](arquitetura/modelo-de-ameacas.md): Git sem injeção de argumento ou transporte (T3), caracteres invisíveis escapados no `plan` (T5), limites de tamanho e profundidade (D1), redação de segredos na auditoria e no lockfile (I1), MCP e hooks sem download em tempo de execução (E7).
 - Base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): portas `PortaIndice` e `PortaEmbeddings`; cache em `.harness/cache/` fora do Git; spike de `node:sqlite` (FTS5) nos 3 SOs, com plano B em JS puro.
+
+**Andamento (sprint 02, 2026-11-02):** parte 1 entregue — base segura de caminhos e porta de arquivos, auditoria JSONL local, resolução semver via Git, integridade do lockfile e `init`/`list`/`validate`/`plan`/`doctor` ([ADR-0023](adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md)). **Andamento (sprint 03, 2026-11-02):** parte 2 entregue - `add`/`remove`/`update`/`apply` com camada local de customização e recusa de sobrescrever edição à mão ([ADR-0024](adr/0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md)), fuzzing de manifestos, E2E no disco em Ubuntu e Windows (macOS suspenso no CI por ora) e spike do `node:sqlite` ([resultado](arquitetura/spike-node-sqlite.md)). Fica para a F3: projeção por ambiente (`.claude/`, `.github/`) e diff de instruções.
 
 Critérios de saída: testes E2E nos 3 SOs instalando/atualizando/removendo pacote de exemplo; `update` nunca sobrescreve customização sem aviso; fuzzing de manifestos sem falhas; testes previstos das ameaças com fase F2 no [modelo de ameaças](arquitetura/modelo-de-ameacas.md) passando.
 

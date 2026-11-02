@@ -1,6 +1,6 @@
 # Mapa de módulos
 
-> Status: Estável · Atualizado: 2026-10-25 · Relacionados: [ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md), [ADR-0015](../adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md), [ADR-0001](../adr/0001-alvos-iniciais-claude-code-e-copilot.md), [ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md), [roadmap](../roadmap.md)
+> Status: Estável · Atualizado: 2026-11-02 · Relacionados: [ADR-0010](../adr/0010-pacote-unico-com-fronteiras-internas.md), [ADR-0015](../adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md), [ADR-0001](../adr/0001-alvos-iniciais-claude-code-e-copilot.md), [ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md), [roadmap](../roadmap.md)
 
 ## Objetivo
 Dizer onde cada responsabilidade do harness mora no código (`src/`), quem pode importar quem e em que fase cada módulo nasce. Responde "responsabilidades do núcleo vs. adapters" do [contexto §12](../contexto.md#12-perguntas-em-aberto).
@@ -42,10 +42,11 @@ Pastas criadas só quando o primeiro código existir ([contexto §7.7](../contex
 | `contratos` | Leitura segura de JSON, validação por JSON Schema ([ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md)) e formato de erro comuns a todos os contratos | Todos | F1 |
 | `manifesto` | Validar manifesto, regras de caminho e comando, diff de permissões ([spec](../specs/manifesto-de-pacote.md)) | Manifesto | F1 (validação), F2 (leitura do pacote) |
 | `configuracao` | Validar a configuração, origens permitidas e limites efetivos ([spec](../specs/configuracao-e-lockfile.md)) | Configuração | F1 (validação), F2 (leitura e `add`) |
-| `resolucao` | Tag semver → commit SHA, pela porta Git | Lockfile | F2 |
+| `resolucao` | Tag semver → commit SHA, pela porta Git (`semver.ts`; adapter em `src/plataforma/git.ts`) | Lockfile | F2 (parte 1) |
 | `lockfile` | Validar o lockfile e calcular o hash de conteúdo ([spec](../specs/configuracao-e-lockfile.md)); ler, gravar e verificar na F2 | Lockfile | F1 (validação e hash), F2 (I/O e verificação) |
 | `plano` | Diff entre o instalado e os arquivos em memória dos adapters; base de `plan` e `--dry-run` | — | F2 |
 | `customizacoes` | Preservar e detectar conflito com edições locais | — | F2 |
+| `comandos` | `init`, `list`, `validate`, `plan`, `doctor` ([ADR-0023](../adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md)) e `add`, `remove`, `update`, `apply` (`escrita.ts`, [ADR-0024](../adr/0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md)) como funções sobre portas | — | F2 |
 | `validadores` | Verificações determinísticas sobre manifesto, plano e projeto (`validate`, `doctor`, `validate --ci`) | — | F2, F4 |
 | `policy` | Validar policies, combinar núcleo, organização, projeto e pacote (o mais restritivo vence), explicar a decisão e classificar a garantia por ambiente ([spec](../specs/policy.md)); motor em execução e validador de servidor na F4 | Policy | F1 (contrato e decisão), F4 (enforcement) |
 | `evidencias` (dentro de `auditoria/`) | Resumo do registro solicitado / executado / verificado / falhou / ignorado, com nível de enforcement ([spec](../specs/auditoria-e-evidencias.md)) | Evidência | F1 (contrato e resumo), F4 (conferência no servidor) |
