@@ -31,6 +31,7 @@ import {
   pastaLocalDoPacote,
   type ResultadoDoComando,
 } from './base.js';
+import { type CacheDaOrganizacao, carregarPoliticas, conteudoAnterior, explicarDecisao } from './politicas.js';
 import {
   aplicarProjecao,
   avisosGeraisDosAmbientes,
@@ -327,6 +328,7 @@ async function preparar(
   const travados = new Map(lock.pacotes.map((p) => [p.nome, p]));
   const aprovacoesUsadas = new Set<string>();
   const reservados = new Map<string, string>();
+  const cacheDaOrganizacao: CacheDaOrganizacao = new Map();
 
   for (const p of config.pacotes.filter((c) => quer(c.nome))) {
     const t = travados.get(p.nome);
@@ -366,13 +368,37 @@ async function preparar(
         erros.push(...desvios.map(e));
         continue;
       }
-      const decisao = avaliarPacote(lido.manifesto, {}, { ambientes: config.ambientes });
+      const instaladoAntes = t ? await lerInstalado(ctx, t) : { arquivos: new Map<string, string>(), editado: false };
+      const politicas = await carregarPoliticas(
+        ctx,
+        config,
+        lock,
+        p.nome,
+        lido,
+        await conteudoAnterior(ctx, p, t, instaladoAntes.arquivos, instaladoAntes.editado),
+        cacheDaOrganizacao,
+      );
+      if (politicas.erros.length > 0) {
+        erros.push(...politicas.erros.map((m) => `${e(p.nome)}: policy inválida: ${m}`));
+        continue;
+      }
+      const decisao = avaliarPacote(lido.manifesto, politicas.fontes, { ambientes: config.ambientes });
+      const bloqueios = explicarDecisao(decisao);
+      if (bloqueios.length > 0) {
+        erros.push(...bloqueios.map((m) => `${e(p.nome)}: bloqueado pela policy: ${m}`));
+        continue;
+      }
       if (decisao.falhaFechada) {
         erros.push(`${e(p.nome)}: policy falha fechada (regra crítica sem garantia); resolva antes de instalar.`);
         continue;
       }
       // Aprovação própria: só o que a pessoa nomeou para ESTE pacote, e só se a impressão ainda vale.
-      const exigidas = itensDeAprovacaoPropria({ chave: p.nome, componentes: lido.manifesto.componentes, decisao });
+      const exigidas = itensDeAprovacaoPropria({
+        chave: p.nome,
+        componentes: lido.manifesto.componentes,
+        decisao,
+        afrouxamentos: politicas.afrouxamentos,
+      });
       const nomeadas: EntradaDeAprovacao[] = exigidas.filter((x) => opcoes.aprovar.includes(x.id));
       for (const x of nomeadas) aprovacoesUsadas.add(x.id);
       const conf = pendentesDeAprovacao(exigidas, [...(t?.aprovacoesProprias ?? []), ...nomeadas]);
@@ -404,7 +430,7 @@ async function preparar(
         componentes: lido.manifesto.componentes,
       };
       // Edição à mão: o que está instalado precisa bater com o hash travado; senão há trabalho do usuário ali.
-      const instalado = t ? await lerInstalado(ctx, t) : { arquivos: new Map<string, string>(), editado: false };
+      const instalado = instaladoAntes;
       let copiar: string[] = [];
       if (instalado.editado) {
         copiar = [...instalado.arquivos.keys()].filter((c) => lido.arquivos.get(c) !== instalado.arquivos.get(c));

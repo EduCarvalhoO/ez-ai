@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { criarGit, criarIdentidade } from '../../src/plataforma/index.js';
 import { entradasDaArvore, shaDaTag, tagsDoLsRemote } from '../../src/plataforma/git.js';
+import { criarGit, criarIdentidade } from '../../src/plataforma/index.js';
 
 const REPO = 'https://github.com/eduardo/revisao-ts';
 const SHA = 'a'.repeat(40);
