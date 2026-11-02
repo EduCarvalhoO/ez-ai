@@ -1,6 +1,6 @@
 # Roadmap até a v1.0
 
-> Status: Aceito (revisável a cada fase) · Atualizado: 2026-10-24 · Relacionados: [contexto](contexto.md), [ADRs](adr/README.md)
+> Status: Aceito (revisável a cada fase) · Atualizado: 2026-11-02 · Relacionados: [contexto](contexto.md), [ADRs](adr/README.md)
 
 ## Premissas
 
@@ -64,6 +64,7 @@ Entregas (em `docs/specs/` e `docs/arquitetura/`):
 - Modelo de ameaças (STRIDE) cobrindo pacotes maliciosos, path traversal, execução de scripts, vazamento de segredos, prompt injection via pacote.
 - Modelo de permissões declaradas por componente.
 - Propriedade e isolamento de pacotes ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)): entrada para o modelo de ameaças e para o manifesto (campos de dono, identidade esperada e permissões comparáveis entre versões).
+- Spec v0 da base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): fontes declaradas por pacote e projeto, formato do chunk e do resultado com fonte, perguntas de referência.
 
 Critérios de saída: schemas com testes de exemplos válidos/inválidos; cada ameaça alta tem controle planejado em uma fase.
 
@@ -80,6 +81,7 @@ Entregas:
 - `--dry-run` em todas as operações que alteram arquivos.
 - Invariantes do [ADR-0018](adr/0018-invariantes-de-seguranca-da-instalacao.md): nenhum código de pacote roda na instalação; recusa de origem fora da lista permitida; diff de instruções no `plan`/`update`.
 - Controles F2 do [modelo de ameaças](arquitetura/modelo-de-ameacas.md): Git sem injeção de argumento ou transporte (T3), caracteres invisíveis escapados no `plan` (T5), limites de tamanho e profundidade (D1), redação de segredos na auditoria e no lockfile (I1), MCP e hooks sem download em tempo de execução (E7).
+- Base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): portas `PortaIndice` e `PortaEmbeddings`; cache em `.harness/cache/` fora do Git; spike de `node:sqlite` (FTS5) nos 3 SOs, com plano B em JS puro.
 
 Critérios de saída: testes E2E nos 3 SOs instalando/atualizando/removendo pacote de exemplo; `update` nunca sobrescreve customização sem aviso; fuzzing de manifestos sem falhas; testes previstos das ameaças com fase F2 no [modelo de ameaças](arquitetura/modelo-de-ameacas.md) passando.
 
@@ -120,6 +122,7 @@ Entregas:
 - Docker Compose de referência do Langfuse + runbook.
 - Datasets e evals: verificações determinísticas + LLM-as-judge com rubricas versionadas.
 - Dashboards/consultas para as [métricas de sucesso](#métricas-de-sucesso), cobrindo as [visões do painel do pipeline](specs/pipeline-agentico.md#painel).
+- Métricas da base de conhecimento (recall@k, MRR, acerto de citação) exportadas ao Langfuse ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)).
 
 Critérios de saída: trace completo de uma execução visível no Langfuse local; teste garante que segredos de fixture nunca chegam ao exportador; telemetria desligada = zero chamadas de rede.
 
@@ -133,8 +136,9 @@ Entregas:
 - Gates por etapa: spec com critérios de aceite; plano revisado; testes passando + cobertura; review com checklist de policies.
 - Aprovação humana configurável entre etapas.
 - **Benchmark interno:** conjunto de 10–20 tarefas reais (golden tasks) executadas com e sem harness para comparação.
+- Base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): C0 (mapa de docs e de código por AST, mantido pelo agente da E0) e C1 (BM25 local com chunks por AST e por título); servidor MCP `buscar`/`abrir`/`mapa`; skill com a regra de uso; 30 perguntas de referência sobre o próprio harness. *(corte)* C1 volta para só C0.
 
-Critérios de saída (**M3**): benchmark executado nos dois ambientes com resultados no Langfuse; relatório comparativo de qualidade, custo e conformidade.
+Critérios de saída (**M3**): benchmark executado nos dois ambientes com resultados no Langfuse; relatório comparativo de qualidade, custo e conformidade; recall@5 da base de conhecimento (C0 + C1) ≥ C0 sozinha nas perguntas de referência do harness.
 
 ## F7 — Supply chain e identidade (S23–S24)
 
@@ -208,11 +212,13 @@ As metas numéricas são definidas após a primeira linha de base no benchmark d
 | Supply chain npm | Comprometimento do harness | Baseline F0, provenance, SBOM, dependências mínimas |
 | Vazamento de dados via telemetria | Perda de confiança | Opt-in, redação testada, self-hosted |
 | Nome colidindo com marca existente | Retrabalho na distribuição | Decisão de naming antes da F8 |
+| Base de conhecimento crescer para banco vetorial e camadas caras | Atraso da F6 e custo | Camadas ligadas só por ganho medido; C2/C3 fora do caminho crítico; C1 é *(corte)* ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)) |
 
 ## Pós-v1.0 (condicionado a evidências)
 
 - Servidor opcional: contas, organizações, RBAC, SSO ([ADR-0003](adr/0003-controle-de-usuarios-faseado.md)).
 - Registry/catálogo de pacotes com revisão comunitária ([ADR-0005](adr/0005-distribuicao-git-lockfile.md)).
 - Novos adapters (Cursor, outros).
+- Base de conhecimento C2 (embeddings locais com fusão RRF) e C3 (reranker e contexto por LLM com a chave do usuário), padrão só com ganho medido; índice compartilhado entre repositórios com o servidor opcional ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)).
 - Orquestração/runtime próprio de workflows ([contexto §5](contexto.md#5-direção-conceitual)).
 - Interface web e dashboards de governança cross-repo.
