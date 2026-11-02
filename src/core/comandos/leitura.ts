@@ -20,6 +20,7 @@ import {
   pastaDoPacote,
   type ResultadoDoComando,
 } from './base.js';
+import { type CacheDaOrganizacao, carregarPoliticas, explicarDecisao } from './politicas.js';
 import { avisosGeraisDosAmbientes, pacoteInstalado, planejarProjecao } from './projecao.js';
 
 const e = escaparInvisiveis;
@@ -106,6 +107,7 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
     const saida: string[] = [];
     const erros: string[] = [];
     const reservados = new Map<string, string>();
+    const cacheDaOrganizacao: CacheDaOrganizacao = new Map();
     for (const p of config.valor.pacotes) {
       const origemTexto = p.origem.tipo === 'local' ? `local:${p.origem.caminho}` : p.origem.url;
       if (!origemPermitida(config.valor, origemTexto)) {
@@ -124,7 +126,21 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
           erros.push(...desvios.map(e));
           continue;
         }
-        const decisao = avaliarPacote(lido.manifesto, {}, { ambientes: config.valor.ambientes });
+        const instalado = await lerPastaLocal(ctx.arquivos, pastaDoPacote(p.nome));
+        const politicas = await carregarPoliticas(
+          ctx,
+          config.valor,
+          lock.valor,
+          p.nome,
+          lido,
+          instalado,
+          cacheDaOrganizacao,
+        );
+        if (politicas.erros.length > 0) {
+          erros.push(...politicas.erros.map((m) => `${e(p.nome)}: policy inválida: ${m}`));
+          continue;
+        }
+        const decisao = avaliarPacote(lido.manifesto, politicas.fontes, { ambientes: config.valor.ambientes });
         const versao = lido.manifesto.versao;
         let estado: string;
         if (!t) estado = 'instalar';
@@ -145,6 +161,15 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
             `    policy: ${decisao.efeito}${decisao.falhaFechada ? ' (falha fechada: regra crítica sem garantia)' : ''}`,
           );
           if (decisao.falhaFechada) erros.push(`${e(p.nome)}: policy falha fechada; resolva antes de aplicar.`);
+          for (const motivo of explicarDecisao(decisao)) {
+            saida.push(`    bloqueado: ${motivo}`);
+            erros.push(`${e(p.nome)}: bloqueado pela policy: ${motivo}`);
+          }
+          for (const motivo of explicarDecisao(decisao, ['exigir-aprovacao'])) saida.push(`    aprovação: ${motivo}`);
+          for (const motivo of explicarDecisao(decisao, ['avisar'])) saida.push(`    aviso: ${motivo}`);
+          for (const a of politicas.afrouxamentos) {
+            saida.push(`    policy afrouxada (${a.nivel}): ${e(JSON.stringify(a.afrouxamento))}`);
+          }
           if (t) {
             for (const a of diferencaDePermissoes(t, lido.manifesto)) {
               saida.push(`    permissão nova: ${e(JSON.stringify(a))}`);
@@ -152,7 +177,6 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
           }
         }
         // Diff das instruções e projeção nos ambientes (ADR-0018, ADR-0025): só leitura, nada é gravado.
-        const instalado = await lerPastaLocal(ctx.arquivos, pastaDoPacote(p.nome));
         if (estado !== 'inalterado') saida.push(...diffDoPacote(instalado, lido.arquivos, lido.manifesto));
         const antigo = pacoteInstalado(p.nome, instalado);
         const projecao = await planejarProjecao(ctx, {

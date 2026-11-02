@@ -1,8 +1,9 @@
 // `init`: cria `.harness/config.json` mínimo e o `.gitignore` do log de auditoria. Com `--dry-run` só mostra o que faria.
+
+import { PASTA_DA_AUDITORIA } from '../auditoria/registro.js';
 import { validarConfiguracao } from '../configuracao/configuracao.js';
 import type { Ambiente } from '../manifesto/manifesto.js';
 import { AMBIENTES } from '../manifesto/schema.js';
-import { PASTA_DA_AUDITORIA } from '../auditoria/registro.js';
 import { CAMINHO_DA_CONFIGURACAO, type Contexto, formatarErros, type ResultadoDoComando } from './base.js';
 
 export interface OpcoesDeInit {

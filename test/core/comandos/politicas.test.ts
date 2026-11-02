@@ -1,0 +1,127 @@
+import { describe, expect, it } from 'vitest';
+import { adicionar, aplicar, type Contexto, init, planejar } from '../../../src/core/index.js';
+import { arquivosEmMemoria, gitEmMemoria, identidadeFixa, relogioFixo } from '../../helpers/memoria.js';
+
+const REPO = 'https://github.com/eduardo/revisao-ts';
+const ORG = 'https://github.com/acme/politicas';
+const SHA1 = '1'.repeat(40);
+const SHA2 = '2'.repeat(40);
+const SHA3 = '3'.repeat(40);
+const SEM_OPCOES = { nomes: [], aprovar: [], forcar: false, aceitarPermissoes: false, dryRun: false };
+
+const POLICY_NEGA_AGENTE = JSON.stringify({
+  versaoPolicy: 0,
+  regras: [{ id: 'sem-agente', efeito: 'negar', categoria: 'tipo', padroes: ['agente'], motivo: 'Sem agentes aqui' }],
+});
+
+function manifesto(nome: string, repo: string, versao: string, componentes: unknown[]): string {
+  return JSON.stringify({
+    versaoManifesto: 0,
+    nome,
+    versao,
+    descricao: 'Pacote de teste',
+    licenca: 'MIT',
+    repositorio: repo,
+    componentes,
+  });
+}
+
+const comAgente = {
+  'harness-pacote.json': manifesto('eduardo/revisao-ts', REPO, '1.0.0', [
+    { id: 'ag', tipo: 'agente', arquivo: 'agentes/a.md' },
+  ]),
+  'agentes/a.md': '---\nname: a\ndescription: x\n---\ncorpo',
+};
+const comInstrucao = {
+  'harness-pacote.json': manifesto('eduardo/revisao-ts', REPO, '1.0.0', [
+    { id: 'conv', tipo: 'instrucao', arquivo: 'instrucoes/c.md' },
+  ]),
+  'instrucoes/c.md': 'regras',
+};
+const organizacao = (policy: string, extra: unknown[] = []) => ({
+  'harness-pacote.json': manifesto('acme/politicas', ORG, '1.0.0', [
+    { id: 'regras', tipo: 'policy', arquivo: 'policy.json' },
+    ...extra,
+  ]),
+  'policy.json': policy,
+});
+
+async function projeto(
+  commits: Record<string, Record<string, string>>,
+  extraConfig: Record<string, unknown> = {},
+  arquivosIniciais: Record<string, string> = {},
+) {
+  const arquivos = arquivosEmMemoria(arquivosIniciais);
+  const ctx: Contexto & { arquivos: typeof arquivos } = {
+    arquivos,
+    git: gitEmMemoria({
+      [REPO]: { tags: { 'v1.0.0': SHA1 }, commits: { [SHA1]: commits[SHA1] ?? comAgente } },
+      [ORG]: {
+        tags: { 'v1.0.0': SHA2, 'v1.1.0': SHA3 },
+        commits: { [SHA2]: commits[SHA2] ?? {}, [SHA3]: commits[SHA3] ?? {} },
+      },
+    }),
+    relogio: relogioFixo(),
+    identidade: identidadeFixa(),
+    harness: '0.0.0',
+    tipoDeAtor: 'humano',
+  };
+  await init(ctx, { dryRun: false });
+  const config = JSON.parse(await arquivos.ler('.harness/config.json'));
+  config.origensPermitidas = [REPO, ORG];
+  Object.assign(config, extraConfig);
+  await arquivos.gravar('.harness/config.json', JSON.stringify(config));
+  return ctx;
+}
+
+describe('policy no plan e no apply', () => {
+  it('policy do projeto que nega o tipo bloqueia plan e apply e explica por quê', async () => {
+    const ctx = await projeto({}, {}, { '.harness/policy.json': POLICY_NEGA_AGENTE });
+    await adicionar(ctx, { origem: REPO, versao: '^1.0.0', dryRun: false });
+    const plano = await planejar(ctx);
+    expect(plano.codigo).toBe(1);
+    expect(plano.erros.join('\n')).toContain('sem-agente');
+    expect(plano.erros.join('\n')).toContain('projeto');
+    const r = await aplicar(ctx, SEM_OPCOES);
+    expect(r.codigo).toBe(1);
+    expect(r.erros.join('\n')).toContain('bloqueado pela policy');
+    expect(await ctx.arquivos.existe('.harness/lock.json')).toBe(false);
+  });
+
+  it('policy do projeto inválida recusa (falha fechada)', async () => {
+    const ctx = await projeto(
+      { [SHA1]: comInstrucao },
+      {},
+      { '.harness/policy.json': '{"versaoPolicy":0,"regras":[{"id":"x","efeito":"permitir"}]}' },
+    );
+    await adicionar(ctx, { origem: REPO, versao: '^1.0.0', dryRun: false });
+    const r = await aplicar(ctx, SEM_OPCOES);
+    expect(r.codigo).toBe(1);
+    expect(r.erros.join('\n')).toContain('policy inválida');
+  });
+
+  it('sem policy que case, o pacote instala normalmente', async () => {
+    const ctx = await projeto({ [SHA1]: comInstrucao });
+    await adicionar(ctx, { origem: REPO, versao: '^1.0.0', dryRun: false });
+    expect((await aplicar(ctx, SEM_OPCOES)).codigo).toBe(0);
+  });
+
+  it('policy da organização (pacote travado) nega o tipo em outro pacote', async () => {
+    const ctx = await projeto({ [SHA2]: organizacao(POLICY_NEGA_AGENTE) }, { policyDaOrganizacao: 'acme/politicas' });
+    await adicionar(ctx, { origem: ORG, versao: '^1.0.0', dryRun: false });
+    await adicionar(ctx, { origem: REPO, versao: '^1.0.0', dryRun: false });
+    const r = await aplicar(ctx, SEM_OPCOES);
+    expect(r.codigo).toBe(1);
+    expect(r.erros.join('\n')).toContain('organizacao');
+  });
+
+  it('pacote da organização com componente que não é policy é recusado', async () => {
+    const ctx = await projeto(
+      { [SHA2]: organizacao(POLICY_NEGA_AGENTE, [{ id: 'i', tipo: 'instrucao', arquivo: 'i.md' }]) },
+      { policyDaOrganizacao: 'acme/politicas' },
+    );
+    await adicionar(ctx, { origem: ORG, versao: '^1.0.0', dryRun: false });
+    const r = await aplicar(ctx, SEM_OPCOES);
+    expect(r.codigo).toBe(1);
+  });
+});

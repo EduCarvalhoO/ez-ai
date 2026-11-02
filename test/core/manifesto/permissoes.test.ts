@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { globsSeCruzam } from '../../../src/core/manifesto/caminhos.js';
 import {
   diferencaDePermissoes,
   type Manifesto,
@@ -11,6 +10,7 @@ import {
   permissoesDoPacote,
   validarManifesto,
 } from '../../../src/core/index.js';
+import { globsSeCruzam } from '../../../src/core/manifesto/caminhos.js';
 
 const arquivo = join(
   dirname(fileURLToPath(import.meta.url)),
