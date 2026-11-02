@@ -159,6 +159,8 @@ Regras do Eduardo (2026-10-24, [ADR-0014](../adr/0014-economia-de-tokens-no-pipe
 | Subagentes para leituras grandes | Regra dos agentes: leituras de muitos arquivos ou logs longos vão para um subagente, que devolve só o resumo | Fixo |
 | Respostas curtas | Regra dos agentes: respostas e relatórios trazem o essencial, sem repetir o processo; o formato dos relatórios segue o [guia §5](../guias/time-de-agentes.md#5-formato-dos-relatórios) | Fixo |
 
+Estado atual (2026-11-02): o agente `professor` do harness está **desativado** na esteira por economia de tokens; os executores escrevem a versão curta dos 4 blocos didáticos ([guia §7](../guias/time-de-agentes.md#7-decisões-didáticas-agente-professor)).
+
 O efeito das regras será acompanhado pelo custo e pelos tokens por etapa e por agente da [rastreabilidade](#rastreabilidade) e pela visão 2 do [painel](#painel). Não há comparação "antes × depois": as regras nascem junto com o pipeline e não existe linha de base anterior.
 
 ### Pacotes de terceiros
