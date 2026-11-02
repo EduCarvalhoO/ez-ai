@@ -1,9 +1,11 @@
 // Comandos somente leitura: `list`, `validate`, `plan` e `doctor`. Nenhum grava arquivo do projeto (o log de
 // auditoria é gravado por `executarComAuditoria`). Nenhum código do pacote roda: só texto é lido e validado (ADR-0018).
-import { diferencaDeConfiguracao, verificarIntegridade, conferirManifesto } from '../lockfile/integridade.js';
+
 import { lerAuditoria, PASTA_DA_AUDITORIA } from '../auditoria/registro.js';
 import { origemPermitida } from '../configuracao/configuracao.js';
+import { conferirManifesto, diferencaDeConfiguracao, verificarIntegridade } from '../lockfile/integridade.js';
 import { diferencaDePermissoes } from '../manifesto/permissoes.js';
+import { diffDoPacote } from '../plano/diff.js';
 import { avaliarPacote } from '../policy/avaliar.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import {
@@ -13,9 +15,12 @@ import {
   carregarConfiguracao,
   carregarLockfile,
   executarComAuditoria,
+  lerPastaLocal,
   obterPacote,
+  pastaDoPacote,
   type ResultadoDoComando,
 } from './base.js';
+import { avisosGeraisDosAmbientes, pacoteInstalado, planejarProjecao } from './projecao.js';
 
 const e = escaparInvisiveis;
 
@@ -100,6 +105,7 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
     const travados = new Map(lock.valor.pacotes.map((p) => [p.nome, p]));
     const saida: string[] = [];
     const erros: string[] = [];
+    const reservados = new Map<string, string>();
     for (const p of config.valor.pacotes) {
       const origemTexto = p.origem.tipo === 'local' ? `local:${p.origem.caminho}` : p.origem.url;
       if (!origemPermitida(config.valor, origemTexto)) {
@@ -145,6 +151,21 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
             }
           }
         }
+        // Diff das instruções e projeção nos ambientes (ADR-0018, ADR-0025): só leitura, nada é gravado.
+        const instalado = await lerPastaLocal(ctx.arquivos, pastaDoPacote(p.nome));
+        if (estado !== 'inalterado') saida.push(...diffDoPacote(instalado, lido.arquivos, lido.manifesto));
+        const antigo = pacoteInstalado(p.nome, instalado);
+        const projecao = await planejarProjecao(ctx, {
+          nome: p.nome,
+          ambientes: config.valor.ambientes,
+          ...(antigo ? { antigo } : {}),
+          novo: { manifesto: lido.manifesto, arquivos: lido.arquivos },
+          forcar: false,
+          reservados,
+        });
+        saida.push(...projecao.linhas);
+        saida.push(...projecao.avisos.map((m) => `    aviso: ${m}`));
+        erros.push(...projecao.erros);
       } catch (erro: unknown) {
         erros.push(e(erro instanceof Error ? erro.message : String(erro)));
       }
@@ -153,6 +174,9 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
       if (d.estado === 'removido') saida.push(`- ${e(d.nome)}  remover (saiu da configuração)`);
     }
     if (saida.length === 0 && erros.length === 0) saida.push('Nada a fazer.');
+    if (config.valor.pacotes.length > 0) {
+      saida.push(...avisosGeraisDosAmbientes(ctx, config.valor.ambientes).map((m) => `aviso  ${m}`));
+    }
     saida.push('plan não grava nada. Aprovação própria: só pedida até o job da F4 existir (nível ausente).');
     return { codigo: erros.length > 0 ? 1 : 0, saida, erros };
   });
@@ -175,6 +199,9 @@ export function diagnosticar(ctx: Contexto): Promise<ResultadoDoComando> {
       if (soltos.length > 0) {
         saida.push(`aviso  ${soltos.length} pacote(s) fora do lockfile ou diferentes dele; rode "harness-ai plan".`);
       }
+    }
+    if (config.ok && config.valor.pacotes.length > 0) {
+      saida.push(...avisosGeraisDosAmbientes(ctx, config.valor.ambientes).map((m) => `aviso  ${m}`));
     }
     const auditoria = await lerAuditoria(ctx.arquivos);
     if (auditoria.ok) saida.push(`ok     auditoria: ${auditoria.eventos.length} evento(s), corrente íntegra`);
