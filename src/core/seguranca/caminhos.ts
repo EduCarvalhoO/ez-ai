@@ -4,8 +4,7 @@ import { problemaNoCaminho } from '../manifesto/caminhos.js';
 import { LIMITES } from '../manifesto/schema.js';
 
 const UNIDADE_DO_WINDOWS = /^[a-zA-Z]:/;
-// biome-ignore lint/suspicious/noControlCharactersInRegex: recusar controle (inclusive NUL) em caminho é o objetivo.
-const CONTROLE = /[\u0000-\u001f\u007f]/;
+const CONTROLE = /\p{Cc}/u;
 const BARRA_INVERTIDA = String.fromCharCode(92);
 
 /**

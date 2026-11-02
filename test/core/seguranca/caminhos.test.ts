@@ -28,7 +28,7 @@ describe('exigirCaminhoDoProjeto', () => {
   });
 
   it('lança mensagem acionável com o caminho escapado', () => {
-    expect(() => exigirCaminhoDoProjeto('../x\u202e')).toThrow(/fora do escopo.*<U\+202E>/);
+    expect(() => exigirCaminhoDoProjeto('../x\u202e')).toThrow(/<U\+202E>.*fora do escopo/);
   });
 });
 
