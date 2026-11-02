@@ -180,7 +180,7 @@ describe('plan', () => {
     const ctx = contexto(
       {
         '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { origem: REPO, versao: '=1.0.0' } }),
-        '.harness/lock.json': lockfile('1.0.0', SHA1, 'sha256:' + '0'.repeat(64)),
+        '.harness/lock.json': lockfile('1.0.0', SHA1, `sha256:${'0'.repeat(64)}`),
       },
       repos,
     );
@@ -274,7 +274,7 @@ describe('validate', () => {
     const adulterado = contexto(
       {
         '.harness/config.json': configuracao(PEDIDO),
-        '.harness/lock.json': lockfile('1.0.0', SHA1, 'sha256:' + 'f'.repeat(64)),
+        '.harness/lock.json': lockfile('1.0.0', SHA1, `sha256:${'f'.repeat(64)}`),
       },
       repos,
     );

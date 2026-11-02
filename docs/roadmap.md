@@ -83,6 +83,8 @@ Entregas:
 - Controles F2 do [modelo de ameaças](arquitetura/modelo-de-ameacas.md): Git sem injeção de argumento ou transporte (T3), caracteres invisíveis escapados no `plan` (T5), limites de tamanho e profundidade (D1), redação de segredos na auditoria e no lockfile (I1), MCP e hooks sem download em tempo de execução (E7).
 - Base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): portas `PortaIndice` e `PortaEmbeddings`; cache em `.harness/cache/` fora do Git; spike de `node:sqlite` (FTS5) nos 3 SOs, com plano B em JS puro.
 
+**Andamento (sprint 02, 2026-11-02):** parte 1 entregue — base segura de caminhos e porta de arquivos, auditoria JSONL local, resolução semver via Git, integridade do lockfile e `init`/`list`/`validate`/`plan`/`doctor` ([ADR-0023](adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md)). Falta (parte 2): `add`/`remove`/`update`/`apply`, preservação de customizações, diff de instruções, fuzzing de manifestos, E2E nos 3 SOs e base de conhecimento.
+
 Critérios de saída: testes E2E nos 3 SOs instalando/atualizando/removendo pacote de exemplo; `update` nunca sobrescreve customização sem aviso; fuzzing de manifestos sem falhas; testes previstos das ameaças com fase F2 no [modelo de ameaças](arquitetura/modelo-de-ameacas.md) passando.
 
 ## F3 — Adapters Claude Code e Copilot (S12–S14)
