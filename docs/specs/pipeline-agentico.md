@@ -161,6 +161,12 @@ Regras do Eduardo (2026-10-24, [ADR-0014](../adr/0014-economia-de-tokens-no-pipe
 
 Estado atual (2026-11-02): o agente `professor` do harness está **desativado** na esteira por economia de tokens; os executores escrevem a versão curta dos 4 blocos didáticos ([guia §7](../guias/time-de-agentes.md#7-decisões-didáticas-agente-professor)).
 
+Regras reforçadas em 2026-11-02, a partir da medição de um dia (cerca de 23 mi de tokens de cache lido, quase todo o gasto: o contexto relido a cada passo):
+
+1. **Sessões curtas:** uma entrega por sessão; encerrar logo após o merge e abrir outra para assunto novo. Se o contexto passar de ~150 mil tokens, encerrar com o registro e continuar em sessão nova.
+2. **Modelo pelo papel:** Opus só para decisão (arquitetura, G1, revisão complexa); Sonnet para pesquisa, redação, docs e ajustes; Haiku para buscas simples.
+3. **Menos passos:** juntar chamadas de ferramenta independentes, evitar subagentes e rodadas de revisão extras, e responder curto. Trabalho não urgente fica pausado até o gargalo atual fechar.
+
 O efeito das regras será acompanhado pelo custo e pelos tokens por etapa e por agente da [rastreabilidade](#rastreabilidade) e pela visão 2 do [painel](#painel). Não há comparação "antes × depois": as regras nascem junto com o pipeline e não existe linha de base anterior.
 
 ### Pacotes de terceiros
