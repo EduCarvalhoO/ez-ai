@@ -1,6 +1,6 @@
 # Padrão de Agentes, Skills e Rules
 
-> Status: Estável · Atualizado: 2026-10-24 · Relacionados: [ADR-0008](../adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md), [ADR-0001](../adr/0001-alvos-iniciais-claude-code-e-copilot.md), [padrão de documentação](padrao-de-documentacao.md)
+> Status: Estável · Atualizado: 2026-11-02 · Relacionados: [ADR-0008](../adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md), [ADR-0001](../adr/0001-alvos-iniciais-claude-code-e-copilot.md), [padrão de documentação](padrao-de-documentacao.md)
 >
 > Fonte única das regras para criar e alterar agentes, skills e rules deste repositório. Os arquivos de cada ambiente apontam para cá; ninguém repete estas regras.
 
@@ -77,7 +77,7 @@
 | `revisor` | Agente | `.claude/agents/revisor.md`, `.github/agents/revisor.agent.md` | [time de agentes §5](time-de-agentes.md#5-formato-dos-relatórios) |
 | `seguranca` | Agente | `.claude/agents/seguranca.md`, `.github/agents/seguranca.agent.md` | [revisão de segurança](revisao-de-seguranca.md) |
 | `painel` | Agente | `.claude/agents/painel.md`, `.github/agents/painel.agent.md`. `Em aberto`: "banco do artifact só leitura" e "só altera o painel" são limites por instrução, sem hook; no Copilot não há publicação de artifact | [time de agentes §6](time-de-agentes.md#6-definição-de-pronto-e-commit) |
-| `professor` | Agente | `.claude/agents/professor.md`, `.github/agents/professor.agent.md`. `Em aberto`: "não editar arquivos" é garantido só pelo `tools` somente leitura; ser chamado antes de cada decisão é regra do orquestrador, sem hook | [time de agentes §7](time-de-agentes.md#7-decisões-didáticas-agente-professor) |
+| `professor` | Agente | `.claude/agents/professor.md`, `.github/agents/professor.agent.md`. `Em aberto`: "não editar arquivos" é garantido só pelo `tools` somente leitura; ser chamado só sob demanda (pedido, dúvida ou decisão importante do Eduardo) é regra do orquestrador, sem hook | [time de agentes §7](time-de-agentes.md#7-decisões-didáticas-agente-professor) |
 | `codigo` | Rule | `.claude/rules/codigo.md`, `.github/instructions/codigo.instructions.md` | [padrão de código e testes](padrao-de-codigo-e-testes.md) |
 | `ci-e-dependencias` | Rule | `.claude/rules/ci-e-dependencias.md`, `.github/instructions/ci-e-dependencias.instructions.md` | [revisão de segurança](revisao-de-seguranca.md) |
 | `ficha-de-tarefa` | Skill | `.claude/skills/ficha-de-tarefa/` | [time de agentes §4](time-de-agentes.md#4-handoffs) |
