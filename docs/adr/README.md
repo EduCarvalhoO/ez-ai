@@ -26,6 +26,7 @@
 | [0018](0018-invariantes-de-seguranca-da-instalacao.md) | Invariantes de segurança da instalação | Aceito |
 | [0019](0019-validacao-de-contratos-com-cfworker-json-schema.md) | Validação de contratos com JSON Schema e `@cfworker/json-schema` | Aceito |
 | [0020](0020-policy-declarativa-so-restritiva-com-precedencia.md) | Policy declarativa, só restritiva, com precedência por nível | Aceito |
+| [0021](0021-rag-em-camadas-local-first-e-medido.md) | RAG em camadas, local-first e medido | Aceito |
 
 ## Decisões em aberto
 

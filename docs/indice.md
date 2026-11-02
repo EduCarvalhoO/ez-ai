@@ -1,6 +1,6 @@
 # Índice da documentação
 
-> Status: Vivo · Atualizado: 2026-10-25 · Relacionados: [padrão de documentação](guias/padrao-de-documentacao.md)
+> Status: Vivo · Atualizado: 2026-11-02 · Relacionados: [padrão de documentação](guias/padrao-de-documentacao.md)
 >
 > Leia este índice primeiro e abra só os documentos de que precisar. Uma linha por documento; ao criar ou mudar um doc, atualize a linha no mesmo PR (a skill `validar-docs` confere).
 
@@ -29,6 +29,7 @@
 | [adr/0018-invariantes-de-seguranca-da-instalacao.md](adr/0018-invariantes-de-seguranca-da-instalacao.md) | ADR-0018: harness nunca executa código de pacote; só origens permitidas até a F7; prompt injection por contenção |
 | [adr/0019-validacao-de-contratos-com-cfworker-json-schema.md](adr/0019-validacao-de-contratos-com-cfworker-json-schema.md) | ADR-0019: contratos em JSON Schema 2020-12 como objeto TS no núcleo, validados por `@cfworker/json-schema` atrás de um wrapper |
 | [adr/0020-policy-declarativa-so-restritiva-com-precedencia.md](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md) | ADR-0020: policy em JSON declarativo, só restritiva; o mais restritivo vence entre núcleo, organização, projeto e pacote; garantia por ambiente |
+| [adr/0021-rag-em-camadas-local-first-e-medido.md](adr/0021-rag-em-camadas-local-first-e-medido.md) | ADR-0021: base de conhecimento (RAG) do harness em camadas C0–C3, local e sem custo, cada camada ligada só com ganho medido |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [arquitetura/modelo-de-ameacas.md](arquitetura/modelo-de-ameacas.md) | Ameaças STRIDE com severidade, controle, fase e teste previsto; riscos residuais aceitos |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
