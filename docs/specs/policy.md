@@ -116,7 +116,7 @@ Cada regra aplicada leva `garantia` ([ADR-0016](../adr/0016-governanca-por-nivel
 `versaoPolicy` sobe quando uma policy válida passa a ser recusada ou muda de sentido; categoria, marca ou campo opcional novo entram sem subir (harness antigo recusa com mensagem clara). Endurecer `POLICY_DO_NUCLEO` não muda a versão. Política de semver dos schemas na F8.
 
 ## Em aberto
-- Quem aprova a aprovação própria e como ela fica fora do alcance do agente: F2/F4, com papéis do [ADR-0003](../adr/0003-controle-de-usuarios-faseado.md) e auditoria na ficha 7. Até lá, não conta como imposta.
+- Imposição da aprovação própria no servidor (job de CI que lê `aprovadores` da base): F4. O contrato (ids, impressão, `aprovacoesProprias` no lockfile) está definido no [ADR-0022](../adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md) e na [spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores); até o job existir, não conta como imposta.
 - Casar `executar` também por argumentos: F4, se o uso pedir.
 - Efeito `permitir` (auto-aprovação): F4/F7, se o uso pedir.
 - Limites numéricos da organização: F4.

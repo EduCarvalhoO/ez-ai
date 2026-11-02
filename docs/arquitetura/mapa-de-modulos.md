@@ -48,8 +48,8 @@ Pastas criadas só quando o primeiro código existir ([contexto §7.7](../contex
 | `customizacoes` | Preservar e detectar conflito com edições locais | — | F2 |
 | `validadores` | Verificações determinísticas sobre manifesto, plano e projeto (`validate`, `doctor`, `validate --ci`) | — | F2, F4 |
 | `policy` | Validar policies, combinar núcleo, organização, projeto e pacote (o mais restritivo vence), explicar a decisão e classificar a garantia por ambiente ([spec](../specs/policy.md)); motor em execução e validador de servidor na F4 | Policy | F1 (contrato e decisão), F4 (enforcement) |
-| `evidencias` | Registro solicitado / executado / verificado / falhou / ignorado | Evidência | F4 |
-| `auditoria` | Eventos JSONL com ator, versão e resultado; encadeamento de hash na F4 | Evento de auditoria | F2, F4 |
+| `evidencias` (dentro de `auditoria/`) | Resumo do registro solicitado / executado / verificado / falhou / ignorado, com nível de enforcement ([spec](../specs/auditoria-e-evidencias.md)) | Evidência | F1 (contrato e resumo), F4 (conferência no servidor) |
+| `auditoria` | Validar evento JSONL, recusar segredo, encadear e verificar a corrente de hash, itens de aprovação própria ([spec](../specs/auditoria-e-evidencias.md), [ADR-0022](../adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md)); a porta `LeitorDeConsumo` lê tokens nos adapters | Evento de auditoria | F1 (contrato e funções puras), F2 (gravar o log), F3 (consumo), F4 (conferência) |
 | `telemetria` | Modelo neutro de spans e redação de segredos antes de sair do núcleo | — | F5 |
 
 ### Regras de dependência

@@ -12,6 +12,7 @@ const schemas = {
   'configuracao.v0.schema.json': nucleo.SCHEMA_DA_CONFIGURACAO,
   'lockfile.v0.schema.json': nucleo.SCHEMA_DO_LOCKFILE,
   'policy.v0.schema.json': nucleo.SCHEMA_DA_POLICY,
+  'evento-de-auditoria.v0.schema.json': nucleo.SCHEMA_DO_EVENTO,
 };
 for (const [arquivo, schema] of Object.entries(schemas)) {
   const destino = join(raiz, 'schemas', arquivo);

@@ -51,3 +51,15 @@ export { carregarPolicyDoCodigo, POLICY_DO_NUCLEO, REGRAS_DO_NUCLEO } from './po
 export type { CategoriaDePolicy, Efeito, Marca, NivelDePolicy, Policy, Regra } from './policy/policy.js';
 export { NIVEIS, validarPolicy } from './policy/policy.js';
 export { LIMITES_DA_POLICY, SCHEMA_DA_POLICY } from './policy/schema.js';
+export type { EntradaDeAprovacao, EntradaParaAprovacao } from './auditoria/aprovacoes.js';
+export { idDeItem, itensDeAprovacaoPropria, pendentesDeAprovacao, problemaNoId } from './auditoria/aprovacoes.js';
+export type { CabecaDaCorrente, ResultadoDaCadeia } from './auditoria/cadeia.js';
+export { encadear, hashDoEvento, verificarCadeia } from './auditoria/cadeia.js';
+export { hashCanonico } from './auditoria/canonico.js';
+export type { ResumoDeEvidencias, VerificacaoResumida } from './auditoria/evidencias.js';
+export { resumirEvidencias } from './auditoria/evidencias.js';
+export type { Consumo, EventoDeAuditoria, EventoSemCorrente, TipoDeEvento } from './auditoria/evento.js';
+export { validarEvento } from './auditoria/evento.js';
+export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
+export { pareceSegredo } from './auditoria/segredos.js';
+export type { JanelaDeConsumo, LeitorDeConsumo } from './portas/index.js';

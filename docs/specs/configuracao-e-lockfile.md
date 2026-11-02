@@ -36,6 +36,7 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 | `pacotes` | não | Até 100; chave `<login>/<pacote>` com as regras do `nome` do manifesto |
 | `pacotes.*.origem` | sim | URL do GitHub ou `local:<caminho>` |
 | `pacotes.*.versao` | GitHub: sim; local: proibido | Intervalo com até dois comparadores (`^1.2.0`, `>=0.3.0 <1.0.0`); o lockfile fixa a exata. Pacote local usa a versão do manifesto da pasta |
+| `aprovadores` | não | Logins do GitHub ou `@org/time` que aprovam a aprovação própria no PR (até 50, sem repetição). O job da F4 lê a lista da branch base ([spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores)) |
 | `policyDaOrganizacao` | não | Chave de `pacotes` com origem do GitHub (pasta `local:` é recusada) cujos componentes `policy` formam o nível organização ([spec da policy](policy.md#níveis)) |
 | `limites` | não | Só `bytesDoManifesto`, `componentes`, `arquivosDoPacote`, `bytesDoPacote`, `bytesPorArquivo`; inteiro de 1 até o valor do núcleo |
 
@@ -70,9 +71,10 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 | `origem` | Como na configuração; login da chave = login da origem |
 | `tag`, `commit` | Obrigatórios em origem GitHub e proibidos em local. `tag` é `<versao>` ou `v<versao>`; `commit` com 40 ou 64 hex minúsculos (SHA-1 ou SHA-256 do Git) |
 | `hash` | Só `sha256:` + 64 hex minúsculos; outro prefixo é erro, nunca pula a verificação |
+| `aprovacoesProprias` | Opcional. Lista de `{id, impressao}` dos itens de aprovação própria aprovados nominalmente (sem repetir id); precisa ser igual à lista que a policy exige ([spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores)) |
 | `componentes` | Retrato do que foi aprovado (id, tipo, arquivo, evento, comando, permissões), com o schema e as regras semânticas do manifesto |
 
-- Sem data, autor nem segredo: duas instalações iguais geram o mesmo arquivo e não brigam no merge; quem aprovou e quando é auditoria (ficha 7). A F2 grava as chaves em ordem alfabética.
+- Sem data, autor nem segredo: duas instalações iguais geram o mesmo arquivo e não brigam no merge; quem aprovou e quando vem do PR, e o log local de auditoria fica fora do repositório ([spec de auditoria e evidências](auditoria-e-evidencias.md#onde-fica)). A F2 grava as chaves em ordem alfabética.
 - O retrato é a base de `diferencaDePermissoes(retrato, manifestoNovo)` no `update` (E2), funciona mesmo se a versão antiga sumir da origem e mostra o aumento de permissão no diff do PR.
 
 ### Hash de conteúdo
