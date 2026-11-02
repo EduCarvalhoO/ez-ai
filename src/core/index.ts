@@ -75,3 +75,6 @@ export {
   verificarIntegridade,
 } from './lockfile/integridade.js';
 export type { Evento, Git, Identidade, Relogio, SistemaDeArquivos } from './portas/index.js';
+export type { Contexto, ResultadoDoComando } from './comandos/base.js';
+export { init } from './comandos/init.js';
+export { diagnosticar, listar, planejar, validar } from './comandos/leitura.js';
