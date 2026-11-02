@@ -23,6 +23,9 @@ export function arquivosEmMemoria(inicial: Record<string, string> = {}): Sistema
     async existe(caminho) {
       return mapa.has(caminho);
     },
+    async remover(caminho) {
+      mapa.delete(caminho);
+    },
   };
 }
 

@@ -15,6 +15,8 @@ export interface SistemaDeArquivos {
   listar(pasta: string): Promise<readonly string[]>;
   /** Diz se o caminho existe. */
   existe(caminho: string): Promise<boolean>;
+  /** Apaga um arquivo comum (nunca pasta nem link). Caminho inexistente não é erro. */
+  remover(caminho: string): Promise<void>;
 }
 
 /** Acesso de leitura a repositórios Git de pacotes (ADR-0005). */

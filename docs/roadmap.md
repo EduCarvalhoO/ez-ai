@@ -46,7 +46,7 @@ gantt
 Entregas:
 - Estrutura TS estrita, Node LTS; decisão monorepo vs. pacote único (ADR).
 - Ferramental: lint/format, Vitest, cobertura, Conventional Commits, changesets.
-- CI (GitHub Actions) em Windows/macOS/Linux ([ADR-0007](adr/0007-suporte-multiplataforma.md)).
+- CI (GitHub Actions) em Windows/Linux, com macOS suspenso temporariamente desde 2026-11-02 ([ADR-0007](adr/0007-suporte-multiplataforma.md)).
 - Baseline de segurança: Renovate/Dependabot, CodeQL, secret scanning, `npm audit` no CI, branch protection, `SECURITY.md`.
 - Padrão de documentação e agente `doc-writer` ([guia](guias/padrao-de-documentacao.md)).
 
@@ -83,7 +83,7 @@ Entregas:
 - Controles F2 do [modelo de ameaças](arquitetura/modelo-de-ameacas.md): Git sem injeção de argumento ou transporte (T3), caracteres invisíveis escapados no `plan` (T5), limites de tamanho e profundidade (D1), redação de segredos na auditoria e no lockfile (I1), MCP e hooks sem download em tempo de execução (E7).
 - Base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): portas `PortaIndice` e `PortaEmbeddings`; cache em `.harness/cache/` fora do Git; spike de `node:sqlite` (FTS5) nos 3 SOs, com plano B em JS puro.
 
-**Andamento (sprint 02, 2026-11-02):** parte 1 entregue — base segura de caminhos e porta de arquivos, auditoria JSONL local, resolução semver via Git, integridade do lockfile e `init`/`list`/`validate`/`plan`/`doctor` ([ADR-0023](adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md)). Falta (parte 2): `add`/`remove`/`update`/`apply`, preservação de customizações, diff de instruções, fuzzing de manifestos, E2E nos 3 SOs e base de conhecimento.
+**Andamento (sprint 02, 2026-11-02):** parte 1 entregue — base segura de caminhos e porta de arquivos, auditoria JSONL local, resolução semver via Git, integridade do lockfile e `init`/`list`/`validate`/`plan`/`doctor` ([ADR-0023](adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md)). **Andamento (sprint 03, 2026-11-02):** parte 2 entregue - `add`/`remove`/`update`/`apply` com camada local de customização e recusa de sobrescrever edição à mão ([ADR-0024](adr/0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md)), fuzzing de manifestos, E2E no disco em Ubuntu e Windows (macOS suspenso no CI por ora) e spike do `node:sqlite` ([resultado](arquitetura/spike-node-sqlite.md)). Fica para a F3: projeção por ambiente (`.claude/`, `.github/`) e diff de instruções.
 
 Critérios de saída: testes E2E nos 3 SOs instalando/atualizando/removendo pacote de exemplo; `update` nunca sobrescreve customização sem aviso; fuzzing de manifestos sem falhas; testes previstos das ameaças com fase F2 no [modelo de ameaças](arquitetura/modelo-de-ameacas.md) passando.
 
