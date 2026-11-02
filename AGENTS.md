@@ -9,3 +9,5 @@
 - Agentes, skills e rules: siga o [padrão de agentes e skills](docs/guias/padrao-de-agentes-e-skills.md). Rules por pasta ficam em `.claude/rules/` e `.github/instructions/`.
 - Arquivos temporários, testes manuais e scripts auxiliares que não fazem parte do projeto vão em `.tmp/` (ignorado pelo Git).
 - Não trate hipóteses ou itens `Em aberto` como decisões aprovadas.
+- **Pronto = CI verde:** uma entrega só está pronta com TODOS os checks do PR verdes, inclusive CodeQL e os jobs de macOS. Acompanhe com `gh pr checks <n> --watch` e corrija antes de avisar.
+- **Arquivos sem corrida:** em código que mexe com arquivos, nunca checar um caminho e depois usar o mesmo caminho (`lstat`/existe seguido de ler/gravar); abra o handle uma vez e use `fstat`/leitura nele ([padrão de código](docs/guias/padrao-de-codigo-e-testes.md#1-código)).

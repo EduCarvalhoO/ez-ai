@@ -13,6 +13,7 @@ Ao escrever ou revisar código TypeScript/JavaScript, testes, scripts de skills 
 ## 1. Código
 - TypeScript em modo estrito, Node LTS, ESM ([ADR-0002](../adr/0002-stack-typescript-node.md)). Scripts de skills em `.mjs` sem dependências.
 - Funções pequenas e puras no núcleo; efeitos (disco, rede, processo) isolados em módulos finos e injetáveis para teste.
+- Arquivos: nunca checar um caminho e depois usar o mesmo caminho (`lstat`/`existe` seguido de ler/gravar; o CodeQL aponta como race condition). Abra o handle uma vez (com `O_NOFOLLOW` onde houver) e use `fstat`/leitura nele; exemplo em `src/plataforma/arquivos.ts`.
 - Erros com mensagem acionável (o que falhou, onde, o que fazer). Nunca engolir exceção.
 - Sem dependência nova sem justificativa na ficha; preferir a biblioteca padrão do Node ([roadmap, riscos](../roadmap.md#riscos)). Versões exatas, publicadas há 7 dias ou mais e sem script de instalação.
 - O `.npmrc` da raiz aplica as duas regras: `ignore-scripts=true` e `min-release-age=7` (npm 11.10+; o npm 10 do Node 22 ignora a opção e só avisa). O `npm ci` instala do lockfile sem reavaliar a idade, então o CI confere em PR as versões novas do lockfile com `scripts/verificar-idade-deps.mjs --desde origin/<base>` ([§5](#5-ci)). Localmente, antes do PR: `node scripts/verificar-idade-deps.mjs --desde origin/develop` (sem `--desde`, confere o lockfile inteiro). Sai 1 listando as versões novas demais e 2 em erro de uso, leitura ou rede.
