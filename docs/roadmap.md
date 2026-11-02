@@ -114,6 +114,8 @@ Entregas:
 - Registro de evidência que distingue **solicitado / executado / verificado / falhou / ignorado**.
 - Trilha de auditoria com encadeamento de hash (detecção de adulteração).
 
+**Andamento (sprint 05, 2026-11-02):** lado local entregue - policy do núcleo, da organização, do projeto e do pacote no `plan`/`apply`/`update` com explicação "por que bloqueou", `validate --ci` e gate de evidências `confirmado` ([ADR-0026](adr/0026-policy-ligada-ao-plan-apply-e-gate-de-validate-ci.md)). Pendente: hooks, MCP e settings de pacote e o job de servidor (aprovadores, CODEOWNERS, ruleset), previstos para a sprint 06.
+
 Critérios de saída: suíte de testes de policies (casos permitidos/negados); nenhum gate ignorado aparece como aprovado; adulteração do log detectada por `doctor`.
 
 ## F5 — Observabilidade e evals (S18–S19)
