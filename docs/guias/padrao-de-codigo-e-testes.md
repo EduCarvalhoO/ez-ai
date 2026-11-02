@@ -47,7 +47,7 @@ Revisão: revisor APROVADO[, seguranca APROVADO]
 
 - Validação: `npm run commits:check` (`scripts/validar-commits.mjs`, sem dependência) confere `origin/develop..HEAD` ou o intervalo passado como argumento. Mensagens geradas pelo git (`Merge ...`, `Revert "..."`) são ignoradas.
 - O repositório só aceita merge commit (squash e rebase desligados): todo commit que entra numa branch protegida passou por essa validação ou foi gerado pelo git ([ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md)).
-- Hook `commit-msg` versionado em `.githooks/`; ele é ativado sozinho por `npm install` (script `prepare`) e no início de cada sessão do Claude Code (`node scripts/ativar-hooks.mjs`); à mão: `git config core.hooksPath .githooks`. Antes do push, rode `npm run commits:check`. Cuidado: o hook roda o script da árvore de trabalho, então commitar numa branch não confiável executa o código dela, o mesmo risco de rodar `npm test` nela.
+- Hook `commit-msg` versionado em `.githooks/`; ele é ativado sozinho no início de cada sessão do Claude Code (`node scripts/ativar-hooks.mjs`); à mão: `git config core.hooksPath .githooks`. Antes do push, rode `npm run commits:check`. Cuidado: o hook roda o script da árvore de trabalho, então commitar numa branch não confiável executa o código dela, o mesmo risco de rodar `npm test` nela.
 - Descrição do PR: o GitHub preenche com `.github/pull_request_template.md` (O que muda, Arquivos, Decisões explicadas, Evidências, Revisão, Pendências). Agentes que abrem PR pela API seguem as mesmas seções.
 - Changesets: mudança que deve aparecer no CHANGELOG ganha um changeset com `npx changeset`. O pacote é privado e versiona sem tag até a publicação na [F8](../roadmap.md).
 
