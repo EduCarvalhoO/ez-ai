@@ -44,6 +44,14 @@ describe('mesclarFragmentos', () => {
     });
   });
 
+  it('hook idêntico de outro dono sobrevive à remoção de um deles', () => {
+    const a = mesclarFragmentos(HOOK.caminho, undefined, [], [HOOK], false);
+    const b = mesclarFragmentos(HOOK.caminho, a.conteudo, [], [HOOK], false);
+    expect(JSON.parse(b.conteudo).hooks.PreToolUse).toHaveLength(2);
+    const c = mesclarFragmentos(HOOK.caminho, b.conteudo, [HOOK], [], false);
+    expect(JSON.parse(c.conteudo).hooks.PreToolUse).toHaveLength(1);
+  });
+
   it('troca o trecho antigo pelo novo no update', () => {
     const v2: FragmentoDeConfig = {
       ...HOOK,
@@ -56,6 +64,8 @@ describe('mesclarFragmentos', () => {
 
   it('recusa servidor MCP de mesmo nome que não é do pacote e servidor nosso editado à mão', () => {
     const alheio = JSON.stringify({ mcpServers: { [MCP.chave]: { command: 'outro' } } });
+    const igualAlheio = JSON.stringify({ mcpServers: { [MCP.chave]: MCP.valor } });
+    expect(mesclarFragmentos(MCP.caminho, igualAlheio, [], [MCP], false).erros[0]).toContain('não é deste pacote');
     expect(mesclarFragmentos(MCP.caminho, alheio, [], [MCP], false).erros[0]).toContain('não é deste pacote');
     expect(mesclarFragmentos(MCP.caminho, alheio, [MCP], [], false).erros[0]).toContain('editado à mão');
     const f = mesclarFragmentos(MCP.caminho, alheio, [MCP], [], true);

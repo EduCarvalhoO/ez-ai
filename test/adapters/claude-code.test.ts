@@ -101,5 +101,10 @@ describe('adapter Claude Code: hooks e MCP (ADR-0027)', () => {
     expect(r.fragmentos).toEqual([]);
     expect(r.avisos.map((a) => a.mensagem).join('\n')).toContain('não declara configurarAmbiente');
     expect(r.avisos.map((a) => a.mensagem).join('\n')).toContain('reservado para o ambiente');
+    const s2 = comHookEMcp((c) => {
+      (c[c.length - 2] as { comando: unknown }).comando = { programa: 'node', argumentos: ['scripts/fora.js'] };
+    });
+    expect(s2.fragmentos.some((f) => f.tipo === 'hook')).toBe(false);
+    expect(s2.avisos.map((a) => a.mensagem).join('\n')).toContain('não está no pacote');
   });
 });

@@ -164,7 +164,8 @@ async function mesclarCompartilhados(
 ): Promise<void> {
   const caminhos = [...new Set([...antigos, ...novos].map((f) => f.caminho))].sort();
   for (const caminho of caminhos) {
-    const noDisco = (await ctx.arquivos.existe(caminho)) ? await ctx.arquivos.ler(caminho) : undefined;
+    // Uma leitura só, sem checar a existência antes (AGENTS.md): ausente = arquivo novo.
+    const noDisco = await ctx.arquivos.ler(caminho).catch(() => undefined);
     const base = pedido.compartilhados?.get(caminho) ?? noDisco;
     const r = mesclarFragmentos(
       caminho,

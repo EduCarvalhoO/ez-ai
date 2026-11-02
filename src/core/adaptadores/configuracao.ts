@@ -18,6 +18,7 @@ export interface ModeloDeConfiguracao {
 }
 
 const PREFIXO_PROIBIDO_EM_ARGUMENTO = '${';
+const SCRIPT = /\.(?:[cm]?js|ts|py|sh|ps1|cmd|bat|rb|pl|php)$/iu;
 
 type Resultado = { readonly fragmento: FragmentoDeConfig } | { readonly aviso: string };
 
@@ -31,6 +32,10 @@ function argumentosDoPacote(
   for (const a of argumentos) {
     if (a.includes(PREFIXO_PROIBIDO_EM_ARGUMENTO)) {
       return `o argumento "${a}" usa "\${", reservado para o ambiente; use um caminho do pacote`;
+    }
+    // Argumento com cara de script que não está no pacote apontaria para arquivo do projeto, que o agente pode escrever.
+    if (!entrada.arquivos.has(a) && (/^\.{1,2}\//u.test(a) || SCRIPT.test(a))) {
+      return `o argumento "${a}" parece um script que não está no pacote; só scripts do próprio pacote são aceitos`;
     }
     // Caminho de arquivo do próprio pacote vira o caminho do pacote instalado (somente leitura, ADR-0024).
     saida.push(entrada.arquivos.has(a) ? `${modelo.raizDosPacotes}/${m.nome}/${a}` : a);
@@ -156,6 +161,7 @@ export function mesclarFragmentos(
   };
   const erros: string[] = [];
   let editadoAMao = false;
+  const removidos = new Set<string>();
   let esvaziouHooks = false;
   let esvaziouServidores = false;
   const antes = canonico(raiz);
@@ -172,6 +178,7 @@ export function mesclarFragmentos(
       }
     } else if (tem(servidores, f.chave)) {
       if (igual(servidores[f.chave], f.valor)) {
+        removidos.add(f.chave);
         delete servidores[f.chave];
         esvaziouServidores = true;
       } else if (forcar) {
@@ -189,10 +196,11 @@ export function mesclarFragmentos(
     if (f.tipo === 'hook') {
       const l = lista(f.chave);
       if (l === undefined) return recusa(`"hooks.${f.chave}" precisa ser uma lista.`);
-      if (!l.some((x) => igual(x, f.valor))) l.push(f.valor);
+      // Sempre acrescenta: hook idêntico de outro dono continua existindo quando este pacote sai (cada remoção tira um).
+      l.push(f.valor);
       hooks[f.chave] = l;
     } else if (!tem(servidores, f.chave)) servidores[f.chave] = f.valor;
-    else if (!igual(servidores[f.chave], f.valor)) {
+    else {
       erros.push(`${caminho}: o servidor "${f.chave}" já existe e não é deste pacote; renomeie ou apague a entrada.`);
     }
   }
