@@ -46,7 +46,7 @@ Pastas criadas só quando o primeiro código existir ([contexto §7.7](../contex
 | `lockfile` | Validar o lockfile e calcular o hash de conteúdo ([spec](../specs/configuracao-e-lockfile.md)); ler, gravar e verificar na F2 | Lockfile | F1 (validação e hash), F2 (I/O e verificação) |
 | `plano` | Diff entre o instalado e os arquivos em memória dos adapters; base de `plan` e `--dry-run` | — | F2 |
 | `customizacoes` | Preservar e detectar conflito com edições locais | — | F2 |
-| `comandos` | `init`, `list`, `validate`, `plan`, `doctor` como funções sobre portas ([ADR-0023](../adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md)) | — | F2 (parte 1) |
+| `comandos` | `init`, `list`, `validate`, `plan`, `doctor` ([ADR-0023](../adr/0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md)) e `add`, `remove`, `update`, `apply` (`escrita.ts`, [ADR-0024](../adr/0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md)) como funções sobre portas | — | F2 |
 | `validadores` | Verificações determinísticas sobre manifesto, plano e projeto (`validate`, `doctor`, `validate --ci`) | — | F2, F4 |
 | `policy` | Validar policies, combinar núcleo, organização, projeto e pacote (o mais restritivo vence), explicar a decisão e classificar a garantia por ambiente ([spec](../specs/policy.md)); motor em execução e validador de servidor na F4 | Policy | F1 (contrato e decisão), F4 (enforcement) |
 | `evidencias` (dentro de `auditoria/`) | Resumo do registro solicitado / executado / verificado / falhou / ignorado, com nível de enforcement ([spec](../specs/auditoria-e-evidencias.md)) | Evidência | F1 (contrato e resumo), F4 (conferência no servidor) |

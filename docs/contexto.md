@@ -167,7 +167,7 @@ Agentes de IA tratam este documento como contexto e princípios, não como autor
 | Requisitos que justificariam serviço central ou interface web? | Parcial — [ADR-0003](adr/0003-controle-de-usuarios-faseado.md), [ADR-0004](adr/0004-observabilidade-langfuse-opcional.md) |
 | Menor conjunto de componentes para validar a proposta | Em aberto — F1 |
 | Responsabilidades do núcleo vs. adapters | Decidido — [ADR-0015](adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md), [mapa de módulos](arquitetura/mapa-de-modulos.md) |
-| Preservação de customizações | Em aberto — F2 (parte 2: `apply`/`update`) |
+| Preservação de customizações | Decidido (ADR-0024, sprint 03): pacote somente leitura em `.harness/pacotes/`; customização em `.harness/local/`, nunca tocada; edição à mão em arquivo instalado faz `apply`/`update` recusarem, e `--forcar` guarda cópia em `.harness/local/<pacote>/anterior/`. Mesclagem automática e projeção por ambiente ficam para a F3 |
 | Combinação e precedência de políticas de diferentes origens | Decidido — [ADR-0020](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md), [spec da policy](specs/policy.md) |
 | Operações que exigem aprovação explícita | Parcial — policy do núcleo ([ADR-0020](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md)); aprovação própria definida no [ADR-0022](adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md), imposta no servidor na F4 |
 | Representação de validações e evidências | Decidido — [ADR-0022](adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md), [spec](specs/auditoria-e-evidencias.md) |
