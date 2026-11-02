@@ -1,8 +1,9 @@
 # ADR-0026: Policy ligada ao plan/apply/update e gate de `validate --ci`
 
-> Status: Parcial (hooks, MCP e settings de pacote seguem `Em aberto` nesta sprint) · Data: 2026-11-02 · Relacionados: [ADR-0016](0016-governanca-por-nivel-de-enforcement.md), [ADR-0020](0020-policy-declarativa-so-restritiva-com-precedencia.md), [ADR-0022](0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md), [ADR-0024](0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md), [ADR-0025](0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md), [roadmap F4](../roadmap.md#f4--governança-e-evidências-s15s17)
+> Status: Parcial · Data: 2026-11-02 · Relacionados: [ADR-0016](0016-governanca-por-nivel-de-enforcement.md), [ADR-0020](0020-policy-declarativa-so-restritiva-com-precedencia.md), [ADR-0022](0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md), [ADR-0024](0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md), [ADR-0025](0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md), [roadmap F4](../roadmap.md#f4--governança-e-evidências-s15s17)
 
 ## Contexto
+Hooks, MCP e settings de pacote seguem `Em aberto` (Sprint 06).
 Até a sprint 04 o motor de policy existia, mas `plan`, `apply` e `update` avaliavam só o núcleo (risco aceito no ADR-0024). A Sprint 05 (lado local da F4) liga as quatro policies e cria o gate que CI e pre-commit usam. O job de servidor (aprovadores, CODEOWNERS, ruleset) fica para a Sprint 06.
 
 ## Alternativas
