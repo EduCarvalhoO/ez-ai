@@ -22,7 +22,7 @@ Ao executar qualquer entrega do [roadmap](../roadmap.md) com apoio de agentes, e
 | `seguranca` | Papel de DevSecOps (segurança em todo o fluxo, não só no fim): revisa o plano de fichas sensíveis antes do G1 e a mudança no E4 contra o [modelo de ameaças](../arquitetura/modelo-de-ameacas.md), e mantém o modelo vivo; apoia a supply chain (F7) | Nada (só relatório) | Leitura + skill `escopo-da-mudanca` |
 | `doc-writer` | Registra ADRs, specs, guias e runbooks a partir do que os outros produziram | `docs/` | Ver [padrão de documentação](padrao-de-documentacao.md) |
 | `painel` | Atualiza e republica o painel do roadmap no encerramento da entrega | Só a cópia do painel em `.tmp/` e o artifact do painel | Leitura, edição, publicação de artifact; banco do artifact só leitura |
-| `professor` | Sob demanda: redige o relatório didático quando o Eduardo pede, tem uma dúvida ou precisa tomar uma decisão importante | Nada (só devolve texto) | Só leitura |
+| `professor` | **DESATIVADO desde 2026-11-02 (economia de tokens; não chamar).** Quando ligado: sob demanda, redige o relatório didático quando o Eduardo pede, tem uma dúvida ou precisa tomar uma decisão importante | Nada (só devolve texto) | Só leitura |
 
 A sessão principal (você + o assistente do ambiente) é o **orquestrador**: escolhe o agente de cada etapa, passa a ficha adiante e decide nos pontos de aprovação. Subagentes não chamam outros subagentes.
 
@@ -84,9 +84,11 @@ Sem achado bloqueante e com todos os critérios atendidos por evidência, o vere
 
 ## 7. Decisões didáticas (agente `professor`)
 
+> **Agente `professor` desativado desde 2026-11-02** (pedido do Eduardo, para economizar tokens). Ninguém o chama, nem sob demanda. Os executores (orquestrador e threads) escrevem os 4 blocos abaixo em versão curta. O arquivo do agente continua em `.claude/agents/professor.md` e `.github/agents/professor.agent.md`. Para religar: apagar este aviso e a marca `DESATIVADO` na tabela de papéis, e voltar a chamá-lo conforme as regras abaixo.
+
 Toda decisão levada ao Eduardo (escolha de arquitetura, G1, cartão de decisão) traz, nesta ordem: (1) a opção recomendada; (2) o que ela impacta no projeto, em linguagem simples; (3) as outras formas de fazer, mesmo as não recomendadas; (4) por que cada uma foi ou não recomendada. Siglas e termos técnicos ganham legenda curta entre parênteses na primeira aparição.
 
-- **Quem escreve:** o orquestrador, em texto curto nos 4 blocos, a partir das alternativas cruas do `arquiteto` (prós, contras, recomendação `Proposto`).
+- **Quem escreve:** o orquestrador (ou a thread executora), em texto curto nos 4 blocos, a partir das alternativas cruas do `arquiteto` (prós, contras, recomendação `Proposto`).
 - **Quando chamar o `professor` (só sob demanda):** (a) o Eduardo pede um relatório explicativo; (b) o Eduardo tem uma dúvida sobre a decisão ou o conceito; (c) a decisão é importante: muda a arquitetura ou um ADR, é difícil de desfazer, ou afeta segurança, custo ou licença. Fora desses casos, o orquestrador não chama o `professor` (economia de tokens, [ADR-0014](../adr/0014-economia-de-tokens-no-pipeline-agentico.md)).
 - **Quem chama:** o orquestrador. Subagentes não chamam subagentes, então o `arquiteto` não chama o `professor`.
 - **Entrada:** pergunta, opções com prós e contras, recomendação e contexto mínimo. **Saída:** o texto nos 4 blocos, para colar no cartão, ficha ou PR (seção "Decisões explicadas").
