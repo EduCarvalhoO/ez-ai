@@ -31,6 +31,7 @@
 | [0023](0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md) | Núcleo da CLI (parte 1): comandos de leitura sobre portas, conteúdo em texto UTF-8 | Aceito |
 | [0024](0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md) | Núcleo da CLI (parte 2): comandos que alteram arquivos e camada local de customização | Aceito |
 | [0025](0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md) | Adapters puros que projetam o pacote nos ambientes (Claude Code e Copilot) | Aceito |
+| [0026](0026-policy-ligada-ao-plan-apply-e-gate-de-validate-ci.md) | Policy ligada ao plan/apply/update e gate de `validate --ci` | Parcial |
 
 ## Decisões em aberto
 

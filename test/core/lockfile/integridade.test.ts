@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  arquivosParaHash,
   type Configuracao,
   conferirManifesto,
   diferencaDeConfiguracao,
   hashDoConteudo,
   type Lockfile,
   type Manifesto,
-  arquivosParaHash,
   verificarIntegridade,
 } from '../../../src/core/index.js';
 
