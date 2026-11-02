@@ -63,3 +63,4 @@ export { validarEvento } from './auditoria/evento.js';
 export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
 export { pareceSegredo } from './auditoria/segredos.js';
 export type { JanelaDeConsumo, LeitorDeConsumo } from './portas/index.js';
+export { escaparInvisiveis, exigirCaminhoDoProjeto, problemaNoCaminhoDoProjeto } from './seguranca/caminhos.js';
