@@ -49,6 +49,12 @@
             ]
           }
         }
+      ],
+      "aprovacoesProprias": [
+        {
+          "id": "comp/github/executar/npx",
+          "impressao": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
       ]
     },
     "eduardo/rascunho": {

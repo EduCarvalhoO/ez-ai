@@ -51,3 +51,43 @@ export { carregarPolicyDoCodigo, POLICY_DO_NUCLEO, REGRAS_DO_NUCLEO } from './po
 export type { CategoriaDePolicy, Efeito, Marca, NivelDePolicy, Policy, Regra } from './policy/policy.js';
 export { NIVEIS, validarPolicy } from './policy/policy.js';
 export { LIMITES_DA_POLICY, SCHEMA_DA_POLICY } from './policy/schema.js';
+export type { EntradaDeAprovacao, EntradaParaAprovacao } from './auditoria/aprovacoes.js';
+export { idDeItem, itensDeAprovacaoPropria, pendentesDeAprovacao, problemaNoId } from './auditoria/aprovacoes.js';
+export type { CabecaDaCorrente, ResultadoDaCadeia } from './auditoria/cadeia.js';
+export { encadear, hashDoEvento, verificarCadeia } from './auditoria/cadeia.js';
+export { hashCanonico } from './auditoria/canonico.js';
+export type { ResumoDeEvidencias, VerificacaoResumida } from './auditoria/evidencias.js';
+export { resumirEvidencias } from './auditoria/evidencias.js';
+export type { Consumo, EventoDeAuditoria, EventoSemCorrente, TipoDeEvento } from './auditoria/evento.js';
+export { validarEvento } from './auditoria/evento.js';
+export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
+export { pareceSegredo } from './auditoria/segredos.js';
+export type { JanelaDeConsumo, LeitorDeConsumo } from './portas/index.js';
+export { escaparInvisiveis, exigirCaminhoDoProjeto, problemaNoCaminhoDoProjeto } from './seguranca/caminhos.js';
+export type { ContextoDeAuditoria, PedidoDeEvento } from './auditoria/registro.js';
+export { lerAuditoria, PASTA_DA_AUDITORIA, registrarEvento } from './auditoria/registro.js';
+export { intervaloDe, lerVersao, resolverVersao } from './resolucao/semver.js';
+export type { DiferencaDeConfiguracao, EstadoDoPacote, ResultadoDeIntegridade } from './lockfile/integridade.js';
+export {
+  arquivosParaHash,
+  conferirManifesto,
+  diferencaDeConfiguracao,
+  verificarIntegridade,
+} from './lockfile/integridade.js';
+export type { Evento, Git, Identidade, Relogio, SistemaDeArquivos } from './portas/index.js';
+export type { Contexto, ResultadoDoComando } from './comandos/base.js';
+export { init } from './comandos/init.js';
+export { diagnosticar, listar, planejar, validar } from './comandos/leitura.js';
+export type { OpcoesDeAdd, OpcoesDeInstalacao, OpcoesDeRemove } from './comandos/escrita.js';
+export {
+  adicionar,
+  aplicar,
+  atualizar,
+  PASTA_DOS_PACOTES,
+  PASTA_LOCAL,
+  pastaDoPacote,
+  pastaLocalDoPacote,
+  remover,
+  serializarConfiguracao,
+  serializarLockfile,
+} from './comandos/escrita.js';

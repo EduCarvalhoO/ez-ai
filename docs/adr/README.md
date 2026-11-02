@@ -26,6 +26,10 @@
 | [0018](0018-invariantes-de-seguranca-da-instalacao.md) | Invariantes de segurança da instalação | Aceito |
 | [0019](0019-validacao-de-contratos-com-cfworker-json-schema.md) | Validação de contratos com JSON Schema e `@cfworker/json-schema` | Aceito |
 | [0020](0020-policy-declarativa-so-restritiva-com-precedencia.md) | Policy declarativa, só restritiva, com precedência por nível | Aceito |
+| [0021](0021-rag-em-camadas-local-first-e-medido.md) | RAG em camadas, local-first e medido | Aceito |
+| [0022](0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md) | Auditoria e evidências com log encadeado e aprovação própria no lockfile | Aceito |
+| [0023](0023-nucleo-da-cli-parte-1-comandos-de-leitura-sobre-portas.md) | Núcleo da CLI (parte 1): comandos de leitura sobre portas, conteúdo em texto UTF-8 | Aceito |
+| [0024](0024-nucleo-da-cli-parte-2-comandos-que-alteram-arquivos.md) | Núcleo da CLI (parte 2): comandos que alteram arquivos e camada local de customização | Aceito |
 
 ## Decisões em aberto
 

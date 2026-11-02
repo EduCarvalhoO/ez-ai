@@ -1,3 +1,5 @@
+import type { Consumo } from '../auditoria/evento.js';
+
 // Portas do núcleo (ADR-0015): interfaces que o núcleo pede para falar com o mundo.
 // Só tipos; as implementações com Node ficam em src/plataforma, e os testes usam versões em memória.
 
@@ -13,10 +15,14 @@ export interface SistemaDeArquivos {
   listar(pasta: string): Promise<readonly string[]>;
   /** Diz se o caminho existe. */
   existe(caminho: string): Promise<boolean>;
+  /** Apaga um arquivo comum (nunca pasta nem link). Caminho inexistente não é erro. */
+  remover(caminho: string): Promise<void>;
 }
 
 /** Acesso de leitura a repositórios Git de pacotes (ADR-0005). */
 export interface Git {
+  /** Lista as tags do repositório. */
+  listarTags(repositorio: string): Promise<readonly string[]>;
   /** Resolve uma tag ou ref de um repositório para o SHA do commit. */
   resolverTag(repositorio: string, tag: string): Promise<string>;
   /** Lê os arquivos de um commit, indexados por caminho relativo. */
@@ -49,4 +55,21 @@ export interface Evento {
 export interface DestinoDeEventos {
   /** Entrega um evento ao destino. */
   emitir(evento: Evento): Promise<void>;
+}
+
+/** Janela de tempo e agente para ler o consumo de tokens (F3). */
+export interface JanelaDeConsumo {
+  readonly inicio: Date;
+  readonly fim: Date;
+  /** Identificador do agente (`^[a-z0-9._/-]{1,64}$`); sem ele, todos os agentes da janela. */
+  readonly agente?: string;
+}
+
+/**
+ * Lê o consumo de tokens que o próprio ambiente já mede (OpenTelemetry), por agente. Cada adapter da F3 implementa;
+ * devolve só o tipo fechado `Consumo` (números e identificadores) e descarta o resto do payload. O núcleo valida
+ * e grava. Consumo é métrica, nunca evidência (spec de auditoria e evidências).
+ */
+export interface LeitorDeConsumo {
+  ler(janela: JanelaDeConsumo): Promise<readonly Consumo[]>;
 }

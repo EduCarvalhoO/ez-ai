@@ -117,7 +117,7 @@ Toda etapa, gate, ciclo e rodada gera um evento:
 Gargalos a medir: tempo por etapa; ciclos por laço; rodadas humanas por item; taxa de aprovação na 1ª tentativa por gate; custo por etapa e por agente. Alimentam as [métricas de sucesso](../roadmap.md#métricas-de-sucesso).
 
 - Eventos locais sempre; exportação opt-in na F5 ([ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md)). O caminho de referência, e o único exigido, é o Langfuse self-hosted sem `ee/`, sem hospedagem ou banco pagos obrigatórios; o Langfuse Cloud continua opcional por configuração (ADR-0004), nunca exigido. Licença do Langfuse: núcleo sob MIT (Expat); os diretórios `ee/` têm licença própria ([LICENSE](https://github.com/langfuse/langfuse/blob/main/LICENSE), acessado em 2026-10-24).
-- Captura de tokens por agente em Claude Code e Copilot: `Hipótese` até pesquisa do `pesquisador` (`Em aberto`).
+- Captura de tokens por agente: o adapter de cada ambiente (F3) lê o OpenTelemetry que o ambiente já emite pela porta `LeitorDeConsumo`, e o evento `etapa` guarda `consumo` com `fonte` e `fonteDoCusto`; desconhecido é `indisponivel`, nunca zero. Consumo é métrica, não evidência ([spec de auditoria e evidências](auditoria-e-evidencias.md#consumo), [ADR-0022](../adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md)).
 - Até a F5, a ficha registra as datas por gate; não há evento automático.
 
 ### Painel
@@ -159,6 +159,14 @@ Regras do Eduardo (2026-10-24, [ADR-0014](../adr/0014-economia-de-tokens-no-pipe
 | Subagentes para leituras grandes | Regra dos agentes: leituras de muitos arquivos ou logs longos vão para um subagente, que devolve só o resumo | Fixo |
 | Respostas curtas | Regra dos agentes: respostas e relatórios trazem o essencial, sem repetir o processo; o formato dos relatórios segue o [guia §5](../guias/time-de-agentes.md#5-formato-dos-relatórios) | Fixo |
 
+Estado atual (2026-11-02): o agente `professor` do harness está **desativado** na esteira por economia de tokens; os executores escrevem a versão curta dos 4 blocos didáticos ([guia §7](../guias/time-de-agentes.md#7-decisões-didáticas-agente-professor)).
+
+Regras reforçadas em 2026-11-02, a partir da medição de um dia (cerca de 23 mi de tokens de cache lido, quase todo o gasto: o contexto relido a cada passo):
+
+1. **Sessões curtas:** uma entrega por sessão; encerrar logo após o merge e abrir outra para assunto novo. Se o contexto passar de ~150 mil tokens, encerrar com o registro e continuar em sessão nova.
+2. **Modelo pelo papel** (campo `model` em `.claude/agents`: `arquiteto` e `seguranca` em Opus; `implementador`, `revisor`, `pesquisador`, `painel` e `professor` em Sonnet; `.github/agents` não define modelo): Opus só para decisão (arquitetura, G1, revisão complexa); Sonnet para pesquisa, redação, docs e ajustes; Haiku para buscas simples.
+3. **Menos passos:** juntar chamadas de ferramenta independentes, evitar subagentes e rodadas de revisão extras, e responder curto. Trabalho não urgente fica pausado até o gargalo atual fechar.
+
 O efeito das regras será acompanhado pelo custo e pelos tokens por etapa e por agente da [rastreabilidade](#rastreabilidade) e pela visão 2 do [painel](#painel). Não há comparação "antes × depois": as regras nascem junto com o pipeline e não existe linha de base anterior.
 
 ### Pacotes de terceiros
@@ -188,7 +196,7 @@ Spec v0: muda livremente até a F6, quando vira o schema do pacote de workflow.
 
 ## Em aberto
 - Nome e local do agente da E0 (provisório `cartografo`); implementação em ficha seguinte.
-- Captura de tokens por agente em Claude Code e Copilot.
+- Implementação da captura de tokens nos adapters (F3) e no Copilot coding agent na nuvem, sem forma documentada.
 - Formato da configuração de customização (F1/F6), incluindo modelo por etapa e caminhos do índice e do registro de encerramento.
 - Enforcement dos gates por hook e CI (F4).
 - Quais visões do painel dependeriam de recursos `ee/` do Langfuse (F5).

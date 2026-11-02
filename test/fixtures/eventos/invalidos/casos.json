@@ -1,0 +1,127 @@
+[
+  {
+    "arquivo": "tipo-fora-do-catalogo.jsonl",
+    "regra": "enum",
+    "caminho": "/tipo"
+  },
+  {
+    "arquivo": "versao-1.jsonl",
+    "regra": "const",
+    "caminho": "/versaoEvento"
+  },
+  {
+    "arquivo": "dados-com-campo-extra.jsonl",
+    "regra": "additionalProperties",
+    "caminho": "/dados"
+  },
+  {
+    "arquivo": "campo-extra-no-envelope.jsonl",
+    "regra": "additionalProperties",
+    "caminho": ""
+  },
+  {
+    "arquivo": "seq-zero.jsonl",
+    "regra": "minimum",
+    "caminho": "/seq"
+  },
+  {
+    "arquivo": "anterior-nulo-fora-do-primeiro.jsonl",
+    "regra": "inicio-da-corrente",
+    "caminho": "/anterior"
+  },
+  {
+    "arquivo": "instante-sem-milissegundos.jsonl",
+    "regra": "pattern",
+    "caminho": "/em"
+  },
+  {
+    "arquivo": "numero-decimal.jsonl",
+    "regra": "type",
+    "caminho": "/dados/duracaoMs"
+  },
+  {
+    "arquivo": "comando-fora-da-cli.jsonl",
+    "regra": "enum",
+    "caminho": "/dados/comando"
+  },
+  {
+    "arquivo": "verificado-sem-hash.jsonl",
+    "regra": "verificado-sem-prova",
+    "caminho": "/dados"
+  },
+  {
+    "arquivo": "verificado-com-codigo-1.jsonl",
+    "regra": "verificado-sem-prova",
+    "caminho": "/dados"
+  },
+  {
+    "arquivo": "falhou-sem-motivo.jsonl",
+    "regra": "motivo-obrigatorio",
+    "caminho": "/codigoDoMotivo"
+  },
+  {
+    "arquivo": "ignorado-sem-motivo.jsonl",
+    "regra": "motivo-obrigatorio",
+    "caminho": "/codigoDoMotivo"
+  },
+  {
+    "arquivo": "validador-externo-sem-ci.jsonl",
+    "regra": "validador-sem-ci",
+    "caminho": "/dados/nivel"
+  },
+  {
+    "arquivo": "consumo-indisponivel-com-numeros.jsonl",
+    "regra": "indisponivel-com-numeros",
+    "caminho": "/dados/consumo"
+  },
+  {
+    "arquivo": "consumo-negativo.jsonl",
+    "regra": "minimum",
+    "caminho": "/dados/consumo/tokensSaida"
+  },
+  {
+    "arquivo": "modelo-fora-da-regex.jsonl",
+    "regra": "pattern",
+    "caminho": "/dados/consumo/modelo"
+  },
+  {
+    "arquivo": "argumento-com-atribuicao.jsonl",
+    "regra": "argumento-com-segredo",
+    "caminho": "/dados/comando/argumentos/0"
+  },
+  {
+    "arquivo": "segredo-no-detalhe.jsonl",
+    "regra": "parece-segredo",
+    "caminho": "/detalhe"
+  },
+  {
+    "arquivo": "url-com-credencial.jsonl",
+    "regra": "pattern",
+    "caminho": "/dados/origemNova"
+  },
+  {
+    "arquivo": "id-de-item-com-curinga.jsonl",
+    "regra": "id-de-item",
+    "caminho": "/dados/entradas/0/id"
+  },
+  {
+    "arquivo": "fim-antes-do-inicio.jsonl",
+    "regra": "fim-antes-do-inicio",
+    "caminho": "/dados/fim"
+  },
+  {
+    "arquivo": "linha-acima-de-16-kib.jsonl",
+    "regra": "tamanho",
+    "caminho": ""
+  },
+  {
+    "arquivo": "chave-duplicada.jsonl",
+    "regra": "chave-duplicada",
+    "caminho": "/seq"
+  },
+  {
+    "arquivo": "invisivel-no-detalhe.jsonl",
+    "regra": "caractere-invisivel",
+    "caminho": "/detalhe"
+  }
+]

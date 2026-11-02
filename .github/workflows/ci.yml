@@ -95,7 +95,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # macOS SUSPENSO TEMPORARIAMENTE (autorizado por Eduardo em 2026-11-02, Sprint 03) para economizar minutos de
+        # CI. Reativar: voltar `macos-latest` a esta lista, ajustar test/ferramental/ci.test.ts e as docs (ADR-0007).
+        os: [ubuntu-latest, windows-latest]
         # Majors de engines.node no package.json; o piso exato entra pelo include.
         node: ['22.x', '24.x', '26.x']
         include:
