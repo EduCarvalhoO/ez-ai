@@ -168,5 +168,15 @@
     "arquivo": "policy-da-organizacao-local.json",
     "regra": "policy-da-organizacao-local",
     "caminho": "/policyDaOrganizacao"
+  },
+  {
+    "arquivo": "aprovador-com-curinga.json",
+    "regra": "pattern",
+    "caminho": "/aprovadores/0"
+  },
+  {
+    "arquivo": "aprovador-repetido.json",
+    "regra": "uniqueItems",
+    "caminho": "/aprovadores"
   }
 ]

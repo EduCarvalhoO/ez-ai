@@ -30,6 +30,7 @@
 | [adr/0019-validacao-de-contratos-com-cfworker-json-schema.md](adr/0019-validacao-de-contratos-com-cfworker-json-schema.md) | ADR-0019: contratos em JSON Schema 2020-12 como objeto TS no núcleo, validados por `@cfworker/json-schema` atrás de um wrapper |
 | [adr/0020-policy-declarativa-so-restritiva-com-precedencia.md](adr/0020-policy-declarativa-so-restritiva-com-precedencia.md) | ADR-0020: policy em JSON declarativo, só restritiva; o mais restritivo vence entre núcleo, organização, projeto e pacote; garantia por ambiente |
 | [adr/0021-rag-em-camadas-local-first-e-medido.md](adr/0021-rag-em-camadas-local-first-e-medido.md) | ADR-0021: base de conhecimento (RAG) do harness em camadas C0–C3, local e sem custo, cada camada ligada só com ganho medido |
+| [adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md](adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md) | ADR-0022: log JSONL encadeado e local, evidência com nível, aprovação própria presa ao conteúdo no lockfile |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [arquitetura/modelo-de-ameacas.md](arquitetura/modelo-de-ameacas.md) | Ameaças STRIDE com severidade, controle, fase e teste previsto; riscos residuais aceitos |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
@@ -38,6 +39,7 @@
 | [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs, definição de pronto e encerramento (agente `painel`) e decisões didáticas (agente `professor`) |
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
+| [specs/auditoria-e-evidencias.md](specs/auditoria-e-evidencias.md) | Evento de auditoria v0: envelope, tipos, evidência, consumo, encadeamento, aprovação própria e recusa de segredo |
 | [specs/configuracao-e-lockfile.md](specs/configuracao-e-lockfile.md) | Configuração do projeto e lockfile v0: origens permitidas, pastas locais, limites só reduzíveis, retrato de permissões e hash de conteúdo |
 | [specs/manifesto-de-pacote.md](specs/manifesto-de-pacote.md) | Manifesto de pacote v0: campos, tipos de componente, permissões declaradas, limites, regras de comando e diff de permissões |
 | [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |

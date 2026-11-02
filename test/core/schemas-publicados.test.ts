@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   SCHEMA_DA_CONFIGURACAO,
   SCHEMA_DA_POLICY,
+  SCHEMA_DO_EVENTO,
   SCHEMA_DO_LOCKFILE,
   SCHEMA_DO_MANIFESTO,
 } from '../../src/core/index.js';
@@ -16,6 +17,7 @@ const schemas = [
   ['configuracao.v0.schema.json', SCHEMA_DA_CONFIGURACAO],
   ['lockfile.v0.schema.json', SCHEMA_DO_LOCKFILE],
   ['policy.v0.schema.json', SCHEMA_DA_POLICY],
+  ['evento-de-auditoria.v0.schema.json', SCHEMA_DO_EVENTO],
 ] as const;
 
 describe('schemas publicados', () => {
