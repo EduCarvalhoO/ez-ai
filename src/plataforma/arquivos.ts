@@ -1,7 +1,7 @@
 // Porta de arquivos com Node (ADR-0015): única via de escrita do harness. Presa a uma raiz real; recusa caminho fora
 // do escopo, symlink e junction em qualquer segmento (T1, T2). Reconfere o caminho real depois de gravar.
 import { constants } from 'node:fs';
-import { lstat, mkdir, open, readdir, realpath } from 'node:fs/promises';
+import { lstat, mkdir, open, readdir, realpath, unlink } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import type { SistemaDeArquivos } from '../core/portas/index.js';
 import { escaparInvisiveis, exigirCaminhoDoProjeto } from '../core/seguranca/caminhos.js';
@@ -101,6 +101,15 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
       const saida: string[] = [];
       await listarEm(alvo, raizDaBusca ? '' : pasta, saida);
       return saida.sort();
+    },
+    async remover(caminho) {
+      const destino = await resolver(caminho);
+      // Uma só chamada, sem checar antes: unlink não segue link (apaga o próprio link) e o SO recusa pasta
+      // (EISDIR/EPERM). Caminho que não existe é ignorado.
+      await unlink(destino).catch((erro: unknown) => {
+        if (ehErroDe(erro, 'ENOENT') || ehErroDe(erro, 'ENOTDIR')) return;
+        throw erro;
+      });
     },
     async existe(caminho) {
       const destino = await resolver(caminho);

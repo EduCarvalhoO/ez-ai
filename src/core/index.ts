@@ -78,3 +78,16 @@ export type { Evento, Git, Identidade, Relogio, SistemaDeArquivos } from './port
 export type { Contexto, ResultadoDoComando } from './comandos/base.js';
 export { init } from './comandos/init.js';
 export { diagnosticar, listar, planejar, validar } from './comandos/leitura.js';
+export type { OpcoesDeAdd, OpcoesDeInstalacao, OpcoesDeRemove } from './comandos/escrita.js';
+export {
+  adicionar,
+  aplicar,
+  atualizar,
+  PASTA_DOS_PACOTES,
+  PASTA_LOCAL,
+  pastaDoPacote,
+  pastaLocalDoPacote,
+  remover,
+  serializarConfiguracao,
+  serializarLockfile,
+} from './comandos/escrita.js';
