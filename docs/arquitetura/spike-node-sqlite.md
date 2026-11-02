@@ -1,6 +1,6 @@
 # Spike: `node:sqlite` para a camada C1 do RAG
 
-> Data: 2026-11-02 · Relacionados: [ADR-0021](../adr/0021-rag-em-camadas-local-first-e-medido.md), [base de conhecimento](../specs/base-de-conhecimento.md) · Teste: `test/spikes/node-sqlite.test.ts`
+> Status: Concluído · Atualizado: 2026-11-02 · Relacionados: [ADR-0021](../adr/0021-rag-em-camadas-local-first-e-medido.md), [base de conhecimento](../specs/base-de-conhecimento.md) · Teste: `test/spikes/node-sqlite.test.ts`
 
 **Pergunta:** o módulo `node:sqlite` (banco SQLite embutido no Node, sem instalar nada nativo) serve para a busca de texto da camada C1?
 
