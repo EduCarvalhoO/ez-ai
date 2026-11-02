@@ -64,3 +64,14 @@ export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
 export { pareceSegredo } from './auditoria/segredos.js';
 export type { JanelaDeConsumo, LeitorDeConsumo } from './portas/index.js';
 export { escaparInvisiveis, exigirCaminhoDoProjeto, problemaNoCaminhoDoProjeto } from './seguranca/caminhos.js';
+export type { ContextoDeAuditoria, PedidoDeEvento } from './auditoria/registro.js';
+export { lerAuditoria, PASTA_DA_AUDITORIA, registrarEvento } from './auditoria/registro.js';
+export { intervaloDe, lerVersao, resolverVersao } from './resolucao/semver.js';
+export type { DiferencaDeConfiguracao, EstadoDoPacote, ResultadoDeIntegridade } from './lockfile/integridade.js';
+export {
+  arquivosParaHash,
+  conferirManifesto,
+  diferencaDeConfiguracao,
+  verificarIntegridade,
+} from './lockfile/integridade.js';
+export type { Evento, Git, Identidade, Relogio, SistemaDeArquivos } from './portas/index.js';
