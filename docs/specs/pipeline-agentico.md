@@ -164,7 +164,7 @@ Estado atual (2026-11-02): o agente `professor` do harness está **desativado** 
 Regras reforçadas em 2026-11-02, a partir da medição de um dia (cerca de 23 mi de tokens de cache lido, quase todo o gasto: o contexto relido a cada passo):
 
 1. **Sessões curtas:** uma entrega por sessão; encerrar logo após o merge e abrir outra para assunto novo. Se o contexto passar de ~150 mil tokens, encerrar com o registro e continuar em sessão nova.
-2. **Modelo pelo papel:** Opus só para decisão (arquitetura, G1, revisão complexa); Sonnet para pesquisa, redação, docs e ajustes; Haiku para buscas simples.
+2. **Modelo pelo papel** (campo `model` em `.claude/agents`: `arquiteto` e `seguranca` em Opus; `implementador`, `revisor`, `pesquisador`, `painel` e `professor` em Sonnet; `.github/agents` não define modelo): Opus só para decisão (arquitetura, G1, revisão complexa); Sonnet para pesquisa, redação, docs e ajustes; Haiku para buscas simples.
 3. **Menos passos:** juntar chamadas de ferramenta independentes, evitar subagentes e rodadas de revisão extras, e responder curto. Trabalho não urgente fica pausado até o gargalo atual fechar.
 
 O efeito das regras será acompanhado pelo custo e pelos tokens por etapa e por agente da [rastreabilidade](#rastreabilidade) e pela visão 2 do [painel](#painel). Não há comparação "antes × depois": as regras nascem junto com o pipeline e não existe linha de base anterior.
