@@ -20,6 +20,7 @@ Aplicar D1 a D5. Módulo `src/core/comandos/politicas.ts` carrega as fontes (só
 ## Consequências
 - Positivas: a organização e o projeto passam a negar de fato; o CI pode barrar aprovação própria faltando.
 - Custos: cada comando lê o pacote da organização do Git (uma vez por execução).
+- Revisão de segurança (Opus, 2026-11-02): o afrouxamento é comparado com o commit travado (hash conferido), nunca com a cópia de trabalho; se a base não puder ser lida, o comando recusa. Policy e config só mudarem em relação à branch base não é detectado pelo `--ci` (job de servidor, Sprint 06).
 - Riscos aceitos: `--exigir-evidencias` no CI sempre falha enquanto não houver execução de CI conferida na API do provedor (Sprint 06); afrouxamentos de policy não são recalculáveis pelo CI (dependem da versão anterior); o servidor ainda não protege `.harness/policy.json` (CODEOWNERS e ruleset, Sprint 06).
 
 ## Gatilhos de revisão

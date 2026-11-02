@@ -31,7 +31,7 @@ import {
   pastaLocalDoPacote,
   type ResultadoDoComando,
 } from './base.js';
-import { type CacheDaOrganizacao, carregarPoliticas, explicarDecisao } from './politicas.js';
+import { type CacheDaOrganizacao, carregarPoliticas, conteudoAnterior, explicarDecisao } from './politicas.js';
 import {
   aplicarProjecao,
   avisosGeraisDosAmbientes,
@@ -375,7 +375,7 @@ async function preparar(
         lock,
         p.nome,
         lido,
-        instaladoAntes.arquivos,
+        await conteudoAnterior(ctx, p, t, instaladoAntes.arquivos, instaladoAntes.editado),
         cacheDaOrganizacao,
       );
       if (politicas.erros.length > 0) {

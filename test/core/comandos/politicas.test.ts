@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   adicionar,
   aplicar,
+  atualizar,
   type Contexto,
   init,
   planejar,
@@ -168,5 +169,53 @@ describe('validate --ci e --exigir-evidencias', () => {
     const soPedido = await validar(ctx, { exigirEvidencias: true });
     expect(soPedido.codigo).toBe(1);
     expect(soPedido.erros.join('\n')).toContain('só pedido');
+  });
+});
+
+describe('afrouxamento de policy no update', () => {
+  it('compara com o commit travado, não com a cópia de trabalho apagada', async () => {
+    const regraForte = JSON.stringify({
+      versaoPolicy: 0,
+      regras: [{ id: 'r', efeito: 'exigir-aprovacao', categoria: 'tipo', padroes: ['agente'], motivo: 'm' }],
+    });
+    const regraFraca = JSON.stringify({
+      versaoPolicy: 0,
+      regras: [{ id: 'r', efeito: 'avisar', categoria: 'tipo', padroes: ['agente'], motivo: 'm' }],
+    });
+    const pacotePolicy = (policy: string, versao: string) => ({
+      'harness-pacote.json': manifesto('eduardo/revisao-ts', REPO, versao, [
+        { id: 'regras', tipo: 'policy', arquivo: 'policy.json' },
+      ]),
+      'policy.json': policy,
+    });
+    const arquivos = arquivosEmMemoria({});
+    const ctx: Contexto & { arquivos: typeof arquivos } = {
+      arquivos,
+      git: gitEmMemoria({
+        [REPO]: {
+          tags: { 'v1.0.0': SHA1, 'v1.1.0': SHA2 },
+          commits: { [SHA1]: pacotePolicy(regraForte, '1.0.0'), [SHA2]: pacotePolicy(regraFraca, '1.1.0') },
+        },
+      }),
+      relogio: relogioFixo(),
+      identidade: identidadeFixa(),
+      harness: '0.0.0',
+      tipoDeAtor: 'humano',
+    };
+    await init(ctx, { dryRun: false });
+    const config = JSON.parse(await arquivos.ler('.harness/config.json'));
+    config.origensPermitidas = [REPO];
+    await arquivos.gravar('.harness/config.json', JSON.stringify(config));
+    await adicionar(ctx, { origem: REPO, versao: '1.0.0', dryRun: false });
+    expect((await aplicar(ctx, SEM_OPCOES)).codigo).toBe(0);
+    // Apagar a cópia de trabalho não pode esconder o afrouxamento.
+    for (const c of [...arquivos.mapa.keys()].filter((k) => k.startsWith('.harness/pacotes/'))) arquivos.mapa.delete(c);
+
+    const cfg = JSON.parse(await arquivos.ler('.harness/config.json'));
+    cfg.pacotes['eduardo/revisao-ts'].versao = '^1.0.0';
+    await arquivos.gravar('.harness/config.json', JSON.stringify(cfg));
+    const r = await atualizar(ctx, SEM_OPCOES);
+    expect(r.codigo).toBe(1);
+    expect(r.erros.join('\n')).toContain('aprovação própria pendente');
   });
 });

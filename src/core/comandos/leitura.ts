@@ -6,7 +6,13 @@ import { resumirEvidencias } from '../auditoria/evidencias.js';
 import { lerAuditoria, PASTA_DA_AUDITORIA } from '../auditoria/registro.js';
 import type { Configuracao } from '../configuracao/configuracao.js';
 import { origemPermitida } from '../configuracao/configuracao.js';
-import { conferirManifesto, diferencaDeConfiguracao, verificarIntegridade } from '../lockfile/integridade.js';
+import { hashDoConteudo } from '../lockfile/hash.js';
+import {
+  arquivosParaHash,
+  conferirManifesto,
+  diferencaDeConfiguracao,
+  verificarIntegridade,
+} from '../lockfile/integridade.js';
 import type { Lockfile, PacoteTravado } from '../lockfile/lockfile.js';
 import { diferencaDePermissoes } from '../manifesto/permissoes.js';
 import { diffDoPacote } from '../plano/diff.js';
@@ -25,7 +31,7 @@ import {
   pastaDoPacote,
   type ResultadoDoComando,
 } from './base.js';
-import { type CacheDaOrganizacao, carregarPoliticas, explicarDecisao } from './politicas.js';
+import { type CacheDaOrganizacao, carregarPoliticas, conteudoAnterior, explicarDecisao } from './politicas.js';
 import { avisosGeraisDosAmbientes, pacoteInstalado, planejarProjecao } from './projecao.js';
 
 const e = escaparInvisiveis;
@@ -119,6 +125,11 @@ export function validar(ctx: Contexto, opcoes: OpcoesDeValidacao = {}): Promise<
       }
     }
     if (problemas.length > 0) return { codigo: 1, saida, erros: problemas, pacotes };
+    if (opcoes.ci) {
+      saida.push(
+        'aviso: o CI não recalcula afrouxamento de policy entre versões nem compara policy/config com a branch base; isso é do job de servidor (ADR-0026).',
+      );
+    }
     saida.unshift(
       `OK: configuração, lockfile e ${lock.valor.pacotes.length} pacote(s) verificados${opcoes.ci ? ', policy e aprovações conferidas' : ''}.`,
     );
@@ -135,10 +146,18 @@ async function conferirPoliticaDoTravado(
   lido: PacoteLido,
   cache: CacheDaOrganizacao,
 ): Promise<string[]> {
-  const politicas = await carregarPoliticas(ctx, config, lock, t.nome, lido, new Map(), cache);
+  const problemasDaOrganizacao: string[] = [];
+  if (config.policyDaOrganizacao !== undefined && !lock.pacotes.some((x) => x.nome === config.policyDaOrganizacao)) {
+    problemasDaOrganizacao.push(
+      `${e(t.nome)}: a policy da organização (${e(config.policyDaOrganizacao)}) não está no lockfile; rode apply antes.`,
+    );
+  }
+  const politicas = await carregarPoliticas(ctx, config, lock, t.nome, lido, undefined, cache);
   if (politicas.erros.length > 0) return politicas.erros.map((m) => `${e(t.nome)}: policy inválida: ${m}`);
   const decisao = avaliarPacote(lido.manifesto, politicas.fontes, { ambientes: config.ambientes });
-  const problemas = explicarDecisao(decisao).map((m) => `${e(t.nome)}: bloqueado pela policy: ${m}`);
+  const problemas = problemasDaOrganizacao.concat(
+    explicarDecisao(decisao).map((m) => `${e(t.nome)}: bloqueado pela policy: ${m}`),
+  );
   if (decisao.falhaFechada) problemas.push(`${e(t.nome)}: policy falha fechada (regra crítica sem garantia).`);
   const exigidas = itensDeAprovacaoPropria({ chave: t.nome, componentes: lido.manifesto.componentes, decisao });
   // Afrouxamento de policy depende da versão anterior, que o CI não tem; esses ids não são recalculáveis aqui.
@@ -180,13 +199,15 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
           continue;
         }
         const instalado = await lerPastaLocal(ctx.arquivos, pastaDoPacote(p.nome));
+        const hashInstalado = instalado.size > 0 ? hashDoConteudo(arquivosParaHash(instalado)) : undefined;
+        const instaladoEditado = !!t && instalado.size > 0 && !(hashInstalado?.ok && hashInstalado.valor === t.hash);
         const politicas = await carregarPoliticas(
           ctx,
           config.valor,
           lock.valor,
           p.nome,
           lido,
-          instalado,
+          await conteudoAnterior(ctx, p, t, instalado, instaladoEditado),
           cacheDaOrganizacao,
         );
         if (politicas.erros.length > 0) {

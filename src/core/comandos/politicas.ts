@@ -3,8 +3,9 @@
 // Tudo é só texto: nenhum código de pacote roda (ADR-0018). Qualquer falha ao ler ou validar recusa (falha fechada).
 import type { AfrouxamentoDeNivel } from '../auditoria/aprovacoes.js';
 import type { Configuracao } from '../configuracao/configuracao.js';
-import { verificarIntegridade } from '../lockfile/integridade.js';
-import type { Lockfile } from '../lockfile/lockfile.js';
+import { hashDoConteudo } from '../lockfile/hash.js';
+import { arquivosParaHash, verificarIntegridade } from '../lockfile/integridade.js';
+import type { Lockfile, PacoteTravado } from '../lockfile/lockfile.js';
 import { type Manifesto, validarManifesto } from '../manifesto/manifesto.js';
 import { afrouxamentosDePolicy, conferirPacoteDaOrganizacao } from '../policy/afrouxamentos.js';
 import type { FonteDePolicy, FontesDePolicy } from '../policy/avaliar.js';
@@ -46,7 +47,7 @@ function policiesDoManifesto(
     }
     const r = validarPolicy(texto, nivel);
     if (!r.ok) {
-      erros.push(...formatarErros(`${nome}:${c.id}`, r.erros));
+      erros.push(...formatarErros(`${nome}:${c.id}`, r.erros).map(e));
       continue;
     }
     lista.push({ id: c.id, fonte: { fonte: `${nome}:${c.id}`, policy: r.valor } });
@@ -55,10 +56,18 @@ function policiesDoManifesto(
 }
 
 async function policyDoProjeto(ctx: Contexto, erros: string[]): Promise<FonteDePolicy | undefined> {
-  if (!(await ctx.arquivos.existe(CAMINHO_DA_POLICY_DO_PROJETO))) return undefined;
-  const r = validarPolicy(await ctx.arquivos.ler(CAMINHO_DA_POLICY_DO_PROJETO), 'projeto');
+  // Uma leitura só (sem checar e depois usar o caminho); a porta lança se o arquivo não existe.
+  let texto: string;
+  try {
+    texto = await ctx.arquivos.ler(CAMINHO_DA_POLICY_DO_PROJETO);
+  } catch (erro: unknown) {
+    if (!(await ctx.arquivos.existe(CAMINHO_DA_POLICY_DO_PROJETO))) return undefined;
+    erros.push(`${CAMINHO_DA_POLICY_DO_PROJETO}: ${e(erro instanceof Error ? erro.message : String(erro))}`);
+    return undefined;
+  }
+  const r = validarPolicy(texto, 'projeto');
   if (r.ok) return { fonte: CAMINHO_DA_POLICY_DO_PROJETO, policy: r.valor };
-  erros.push(...formatarErros(CAMINHO_DA_POLICY_DO_PROJETO, r.erros));
+  erros.push(...formatarErros(CAMINHO_DA_POLICY_DO_PROJETO, r.erros).map(e));
   return undefined;
 }
 
@@ -100,7 +109,7 @@ export async function carregarPoliticas(
   lock: Lockfile,
   nome: string,
   lido: PacoteLido,
-  instalado: ReadonlyMap<string, string>,
+  anterior: ReadonlyMap<string, string> | null | undefined,
   cache: CacheDaOrganizacao,
 ): Promise<PoliticasCarregadas> {
   const erros: string[] = [];
@@ -140,11 +149,17 @@ export async function carregarPoliticas(
 
   const novas = policiesDoManifesto(nome, lido.manifesto, lido.arquivos, nivelDoPacote, erros);
   const afrouxamentos: AfrouxamentoDeNivel[] = [];
-  if (instalado.size > 0) {
-    const texto = instalado.get('harness-pacote.json');
+  if (anterior === null) {
+    erros.push(`${e(nome)}: não consegui obter a versão anterior para comparar a policy (falha fechada).`);
+  } else if (anterior !== undefined) {
+    const texto = anterior.get('harness-pacote.json');
     const antigoManifesto = texto === undefined ? undefined : validarManifesto(texto);
-    if (antigoManifesto?.ok) {
-      const antigas = policiesDoManifesto(nome, antigoManifesto.valor, instalado, nivelDoPacote, []);
+    if (!antigoManifesto?.ok) {
+      erros.push(
+        `${e(nome)}: o manifesto da versão anterior não valida; não dá para comparar a policy (falha fechada).`,
+      );
+    } else {
+      const antigas = policiesDoManifesto(nome, antigoManifesto.valor, anterior, nivelDoPacote, erros);
       const vazia: Policy = { versaoPolicy: 0, regras: [] };
       for (const antiga of antigas) {
         const nova = novas.find((n) => n.id === antiga.id)?.fonte.policy ?? vazia;
@@ -179,4 +194,37 @@ export function explicarDecisao(
         i.tambemCasaram.length > 0 ? ` (também: ${i.tambemCasaram.map((x) => e(x.regra)).join(', ')})` : '';
       return `${e(i.componente)} ${i.categoria} "${e(i.item)}": ${i.efeito} pela regra "${e(r.regra)}" (${r.nivel}, ${e(r.fonte)}): ${e(r.motivo)}${outras}`;
     });
+}
+
+/**
+ * Conteúdo anterior do pacote para comparar a policy: o commit travado (conferido pelo hash do lockfile), nunca a cópia
+ * de trabalho, que pode ter sido apagada ou editada. Origem local não tem commit; usa a cópia instalada só se ela
+ * bate com o hash travado. `undefined` = instalação nova; `null` = precisava e não conseguiu (o chamador recusa).
+ */
+export async function conteudoAnterior(
+  ctx: Contexto,
+  p: { readonly nome: string; readonly origem: PacoteTravado['origem'] },
+  t: PacoteTravado | undefined,
+  instalado: ReadonlyMap<string, string>,
+  editado: boolean,
+): Promise<ReadonlyMap<string, string> | null | undefined> {
+  if (!t) return undefined;
+  // O retrato do lockfile diz se a versão travada tinha policy: sem ela, não há o que afrouxar.
+  if (!t.componentes.some((c) => c.tipo === 'policy')) return undefined;
+  if (p.origem.tipo === 'github' && t.commit) {
+    try {
+      const lido = await obterPacote(ctx, p.origem, p.nome, { commit: t.commit, ...(t.tag ? { tag: t.tag } : {}) });
+      if (verificarIntegridade(t, lido.arquivos).ok) return lido.arquivos;
+    } catch {
+      // Sem o commit travado na origem, tenta a cópia instalada se ela ainda bate com o hash travado.
+    }
+    if (instalado.size > 0 && !editado && hashConfere(t, instalado)) return instalado;
+    return null;
+  }
+  return instalado.size > 0 && !editado && hashConfere(t, instalado) ? instalado : null;
+}
+
+function hashConfere(t: PacoteTravado, arquivos: ReadonlyMap<string, string>): boolean {
+  const h = hashDoConteudo(arquivosParaHash(arquivos));
+  return h.ok && h.valor === t.hash;
 }
