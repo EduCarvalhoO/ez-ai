@@ -116,6 +116,8 @@ Entregas:
 
 **Andamento (sprint 05, 2026-11-02):** lado local entregue - policy do núcleo, da organização, do projeto e do pacote no `plan`/`apply`/`update` com explicação "por que bloqueou", `validate --ci` e gate de evidências `confirmado` ([ADR-0026](adr/0026-policy-ligada-ao-plan-apply-e-gate-de-validate-ci.md)). Pendente: hooks, MCP e settings de pacote e o job de servidor (aprovadores, CODEOWNERS, ruleset), previstos para a sprint 06.
 
+**Andamento (sprint 06, 2026-11-02):** hooks e MCP de pacote no Claude Code, mesclados em `.claude/settings.json` e `.mcp.json` com hook fail-closed ([ADR-0027](adr/0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md)). Pendente: job de servidor (aprovadores, CODEOWNERS, ruleset, S-aud1, `--exigir-evidencias` conferido) na sprint 07; hooks/MCP do Copilot após o spike do M2.
+
 Critérios de saída: suíte de testes de policies (casos permitidos/negados); nenhum gate ignorado aparece como aprovado; adulteração do log detectada por `doctor`.
 
 ## F5 — Observabilidade e evals (S18–S19)

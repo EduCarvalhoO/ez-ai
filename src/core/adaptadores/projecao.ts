@@ -4,12 +4,14 @@
 // de pré-aprovar ferramentas (`hooks`, `mcpServers`, `allowed-tools`, `permissionMode`) NÃO é projetado. Essas
 // capacidades só entram pelo manifesto, com permissão declarada e aprovada (ADR-0019, ADR-0020).
 import type { Ambiente, Componente, Manifesto } from '../manifesto/manifesto.js';
+import { avisoDeEnforcement, fragmentoDeHook, fragmentoDeMcp, type ModeloDeConfiguracao } from './configuracao.js';
 import type {
   Adapter,
   ArquivoProjetado,
   AvisoDeProjecao,
   CapacidadesDoAdapter,
   EntradaDeProjecao,
+  FragmentoDeConfig,
   Projecao,
 } from './contrato.js';
 
@@ -70,6 +72,8 @@ export interface ModeloDeAmbiente {
   readonly pastaDaSkill: (nome: string) => string;
   /** Ajuste do texto da instrução ao formato do ambiente (ex.: frontmatter `applyTo`). */
   readonly ajustarInstrucao?: (texto: string) => string;
+  /** Onde hooks e MCP entram em arquivos JSON compartilhados (ADR-0027). Ausente = o ambiente não projeta hook/MCP. */
+  readonly configuracao?: ModeloDeConfiguracao;
 }
 
 const LIMITE_DO_NOME_DA_SKILL = 64;
@@ -122,6 +126,7 @@ function projetarSkill(
 export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDeProjecao): Projecao {
   const arquivos: ArquivoProjetado[] = [];
   const avisos: AvisoDeProjecao[] = [];
+  const fragmentos: FragmentoDeConfig[] = [];
   for (const c of entrada.manifesto.componentes) {
     const aviso = (mensagem: string): void => {
       avisos.push({ componente: c.id, mensagem });
@@ -130,7 +135,7 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
     if (cap.interno) continue;
     if (!cap.projeta) {
       aviso(
-        `${c.tipo} "${c.id}" não foi escrito em ${modelo.ambiente}: o ambiente tem suporte ${cap.suporte}, mas este adapter ainda não grava esse tipo (fica para a F4).`,
+        `${c.tipo} "${c.id}" não foi escrito em ${modelo.ambiente}: o ambiente tem suporte ${cap.suporte}, mas este adapter ainda não grava esse tipo (hooks e MCP dependem do spike do ambiente).`,
       );
       continue;
     }
@@ -140,7 +145,21 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
       aviso(`${c.tipo} "${c.id}": arquivo "${c.arquivo}" ausente do pacote; não projetado.`);
       continue;
     }
-    if (c.tipo === 'instrucao') {
+    if (c.tipo === 'hook' || c.tipo === 'mcp') {
+      const cfg = modelo.configuracao;
+      if (cfg === undefined) {
+        aviso(`${c.tipo} "${c.id}": o adapter não tem destino para este tipo; não projetado.`);
+        continue;
+      }
+      const r = c.tipo === 'hook' ? fragmentoDeHook(cfg, entrada, c) : fragmentoDeMcp(cfg, entrada, c, nome);
+      if ('aviso' in r) {
+        aviso(`${c.tipo} "${c.id}": ${r.aviso}`);
+        continue;
+      }
+      fragmentos.push(r.fragmento);
+      avisos.push(avisoDeEnforcement(c, r.fragmento.caminho));
+      if (c.tipo === 'hook' && cfg.avisoDoHook) aviso(`enforcement: hook "${c.id}": ${cfg.avisoDoHook}`);
+    } else if (c.tipo === 'instrucao') {
       arquivos.push({
         caminho: modelo.caminhoDaInstrucao(nome),
         conteudo: modelo.ajustarInstrucao ? modelo.ajustarInstrucao(texto) : texto,
@@ -165,7 +184,9 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
       projetarSkill(modelo, c, entrada, arquivos, avisos, nome);
     }
   }
-  return { arquivos: arquivos.sort((a, b) => (a.caminho < b.caminho ? -1 : a.caminho > b.caminho ? 1 : 0)), avisos };
+  const porCaminho = (a: { caminho: string }, b: { caminho: string }): number =>
+    a.caminho < b.caminho ? -1 : a.caminho > b.caminho ? 1 : 0;
+  return { arquivos: arquivos.sort(porCaminho), fragmentos: fragmentos.sort(porCaminho), avisos };
 }
 
 /** Cria o adapter a partir do modelo. */

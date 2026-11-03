@@ -1,5 +1,7 @@
 // Núcleo do harness-ai: lógica pura, sem dependência dos adapters (ADR-0010).
 
+export type { ModeloDeConfiguracao } from './adaptadores/configuracao.js';
+export { mesclarFragmentos } from './adaptadores/configuracao.js';
 export type {
   Adapter,
   ArquivoProjetado,
@@ -7,6 +9,7 @@ export type {
   CapacidadeDoAdapter,
   CapacidadesDoAdapter,
   EntradaDeProjecao,
+  FragmentoDeConfig,
   Projecao,
   Suporte,
 } from './adaptadores/contrato.js';
