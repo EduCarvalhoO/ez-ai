@@ -215,6 +215,7 @@ export function remover(ctx: Contexto, opcoes: OpcoesDeRemove): Promise<Resultad
       ...(antigo ? { antigo } : {}),
       forcar: opcoes.forcar === true,
       reservados: new Map(),
+      compartilhados: new Map(),
     });
     if (projecao.erros.length > 0) return falha(projecao.erros);
     const instalados = (await ctx.arquivos.listar(pastaDoPacote(nome))).length;
@@ -328,6 +329,7 @@ async function preparar(
   const travados = new Map(lock.pacotes.map((p) => [p.nome, p]));
   const aprovacoesUsadas = new Set<string>();
   const reservados = new Map<string, string>();
+  const compartilhados = new Map<string, string>();
   const cacheDaOrganizacao: CacheDaOrganizacao = new Map();
 
   for (const p of config.pacotes.filter((c) => quer(c.nome))) {
@@ -460,6 +462,7 @@ async function preparar(
         novo: { manifesto: lido.manifesto, arquivos: lido.arquivos },
         forcar: opcoes.forcar,
         reservados,
+        compartilhados,
       });
       if (projecao.erros.length > 0) {
         erros.push(...projecao.erros);
@@ -491,6 +494,7 @@ async function preparar(
         ...(antigo ? { antigo } : {}),
         forcar: opcoes.forcar,
         reservados,
+        compartilhados,
       });
       if (projecao.erros.length > 0) {
         erros.push(...projecao.erros);

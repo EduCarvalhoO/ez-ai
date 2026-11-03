@@ -232,3 +232,83 @@ describe('plan e doctor', () => {
     expect(r.saida.join('\n')).toContain('aviso  Copilot (VS Code, harness Local)');
   });
 });
+
+describe('hooks e MCP de pacote (ADR-0027)', () => {
+  function pacoteComHookEMcp(): Record<string, string> {
+    const a = arquivosDoStarter();
+    const m = JSON.parse(a['harness-pacote.json'] ?? '{}');
+    m.componentes.push(
+      {
+        id: 'lint',
+        tipo: 'hook',
+        arquivo: 'hooks/lint.mjs',
+        evento: 'antes-de-ferramenta',
+        comando: { programa: 'node', argumentos: ['hooks/lint.mjs'] },
+        permissoes: { configurarAmbiente: ['.claude/settings.json'] },
+      },
+      {
+        id: 'gh',
+        tipo: 'mcp',
+        arquivo: 'mcp/gh.json',
+        comando: { programa: 'npx', argumentos: ['-y', 'servidor@1.0.0'] },
+        permissoes: { configurarAmbiente: ['.mcp.json'] },
+      },
+    );
+    return { ...a, 'harness-pacote.json': JSON.stringify(m), 'hooks/lint.mjs': 'process.exit(0)', 'mcp/gh.json': '{}' };
+  }
+
+  async function comHook(existente?: Record<string, string>) {
+    const arquivos = arquivosEmMemoria(existente ?? {});
+    const ctx: Contexto = {
+      arquivos,
+      git: gitEmMemoria({ [REPO]: { tags: { 'v1.0.0': SHA1 }, commits: { [SHA1]: pacoteComHookEMcp() } } }),
+      relogio: relogioFixo(),
+      identidade: identidadeFixa(),
+      harness: '0.0.0',
+      tipoDeAtor: 'humano',
+      adapters: [adapterClaudeCode, adapterCopilot],
+    };
+    await init(ctx, { dryRun: false, ambientes: ['claude-code'] });
+    const config = JSON.parse(await arquivos.ler('.harness/config.json'));
+    config.origensPermitidas = [REPO];
+    await arquivos.gravar('.harness/config.json', JSON.stringify(config));
+    await adicionar(ctx, { origem: REPO, versao: '1.0.0', dryRun: false });
+    return { ctx, arquivos };
+  }
+
+  it('mescla no settings.json e no .mcp.json sem tocar nas chaves do usuário, e o remove desfaz', async () => {
+    const usuario = JSON.stringify({ permissions: { deny: ['Bash(rm *)'] } });
+    const { ctx, arquivos } = await comHook({ '.claude/settings.json': usuario });
+    // Hook e MCP mexem em arquivo de enforcement: sem aprovação própria nomeada o apply para (policy do núcleo).
+    const sem = await aplicar(ctx, SEM_OPCOES);
+    expect(sem.erros.join('\n')).toContain('aprovação própria pendente');
+    expect(await arquivos.ler('.claude/settings.json')).toBe(usuario);
+    const r = await aplicar(ctx, {
+      ...SEM_OPCOES,
+      aprovar: ['comp/gh/configurarAmbiente/.mcp.json', 'comp/lint/configurarAmbiente/.claude%2Fsettings.json'],
+    });
+    expect(r.erros).toEqual([]);
+    const settings = JSON.parse(await arquivos.ler('.claude/settings.json'));
+    expect(settings.permissions).toEqual({ deny: ['Bash(rm *)'] });
+    expect(settings.hooks.PreToolUse).toHaveLength(1);
+    expect(settings.hooks.PreToolUse[0].hooks[0].onFailure).toBe('block');
+    const mcp = JSON.parse(await arquivos.ler('.mcp.json'));
+    expect(Object.keys(mcp.mcpServers)).toEqual(['eduardo-starter-gh']);
+
+    const rm = await remover(ctx, { nome: 'eduardo/starter', dryRun: false, forcar: false });
+    expect(rm.erros).toEqual([]);
+    expect(JSON.parse(await arquivos.ler('.claude/settings.json'))).toEqual({ permissions: { deny: ['Bash(rm *)'] } });
+    expect(JSON.parse(await arquivos.ler('.mcp.json'))).toEqual({});
+  });
+
+  it('recusa o apply se o settings.json existente não é JSON', async () => {
+    const { ctx, arquivos } = await comHook({ '.claude/settings.json': '{ // x\n}' });
+    const r = await aplicar(ctx, {
+      ...SEM_OPCOES,
+      aprovar: ['comp/gh/configurarAmbiente/.mcp.json', 'comp/lint/configurarAmbiente/.claude%2Fsettings.json'],
+    });
+    expect(r.erros.join('\n')).toContain('não é JSON válido');
+    expect(await arquivos.ler('.claude/settings.json')).toBe('{ // x\n}');
+    expect(await arquivos.existe('.mcp.json')).toBe(false);
+  });
+});

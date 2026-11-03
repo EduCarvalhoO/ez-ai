@@ -30,8 +30,22 @@ export interface AvisoDeProjecao {
   readonly mensagem: string;
 }
 
+/**
+ * Trecho de um arquivo JSON compartilhado (`.claude/settings.json`, `.mcp.json`) que o harness mescla sem tomar o
+ * arquivo inteiro (ADR-0027). `hook`: o `valor` entra na lista `hooks[evento]`; `mcp`: o `valor` vira `mcpServers[chave]`.
+ */
+export interface FragmentoDeConfig {
+  readonly caminho: string;
+  readonly componente: string;
+  readonly tipo: 'hook' | 'mcp';
+  /** Nome do evento do ambiente (hook) ou nome do servidor (mcp). */
+  readonly chave: string;
+  readonly valor: unknown;
+}
+
 export interface Projecao {
   readonly arquivos: readonly ArquivoProjetado[];
+  readonly fragmentos: readonly FragmentoDeConfig[];
   readonly avisos: readonly AvisoDeProjecao[];
 }
 
