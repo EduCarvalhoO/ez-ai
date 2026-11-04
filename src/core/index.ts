@@ -37,6 +37,9 @@ export { pareceSegredo, redigirSegredos } from './auditoria/segredos.js';
 export type { Contexto, ResultadoDoComando } from './comandos/base.js';
 export { relatarBenchmark } from './comandos/benchmark.js';
 export { avaliarBase, buscarNaBase, indexarBase, mapaDaBase } from './comandos/conhecimento.js';
+export { responderMcp, servirMcp } from './comandos/mcp.js';
+export type { FatosDeConfianca, NivelDeConfianca } from './configuracao/confianca.js';
+export { atendeConfiancaMinima, NIVEIS_DE_CONFIANCA, nivelDeConfianca } from './configuracao/confianca.js';
 export { relatarCusto } from './comandos/custo.js';
 export type { OpcoesDeAdd, OpcoesDeInstalacao, OpcoesDeRemove } from './comandos/escrita.js';
 export {

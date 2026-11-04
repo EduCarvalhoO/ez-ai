@@ -11,6 +11,7 @@ import {
   PADRAO_PACOTE,
   PADRAO_REPO,
 } from '../manifesto/schema.js';
+import { NIVEIS_DE_CONFIANCA } from './confianca.js';
 
 export const ID_DO_SCHEMA_DA_CONFIGURACAO =
   'https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/configuracao.v0.schema.json';
@@ -66,6 +67,8 @@ export const SCHEMA_DA_CONFIGURACAO = {
       },
     },
     policyDaOrganizacao: NOME_DE_PACOTE,
+    // Nível mínimo de confiança dos pacotes do GitHub (ADR-0034); pacote local sempre passa.
+    confiancaMinima: { enum: NIVEIS_DE_CONFIANCA },
     // Quem aprova a aprovação própria no PR (docs/specs/auditoria-e-evidencias.md): login ou `@org/time`.
     // O job da F4 lê esta lista da branch base, nunca da head.
     aprovadores: {
