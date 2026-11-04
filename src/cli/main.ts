@@ -15,8 +15,10 @@ import {
   type OpcoesDeInstalacao,
   planejar,
   type ResultadoDoComando,
+  registrarEtapa,
   relatarCusto,
   remover,
+  statusDoWorkflow,
   validar,
   validarNoServidor,
 } from '../core/index.js';
@@ -59,6 +61,7 @@ const COMANDOS = [
   'apply',
   'export',
   'custo',
+  'workflow',
 ] as const;
 type Comando = (typeof COMANDOS)[number];
 
@@ -72,6 +75,8 @@ const USO = [
   '  update [pacote...]                    resolve de novo dentro do intervalo pedido',
   '  export                                envia ao coletor OTLP (Langfuse) os eventos de auditoria novos; só com 	elemetria na configuração; --dry-run mostra sem enviar',
   '  custo                                 mostra tokens e custo por agente, lidos da auditoria local (sem rede)',
+  '  workflow status <item> | workflow etapa <item> <etapa> <resultado> --agente <id> [--consumo <json>]',
+  '                                        mostra ou registra etapas e gates do workflow (grava o consumo na auditoria)',
   '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
   '  validate --ci          recalcula policy e aprovações a partir do commit travado',
   '  validate --servidor    (job de CI) compara com a base: --base <ref> [--pr <n>] [--sha <sha>] [--repo <dono/repo>] [--checks a,b] [--exigir-evidencias]; token em GITHUB_TOKEN',
@@ -100,6 +105,8 @@ interface Argumentos {
   readonly sha?: string;
   readonly repo?: string;
   readonly checks: readonly string[];
+  readonly agente?: string;
+  readonly consumo?: string;
 }
 
 /** Quantos argumentos soltos (sem `--`) cada comando aceita; `undefined` = qualquer quantidade. */
@@ -115,6 +122,7 @@ const POSICIONAIS: Record<Comando, number | undefined> = {
   apply: undefined,
   export: 0,
   custo: 0,
+  workflow: 4,
 };
 
 function lerArgumentos(args: readonly string[]): Argumentos | string {
@@ -138,6 +146,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
   let checks: string[] = [];
   let ambientes: string[] | undefined;
   let versao: string | undefined;
+  let agente: string | undefined;
+  let consumo: string | undefined;
   const aprovar: string[] = [];
   const posicionais: string[] = [];
   for (let i = 0; i < resto.length; i++) {
@@ -159,6 +169,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     else if (a === '--repo' && valor !== undefined && cmd === 'validate') repo = resto[++i];
     else if (a === '--checks' && valor !== undefined && cmd === 'validate')
       checks = (resto[++i] ?? '').split(',').filter(Boolean);
+    else if (a === '--agente' && valor !== undefined && cmd === 'workflow') agente = resto[++i];
+    else if (a === '--consumo' && valor !== undefined && cmd === 'workflow') consumo = resto[++i];
     else if (a === '--aceitar-permissoes' && instala) aceitarPermissoes = true;
     else if (!a.startsWith('--')) posicionais.push(a);
     else return `argumento(s) não reconhecido(s): ${resto.slice(i).join(' ')}`;
@@ -172,7 +184,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
   }
   if (servidor && (!base || !repo)) return '--servidor precisa de --base <ref> e --repo <dono/repo>';
   if (pr !== undefined && !Number.isInteger(pr)) return '--pr precisa de um número';
-  const gravaArquivos = cmd !== 'list' && cmd !== 'validate' && cmd !== 'doctor' && cmd !== 'custo';
+  const gravaArquivos =
+    cmd !== 'list' && cmd !== 'validate' && cmd !== 'doctor' && cmd !== 'custo' && cmd !== 'workflow';
   // export --dry-run não grava nada: mostra o que enviaria.
   if (dryRun && !gravaArquivos) return `--dry-run não se aplica a "${cmd}" (ele não altera arquivos)`;
   return {
@@ -193,6 +206,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     ...(repo ? { repo } : {}),
     ...(ambientes ? { ambientes } : {}),
     ...(versao ? { versao } : {}),
+    ...(agente ? { agente } : {}),
+    ...(consumo ? { consumo } : {}),
   };
 }
 
@@ -261,6 +276,26 @@ export async function main(
   return resultado.codigo;
 }
 
+const USO_DO_WORKFLOW = [
+  'uso: harness-ai workflow status <item>',
+  '     harness-ai workflow etapa <item> <E0..E5|G0..G3> <solicitado|executado|verificado|falhou|ignorado> --agente <id> [--consumo <arquivo.json>]',
+];
+
+function executarWorkflow(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
+  const [sub, item, etapa, resultado] = a.posicionais;
+  if (sub === 'status' && item !== undefined && a.posicionais.length === 2) return statusDoWorkflow(ctx, item);
+  if (sub === 'etapa' && item !== undefined && etapa !== undefined && resultado !== undefined && a.agente) {
+    return registrarEtapa(ctx, {
+      item,
+      etapa,
+      resultado,
+      agente: a.agente,
+      ...(a.consumo ? { consumoArquivo: a.consumo } : {}),
+    });
+  }
+  return Promise.resolve({ codigo: 1, saida: [], erros: USO_DO_WORKFLOW });
+}
+
 function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
   switch (a.comando) {
     case 'init':
@@ -302,5 +337,7 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
       return exportarTelemetria(ctx, { dryRun: a.dryRun });
     case 'custo':
       return relatarCusto(ctx);
+    case 'workflow':
+      return executarWorkflow(a, ctx);
   }
 }

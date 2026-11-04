@@ -150,6 +150,8 @@ Entregas:
 - **Benchmark interno:** conjunto de 10–20 tarefas reais (golden tasks) executadas com e sem harness para comparação.
 - Base de conhecimento ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)): C0 (mapa de docs e de código por AST, mantido pelo agente da E0) e C1 (BM25 local com chunks por AST e por título); servidor MCP `buscar`/`abrir`/`mapa`; skill com a regra de uso; 30 perguntas de referência sobre o próprio harness. *(corte)* C1 volta para só C0.
 
+**Andamento (sprint 10, 2026-11-04):** parte 1 entregue: motor puro de etapas e gates com limites de revisão e escala ao humano, estado refeito pelo log de auditoria, comando `workflow` (`status` e `etapa`) que grava o `consumo` por etapa e pacote oficial `pacotes/workflow-feature` ([ADR-0031](adr/0031-motor-de-workflow-com-estado-no-log-e-pacote-oficial.md)). Pendente: agentes do pacote, benchmark (golden tasks), base de conhecimento C0/C1 e datasets/evals da F5.
+
 Critérios de saída (**M3**): benchmark executado nos dois ambientes com resultados no Langfuse; relatório comparativo de qualidade, custo e conformidade; recall@5 da base de conhecimento (C0 + C1) ≥ C0 sozinha nas perguntas de referência do harness.
 
 ## F7 — Supply chain e identidade (S23–S24)
