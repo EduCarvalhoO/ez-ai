@@ -93,11 +93,17 @@ function itensDe(corpo: readonly { texto: string; linha: number }[]): { texto: s
   return itens;
 }
 
+// Linhas que são só comentário HTML (instrução de modelo) não contam como conteúdo.
+const ehComentario = (s: string): boolean => {
+  const x = s.trim();
+  return x.startsWith('<!--') && x.endsWith('-->');
+};
+
 const util = (corpo: readonly { texto: string }[]): string =>
   corpo
+    .filter((l) => !ehComentario(l.texto))
     .map((l) => l.texto)
     .join(' ')
-    .replace(/<!--.*?-->/g, '')
     .trim();
 
 export function tipoPeloCaminho(caminho: string): TipoDeDocumento {
