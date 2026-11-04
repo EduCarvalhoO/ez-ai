@@ -23,9 +23,11 @@ import {
   relatarBenchmark,
   relatarCusto,
   remover,
+  retomarWorkflow,
   statusDoWorkflow,
   validar,
   validarNoServidor,
+  verificarDocumento,
 } from '../core/index.js';
 import {
   criarArquivos,
@@ -83,8 +85,9 @@ const USO = [
   '  update [pacote...]                    resolve de novo dentro do intervalo pedido',
   '  export                                envia ao coletor OTLP (Langfuse) os eventos de auditoria novos; só com telemetria na configuração; --dry-run mostra sem enviar',
   '  custo                                 mostra tokens e custo por agente, lidos da auditoria local (sem rede)',
-  '  workflow status <item> | workflow etapa <item> <etapa> <resultado> --agente <id> [--consumo <json>]',
-  '                                        mostra ou registra etapas e gates do workflow (grava o consumo na auditoria)',
+  '  workflow status <item> | etapa <item> <etapa> <resultado> --agente <id> [--consumo <json>] [--documento <arq>] [--evidencia <arq>]',
+  '  workflow docs <arquivo> | workflow retomar',
+  '                                        registra etapas e gates, confere a completude de um documento e lista itens abertos ou parados',
   '  conhecimento indexar | buscar <consulta> [--limite <n>] | mapa [pasta] | avaliar [--exportar]',
   '                                        base de conhecimento local: mapa C0, índice C1 (node:sqlite) e métricas',
   '  benchmark [--exportar]                pontua as tarefas de referência pelo log de auditoria (--exportar grava o dataset)',
@@ -118,6 +121,8 @@ interface Argumentos {
   readonly checks: readonly string[];
   readonly agente?: string;
   readonly consumo?: string;
+  readonly documento?: string;
+  readonly evidencia?: string;
   readonly exportar: boolean;
   readonly limite?: number;
 }
@@ -163,6 +168,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
   let versao: string | undefined;
   let agente: string | undefined;
   let consumo: string | undefined;
+  let documento: string | undefined;
+  let evidencia: string | undefined;
   let exportar = false;
   let limite: number | undefined;
   const aprovar: string[] = [];
@@ -188,6 +195,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
       checks = (resto[++i] ?? '').split(',').filter(Boolean);
     else if (a === '--agente' && valor !== undefined && cmd === 'workflow') agente = resto[++i];
     else if (a === '--consumo' && valor !== undefined && cmd === 'workflow') consumo = resto[++i];
+    else if (a === '--documento' && valor !== undefined && cmd === 'workflow') documento = resto[++i];
+    else if (a === '--evidencia' && valor !== undefined && cmd === 'workflow') evidencia = resto[++i];
     else if (a === '--exportar' && (cmd === 'conhecimento' || cmd === 'benchmark')) exportar = true;
     else if (a === '--limite' && valor !== undefined && cmd === 'conhecimento') limite = Number(resto[++i]);
     else if (a === '--aceitar-permissoes' && instala) aceitarPermissoes = true;
@@ -237,6 +246,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     ...(versao ? { versao } : {}),
     ...(agente ? { agente } : {}),
     ...(consumo ? { consumo } : {}),
+    ...(documento ? { documento } : {}),
+    ...(evidencia ? { evidencia } : {}),
   };
 }
 
@@ -309,12 +320,16 @@ export async function main(
 
 const USO_DO_WORKFLOW = [
   'uso: harness-ai workflow status <item>',
-  '     harness-ai workflow etapa <item> <E0..E5|G0..G3> <solicitado|executado|verificado|falhou|ignorado> --agente <id> [--consumo <arquivo.json>]',
+  '     harness-ai workflow docs <arquivo>',
+  '     harness-ai workflow retomar',
+  '     harness-ai workflow etapa <item> <E0..E5|G0..G3> <solicitado|executado|verificado|falhou|ignorado> --agente <id> [--consumo <arquivo.json>] [--documento <arquivo>] [--evidencia <arquivo>]',
 ];
 
 function executarWorkflow(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
   const [sub, item, etapa, resultado] = a.posicionais;
   if (sub === 'status' && item !== undefined && a.posicionais.length === 2) return statusDoWorkflow(ctx, item);
+  if (sub === 'docs' && item !== undefined && a.posicionais.length === 2) return verificarDocumento(ctx, item);
+  if (sub === 'retomar' && a.posicionais.length === 1) return retomarWorkflow(ctx);
   if (sub === 'etapa' && item !== undefined && etapa !== undefined && resultado !== undefined && a.agente) {
     return registrarEtapa(ctx, {
       item,
@@ -322,6 +337,8 @@ function executarWorkflow(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComa
       resultado,
       agente: a.agente,
       ...(a.consumo ? { consumoArquivo: a.consumo } : {}),
+      ...(a.documento ? { documento: a.documento } : {}),
+      ...(a.evidencia ? { evidencia: a.evidencia } : {}),
     });
   }
   return Promise.resolve({ codigo: 1, saida: [], erros: USO_DO_WORKFLOW });

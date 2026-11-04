@@ -58,7 +58,7 @@ export { validarNoServidor } from './comandos/servidor.js';
 export type { OpcoesDeExportacao } from './comandos/telemetria.js';
 export { exportarTelemetria } from './comandos/telemetria.js';
 export type { OpcoesDeEtapa } from './comandos/workflow.js';
-export { registrarEtapa, statusDoWorkflow } from './comandos/workflow.js';
+export { registrarEtapa, retomarWorkflow, statusDoWorkflow, verificarDocumento } from './comandos/workflow.js';
 export type {
   Configuracao,
   LimiteAjustavel,
@@ -143,7 +143,16 @@ export { formatarUsd, resumirConsumoPorAgente } from './telemetria/consumo.js';
 export { problemaNoEndpoint } from './telemetria/endpoint.js';
 export type { PayloadOtlp, SpanOtlp } from './telemetria/otlp.js';
 export { eventoParaSpan, montarPayloadOtlp } from './telemetria/otlp.js';
+export type { ProblemaDeDocumento, TipoDeDocumento } from './workflow/completude.js';
+export { tipoPeloCaminho, verificarCompletude } from './workflow/completude.js';
 export { CAMINHO_DO_WORKFLOW, validarConfiguracaoDoWorkflow } from './workflow/configuracao.js';
+export type {
+  JanelaDeControle,
+  OrcamentoDoWorkflow,
+  ProtecaoContraLaco,
+  SaidaExigida,
+} from './workflow/protecao.js';
+export { causaDeParada, PROTECAO_PADRAO, repeticaoNaTrilha } from './workflow/protecao.js';
 export type { Pontuacao, TarefaDeReferencia } from './workflow/benchmark.js';
 export { pontuarExecucao, relatorioComparativo, validarTarefas } from './workflow/benchmark.js';
 export type {
@@ -152,4 +161,4 @@ export type {
   Etapa,
   Transicao,
 } from './workflow/motor.js';
-export { avancar, estadoDoItem, estadoInicial, WORKFLOW_PADRAO } from './workflow/motor.js';
+export { aplicarEvento, avancar, estadoDoItem, estadoInicial, WORKFLOW_PADRAO } from './workflow/motor.js';
