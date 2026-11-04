@@ -87,6 +87,13 @@ Falha do `verificar` rodado pelo próprio `implementador` antes do handoff não 
 
 Cada rodada humana zera os contadores de ciclos dos agentes. Quem classifica o pedido do G3 (dentro do plano × mudança de escopo) é o orquestrador; na dúvida, trata como mudança de escopo.
 
+### Proteção contra laço, orçamento e retomada
+Definidos no [ADR-0033](../adr/0033-protecao-contra-laco-orcamento-saidas-por-etapa-e-retomada.md); o estado continua refeito só pelo log.
+- **Disjuntor (padrão ligado):** por janela (desde a última decisão humana) o item aceita no máximo 60 passos, 10 por etapa e 3 repetições seguidas de um padrão de 1 a 3 passos. Estourou: escala ao humano, que decide com E1 ou E3 e reabre a janela.
+- **Orçamento (opcional):** `orcamento.tokensPorItem` e `orcamento.minutosPorItem` (tempo ativo, sem a espera por G1 e G3) escalam da mesma forma.
+- **Saídas por etapa (opcional):** `saidas.<etapa>.documento` e `.evidencia` fazem o comando recusar a etapa sem documento completo (`workflow docs`) ou sem arquivo de evidência.
+- **Retomada:** `workflow retomar` lista itens abertos e parados (`minutosParado`) com o que a próxima etapa exige.
+
 ### Artefatos de handoff
 A ficha ([guia §4](../guias/time-de-agentes.md#4-handoffs)) ganha estas seções:
 

@@ -3,6 +3,16 @@
 // "diz" em que etapa está, o motor refaz o caminho pelos eventos de `etapa`.
 import type { EventoDeAuditoria } from '../auditoria/evento.js';
 import type { ETAPAS, RESULTADOS } from '../auditoria/schema.js';
+import {
+  causaDeParada,
+  JANELA_VAZIA,
+  type JanelaDeControle,
+  type Medida,
+  type OrcamentoDoWorkflow,
+  type ProtecaoContraLaco,
+  type SaidaExigida,
+  somarNaJanela,
+} from './protecao.js';
 
 export type Etapa = (typeof ETAPAS)[number];
 export type ResultadoDaEtapa = (typeof RESULTADOS)[number];
@@ -15,6 +25,14 @@ export interface ConfiguracaoDoWorkflow {
   readonly etapasDesligadas: readonly EtapaDesligavel[];
   /** Revisões permitidas antes de escalar ao humano: documentação (G0) e código (G2/E4). */
   readonly limiteDeCiclos: { readonly documentacao: number; readonly codigo: number };
+  /** Teto de tokens e de minutos ativos por janela (ADR-0033). Sem ele, só os limites de laço valem. */
+  readonly orcamento?: OrcamentoDoWorkflow;
+  /** Limites contra laço infinito; sem ele valem os padrões de `PROTECAO_PADRAO`. */
+  readonly protecao?: ProtecaoContraLaco;
+  /** Saída que cada etapa precisa entregar para o comando aceitar o evento (documento completo, evidência). */
+  readonly saidas?: Readonly<Partial<Record<Etapa, SaidaExigida>>>;
+  /** Item sem evento há mais que isto aparece como parado em `workflow retomar` (padrão 120). */
+  readonly minutosParado?: number;
 }
 
 export const WORKFLOW_PADRAO: ConfiguracaoDoWorkflow = {
@@ -41,6 +59,10 @@ export interface EstadoDoWorkflow {
   readonly propoeReplanejar: boolean;
   /** Eventos que o motor recusou ao refazer o caminho (log editado ou escrito por fora do comando). */
   readonly desvios: readonly string[];
+  /** Contadores desde a última decisão humana: passos, repetição, tokens e tempo ativo (ADR-0033). */
+  readonly janela: JanelaDeControle;
+  /** Por que o item aguarda o humano quando não foi por ciclo de revisão: laço ou orçamento estourado. */
+  readonly motivoDaEscala?: string | undefined;
 }
 
 export type Transicao =
@@ -63,6 +85,7 @@ export function estadoInicial(item: string, cfg: ConfiguracaoDoWorkflow = WORKFL
     ignorados: [],
     propoeReplanejar: false,
     desvios: [],
+    janela: JANELA_VAZIA,
   };
 }
 
@@ -167,10 +190,44 @@ export function estadoDoItem(
     if (e.tipo !== 'etapa') continue;
     const d = e.dados as Json;
     if (d.item !== item) continue;
-    const t = avancar(estado, d.etapa as Etapa, e.resultado, cfg);
+    const t = aplicarEvento(estado, d.etapa as Etapa, e.resultado, medidaDoEvento(d), cfg);
     estado = t.ok
       ? t.estado
       : { ...estado, desvios: [...estado.desvios, `seq ${e.seq}: ${d.etapa as string} ${e.resultado}: ${t.motivo}`] };
   }
   return estado;
+}
+
+/**
+ * Como `avancar`, mais a contabilidade da janela: soma o passo, confere os limites de laço e de orçamento e, se algum
+ * estourar, abre o disjuntor (o item escala ao humano). Uma decisão humana depois de uma escala zera a janela.
+ */
+export function aplicarEvento(
+  estado: EstadoDoWorkflow,
+  etapa: Etapa,
+  resultado: ResultadoDaEtapa,
+  medida: Medida,
+  cfg: ConfiguracaoDoWorkflow = WORKFLOW_PADRAO,
+): Transicao {
+  const t = avancar(estado, etapa, resultado, cfg);
+  if (!t.ok) return t;
+  const reinicia = estado.situacao === 'aguarda-decisao-humana';
+  const janela = somarNaJanela(reinicia ? JANELA_VAZIA : t.estado.janela, etapa, resultado, medida);
+  let novo: EstadoDoWorkflow = {
+    ...t.estado,
+    janela,
+    ...(reinicia ? { motivoDaEscala: undefined } : {}),
+  };
+  if (novo.situacao === 'em-andamento') {
+    const causa = causaDeParada(janela, cfg.orcamento, cfg.protecao);
+    if (causa !== undefined) novo = { ...escalar(novo, {}), motivoDaEscala: causa };
+  }
+  return { ok: true, estado: novo };
+}
+
+function medidaDoEvento(d: Json): Medida {
+  const c = d.consumo as { fonte?: unknown; tokensEntrada?: unknown; tokensSaida?: unknown } | undefined;
+  const n = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
+  const tokens = c && c.fonte !== 'indisponivel' ? n(c.tokensEntrada) + n(c.tokensSaida) : 0;
+  return { tokens, ...(typeof d.fim === 'string' ? { fim: d.fim } : {}) };
 }
