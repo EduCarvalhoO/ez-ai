@@ -35,6 +35,8 @@ export { lerAuditoria, PASTA_DA_AUDITORIA, registrarEvento } from './auditoria/r
 export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
 export { pareceSegredo, redigirSegredos } from './auditoria/segredos.js';
 export type { Contexto, ResultadoDoComando } from './comandos/base.js';
+export { relatarBenchmark } from './comandos/benchmark.js';
+export { avaliarBase, buscarNaBase, indexarBase, mapaDaBase } from './comandos/conhecimento.js';
 export { relatarCusto } from './comandos/custo.js';
 export type { OpcoesDeAdd, OpcoesDeInstalacao, OpcoesDeRemove } from './comandos/escrita.js';
 export {
@@ -142,6 +144,8 @@ export { problemaNoEndpoint } from './telemetria/endpoint.js';
 export type { PayloadOtlp, SpanOtlp } from './telemetria/otlp.js';
 export { eventoParaSpan, montarPayloadOtlp } from './telemetria/otlp.js';
 export { CAMINHO_DO_WORKFLOW, validarConfiguracaoDoWorkflow } from './workflow/configuracao.js';
+export type { Pontuacao, TarefaDeReferencia } from './workflow/benchmark.js';
+export { pontuarExecucao, relatorioComparativo, validarTarefas } from './workflow/benchmark.js';
 export type {
   ConfiguracaoDoWorkflow,
   EstadoDoWorkflow,

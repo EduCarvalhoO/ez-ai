@@ -4,4 +4,5 @@ export { criarArquivos } from './arquivos.js';
 export { criarGit } from './git.js';
 export { criarLeitorDaBase, criarProvedorDoPr } from './servidor.js';
 export { criarIdentidade, relogioDoSistema } from './sistema.js';
+export { criarIndiceSqlite } from './indice-sqlite.js';
 export { criarEnviadorOtlp } from './telemetria.js';

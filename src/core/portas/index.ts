@@ -1,4 +1,5 @@
 import type { Consumo } from '../auditoria/evento.js';
+import type { Chunk } from '../conhecimento/chunks.js';
 import type { CheckRun, DadosDoPr } from '../servidor/conferir.js';
 
 // Portas do núcleo (ADR-0015): interfaces que o núcleo pede para falar com o mundo.
@@ -99,4 +100,26 @@ export interface ProvedorDoPr {
   /** `undefined` = o commit não pertence a nenhum PR (push direto). */
   dados(times?: readonly string[]): Promise<DadosDoPr | undefined>;
   checkRuns(sha: string): Promise<readonly CheckRun[]>;
+}
+
+/** Um trecho devolvido pelo índice de busca (C1). `pontuacao` maior = mais relevante. */
+export interface TrechoDoIndice {
+  readonly fonte: string;
+  readonly arquivo: string;
+  readonly linhaInicio: number;
+  readonly linhaFim: number;
+  readonly pontuacao: number;
+  readonly texto: string;
+}
+
+/**
+ * Índice de texto da camada C1 (ADR-0021/0032), local e sem rede. A implementação com `node:sqlite` fica em
+ * src/plataforma; sem ela (Node antigo) a CLI segue só com o mapa C0. A consulta já chega no formato seguro de
+ * `consultaParaIndice`.
+ */
+export interface IndiceDeBusca {
+  /** Troca todo o conteúdo do índice pelos chunks dados. */
+  reconstruir(chunks: readonly Chunk[]): Promise<void>;
+  /** Mais relevantes primeiro; índice nunca construído devolve lista vazia. */
+  buscar(consulta: string, limite: number): Promise<readonly TrechoDoIndice[]>;
 }
