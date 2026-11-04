@@ -6,6 +6,7 @@
 import { mesclarFragmentos } from '../adaptadores/configuracao.js';
 import type { Adapter, ArquivoProjetado, FragmentoDeConfig } from '../adaptadores/contrato.js';
 import type { Manifesto } from '../manifesto/manifesto.js';
+import { diffDeLinhas } from '../plano/diff.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import { type Contexto, examinarPacote, pastaLocalDoPacote } from './base.js';
 
@@ -93,6 +94,7 @@ export async function planejarProjecao(ctx: Contexto, pedido: PedidoDeProjecao):
   const guardar: string[] = [];
   const erros: string[] = [];
   const linhas: string[] = [];
+  const detalhes: string[] = [];
 
   for (const [caminho, a] of depois.arquivos) {
     const dono = pedido.reservados.get(caminho);
@@ -144,7 +146,13 @@ export async function planejarProjecao(ctx: Contexto, pedido: PedidoDeProjecao):
       );
     }
   }
-  await mesclarCompartilhados(ctx, pedido, antes.fragmentos, depois.fragmentos, { escrever, guardar, erros, linhas });
+  await mesclarCompartilhados(ctx, pedido, antes.fragmentos, depois.fragmentos, {
+    escrever,
+    guardar,
+    erros,
+    linhas,
+    detalhes,
+  });
   const resumo =
     linhas.length > MAX_LINHAS_DE_ARQUIVOS
       ? [
@@ -152,7 +160,7 @@ export async function planejarProjecao(ctx: Contexto, pedido: PedidoDeProjecao):
           `    ... mais ${linhas.length - MAX_LINHAS_DE_ARQUIVOS} arquivo(s) nos ambientes`,
         ]
       : linhas;
-  return { escrever, apagar, guardar, linhas: resumo, avisos: depois.avisos.map(e), erros };
+  return { escrever, apagar, guardar, linhas: [...resumo, ...detalhes], avisos: depois.avisos.map(e), erros };
 }
 
 async function mesclarCompartilhados(
@@ -160,7 +168,13 @@ async function mesclarCompartilhados(
   pedido: PedidoDeProjecao,
   antigos: readonly (FragmentoDeConfig & { ambiente: string })[],
   novos: readonly (FragmentoDeConfig & { ambiente: string })[],
-  saida: { escrever: ArquivoProjetado[]; guardar: string[]; erros: string[]; linhas: string[] },
+  saida: {
+    escrever: ArquivoProjetado[];
+    guardar: string[];
+    erros: string[];
+    linhas: string[];
+    detalhes: string[];
+  },
 ): Promise<void> {
   const caminhos = [...new Set([...antigos, ...novos].map((f) => f.caminho))].sort();
   for (const caminho of caminhos) {
@@ -192,6 +206,12 @@ async function mesclarCompartilhados(
     saida.escrever.push({ caminho, conteudo: r.conteudo, componente: ids.join(', ') });
     const ambiente = (novos[0] ?? antigos[0])?.ambiente ?? '';
     saida.linhas.push(`    ~ ${ambiente}: ${e(caminho)} (mescla: ${ids.map(e).join(', ')})`);
+    saida.detalhes.push(
+      ...detalhesDosFragmentos(
+        novos.filter((f) => f.caminho === caminho),
+        pedido,
+      ),
+    );
   }
 }
 
@@ -211,4 +231,38 @@ export async function aplicarProjecao(ctx: Contexto, nome: string, plano: PlanoD
 /** Avisos do ambiente (limitações do projeto inteiro) para os ambientes pedidos. */
 export function avisosGeraisDosAmbientes(ctx: Contexto, ambientes: readonly string[]): string[] {
   return (ctx.adapters ?? []).filter((a) => ambientes.includes(a.ambiente)).flatMap((a) => a.avisosGerais.map(e));
+}
+
+const MAX_LINHAS_DE_SCRIPT = 30;
+
+interface Chamada {
+  readonly command?: unknown;
+  readonly args?: unknown;
+}
+
+/** Evento e comando de cada hook, comando de cada servidor MCP e diff dos scripts do pacote citados em `args` (ADR-0028). */
+function detalhesDosFragmentos(novos: readonly FragmentoDeConfig[], pedido: PedidoDeProjecao): string[] {
+  const saida: string[] = [];
+  for (const f of novos) {
+    const v = (f.valor ?? {}) as { hooks?: Chamada[] } & Chamada;
+    const chamada: Chamada = f.tipo === 'hook' ? (v.hooks?.[0] ?? {}) : v;
+    const args = Array.isArray(chamada.args) ? chamada.args.map(String) : [];
+    const comando = [String(chamada.command ?? ''), ...args].join(' ');
+    saida.push(
+      f.tipo === 'hook'
+        ? `      hook ${e(f.componente)}: evento ${e(f.chave)} roda: ${e(comando)}`
+        : `      mcp ${e(f.componente)}: servidor ${e(f.chave)} roda: ${e(comando)}`,
+    );
+    for (const caminho of pedido.novo?.arquivos.keys() ?? []) {
+      if (!args.some((a) => a.endsWith(`/${pedido.nome}/${caminho}`))) continue;
+      const diff = diffDeLinhas(pedido.antigo?.arquivos.get(caminho) ?? '', pedido.novo?.arquivos.get(caminho) ?? '');
+      saida.push(
+        `        script ${e(caminho)}: ${diff.length === 0 ? 'sem mudança' : `${diff.length} linha(s) mudada(s)`}`,
+      );
+      for (const l of diff.slice(0, MAX_LINHAS_DE_SCRIPT)) saida.push(`          ${e(l)}`);
+      if (diff.length > MAX_LINHAS_DE_SCRIPT)
+        saida.push(`          ... mais ${diff.length - MAX_LINHAS_DE_SCRIPT} linha(s)`);
+    }
+  }
+  return saida;
 }
