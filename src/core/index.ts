@@ -55,6 +55,8 @@ export type { OpcoesDoServidor } from './comandos/servidor.js';
 export { validarNoServidor } from './comandos/servidor.js';
 export type { OpcoesDeExportacao } from './comandos/telemetria.js';
 export { exportarTelemetria } from './comandos/telemetria.js';
+export type { OpcoesDeEtapa } from './comandos/workflow.js';
+export { registrarEtapa, statusDoWorkflow } from './comandos/workflow.js';
 export type {
   Configuracao,
   LimiteAjustavel,
@@ -139,3 +141,11 @@ export { formatarUsd, resumirConsumoPorAgente } from './telemetria/consumo.js';
 export { problemaNoEndpoint } from './telemetria/endpoint.js';
 export type { PayloadOtlp, SpanOtlp } from './telemetria/otlp.js';
 export { eventoParaSpan, montarPayloadOtlp } from './telemetria/otlp.js';
+export { CAMINHO_DO_WORKFLOW, validarConfiguracaoDoWorkflow } from './workflow/configuracao.js';
+export type {
+  ConfiguracaoDoWorkflow,
+  EstadoDoWorkflow,
+  Etapa,
+  Transicao,
+} from './workflow/motor.js';
+export { avancar, estadoDoItem, estadoInicial, WORKFLOW_PADRAO } from './workflow/motor.js';
