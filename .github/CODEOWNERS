@@ -9,6 +9,9 @@
 /.github/               @EduCarvalhoO
 /.claude/               @EduCarvalhoO
 /.githooks/             @EduCarvalhoO
+/.harness/              @EduCarvalhoO
+/.mcp.json              @EduCarvalhoO
+/.vscode/               @EduCarvalhoO
 /.npmrc                 @EduCarvalhoO
 /package.json           @EduCarvalhoO
 /package-lock.json      @EduCarvalhoO
