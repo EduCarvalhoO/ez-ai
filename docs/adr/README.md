@@ -34,6 +34,7 @@
 | [0026](0026-policy-ligada-ao-plan-apply-e-gate-de-validate-ci.md) | Policy ligada ao plan/apply/update e gate de `validate --ci` | Parcial |
 | [0027](0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md) | Hooks e MCP de pacote mesclados em arquivos compartilhados (Claude Code) | Aceito |
 | [0028](0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md) | Job de servidor: aprovadores da base, S-aud1 e evidência de CI | Aceito |
+| [0029](0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md) | Exportação opt-in da auditoria como spans OTLP para o Langfuse | Aceito |
 
 ## Decisões em aberto
 
