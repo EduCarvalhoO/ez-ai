@@ -33,7 +33,7 @@ export { resumirEvidencias } from './auditoria/evidencias.js';
 export type { ContextoDeAuditoria, PedidoDeEvento } from './auditoria/registro.js';
 export { lerAuditoria, PASTA_DA_AUDITORIA, registrarEvento } from './auditoria/registro.js';
 export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
-export { pareceSegredo } from './auditoria/segredos.js';
+export { pareceSegredo, redigirSegredos } from './auditoria/segredos.js';
 export type { Contexto, ResultadoDoComando } from './comandos/base.js';
 export type { OpcoesDeAdd, OpcoesDeInstalacao, OpcoesDeRemove } from './comandos/escrita.js';
 export {
@@ -112,13 +112,20 @@ export { carregarPolicyDoCodigo, POLICY_DO_NUCLEO, REGRAS_DO_NUCLEO } from './po
 export type { CategoriaDePolicy, Efeito, Marca, NivelDePolicy, Policy, Regra } from './policy/policy.js';
 export { NIVEIS, validarPolicy } from './policy/policy.js';
 export { LIMITES_DA_POLICY, SCHEMA_DA_POLICY } from './policy/schema.js';
+export type { OpcoesDeExportacao } from './comandos/telemetria.js';
+export { exportarTelemetria } from './comandos/telemetria.js';
+export { problemaNoEndpoint } from './telemetria/endpoint.js';
+export type { PayloadOtlp, SpanOtlp } from './telemetria/otlp.js';
+export { eventoParaSpan, montarPayloadOtlp } from './telemetria/otlp.js';
 export type {
+  EnviadorDeTelemetria,
   Evento,
   Git,
   Identidade,
   JanelaDeConsumo,
   LeitorDaBase,
   LeitorDeConsumo,
+  PedidoDeTelemetria,
   ProvedorDoPr,
   Relogio,
   SistemaDeArquivos,

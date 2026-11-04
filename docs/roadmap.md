@@ -134,6 +134,8 @@ Entregas:
 - Dashboards/consultas para as [métricas de sucesso](#métricas-de-sucesso), cobrindo as [visões do painel do pipeline](specs/pipeline-agentico.md#painel).
 - Métricas da base de conhecimento (recall@k, MRR, acerto de citação) exportadas ao Langfuse ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)).
 
+**Andamento (sprint 08, 2026-11-04):** parte 1 entregue: `harness-ai export` envia a auditoria como spans OTLP ao Langfuse, só com `telemetria` na configuração, com redação de segredos em três barreiras e zero rede quando desligado ([ADR-0029](adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md)); `nomeProjetado` deixa de colidir. Pendente: Docker Compose e runbook do Langfuse, datasets e evals, métricas da base de conhecimento, captura de tokens por agente.
+
 Critérios de saída: trace completo de uma execução visível no Langfuse local; teste garante que segredos de fixture nunca chegam ao exportador; telemetria desligada = zero chamadas de rede.
 
 ## F6 — Workflow MVP: feature com gates (S20–S22)
