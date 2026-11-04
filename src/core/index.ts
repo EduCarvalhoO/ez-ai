@@ -50,6 +50,8 @@ export {
 } from './comandos/escrita.js';
 export { init } from './comandos/init.js';
 export { diagnosticar, listar, planejar, validar } from './comandos/leitura.js';
+export type { OpcoesDoServidor } from './comandos/servidor.js';
+export { validarNoServidor } from './comandos/servidor.js';
 export type {
   Configuracao,
   LimiteAjustavel,
@@ -115,9 +117,13 @@ export type {
   Git,
   Identidade,
   JanelaDeConsumo,
+  LeitorDaBase,
   LeitorDeConsumo,
+  ProvedorDoPr,
   Relogio,
   SistemaDeArquivos,
 } from './portas/index.js';
 export { intervaloDe, lerVersao, resolverVersao } from './resolucao/semver.js';
 export { escaparInvisiveis, exigirCaminhoDoProjeto, problemaNoCaminhoDoProjeto } from './seguranca/caminhos.js';
+export type { CheckRun, DadosDoPr, EntradaDoServidor, ResultadoDoServidor, ReviewDoPr } from './servidor/conferir.js';
+export { aprovadoresValidos, conferirNoServidor, minimoDeAprovadores } from './servidor/conferir.js';
