@@ -78,6 +78,17 @@ export const SCHEMA_DA_CONFIGURACAO = {
         pattern: `^(?:${PADRAO_LOGIN}|@${PADRAO_LOGIN}/[a-z0-9][a-z0-9._-]{0,99})$`,
       },
     },
+    // Exportação opt-in de telemetria (ADR-0029). Sem este campo, o harness nunca abre conexão de rede para isso.
+    // O segredo nunca fica aqui: `variavelDoToken` é só o NOME da variável de ambiente com o cabeçalho Authorization.
+    telemetria: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['endpoint'],
+      properties: {
+        endpoint: { type: 'string', maxLength: 200, pattern: '^https?://[^\\s/?#@]+(?:/[^\\s?#]*)?$' },
+        variavelDoToken: { type: 'string', maxLength: 64, pattern: '^[A-Z][A-Z0-9_]{0,63}$' },
+      },
+    },
     limites: {
       type: 'object',
       additionalProperties: false,

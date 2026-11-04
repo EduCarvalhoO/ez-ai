@@ -24,6 +24,34 @@ export function pareceSegredo(texto: string): string | undefined {
   return PADROES.find(([, padrao]) => padrao.test(texto))?.[0];
 }
 
+export const MARCA_REDIGIDA = '[redigido]';
+
+const VALOR_NA_QUERY = /([?&](?:access_token|token|password|passwd|secret|api_key|apikey)=)[^&\s#]*/gi;
+const CREDENCIAL_NA_URL = /([a-z][a-z0-9+.-]*:\/\/)[^/\s@]+@/gi;
+/** Padrões que a redação trata à parte (têm valor ou credencial depois do trecho casado). */
+const TRATADOS_A_PARTE = new Set(['url com credencial', 'token na query']);
+
+/** Resto de segredo depois de redigir: os dois padrões tratados à parte só contam se o valor não for a marca. */
+function sobrouSegredo(texto: string): boolean {
+  return (
+    PADROES.some(([nome, padrao]) => !TRATADOS_A_PARTE.has(nome) && padrao.test(texto)) ||
+    /[?&](?:access_token|token|password|passwd|secret|api_key|apikey)=(?!\[redigido\])/i.test(texto) ||
+    /[a-z][a-z0-9+.-]*:\/\/(?!\[redigido\]@)[^/\s@]+@/i.test(texto)
+  );
+}
+
+/**
+ * Troca por `[redigido]` o que parece segredo (exportação de telemetria, ADR-0029). Se ainda sobrar algo com cara de
+ * segredo, o texto inteiro vira a marca: na dúvida, nada sai.
+ */
+export function redigirSegredos(texto: string): string {
+  let r = texto.replace(VALOR_NA_QUERY, `$1${MARCA_REDIGIDA}`).replace(CREDENCIAL_NA_URL, `$1${MARCA_REDIGIDA}@`);
+  for (const [nome, padrao] of PADROES) {
+    if (!TRATADOS_A_PARTE.has(nome)) r = r.replace(new RegExp(padrao.source, `${padrao.flags}g`), MARCA_REDIGIDA);
+  }
+  return sobrouSegredo(r) ? MARCA_REDIGIDA : r;
+}
+
 /** Percorre o valor e acusa cada string (ou chave) que parece segredo, com o JSON Pointer dela. */
 export function procurarSegredos(valor: unknown, caminho: string, erros: ErroDeContrato[]): void {
   if (typeof valor === 'string') {

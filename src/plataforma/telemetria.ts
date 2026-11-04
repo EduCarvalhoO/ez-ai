@@ -1,0 +1,42 @@
+// Enviador OTLP/HTTP da telemetria (ADR-0029). Única parte do harness que abre conexão para um coletor, e só quando
+// o comando `export` o chama com `telemetria` ligada na configuração. O valor do cabeçalho vem da variável de
+// ambiente nomeada na configuração; nunca é lido pelo núcleo, gravado ou impresso.
+import type { EnviadorDeTelemetria } from '../core/index.js';
+import { problemaNoEndpoint } from '../core/telemetria/endpoint.js';
+
+type Buscar = (url: string, init: RequestInit) => Promise<{ readonly status: number }>;
+
+export interface OpcoesDoEnviador {
+  readonly ambiente?: NodeJS.ProcessEnv;
+  readonly buscar?: Buscar;
+  readonly limiteMs?: number;
+}
+
+export function criarEnviadorOtlp(o: OpcoesDoEnviador = {}): EnviadorDeTelemetria {
+  const ambiente = o.ambiente ?? process.env;
+  const buscar: Buscar = o.buscar ?? ((url, init) => fetch(url, init));
+  return {
+    async enviar(pedido) {
+      const problema = problemaNoEndpoint(pedido.endpoint);
+      if (problema) throw new Error(`endpoint recusado: ${problema}`);
+      const cabecalhos: Record<string, string> = { 'content-type': 'application/json' };
+      if (pedido.variavelDoToken !== undefined) {
+        const valor = ambiente[pedido.variavelDoToken];
+        if (valor === undefined || valor === '') {
+          throw new Error(`a variável de ambiente ${pedido.variavelDoToken} não está definida`);
+        }
+        if (/[\r\n]/.test(valor)) throw new Error(`o valor de ${pedido.variavelDoToken} tem quebra de linha`);
+        cabecalhos.authorization = valor;
+      }
+      const url = new URL(pedido.endpoint).toString();
+      // Sem redirecionamento (o cabeçalho de autorização não segue para outro host) e com prazo.
+      return buscar(url, {
+        method: 'POST',
+        headers: cabecalhos,
+        body: pedido.corpo,
+        redirect: 'error',
+        signal: AbortSignal.timeout(o.limiteMs ?? 15_000),
+      });
+    },
+  };
+}

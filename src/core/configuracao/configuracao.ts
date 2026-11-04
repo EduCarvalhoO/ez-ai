@@ -11,6 +11,7 @@ import {
   procurarInvisiveis,
 } from '../manifesto/manifesto.js';
 import { LIMITES, LIMITES_AJUSTAVEIS } from '../manifesto/schema.js';
+import { problemaNoEndpoint } from '../telemetria/endpoint.js';
 import { canonizarRepositorio, lerOrigem, ORIGENS_OFICIAIS, type Origem, pastaDentroDe } from './origem.js';
 import { SCHEMA_DA_CONFIGURACAO } from './schema.js';
 
@@ -39,6 +40,8 @@ export interface Configuracao {
   readonly policyDaOrganizacao?: string;
   /** Logins ou `@org/time` que aprovam a aprovação própria no PR; vazio = o que a proteção de branch exigir. */
   readonly aprovadores: readonly string[];
+  /** Exportação opt-in de telemetria (ADR-0029); ausente = desligada, zero rede. */
+  readonly telemetria?: { readonly endpoint: string; readonly variavelDoToken?: string };
 }
 
 type Json = Record<string, unknown>;
@@ -74,6 +77,16 @@ function configuracaoDe(dado: Json): Configuracao {
     ),
     ...(typeof dado.policyDaOrganizacao === 'string' ? { policyDaOrganizacao: dado.policyDaOrganizacao } : {}),
     aprovadores: lista<unknown>(dado.aprovadores).map(String),
+    ...(typeof dado.telemetria === 'object' && dado.telemetria !== null
+      ? { telemetria: telemetriaDe(dado.telemetria as Json) }
+      : {}),
+  };
+}
+
+function telemetriaDe(t: Json): NonNullable<Configuracao['telemetria']> {
+  return {
+    endpoint: String(t.endpoint),
+    ...(typeof t.variavelDoToken === 'string' ? { variavelDoToken: t.variavelDoToken } : {}),
   };
 }
 
@@ -154,6 +167,11 @@ function regrasSemanticas(dado: Json, config: Configuracao): ErroDeContrato[] {
         'a policy da organização vem de uma origem do GitHub permitida, nunca de pasta local (editável no projeto)',
       );
     }
+  }
+
+  if (config.telemetria) {
+    const problema = problemaNoEndpoint(config.telemetria.endpoint);
+    if (problema) falha('/telemetria/endpoint', 'endpoint-de-telemetria', problema);
   }
 
   for (const [nome, valor] of Object.entries(config.limites)) {
