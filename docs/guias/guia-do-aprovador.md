@@ -22,6 +22,9 @@ O agente pode usar o `gh` da sua conta para aprovar o próprio PR. Na sessão on
 - Aprove pela interface do GitHub, em outro navegador ou perfil, nunca por comando dentro da sessão do agente.
 - Defina `GITHUB_TOKEN` só no job de CI (`pull-requests: read`, `checks: read`); leia times (`@org/time`) exige escopo extra, senão o job avisa e só logins diretos contam.
 
+## Modelos
+O workflow e o ruleset prontos estão em [docs/modelos/aprovacao.yml](../modelos/aprovacao.yml) e [docs/modelos/ruleset.json](../modelos/ruleset.json). Copie para o projeto (o repositório do harness não tem `.harness/` próprio, então o job não roda nele), proteja o workflow com CODEOWNERS e aplique o ruleset em Settings, Rules. O harness do job vem do npm em versão fixa, nunca do código do PR.
+
 ## Chamada do job
 ```bash
 harness-ai validate --servidor --base origin/develop --repo dono/repo --pr 12 --exigir-evidencias --checks "qualidade,workflows"

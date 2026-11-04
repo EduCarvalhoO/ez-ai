@@ -48,6 +48,7 @@
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
 | [guias/guia-do-aprovador.md](guias/guia-do-aprovador.md) | Como aprovar PR com aprovação própria: review no SHA da head, dois aprovadores, token de escopo mínimo e chamada do job |
+| [modelos/aprovacao.yml](modelos/aprovacao.yml) | Modelo do workflow do job de servidor e do ruleset ([modelos/ruleset.json](modelos/ruleset.json)) para copiar num projeto |
 | [specs/auditoria-e-evidencias.md](specs/auditoria-e-evidencias.md) | Evento de auditoria v0: envelope, tipos, evidência, consumo, encadeamento, aprovação própria e recusa de segredo |
 | [specs/base-de-conhecimento.md](specs/base-de-conhecimento.md) | Base de conhecimento (RAG) v0: fontes declaradas, chunk, resultado, limites, avaliação e 30 perguntas de referência |
 | [specs/configuracao-e-lockfile.md](specs/configuracao-e-lockfile.md) | Configuração do projeto e lockfile v0: origens permitidas, pastas locais, limites só reduzíveis, retrato de permissões e hash de conteúdo |
