@@ -1,0 +1,182 @@
+[
+  {
+    "id": "mapa-nucleo-sem-io",
+    "pergunta": "Por que o núcleo não faz I/O?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md"]
+  },
+  {
+    "id": "regras-de-dependencia",
+    "pergunta": "Onde ficam as regras de dependência entre camadas?",
+    "tipo": "onde-fica",
+    "esperado": ["docs/arquitetura/mapa-de-modulos.md"]
+  },
+  {
+    "id": "niveis-de-enforcement",
+    "pergunta": "Quais são os níveis de enforcement de governança?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0016-governanca-por-nivel-de-enforcement.md"]
+  },
+  {
+    "id": "dono-do-pacote",
+    "pergunta": "Como se define quem é dono de um pacote?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0017-propriedade-de-pacotes-por-identidade-github.md"]
+  },
+  {
+    "id": "invariantes-instalacao",
+    "pergunta": "Que invariantes de segurança valem na instalação?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0018-invariantes-de-seguranca-da-instalacao.md"]
+  },
+  {
+    "id": "validador-cfworker",
+    "pergunta": "Por que o validador de JSON Schema escolhido foi o cfworker?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0019-validacao-de-contratos-com-cfworker-json-schema.md"]
+  },
+  {
+    "id": "policy-afrouxar",
+    "pergunta": "Uma policy pode afrouxar regra do núcleo?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0020-policy-declarativa-so-restritiva-com-precedencia.md"]
+  },
+  {
+    "id": "auditoria-adulteracao",
+    "pergunta": "Como o log de auditoria detecta adulteração?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md"]
+  },
+  {
+    "id": "formato-manifesto",
+    "pergunta": "Onde está o formato do manifesto de pacote?",
+    "tipo": "onde-fica",
+    "esperado": ["docs/specs/manifesto-de-pacote.md"]
+  },
+  {
+    "id": "formato-lockfile",
+    "pergunta": "Onde está o formato do lockfile?",
+    "tipo": "onde-fica",
+    "esperado": ["docs/specs/configuracao-e-lockfile.md"]
+  },
+  {
+    "id": "precedencia-policy",
+    "pergunta": "Onde está a precedência núcleo, organização, projeto e pacote?",
+    "tipo": "onde-fica",
+    "esperado": ["docs/specs/policy.md"]
+  },
+  {
+    "id": "etapas-e-gates",
+    "pergunta": "Onde ficam as etapas e gates do pipeline agêntico?",
+    "tipo": "onde-fica",
+    "esperado": ["docs/specs/pipeline-agentico.md"]
+  },
+  {
+    "id": "ameacas-altas",
+    "pergunta": "Quais ameaças altas o modelo de ameaças cobre?",
+    "tipo": "conceito",
+    "esperado": ["docs/arquitetura/modelo-de-ameacas.md"]
+  },
+  {
+    "id": "claude-vs-copilot",
+    "pergunta": "O que Claude Code e Copilot suportam de cada componente?",
+    "tipo": "conceito",
+    "esperado": ["docs/arquitetura/matriz-de-capacidades.md"]
+  },
+  {
+    "id": "pacote-unico",
+    "pergunta": "Por que pacote único e não monorepo?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0010-pacote-unico-com-fronteiras-internas.md"]
+  },
+  {
+    "id": "licenca",
+    "pergunta": "Qual é a licença e por quê?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0012-licenca-fsl-e-modelo-open-core.md"]
+  },
+  {
+    "id": "destino-dos-prs",
+    "pergunta": "Para onde os PRs devem apontar?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0013-fluxo-de-branches-develop-para-main.md"]
+  },
+  {
+    "id": "economia-de-tokens",
+    "pergunta": "Quais regras de economia de tokens a esteira segue?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0014-economia-de-tokens-no-pipeline-agentico.md"]
+  },
+  {
+    "id": "workflow-mvp",
+    "pergunta": "Por que o workflow do MVP é feature com gates?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0006-workflow-mvp-feature-com-gates.md"]
+  },
+  {
+    "id": "distribuicao-de-pacotes",
+    "pergunta": "Como pacotes são distribuídos e travados?",
+    "tipo": "conceito",
+    "esperado": ["docs/adr/0005-distribuicao-git-lockfile.md"]
+  },
+  {
+    "id": "hash-encadeado",
+    "pergunta": "Onde se calcula o hash encadeado do log de auditoria?",
+    "tipo": "identificador",
+    "esperado": ["src/core/auditoria/cadeia.ts"]
+  },
+  {
+    "id": "validar-manifesto",
+    "pergunta": "Onde se valida o manifesto contra o schema?",
+    "tipo": "identificador",
+    "esperado": ["src/core/manifesto/manifesto.ts"]
+  },
+  {
+    "id": "avaliar-policy",
+    "pergunta": "Onde se avalia uma policy?",
+    "tipo": "identificador",
+    "esperado": ["src/core/policy/avaliar.ts"]
+  },
+  {
+    "id": "afrouxamentos",
+    "pergunta": "Onde se detectam afrouxamentos de policy?",
+    "tipo": "identificador",
+    "esperado": ["src/core/policy/afrouxamentos.ts"]
+  },
+  {
+    "id": "permissoes-versoes",
+    "pergunta": "Onde se comparam permissões entre versões de um pacote?",
+    "tipo": "identificador",
+    "esperado": ["src/core/manifesto/permissoes.ts"]
+  },
+  {
+    "id": "hash-lockfile",
+    "pergunta": "Onde se calcula o hash de conteúdo do lockfile?",
+    "tipo": "identificador",
+    "esperado": ["src/core/lockfile/hash.ts"]
+  },
+  {
+    "id": "mascarar-segredos",
+    "pergunta": "Onde se mascaram segredos antes de gravar evidência?",
+    "tipo": "identificador",
+    "esperado": ["src/core/auditoria/segredos.ts"]
+  },
+  {
+    "id": "padrao-de-commits",
+    "pergunta": "Onde está o padrão de commits e branches?",
+    "tipo": "onde-fica",
+    "esperado": ["docs/guias/padrao-de-codigo-e-testes.md"]
+  },
+  {
+    "id": "checklist-seguranca",
+    "pergunta": "Onde está o checklist de revisão de segurança?",
+    "tipo": "onde-fica",
+    "esperado": ["docs/guias/revisao-de-seguranca.md"]
+  },
+  {
+    "id": "papeis-do-time",
+    "pergunta": "Onde estão os papéis e gates do time de agentes?",
+    "tipo": "onde-fica",
+    "esperado": ["docs/guias/time-de-agentes.md"]
+  }
+]

@@ -9,7 +9,7 @@ import { hashDoConteudo } from '../lockfile/hash.js';
 import { arquivosParaHash } from '../lockfile/integridade.js';
 import { type Lockfile, validarLockfile } from '../lockfile/lockfile.js';
 import { type Manifesto, validarManifesto } from '../manifesto/manifesto.js';
-import type { EnviadorDeTelemetria, Git, SistemaDeArquivos } from '../portas/index.js';
+import type { EnviadorDeTelemetria, Git, IndiceDeBusca, SistemaDeArquivos } from '../portas/index.js';
 import { resolverVersao } from '../resolucao/semver.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
 
@@ -23,6 +23,8 @@ export interface Contexto extends ContextoDeAuditoria {
   readonly adapters?: readonly Adapter[];
   /** Porta de rede da telemetria (ADR-0029); só o comando `export` a usa. Sem ela, nada sai da máquina. */
   readonly enviador?: EnviadorDeTelemetria;
+  /** Índice C1 da base de conhecimento (ADR-0032); ausente quando `node:sqlite` não existe no Node em uso. */
+  readonly indice?: IndiceDeBusca;
 }
 
 export const PASTA_DOS_PACOTES = '.harness/pacotes';
