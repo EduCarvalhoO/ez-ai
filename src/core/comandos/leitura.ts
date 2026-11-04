@@ -65,6 +65,8 @@ export interface OpcoesDeValidacao {
   readonly ci?: boolean;
   /** Gate de evidências (ficha 7): falha se o resumo do log local não estiver `confirmado`. */
   readonly exigirEvidencias?: boolean;
+  /** Chamado pelo job de servidor, que compara com a base (ADR-0028): some o aviso de que o CI não compara. */
+  readonly servidor?: boolean;
 }
 
 /** `validate`: contratos, origens permitidas e integridade de cada pacote travado, lido do commit travado. */
@@ -125,9 +127,9 @@ export function validar(ctx: Contexto, opcoes: OpcoesDeValidacao = {}): Promise<
       }
     }
     if (problemas.length > 0) return { codigo: 1, saida, erros: problemas, pacotes };
-    if (opcoes.ci) {
+    if (opcoes.ci && !opcoes.servidor) {
       saida.push(
-        'aviso: o CI não recalcula afrouxamento de policy entre versões nem compara policy/config com a branch base; isso é do job de servidor (ADR-0026).',
+        'aviso: o CI não recalcula afrouxamento de policy entre versões nem compara policy/config com a branch base; isso é do job de servidor (`validate --servidor`, ADR-0028).',
       );
     }
     saida.unshift(
@@ -299,6 +301,15 @@ export function diagnosticar(ctx: Contexto): Promise<ResultadoDoComando> {
       if (soltos.length > 0) {
         saida.push(`aviso  ${soltos.length} pacote(s) fora do lockfile ou diferentes dele; rode "harness-ai plan".`);
       }
+    }
+    if (config.ok && config.valor.pacotes.length > 0 && config.valor.aprovadores.length === 0) {
+      saida.push(
+        'aviso  aprovação própria não imposta: `aprovadores` vazio; defina-os e ligue o job de servidor (ADR-0028).',
+      );
+    } else if (config.ok && config.valor.aprovadores.length === 1) {
+      saida.push(
+        'aviso  só um aprovador: itens com executável ou arquivo de ambiente não têm segundo aprovador (S-aud1).',
+      );
     }
     if (config.ok && config.valor.pacotes.length > 0) {
       saida.push(...avisosGeraisDosAmbientes(ctx, config.valor.ambientes).map((m) => `aviso  ${m}`));

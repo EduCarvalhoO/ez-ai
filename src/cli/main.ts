@@ -16,8 +16,16 @@ import {
   type ResultadoDoComando,
   remover,
   validar,
+  validarNoServidor,
 } from '../core/index.js';
-import { criarArquivos, criarGit, criarIdentidade, relogioDoSistema } from '../plataforma/index.js';
+import {
+  criarArquivos,
+  criarGit,
+  criarIdentidade,
+  criarLeitorDaBase,
+  criarProvedorDoPr,
+  relogioDoSistema,
+} from '../plataforma/index.js';
 
 // dist/cli/main.js (ou src/cli/main.ts nos testes) -> ../../package.json (raiz do pacote).
 const caminhoDoPacote = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'package.json');
@@ -48,6 +56,8 @@ const USO = [
   '  apply [pacote...]                     instala o que a configuração pede (reproduz o lockfile)',
   '  update [pacote...]                    resolve de novo dentro do intervalo pedido',
   '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
+  '  validate --ci          recalcula policy e aprovações a partir do commit travado',
+  '  validate --servidor    (job de CI) compara com a base: --base <ref> [--pr <n>] [--sha <sha>] [--repo <dono/repo>] [--checks a,b] [--exigir-evidencias]; token em GITHUB_TOKEN',
   '  --dry-run              mostra o que seria feito sem gravar',
   '  --aprovar <id>         (apply/update) aprova um item de aprovação própria pelo id; repita a flag por item',
   '  --forcar               (apply/update/remove) sobrescreve ou apaga arquivo instalado editado à mão, guardando cópia em .harness/local/',
@@ -67,6 +77,12 @@ interface Argumentos {
   readonly aceitarPermissoes: boolean;
   readonly ci: boolean;
   readonly exigirEvidencias: boolean;
+  readonly servidor: boolean;
+  readonly base?: string;
+  readonly pr?: number;
+  readonly sha?: string;
+  readonly repo?: string;
+  readonly checks: readonly string[];
 }
 
 /** Quantos argumentos soltos (sem `--`) cada comando aceita; `undefined` = qualquer quantidade. */
@@ -95,6 +111,12 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
   let aceitarPermissoes = false;
   let ci = false;
   let exigirEvidencias = false;
+  let servidor = false;
+  let base: string | undefined;
+  let pr: number | undefined;
+  let sha: string | undefined;
+  let repo: string | undefined;
+  let checks: string[] = [];
   let ambientes: string[] | undefined;
   let versao: string | undefined;
   const aprovar: string[] = [];
@@ -111,6 +133,13 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     else if (a === '--forcar' && (instala || cmd === 'remove')) forcar = true;
     else if (a === '--ci' && cmd === 'validate') ci = true;
     else if (a === '--exigir-evidencias' && cmd === 'validate') exigirEvidencias = true;
+    else if (a === '--servidor' && cmd === 'validate') servidor = true;
+    else if (a === '--base' && valor !== undefined && cmd === 'validate') base = resto[++i];
+    else if (a === '--pr' && valor !== undefined && cmd === 'validate') pr = Number(resto[++i]);
+    else if (a === '--sha' && valor !== undefined && cmd === 'validate') sha = resto[++i];
+    else if (a === '--repo' && valor !== undefined && cmd === 'validate') repo = resto[++i];
+    else if (a === '--checks' && valor !== undefined && cmd === 'validate')
+      checks = (resto[++i] ?? '').split(',').filter(Boolean);
     else if (a === '--aceitar-permissoes' && instala) aceitarPermissoes = true;
     else if (!a.startsWith('--')) posicionais.push(a);
     else return `argumento(s) não reconhecido(s): ${resto.slice(i).join(' ')}`;
@@ -122,6 +151,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
   if ((cmd === 'add' || cmd === 'remove') && posicionais.length !== 1) {
     return cmd === 'add' ? '"add" precisa de uma origem' : '"remove" precisa do nome do pacote (login/pacote)';
   }
+  if (servidor && (!base || !repo)) return '--servidor precisa de --base <ref> e --repo <dono/repo>';
+  if (pr !== undefined && !Number.isInteger(pr)) return '--pr precisa de um número';
   const gravaArquivos = cmd !== 'list' && cmd !== 'validate' && cmd !== 'doctor';
   if (dryRun && !gravaArquivos) return `--dry-run não se aplica a "${cmd}" (ele não altera arquivos)`;
   return {
@@ -134,6 +165,12 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     aceitarPermissoes,
     ci,
     exigirEvidencias,
+    servidor,
+    checks,
+    ...(base ? { base } : {}),
+    ...(pr !== undefined ? { pr } : {}),
+    ...(sha ? { sha } : {}),
+    ...(repo ? { repo } : {}),
     ...(ambientes ? { ambientes } : {}),
     ...(versao ? { versao } : {}),
   };
@@ -210,6 +247,19 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
     case 'list':
       return listar(ctx);
     case 'validate':
+      if (a.servidor) {
+        return validarNoServidor(ctx, {
+          base: criarLeitorDaBase(a.base ?? '', ctx.arquivos.raiz),
+          pr: criarProvedorDoPr({
+            repositorio: a.repo ?? '',
+            ...(a.pr !== undefined ? { pr: a.pr } : {}),
+            ...(a.sha ? { sha: a.sha } : {}),
+            token: process.env.GITHUB_TOKEN ?? '',
+          }),
+          exigirEvidencias: a.exigirEvidencias,
+          checksExigidos: a.checks,
+        });
+      }
       return validar(ctx, { ci: a.ci, exigirEvidencias: a.exigirEvidencias });
     case 'plan':
       return planejar(ctx);

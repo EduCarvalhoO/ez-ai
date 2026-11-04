@@ -118,6 +118,8 @@ Entregas:
 
 **Andamento (sprint 06, 2026-11-02):** hooks e MCP de pacote no Claude Code, mesclados em `.claude/settings.json` e `.mcp.json` com hook fail-closed ([ADR-0027](adr/0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md)). Pendente: job de servidor (aprovadores, CODEOWNERS, ruleset, S-aud1, `--exigir-evidencias` conferido) na sprint 07; hooks/MCP do Copilot após o spike do M2.
 
+**Andamento (sprint 07, 2026-11-04):** job de servidor: `validate --servidor` compara aprovadores, policy do projeto, config e lockfile com a branch base, exige review de aprovador no SHA da head (dois para item perigoso quando há 2+ aprovadores, S-aud1) e confere os checks do CI pela API; o `plan` mostra evento, comando e diff de script dos hooks ([ADR-0028](adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md)). Workflow, CODEOWNERS e ruleset em `.github/` só com autorização escrita; ruleset aplicado pelo Eduardo no GitHub. Pendente: hooks/MCP do Copilot após o spike do M2.
+
 Critérios de saída: suíte de testes de policies (casos permitidos/negados); nenhum gate ignorado aparece como aprovado; adulteração do log detectada por `doctor`.
 
 ## F5 — Observabilidade e evals (S18–S19)

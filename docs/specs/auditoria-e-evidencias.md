@@ -75,7 +75,7 @@ Log em `.harness/auditoria/AAAA-MM.jsonl`, **não versionado** (a F2 grava `.har
 - **Local (F2):** a CLI recusa `--aprovar` com `CLAUDECODE=1`; é heurística (o agente pode editar o `lock.json`). Até o job da F4 existir, o `plan` mostra "aprovação própria: só pedido" (nível `ausente`).
 - **Imposta (F4):** job obrigatório de CI que (1) lê `aprovadores`, policy e CODEOWNERS da **branch base**, nunca da head; mudar `aprovadores` exige code owner e não pode vir no mesmo PR que acrescenta ids; (2) conta só review `APPROVED` no SHA da head, de aprovador que não é o autor do PR, nem bot, nem quem fez o último push (ruleset com "dismiss stale approvals" e "require approval of most recent push"); (3) roda em `pull_request`, `pull_request_review` e no push à `develop`/`main` (pega bypass de admin). Sem `aprovadores` e sem review obrigatória, o `plan` avisa "aprovação própria não imposta".
 - `aprovadores` (configuração, opcional): logins do GitHub ou `@org/time`. O workflow do job entra nos arquivos de enforcement com CODEOWNERS.
-- **Risco residual S-aud1:** o agente usa o token `gh` da pessoa aprovadora para aprovar um PR aberto por outra conta. A avaliar na F4: dois aprovadores para `comp/*` com `executavel` ou `configurarAmbiente`; token de escopo mínimo na sessão do agente.
+- **Risco residual S-aud1:** o agente usa o token `gh` da pessoa aprovadora para aprovar um PR aberto por outra conta. Decidido no [ADR-0028](../adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md): dois aprovadores para `comp/*` com `executar` ou `configurarAmbiente` quando `aprovadores` tem 2 ou mais; token de escopo mínimo na sessão do agente.
 
 ### Recusa de segredo (I1)
 `validarEvento` busca em **cada string e chave depois do parse** (pega escape `p`), com fronteira de palavra: URL com credencial (`://user@`), query com `token=`/`access_token=`/`password=`/`secret=`; prefixos `ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_`, `github_pat_`, `sk-ant-`, `sk-…`, `npm_`, `AIza`, `AKIA`, `ASIA`, `xox[abposr]-`, `Bearer `, chave privada PEM e JWT. `disk-usage` e `task-runner` passam. Lista heurística: a F2 redige antes de gravar e o validador é a segunda barreira (evento recusado, nunca gravado).
@@ -91,5 +91,5 @@ Log em `.harness/auditoria/AAAA-MM.jsonl`, **não versionado** (a F2 grava `.har
 ## Em aberto
 - Gravar, rotacionar e travar escrita concorrente: F2.
 - Âncora da cabeça fora do alcance do agente e assinatura de eventos: F4/F7.
-- Quantos aprovadores `comp/*` com `executavel` exigem (S-aud1): F4.
+- Quantos aprovadores `comp/*` com `executavel` exigem (S-aud1): dois, se a base tiver 2 ou mais ([ADR-0028](../adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md)).
 - Detecção de "rodando dentro do agente" no Copilot (não há variável documentada): F3.
