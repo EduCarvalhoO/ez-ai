@@ -39,7 +39,10 @@ const bool = (key: string, v: unknown): Atributo[] =>
 const hex = (texto: string, tamanho: number): string =>
   createHash('sha256').update(texto, 'utf8').digest('hex').slice(0, tamanho);
 
-const nano = (iso: string): string => String(BigInt(Date.parse(iso)) * 1_000_000n);
+const nano = (iso: string): string => {
+  const ms = Date.parse(iso);
+  return String(BigInt(Number.isFinite(ms) ? ms : 0) * 1_000_000n);
+};
 
 function atributosDe(e: EventoDeAuditoria): Atributo[] {
   const d = e.dados as Json;
@@ -76,6 +79,8 @@ function atributosDe(e: EventoDeAuditoria): Atributo[] {
       ...txt('harness.agente', d.agente),
       ...num('harness.ciclo', d.ciclo),
       ...num('harness.rodada', d.rodada),
+      ...txt('harness.consumo.fonte', c.fonte),
+      ...txt('harness.consumo.agente', c.agente),
       ...txt('gen_ai.request.model', c.modelo),
       ...num('gen_ai.usage.input_tokens', c.tokensEntrada),
       ...num('gen_ai.usage.output_tokens', c.tokensSaida),

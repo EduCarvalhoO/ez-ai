@@ -3,5 +3,5 @@
 export { criarArquivos } from './arquivos.js';
 export { criarGit } from './git.js';
 export { criarLeitorDaBase, criarProvedorDoPr } from './servidor.js';
-export { criarEnviadorOtlp } from './telemetria.js';
 export { criarIdentidade, relogioDoSistema } from './sistema.js';
+export { criarEnviadorOtlp } from './telemetria.js';

@@ -95,7 +95,7 @@
         "variavelDoToken": {
           "type": "string",
           "maxLength": 64,
-          "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+          "pattern": "^(?:LANGFUSE|HARNESS_TELEMETRIA)_[A-Z0-9_]{1,50}$"
         }
       }
     },

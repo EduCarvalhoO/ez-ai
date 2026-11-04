@@ -5,7 +5,7 @@ import { procurarSegredos } from '../auditoria/segredos.js';
 import type { ErroDeContrato } from '../contratos/resultado.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import { montarPayloadOtlp } from '../telemetria/otlp.js';
-import { carregarConfiguracao, type Contexto, type ResultadoDoComando } from './base.js';
+import { type Contexto, carregarConfiguracao, type ResultadoDoComando } from './base.js';
 
 export const CAMINHO_DO_MARCADOR = `${PASTA_DA_AUDITORIA}/.exportado.json`;
 const SPANS_POR_REQUISICAO = 100;
@@ -18,7 +18,7 @@ const falha = (...erros: string[]): ResultadoDoComando => ({ codigo: 1, saida: [
 
 /** Último `seq` já entregue; marcador ausente ou ilegível vale 0 (reenviar é seguro, perder não). */
 async function lerMarcador(ctx: Contexto): Promise<number> {
-  if (!(await ctx.arquivos.existe(CAMINHO_DO_MARCADOR))) return 0;
+  // Sem checar antes e ler depois (mesmo caminho): ler direto e tratar a ausencia no catch.
   try {
     const seq: unknown = (JSON.parse(await ctx.arquivos.ler(CAMINHO_DO_MARCADOR)) as { seq?: unknown }).seq;
     return typeof seq === 'number' && Number.isInteger(seq) && seq >= 0 ? seq : 0;
@@ -39,6 +39,12 @@ export async function exportarTelemetria(ctx: Contexto, opcoes: OpcoesDeExportac
   const lido = await lerAuditoria(ctx.arquivos);
   if (!lido.ok) return falha(escaparInvisiveis(lido.mensagem));
   const marcador = await lerMarcador(ctx);
+  const maximo = lido.eventos.at(-1)?.seq ?? 0;
+  if (marcador > maximo) {
+    return falha(
+      `o marcador (${marcador}) esta alem do ultimo evento do log (${maximo}); apague  se o log foi recriado. Nada foi enviado.`,
+    );
+  }
   const pendentes = lido.eventos.filter((e) => e.seq > marcador);
   if (pendentes.length === 0) return { codigo: 0, saida: ['nada novo para exportar.'], erros: [] };
 
@@ -57,7 +63,7 @@ export async function exportarTelemetria(ctx: Contexto, opcoes: OpcoesDeExportac
       );
     }
   }
-  const resumo = `${pendentes.length} evento(s) em ${lotes.length} requisição(ões) para ${destino.endpoint}`;
+  const resumo = `${pendentes.length} evento(s) em ${lotes.length} requisição(ões) para ${destino.endpoint} (token na variavel ${destino.variavelDoToken ?? 'nenhuma'})`;
   if (opcoes.dryRun) return { codigo: 0, saida: [`dry-run: enviaria ${resumo}; nada foi enviado.`], erros: [] };
   const enviador = ctx.enviador;
   if (!enviador) return falha('esta instalação não tem enviador de telemetria; nada foi enviado.');

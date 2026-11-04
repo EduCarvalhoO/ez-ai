@@ -35,6 +35,7 @@
 | [0027](0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md) | Hooks e MCP de pacote mesclados em arquivos compartilhados (Claude Code) | Aceito |
 | [0028](0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md) | Job de servidor: aprovadores da base, S-aud1 e evidência de CI | Aceito |
 | [0029](0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md) | Exportação opt-in da auditoria como spans OTLP para o Langfuse | Aceito |
+| [0030](0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md) | Langfuse self-host, consumo por agente, métricas da base e correções da revisão de segurança | Aceito |
 
 ## Decisões em aberto
 
