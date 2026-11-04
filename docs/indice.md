@@ -1,6 +1,6 @@
 # Índice da documentação
 
-> Status: Vivo · Atualizado: 2026-11-02 · Relacionados: [padrão de documentação](guias/padrao-de-documentacao.md)
+> Status: Vivo · Atualizado: 2026-11-04 · Relacionados: [padrão de documentação](guias/padrao-de-documentacao.md)
 >
 > Leia este índice primeiro e abra só os documentos de que precisar. Uma linha por documento; ao criar ou mudar um doc, atualize a linha no mesmo PR (a skill `validar-docs` confere).
 
@@ -36,6 +36,7 @@
 | [adr/0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md](adr/0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md) | ADR-0025: contrato de adapter, projeção em `.claude/` e `.github/` só em arquivos do harness, frontmatter perigoso recusado, diff de instruções no `plan`/`update` |
 | [adr/0026-policy-ligada-ao-plan-apply-e-gate-de-validate-ci.md](adr/0026-policy-ligada-ao-plan-apply-e-gate-de-validate-ci.md) | ADR-0026: policy dos quatro níveis no `plan`/`apply`/`update`, falha fechada, `validate --ci` e gate de evidências `confirmado` |
 | [adr/0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md](adr/0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md) | ADR-0027: hooks e MCP de pacote mesclados em `.claude/settings.json` e `.mcp.json`, hook fail-closed, MCP só com comando do manifesto |
+| [adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md](adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md) | ADR-0028: `validate --servidor` compara com a base (aprovadores, policy, config), exige review de aprovador no SHA da head e confere o CI pela API; S-aud1 em camadas |
 | [arquitetura/spike-enforcement-copilot.md](arquitetura/spike-enforcement-copilot.md) | Spike do Copilot: procedimento de teste manual no VS Code (resultados pendentes) |
 | [arquitetura/spike-node-sqlite.md](arquitetura/spike-node-sqlite.md) | Spike: `node:sqlite` com FTS5 serve para a camada C1 do RAG; vetores não vêm embutidos |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
@@ -46,6 +47,8 @@
 | [guias/time-de-agentes.md](guias/time-de-agentes.md) | Papéis, fluxo com gates, handoffs, definição de pronto e encerramento (agente `painel`) e decisões didáticas (agente `professor`) |
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
+| [guias/guia-do-aprovador.md](guias/guia-do-aprovador.md) | Como aprovar PR com aprovação própria: review no SHA da head, dois aprovadores, token de escopo mínimo e chamada do job |
+| [modelos/aprovacao.yml](modelos/aprovacao.yml) | Modelo do workflow do job de servidor e do ruleset ([modelos/ruleset.json](modelos/ruleset.json)) para copiar num projeto |
 | [specs/auditoria-e-evidencias.md](specs/auditoria-e-evidencias.md) | Evento de auditoria v0: envelope, tipos, evidência, consumo, encadeamento, aprovação própria e recusa de segredo |
 | [specs/base-de-conhecimento.md](specs/base-de-conhecimento.md) | Base de conhecimento (RAG) v0: fontes declaradas, chunk, resultado, limites, avaliação e 30 perguntas de referência |
 | [specs/configuracao-e-lockfile.md](specs/configuracao-e-lockfile.md) | Configuração do projeto e lockfile v0: origens permitidas, pastas locais, limites só reduzíveis, retrato de permissões e hash de conteúdo |

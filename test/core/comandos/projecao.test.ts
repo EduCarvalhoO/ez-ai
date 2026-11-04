@@ -276,6 +276,16 @@ describe('hooks e MCP de pacote (ADR-0027)', () => {
     return { ctx, arquivos };
   }
 
+  it('o plan mostra evento e comando projetados e o diff do script citado em args', async () => {
+    const { ctx } = await comHook();
+    const r = await planejar(ctx);
+    const texto = [...r.saida, ...r.erros].join('\n');
+    expect(texto).toContain('hook lint: evento PreToolUse roda: node');
+    expect(texto).toContain('mcp gh: servidor eduardo-starter-gh roda: npx -y servidor@1.0.0');
+    expect(texto).toContain('script hooks/lint.mjs: 1 linha(s) mudada(s)');
+    expect(texto).toContain('+ process.exit(0)');
+  });
+
   it('mescla no settings.json e no .mcp.json sem tocar nas chaves do usuário, e o remove desfaz', async () => {
     const usuario = JSON.stringify({ permissions: { deny: ['Bash(rm *)'] } });
     const { ctx, arquivos } = await comHook({ '.claude/settings.json': usuario });

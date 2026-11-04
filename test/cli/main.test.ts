@@ -124,3 +124,20 @@ describe('main com comandos', () => {
     expect(c.stderr.join('')).toMatch(/sem contexto/);
   });
 });
+
+describe('validate --servidor (argumentos)', () => {
+  it('exige --base e --repo e recusa --pr não numérico', async () => {
+    const a = capturar();
+    expect(await main(['validate', '--servidor'], a.saidas)).toBe(2);
+    expect(a.stderr.join('')).toContain('--base');
+    const b = capturar();
+    expect(
+      await main(['validate', '--servidor', '--base', 'origin/develop', '--repo', 'o/r', '--pr', 'x'], b.saidas),
+    ).toBe(2);
+    expect(b.stderr.join('')).toContain('--pr');
+  });
+  it('a flag é só do validate', async () => {
+    const a = capturar();
+    expect(await main(['plan', '--servidor'], a.saidas)).toBe(2);
+  });
+});

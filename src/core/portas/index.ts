@@ -1,4 +1,5 @@
 import type { Consumo } from '../auditoria/evento.js';
+import type { CheckRun, DadosDoPr } from '../servidor/conferir.js';
 
 // Portas do núcleo (ADR-0015): interfaces que o núcleo pede para falar com o mundo.
 // Só tipos; as implementações com Node ficam em src/plataforma, e os testes usam versões em memória.
@@ -72,4 +73,16 @@ export interface JanelaDeConsumo {
  */
 export interface LeitorDeConsumo {
   ler(janela: JanelaDeConsumo): Promise<readonly Consumo[]>;
+}
+
+/** Leitura de arquivos da branch base do PR, não da cópia de trabalho (ADR-0028). `undefined` = o arquivo não existe lá. */
+export interface LeitorDaBase {
+  ler(caminho: string): Promise<string | undefined>;
+}
+
+/** Fatos do PR e do CI vindos do provedor Git (GitHub). Só leitura; usado só pelo job de servidor (ADR-0028). */
+export interface ProvedorDoPr {
+  /** `undefined` = o commit não pertence a nenhum PR (push direto). */
+  dados(times?: readonly string[]): Promise<DadosDoPr | undefined>;
+  checkRuns(sha: string): Promise<readonly CheckRun[]>;
 }
