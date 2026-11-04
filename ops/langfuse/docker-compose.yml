@@ -1,0 +1,97 @@
+# Langfuse v3 self-hosted para o harness-ai (ADR-0030). Uso local: tudo escuta só em 127.0.0.1.
+# Segredos vêm do arquivo .env (copie de .env.example); nenhum valor padrão inseguro fica aqui.
+# Passo a passo: docs/guias/runbook-langfuse.md
+name: harness-langfuse
+
+x-langfuse-env: &langfuse-env
+  DATABASE_URL: postgresql://langfuse:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@postgres:5432/langfuse
+  SALT: ${LANGFUSE_SALT:?defina LANGFUSE_SALT no .env}
+  ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY:?defina LANGFUSE_ENCRYPTION_KEY no .env}
+  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?defina NEXTAUTH_SECRET no .env}
+  NEXTAUTH_URL: http://localhost:3000
+  TELEMETRY_ENABLED: "false"
+  CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
+  CLICKHOUSE_URL: http://clickhouse:8123
+  CLICKHOUSE_USER: clickhouse
+  CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?defina CLICKHOUSE_PASSWORD no .env}
+  CLICKHOUSE_CLUSTER_ENABLED: "false"
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_AUTH: ${REDIS_AUTH:?defina REDIS_AUTH no .env}
+  LANGFUSE_USE_AZURE_BLOB: "false"
+  LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+  LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+  LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minio
+  LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD no .env}
+  LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
+  LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+  LANGFUSE_S3_EVENT_UPLOAD_PREFIX: events/
+
+services:
+  langfuse-web:
+    image: docker.io/langfuse/langfuse:${LANGFUSE_VERSION:-3}
+    depends_on: [postgres, clickhouse, redis, minio]
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      <<: *langfuse-env
+      # Sem cadastro aberto: o primeiro usuário é criado na tela e depois o cadastro é fechado (runbook).
+      AUTH_DISABLE_SIGNUP: ${AUTH_DISABLE_SIGNUP:-false}
+    restart: unless-stopped
+
+  langfuse-worker:
+    image: docker.io/langfuse/langfuse-worker:${LANGFUSE_VERSION:-3}
+    depends_on: [postgres, clickhouse, redis, minio]
+    ports:
+      - "127.0.0.1:3030:3030"
+    environment: *langfuse-env
+    restart: unless-stopped
+
+  clickhouse:
+    image: docker.io/clickhouse/clickhouse-server:24.12
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?defina CLICKHOUSE_PASSWORD no .env}
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+    restart: unless-stopped
+
+  minio:
+    image: docker.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    entrypoint: sh
+    command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD no .env}
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  redis:
+    image: docker.io/redis:7
+    command: --requirepass ${REDIS_AUTH:?defina REDIS_AUTH no .env} --maxmemory-policy noeviction
+    restart: unless-stopped
+
+  postgres:
+    image: docker.io/postgres:17
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: langfuse
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  clickhouse_data:
+  clickhouse_logs:
+  minio_data:

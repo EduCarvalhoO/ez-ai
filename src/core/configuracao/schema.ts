@@ -86,7 +86,11 @@ export const SCHEMA_DA_CONFIGURACAO = {
       required: ['endpoint'],
       properties: {
         endpoint: { type: 'string', maxLength: 200, pattern: '^https?://[^\\s/?#@]+(?:/[^\\s?#]*)?$' },
-        variavelDoToken: { type: 'string', maxLength: 64, pattern: '^[A-Z][A-Z0-9_]{0,63}$' },
+        variavelDoToken: {
+          type: 'string',
+          maxLength: 64,
+          pattern: '^(?:LANGFUSE|HARNESS_TELEMETRIA)_[A-Z0-9_]{1,50}$',
+        },
       },
     },
     limites: {

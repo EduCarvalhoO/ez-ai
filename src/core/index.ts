@@ -35,6 +35,7 @@ export { lerAuditoria, PASTA_DA_AUDITORIA, registrarEvento } from './auditoria/r
 export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
 export { pareceSegredo, redigirSegredos } from './auditoria/segredos.js';
 export type { Contexto, ResultadoDoComando } from './comandos/base.js';
+export { relatarCusto } from './comandos/custo.js';
 export type { OpcoesDeAdd, OpcoesDeInstalacao, OpcoesDeRemove } from './comandos/escrita.js';
 export {
   adicionar,
@@ -52,6 +53,8 @@ export { init } from './comandos/init.js';
 export { diagnosticar, listar, planejar, validar } from './comandos/leitura.js';
 export type { OpcoesDoServidor } from './comandos/servidor.js';
 export { validarNoServidor } from './comandos/servidor.js';
+export type { OpcoesDeExportacao } from './comandos/telemetria.js';
+export { exportarTelemetria } from './comandos/telemetria.js';
 export type {
   Configuracao,
   LimiteAjustavel,
@@ -62,6 +65,8 @@ export { limitesEfetivos, origemPermitida, validarConfiguracao } from './configu
 export type { Origem } from './configuracao/origem.js';
 export { ORIGENS_OFICIAIS } from './configuracao/origem.js';
 export { SCHEMA_DA_CONFIGURACAO } from './configuracao/schema.js';
+export type { MetricasDaBase, PerguntaDeReferencia, ResultadoDaBusca } from './conhecimento/metricas.js';
+export { calcularMetricasDaBase } from './conhecimento/metricas.js';
 export type { ErroDeContrato, Resultado } from './contratos/resultado.js';
 export type { ArquivoDoPacote } from './lockfile/hash.js';
 export { hashDoConteudo } from './lockfile/hash.js';
@@ -112,11 +117,6 @@ export { carregarPolicyDoCodigo, POLICY_DO_NUCLEO, REGRAS_DO_NUCLEO } from './po
 export type { CategoriaDePolicy, Efeito, Marca, NivelDePolicy, Policy, Regra } from './policy/policy.js';
 export { NIVEIS, validarPolicy } from './policy/policy.js';
 export { LIMITES_DA_POLICY, SCHEMA_DA_POLICY } from './policy/schema.js';
-export type { OpcoesDeExportacao } from './comandos/telemetria.js';
-export { exportarTelemetria } from './comandos/telemetria.js';
-export { problemaNoEndpoint } from './telemetria/endpoint.js';
-export type { PayloadOtlp, SpanOtlp } from './telemetria/otlp.js';
-export { eventoParaSpan, montarPayloadOtlp } from './telemetria/otlp.js';
 export type {
   EnviadorDeTelemetria,
   Evento,
@@ -134,3 +134,8 @@ export { intervaloDe, lerVersao, resolverVersao } from './resolucao/semver.js';
 export { escaparInvisiveis, exigirCaminhoDoProjeto, problemaNoCaminhoDoProjeto } from './seguranca/caminhos.js';
 export type { CheckRun, DadosDoPr, EntradaDoServidor, ResultadoDoServidor, ReviewDoPr } from './servidor/conferir.js';
 export { aprovadoresValidos, conferirNoServidor, minimoDeAprovadores } from './servidor/conferir.js';
+export type { ConsumoDoAgente } from './telemetria/consumo.js';
+export { formatarUsd, resumirConsumoPorAgente } from './telemetria/consumo.js';
+export { problemaNoEndpoint } from './telemetria/endpoint.js';
+export type { PayloadOtlp, SpanOtlp } from './telemetria/otlp.js';
+export { eventoParaSpan, montarPayloadOtlp } from './telemetria/otlp.js';

@@ -15,6 +15,7 @@ import {
   type OpcoesDeInstalacao,
   planejar,
   type ResultadoDoComando,
+  relatarCusto,
   remover,
   validar,
   validarNoServidor,
@@ -46,7 +47,19 @@ export function lerVersao(caminho: string = caminhoDoPacote): string {
   return pacote.version;
 }
 
-const COMANDOS = ['init', 'list', 'validate', 'plan', 'doctor', 'add', 'remove', 'update', 'apply', 'export'] as const;
+const COMANDOS = [
+  'init',
+  'list',
+  'validate',
+  'plan',
+  'doctor',
+  'add',
+  'remove',
+  'update',
+  'apply',
+  'export',
+  'custo',
+] as const;
 type Comando = (typeof COMANDOS)[number];
 
 const USO = [
@@ -58,6 +71,7 @@ const USO = [
   '  apply [pacote...]                     instala o que a configuração pede (reproduz o lockfile)',
   '  update [pacote...]                    resolve de novo dentro do intervalo pedido',
   '  export                                envia ao coletor OTLP (Langfuse) os eventos de auditoria novos; só com 	elemetria na configuração; --dry-run mostra sem enviar',
+  '  custo                                 mostra tokens e custo por agente, lidos da auditoria local (sem rede)',
   '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
   '  validate --ci          recalcula policy e aprovações a partir do commit travado',
   '  validate --servidor    (job de CI) compara com a base: --base <ref> [--pr <n>] [--sha <sha>] [--repo <dono/repo>] [--checks a,b] [--exigir-evidencias]; token em GITHUB_TOKEN',
@@ -100,6 +114,7 @@ const POSICIONAIS: Record<Comando, number | undefined> = {
   update: undefined,
   apply: undefined,
   export: 0,
+  custo: 0,
 };
 
 function lerArgumentos(args: readonly string[]): Argumentos | string {
@@ -157,7 +172,7 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
   }
   if (servidor && (!base || !repo)) return '--servidor precisa de --base <ref> e --repo <dono/repo>';
   if (pr !== undefined && !Number.isInteger(pr)) return '--pr precisa de um número';
-  const gravaArquivos = cmd !== 'list' && cmd !== 'validate' && cmd !== 'doctor';
+  const gravaArquivos = cmd !== 'list' && cmd !== 'validate' && cmd !== 'doctor' && cmd !== 'custo';
   // export --dry-run não grava nada: mostra o que enviaria.
   if (dryRun && !gravaArquivos) return `--dry-run não se aplica a "${cmd}" (ele não altera arquivos)`;
   return {
@@ -285,5 +300,7 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
       return atualizar(ctx, opcoesDeInstalacao(a));
     case 'export':
       return exportarTelemetria(ctx, { dryRun: a.dryRun });
+    case 'custo':
+      return relatarCusto(ctx);
   }
 }

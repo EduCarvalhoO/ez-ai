@@ -38,6 +38,7 @@
 | [adr/0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md](adr/0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md) | ADR-0027: hooks e MCP de pacote mesclados em `.claude/settings.json` e `.mcp.json`, hook fail-closed, MCP só com comando do manifesto |
 | [adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md](adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md) | ADR-0028: `validate --servidor` compara com a base (aprovadores, policy, config), exige review de aprovador no SHA da head e confere o CI pela API; S-aud1 em camadas |
 | [adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md](adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md) | ADR-0029: `harness-ai export` envia a auditoria como spans OTLP ao Langfuse, só com opt-in, com redação de segredos e zero rede quando desligado |
+| [adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md](adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md) | ADR-0030: Compose do Langfuse, comando `custo` (tokens por agente), métricas da base de conhecimento e correções da revisão de segurança da Sprint 08 |
 | [arquitetura/spike-enforcement-copilot.md](arquitetura/spike-enforcement-copilot.md) | Spike do Copilot: procedimento de teste manual no VS Code (resultados pendentes) |
 | [arquitetura/spike-node-sqlite.md](arquitetura/spike-node-sqlite.md) | Spike: `node:sqlite` com FTS5 serve para a camada C1 do RAG; vetores não vêm embutidos |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
@@ -49,6 +50,7 @@
 | [guias/padrao-de-codigo-e-testes.md](guias/padrao-de-codigo-e-testes.md) | TypeScript, testes, multiplataforma, commits, branches e CI |
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
 | [guias/guia-do-aprovador.md](guias/guia-do-aprovador.md) | Como aprovar PR com aprovação própria: review no SHA da head, dois aprovadores, token de escopo mínimo e chamada do job |
+| [guias/runbook-langfuse.md](guias/runbook-langfuse.md) | Como subir o Langfuse self-host com Docker Compose (`ops/langfuse/`), ligar o `export` e operar |
 | [modelos/aprovacao.yml](modelos/aprovacao.yml) | Modelo do workflow do job de servidor e do ruleset ([modelos/ruleset.json](modelos/ruleset.json)) para copiar num projeto |
 | [specs/auditoria-e-evidencias.md](specs/auditoria-e-evidencias.md) | Evento de auditoria v0: envelope, tipos, evidência, consumo, encadeamento, aprovação própria e recusa de segredo |
 | [specs/base-de-conhecimento.md](specs/base-de-conhecimento.md) | Base de conhecimento (RAG) v0: fontes declaradas, chunk, resultado, limites, avaliação e 30 perguntas de referência |
