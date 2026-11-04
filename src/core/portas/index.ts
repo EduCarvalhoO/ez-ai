@@ -83,6 +83,6 @@ export interface LeitorDaBase {
 /** Fatos do PR e do CI vindos do provedor Git (GitHub). Só leitura; usado só pelo job de servidor (ADR-0028). */
 export interface ProvedorDoPr {
   /** `undefined` = o commit não pertence a nenhum PR (push direto). */
-  dados(): Promise<DadosDoPr | undefined>;
+  dados(times?: readonly string[]): Promise<DadosDoPr | undefined>;
   checkRuns(sha: string): Promise<readonly CheckRun[]>;
 }

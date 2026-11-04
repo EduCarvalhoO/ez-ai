@@ -53,6 +53,12 @@ describe('aprovadoresValidos', () => {
     expect(aprovadoresValidos(pr([{ ...ok('dona'), tipoDeConta: 'Bot' }]), ['dona'])).toEqual([]);
     expect(aprovadoresValidos(pr([ok('dona[bot]')]), ['dona[bot]'])).toEqual([]);
   });
+  it('autor e committer do último commit ficam excluídos, e SHA inválido não conta', () => {
+    expect(aprovadoresValidos(pr([ok('dona')], { ultimosPushes: ['Dona'] }), ['dona'])).toEqual([]);
+    expect(
+      aprovadoresValidos({ ...pr([{ login: 'dona', estado: 'APPROVED', commit: '' }]), shaDaHead: '' }, ['dona']),
+    ).toEqual([]);
+  });
   it('o último review do login manda (pedir mudança ou dispensar cancela)', () => {
     const r = [ok('dona'), { login: 'dona', estado: 'CHANGES_REQUESTED', commit: HEAD }];
     expect(aprovadoresValidos(pr(r), ['dona'])).toEqual([]);
@@ -136,6 +142,25 @@ describe('conferirNoServidor', () => {
 
   it('mudança de origens permitidas ou policyDaOrganizacao entra como motivo', () => {
     const r = conferirNoServidor(entrada({ motivosDaConfig: ['origem permitida acrescentada: x'] }));
+    expect(r.problemas.join()).toContain('faltam aprovadores');
+  });
+
+  it('dois logins iguais na base valem uma pessoa; time vale pelos membros', () => {
+    const e = { aprovadoresHead: ['dona', 'Dona'], aprovadoresBase: ['dona', 'Dona'], aprovacoesHead: [NOVA] };
+    expect(conferirNoServidor(entrada({ ...e, pr: pr([ok('dona')]) })).problemas).toEqual([]);
+    const t = { aprovadoresHead: ['@o/t'], aprovadoresBase: ['@o/t'], aprovacoesHead: [NOVA] };
+    const equipe = { equipes: { '@o/t': ['ana', 'bia'] } };
+    expect(conferirNoServidor(entrada({ ...t, pr: pr([ok('ana')], equipe) })).problemas.join()).toContain('1 de 2');
+  });
+
+  it('mudar o workflow do job ou o CODEOWNERS em relação à base exige review', () => {
+    const r = conferirNoServidor(
+      entrada({
+        arquivosDeEnforcementHead: { '.github/workflows/aprovacao.yml': 'run: exit 0' },
+        arquivosDeEnforcementBase: { '.github/workflows/aprovacao.yml': 'run: harness' },
+      }),
+    );
+    expect(r.informacoes.join()).toContain('arquivo de enforcement alterado');
     expect(r.problemas.join()).toContain('faltam aprovadores');
   });
 

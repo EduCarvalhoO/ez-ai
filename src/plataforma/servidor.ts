@@ -9,6 +9,7 @@ const REF = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/;
 const CAMINHO = /^[A-Za-z0-9._/-]{1,200}$/;
 const REPOSITORIO = /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/;
 const SHA = /^[0-9a-f]{40}$/;
+const TIME = /^@[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/;
 const API = 'https://api.github.com';
 const PAGINAS = 5;
 
@@ -51,8 +52,6 @@ export interface OpcoesDoProvedor {
   readonly sha?: string;
   readonly token: string;
   readonly buscar?: Buscar;
-  /** `@org/time` do `aprovadores` da base, para expandir em logins. */
-  readonly times?: readonly string[];
 }
 
 const obj = (v: unknown): Record<string, unknown> =>
@@ -85,18 +84,27 @@ export function criarProvedorDoPr(o: OpcoesDoProvedor): ProvedorDoPr {
     throw new Error(`mais de ${PAGINAS * 100} itens em ${caminho.split('?')[0]}; o job recusa (falha fechada).`);
   };
   return {
-    async dados(): Promise<DadosDoPr | undefined> {
+    async dados(times = []): Promise<DadosDoPr | undefined> {
       let numero = o.pr;
       if (numero === undefined) {
         if (!o.sha || !SHA.test(o.sha)) return undefined;
         const lista = await pegar(`/repos/${o.repositorio}/commits/${o.sha}/pulls`);
-        const primeiro = Array.isArray(lista) ? obj(lista[0]) : {};
-        if (typeof primeiro.number !== 'number') return undefined;
-        numero = primeiro.number;
+        // Só o PR cujo commit de merge é este push; PR aberto que apenas contém o commit não vale.
+        const achado = (Array.isArray(lista) ? lista : [])
+          .map(obj)
+          .find((p) => p.merge_commit_sha === o.sha && p.merged_at);
+        if (!achado || typeof achado.number !== 'number') return undefined;
+        numero = achado.number;
       }
       const base = `/repos/${o.repositorio}/pulls/${numero}`;
       const pr = obj(await pegar(base));
       const head = obj(pr.head);
+      const shaDaHead = texto(head.sha);
+      if (!SHA.test(shaDaHead)) throw new Error('a API não devolveu o SHA da head do PR.');
+      // Os arquivos conferidos são os do commit do job; se a head andou depois, o resultado não vale.
+      if (o.pr !== undefined && o.sha !== undefined && o.sha !== shaDaHead) {
+        throw new Error('a head do PR mudou depois do checkout; rode o job de novo.');
+      }
       const reviews: ReviewDoPr[] = (await paginas(`${base}/reviews`)).map((r) => {
         const x = obj(r);
         return {
@@ -106,11 +114,14 @@ export function criarProvedorDoPr(o: OpcoesDoProvedor): ProvedorDoPr {
           tipoDeConta: texto(obj(x.user).type),
         };
       });
+      // A API lista no máximo 250 commits do PR; com 250 ou mais o último é incerto, então falha fechada.
       const commits = await paginas(`${base}/commits`);
+      if (commits.length >= 250) throw new Error('PR com 250 commits ou mais; o job não sabe quem fez o último push.');
       const ultimo = obj(commits[commits.length - 1]);
-      const ultimoPush = texto(obj(ultimo.author).login) || texto(obj(ultimo.committer).login) || undefined;
+      const ultimosPushes = [texto(obj(ultimo.author).login), texto(obj(ultimo.committer).login)].filter(Boolean);
       const equipes: Record<string, string[]> = {};
-      for (const t of o.times ?? []) {
+      for (const t of times) {
+        if (!TIME.test(t)) continue;
         const [org, slug] = t.slice(1).split('/');
         try {
           const membros = await paginas(`/orgs/${org}/teams/${slug}/members`);
@@ -120,9 +131,9 @@ export function criarProvedorDoPr(o: OpcoesDoProvedor): ProvedorDoPr {
         }
       }
       return {
-        shaDaHead: texto(head.sha),
+        shaDaHead,
         autor: texto(obj(pr.user).login),
-        ...(ultimoPush ? { ultimoPush } : {}),
+        ultimosPushes,
         reviews,
         equipes,
       };
@@ -130,13 +141,17 @@ export function criarProvedorDoPr(o: OpcoesDoProvedor): ProvedorDoPr {
     async checkRuns(sha): Promise<readonly CheckRun[]> {
       if (!SHA.test(sha)) throw new Error('SHA da head inválido.');
       const lista = await paginas(`/repos/${o.repositorio}/commits/${sha}/check-runs`, 'check_runs');
-      return lista.map((c) => {
+      return lista.flatMap((c) => {
         const x = obj(c);
-        return {
-          nome: texto(x.name),
-          conclusao: typeof x.conclusion === 'string' ? x.conclusion : null,
-          sha: texto(x.head_sha),
-        };
+        // Só o GitHub Actions vale: outro app poderia publicar um check com o mesmo nome.
+        if (texto(obj(x.app).slug) !== 'github-actions' || texto(x.head_sha) !== sha) return [];
+        return [
+          {
+            nome: texto(x.name),
+            conclusao: typeof x.conclusion === 'string' ? x.conclusion : null,
+            sha: texto(x.head_sha),
+          },
+        ];
       });
     },
   };

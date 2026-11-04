@@ -19,6 +19,13 @@ import { validar } from './leitura.js';
 const e = escaparInvisiveis;
 export const CAMINHO_DA_POLICY_DO_PROJETO = '.harness/policy.json';
 
+/** Quem controla o próprio job: mudar um deles no PR exige review de aprovador (T4, ADR-0028). */
+export const ARQUIVOS_DE_ENFORCEMENT = ['.github/workflows/aprovacao.yml', '.github/CODEOWNERS'] as const;
+
+/** Uma leitura só (AGENTS.md: sem checar e depois usar); ausente = `undefined`. */
+const lerOuUndefined = (ctx: Contexto, caminho: string): Promise<string | undefined> =>
+  ctx.arquivos.ler(caminho).catch(() => undefined);
+
 export interface OpcoesDoServidor {
   readonly base: LeitorDaBase;
   readonly pr: ProvedorDoPr;
@@ -52,21 +59,28 @@ export async function validarNoServidor(ctx: Contexto, opcoes: OpcoesDoServidor)
     for (const o of config.valor.origensPermitidas) {
       if (!cBase.origensPermitidas.includes(o)) motivosDaConfig.push(`origem permitida acrescentada: ${o}`);
     }
+    if (JSON.stringify([...cBase.ambientes].sort()) !== JSON.stringify([...config.valor.ambientes].sort())) {
+      motivosDaConfig.push('ambientes alterados em relação à base');
+    }
     if (cBase.policyDaOrganizacao !== config.valor.policyDaOrganizacao) {
       motivosDaConfig.push('policyDaOrganizacao alterada ou removida em relação à base');
     }
   }
-  const pr = await opcoes.pr.dados();
+  const pr = await opcoes.pr.dados(cBase?.aprovadores.filter((a) => a.startsWith('@')) ?? []);
   const checkRuns = opcoes.exigirEvidencias && pr ? await opcoes.pr.checkRuns(pr.shaDaHead) : [];
   const r = conferirNoServidor({
     aprovadoresHead: config.valor.aprovadores,
     aprovadoresBase: cBase?.aprovadores ?? [],
     aprovacoesHead: lock.valor.pacotes.flatMap((p) => p.aprovacoesProprias),
     aprovacoesBase: lBase?.pacotes.flatMap((p) => p.aprovacoesProprias) ?? [],
-    policyHead: (await ctx.arquivos.existe(CAMINHO_DA_POLICY_DO_PROJETO))
-      ? await ctx.arquivos.ler(CAMINHO_DA_POLICY_DO_PROJETO)
-      : undefined,
+    policyHead: await lerOuUndefined(ctx, CAMINHO_DA_POLICY_DO_PROJETO),
     policyBase: await opcoes.base.ler(CAMINHO_DA_POLICY_DO_PROJETO),
+    arquivosDeEnforcementHead: Object.fromEntries(
+      await Promise.all(ARQUIVOS_DE_ENFORCEMENT.map(async (c) => [c, await lerOuUndefined(ctx, c)] as const)),
+    ),
+    arquivosDeEnforcementBase: Object.fromEntries(
+      await Promise.all(ARQUIVOS_DE_ENFORCEMENT.map(async (c) => [c, await opcoes.base.ler(c)] as const)),
+    ),
     motivosDaConfig,
     baseExiste: cBase !== undefined,
     pr,

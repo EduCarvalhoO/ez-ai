@@ -20,7 +20,10 @@
       "type": "required_status_checks",
       "parameters": {
         "strict_required_status_checks_policy": true,
-        "required_status_checks": [{ "context": "aprovacao" }, { "context": "qualidade" }]
+        "required_status_checks": [
+          { "context": "aprovacao", "integration_id": 15368 },
+          { "context": "qualidade", "integration_id": 15368 }
+        ]
       }
     }
   ],

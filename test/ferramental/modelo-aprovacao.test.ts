@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const raiz = join(import.meta.dirname, '..', '..');
-const ler = (c: string): string => readFileSync(join(raiz, c), 'utf8');
+const ler = (c: string): string => readFileSync(join(raiz, c), 'utf8').replaceAll('\r', '');
 const sha = (s: string): string[] => [...s.matchAll(/uses: (\S+)@([0-9a-f]{40})/g)].map((m) => m[0]);
 
 describe('modelo do job de servidor (docs/modelos/aprovacao.yml)', () => {

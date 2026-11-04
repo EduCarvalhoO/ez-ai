@@ -245,16 +245,20 @@ function detalhesDosFragmentos(novos: readonly FragmentoDeConfig[], pedido: Pedi
   const saida: string[] = [];
   for (const f of novos) {
     const v = (f.valor ?? {}) as { hooks?: Chamada[] } & Chamada;
-    const chamada: Chamada = f.tipo === 'hook' ? (v.hooks?.[0] ?? {}) : v;
-    const args = Array.isArray(chamada.args) ? chamada.args.map(String) : [];
-    const comando = [String(chamada.command ?? ''), ...args].join(' ');
-    saida.push(
-      f.tipo === 'hook'
-        ? `      hook ${e(f.componente)}: evento ${e(f.chave)} roda: ${e(comando)}`
-        : `      mcp ${e(f.componente)}: servidor ${e(f.chave)} roda: ${e(comando)}`,
-    );
+    const chamadas: Chamada[] = f.tipo === 'hook' ? (v.hooks ?? []) : [v];
+    const args = chamadas.flatMap((c) => (Array.isArray(c.args) ? c.args.map(String) : []));
+    for (const c of chamadas) {
+      const comando = [String(c.command ?? ''), ...(Array.isArray(c.args) ? c.args.map(String) : [])].join(' ');
+      saida.push(
+        f.tipo === 'hook'
+          ? `      hook ${e(f.componente)}: evento ${e(f.chave)} roda: ${e(comando)}`
+          : `      mcp ${e(f.componente)}: servidor ${e(f.chave)} roda: ${e(comando)}`,
+      );
+    }
     for (const caminho of pedido.novo?.arquivos.keys() ?? []) {
-      if (!args.some((a) => a.endsWith(`/${pedido.nome}/${caminho}`))) continue;
+      // Script citado em `args` (ou como `command`) por caminho do pacote instalado.
+      const citado = [...args, ...chamadas.map((c) => String(c.command ?? ''))];
+      if (!citado.some((a) => a.endsWith(`/${pedido.nome}/${caminho}`))) continue;
       const diff = diffDeLinhas(pedido.antigo?.arquivos.get(caminho) ?? '', pedido.novo?.arquivos.get(caminho) ?? '');
       saida.push(
         `        script ${e(caminho)}: ${diff.length === 0 ? 'sem mudança' : `${diff.length} linha(s) mudada(s)`}`,

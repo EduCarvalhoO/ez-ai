@@ -21,6 +21,8 @@ export interface DadosDoPr {
   readonly autor: string;
   /** Login de quem fez o último commit/push, quando o servidor sabe. */
   readonly ultimoPush?: string;
+  /** Autor e committer do último commit; todos ficam excluídos dos aprovadores. */
+  readonly ultimosPushes?: readonly string[];
   /** Em ordem cronológica. */
   readonly reviews: readonly ReviewDoPr[];
   /** `@org/time` -> logins, quando o token consegue ler o time. */
@@ -44,6 +46,9 @@ export interface EntradaDoServidor {
   readonly policyBase: string | undefined;
   /** Mudanças de campos de enforcement da config (origens permitidas, policyDaOrganizacao). */
   readonly motivosDaConfig: readonly string[];
+  /** Texto de arquivos de enforcement do repositório (workflow do job, CODEOWNERS) na head e na base. */
+  readonly arquivosDeEnforcementHead?: Readonly<Record<string, string | undefined>>;
+  readonly arquivosDeEnforcementBase?: Readonly<Record<string, string | undefined>>;
   /** Há config na base? Sem ela (primeiro commit) não há com o que comparar. */
   readonly baseExiste: boolean;
   readonly pr: DadosDoPr | undefined;
@@ -58,10 +63,14 @@ export interface ResultadoDoServidor {
   readonly informacoes: readonly string[];
 }
 
+const SHA = /^[0-9a-f]{40}$/;
 const CATEGORIAS_PERIGOSAS = new Set(['executar', 'configurarAmbiente']);
 
-const igual = (a: readonly string[], b: readonly string[]): boolean =>
-  a.length === b.length && a.every((x) => b.includes(x));
+const igual = (a: readonly string[], b: readonly string[]): boolean => {
+  const x = new Set(a);
+  const y = new Set(b);
+  return x.size === y.size && [...x].every((v) => y.has(v));
+};
 
 /** Itens `comp/<componente>/<categoria>/<valor>` com executável ou arquivo de ambiente pedem dois aprovadores (S-aud1). */
 export function itemPerigoso(id: string): boolean {
@@ -104,7 +113,10 @@ export function aprovadoresValidos(pr: DadosDoPr, aprovadoresDaBase: readonly st
     if (r.estado === 'COMMENTED' || r.estado === 'PENDING') continue;
     ultimo.set(minusculo(r.login), r);
   }
-  const excluidos = new Set([minusculo(pr.autor), ...(pr.ultimoPush ? [minusculo(pr.ultimoPush)] : [])]);
+  if (!SHA.test(pr.shaDaHead)) return [];
+  const excluidos = new Set(
+    [pr.autor, ...(pr.ultimoPush ? [pr.ultimoPush] : []), ...(pr.ultimosPushes ?? [])].map(minusculo),
+  );
   return [...ultimo.entries()]
     .filter(([login, r]) => {
       if (r.estado !== 'APPROVED' || r.commit !== pr.shaDaHead) return false;
@@ -164,6 +176,11 @@ export function conferirNoServidor(entrada: EntradaDoServidor): ResultadoDoServi
     }
   }
   motivos.push(...entrada.motivosDaConfig);
+  for (const [caminho, texto] of Object.entries(entrada.arquivosDeEnforcementHead ?? {})) {
+    if (texto !== entrada.arquivosDeEnforcementBase?.[caminho]) {
+      motivos.push(`arquivo de enforcement alterado em relação à base: ${caminho}`);
+    }
+  }
 
   const policy = avaliarPolicyDoProjeto(entrada.policyBase, entrada.policyHead);
   problemas.push(...policy.erros);
@@ -174,9 +191,11 @@ export function conferirNoServidor(entrada: EntradaDoServidor): ResultadoDoServi
 
   if (motivos.length > 0) {
     informacoes.push(...motivos.map((m) => `exige review de aprovador: ${e(m)}`));
+    // Pessoas distintas, não entradas da lista: `['alice','Alice']` é um aprovador; um time vale pelos seus membros.
+    const pessoas = expandirAprovadores(entrada.aprovadoresBase, entrada.pr?.equipes).logins.size;
     const minimo = minimoDeAprovadores(
       novos.map((n) => n.id),
-      entrada.aprovadoresBase.length,
+      pessoas,
     );
     if (!entrada.baseExiste) {
       avisos.push('sem configuração na base (primeiro commit?); aprovação própria não conferida.');
