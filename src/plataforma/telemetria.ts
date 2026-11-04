@@ -30,13 +30,16 @@ export function criarEnviadorOtlp(o: OpcoesDoEnviador = {}): EnviadorDeTelemetri
       }
       const url = new URL(pedido.endpoint).toString();
       // Sem redirecionamento (o cabeçalho de autorização não segue para outro host) e com prazo.
-      return buscar(url, {
+      const resposta = await buscar(url, {
         method: 'POST',
         headers: cabecalhos,
         body: pedido.corpo,
         redirect: 'error',
         signal: AbortSignal.timeout(o.limiteMs ?? 15_000),
       });
+      // Libera a conexao sem ler o corpo da resposta.
+      await (resposta as { body?: { cancel?: () => Promise<void> } }).body?.cancel?.().catch(() => undefined);
+      return { status: resposta.status };
     },
   };
 }
