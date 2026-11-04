@@ -3,6 +3,7 @@
 // Regra de segurança central: arquivo de agente ou skill que traga no frontmatter uma chave capaz de rodar código ou
 // de pré-aprovar ferramentas (`hooks`, `mcpServers`, `allowed-tools`, `permissionMode`) NÃO é projetado. Essas
 // capacidades só entram pelo manifesto, com permissão declarada e aprovada (ADR-0019, ADR-0020).
+import { createHash } from 'node:crypto';
 import type { Ambiente, Componente, Manifesto } from '../manifesto/manifesto.js';
 import { avisoDeEnforcement, fragmentoDeHook, fragmentoDeMcp, type ModeloDeConfiguracao } from './configuracao.js';
 import type {
@@ -57,9 +58,16 @@ export function chavesProibidas(chaves: readonly string[]): string[] {
   return chaves.filter((c) => CHAVES_PROIBIDAS.has(c));
 }
 
-/** Nome estável e sem colisão dentro do pacote: `<login>-<pacote>-<id>`, só `[a-z0-9-]`. */
+/**
+ * Nome estável e sem colisão: `<login>-<pacote>-<id>`, só `[a-z0-9-]`. Quando login ou pacote têm `-`, `.` ou `_`,
+ * ou o id tem algo fora de `[a-z0-9-]`, a junção seria ambígua (`a-b/c` e `a/b-c` dariam o mesmo nome; `x.y` e `x-y`
+ * também), então entram 6 hex do SHA-256 de `login/pacote/id`. Nomes simples, como `eduardo-starter-revisor`, não mudam.
+ */
 export function nomeProjetado(m: Manifesto, id: string): string {
-  return `${m.login}-${m.pacote}-${id}`.toLowerCase().replace(/[^a-z0-9-]/gu, '-');
+  const base = `${m.login}-${m.pacote}-${id}`.toLowerCase().replace(/[^a-z0-9-]/gu, '-');
+  const ambiguo = !/^[a-z0-9]+$/u.test(m.login) || !/^[a-z0-9]+$/u.test(m.pacote) || !/^[a-z0-9-]+$/u.test(id);
+  if (!ambiguo) return base;
+  return `${base}-${createHash('sha256').update(`${m.login}/${m.pacote}/${id}`, 'utf8').digest('hex').slice(0, 6)}`;
 }
 
 /** Onde cada tipo de componente mora em um ambiente. */

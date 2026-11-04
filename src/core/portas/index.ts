@@ -75,6 +75,20 @@ export interface LeitorDeConsumo {
   ler(janela: JanelaDeConsumo): Promise<readonly Consumo[]>;
 }
 
+/** Um lote de spans OTLP/HTTP em JSON para enviar ao destino de telemetria escolhido pelo projeto (ADR-0029). */
+export interface PedidoDeTelemetria {
+  /** URL do coletor, já validada (https, ou http só em loopback). */
+  readonly endpoint: string;
+  /** Nome da variável de ambiente com o valor do cabeçalho `Authorization`; o núcleo nunca vê o valor. */
+  readonly variavelDoToken?: string;
+  readonly corpo: string;
+}
+
+/** Única porta de rede do núcleo. Só o comando `export` a usa, e só com `telemetria` ligada na configuração. */
+export interface EnviadorDeTelemetria {
+  enviar(pedido: PedidoDeTelemetria): Promise<{ readonly status: number }>;
+}
+
 /** Leitura de arquivos da branch base do PR, não da cópia de trabalho (ADR-0028). `undefined` = o arquivo não existe lá. */
 export interface LeitorDaBase {
   ler(caminho: string): Promise<string | undefined>;

@@ -26,6 +26,18 @@ describe('nomeProjetado', () => {
   it('une login, pacote e id só com [a-z0-9-]', () => {
     const { manifesto } = manifestoDoStarter();
     expect(nomeProjetado(manifesto, 'revisor')).toBe('eduardo-starter-revisor');
-    expect(nomeProjetado({ ...manifesto, pacote: 'meu.pacote_x' }, 'a')).toBe('eduardo-meu-pacote-x-a');
+    expect(nomeProjetado(manifesto, 'code-review')).toBe('eduardo-starter-code-review');
+  });
+
+  it('login ou pacote com separador ganha sufixo de hash e não colide', () => {
+    const { manifesto } = manifestoDoStarter();
+    const a = nomeProjetado({ ...manifesto, login: 'a-b', pacote: 'c' }, 'x');
+    const b = nomeProjetado({ ...manifesto, login: 'a', pacote: 'b-c' }, 'x');
+    expect(a).not.toBe(b);
+    expect(a).toMatch(/^a-b-c-x-[0-9a-f]{6}$/);
+    expect(nomeProjetado({ ...manifesto, pacote: 'meu.pacote_x' }, 'a')).toMatch(
+      /^eduardo-meu-pacote-x-a-[0-9a-f]{6}$/,
+    );
+    expect(nomeProjetado(manifesto, 'x.y')).not.toBe(nomeProjetado(manifesto, 'x-y'));
   });
 });
