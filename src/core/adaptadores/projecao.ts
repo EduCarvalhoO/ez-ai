@@ -5,6 +5,7 @@
 // capacidades só entram pelo manifesto, com permissão declarada e aprovada (ADR-0019, ADR-0020).
 import { createHash } from 'node:crypto';
 import type { Ambiente, Componente, Manifesto } from '../manifesto/manifesto.js';
+import { corpoDoBloco, renderizarBloco, textoSeguroParaBloco } from './blocos.js';
 import { avisoDeEnforcement, fragmentoDeHook, fragmentoDeMcp, type ModeloDeConfiguracao } from './configuracao.js';
 import type {
   Adapter,
@@ -82,6 +83,11 @@ export interface ModeloDeAmbiente {
   readonly ajustarInstrucao?: (texto: string) => string;
   /** Onde hooks e MCP entram em arquivos JSON compartilhados (ADR-0027). Ausente = o ambiente não projeta hook/MCP. */
   readonly configuracao?: ModeloDeConfiguracao;
+  /**
+   * Instruções entram como blocos delimitados num arquivo de texto compartilhado (AGENTS.md, ADR-0038) em vez de um
+   * arquivo por instrução. Quando presente, `caminhoDaInstrucao` e `ajustarInstrucao` não são usados.
+   */
+  readonly blocoDeInstrucoes?: { readonly arquivo: string };
 }
 
 const LIMITE_DO_NOME_DA_SKILL = 64;
@@ -141,6 +147,10 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
     };
     const cap = modelo.capacidades[c.tipo];
     if (cap.interno) continue;
+    if (!cap.projeta && cap.suporte === 'ausente') {
+      aviso(`${c.tipo} "${c.id}" não se aplica a ${modelo.ambiente}: o ambiente não tem equivalente; não projetado.`);
+      continue;
+    }
     if (!cap.projeta) {
       aviso(
         `${c.tipo} "${c.id}" não foi escrito em ${modelo.ambiente}: o ambiente tem suporte ${cap.suporte}, mas este adapter ainda não grava esse tipo (hooks e MCP dependem do spike do ambiente).`,
@@ -167,6 +177,23 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
       fragmentos.push(r.fragmento);
       avisos.push(avisoDeEnforcement(c, r.fragmento.caminho));
       if (c.tipo === 'hook' && cfg.avisoDoHook) aviso(`enforcement: hook "${c.id}": ${cfg.avisoDoHook}`);
+    } else if (c.tipo === 'instrucao' && modelo.blocoDeInstrucoes) {
+      const corpo = corpoDoBloco(texto);
+      if (!textoSeguroParaBloco(texto)) {
+        aviso(`instrução "${c.id}" contém o marcador reservado "<!-- ez-ai:"; não projetada.`);
+        continue;
+      }
+      if (corpo === '') {
+        aviso(`instrução "${c.id}" está vazia; não projetada.`);
+        continue;
+      }
+      fragmentos.push({
+        caminho: modelo.blocoDeInstrucoes.arquivo,
+        componente: c.id,
+        tipo: 'bloco',
+        chave: nome,
+        valor: renderizarBloco(nome, entrada.manifesto.nome, c.id, corpo),
+      });
     } else if (c.tipo === 'instrucao') {
       arquivos.push({
         caminho: modelo.caminhoDaInstrucao(nome),

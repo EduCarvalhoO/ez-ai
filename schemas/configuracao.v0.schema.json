@@ -17,7 +17,7 @@
     "ambientes": {
       "type": "array",
       "items": {
-        "enum": ["claude-code", "copilot"]
+        "enum": ["claude-code", "copilot", "agents-md"]
       },
       "minItems": 1,
       "uniqueItems": true
@@ -99,6 +99,15 @@
           "type": "string",
           "maxLength": 64,
           "pattern": "^(?:LANGFUSE|HARNESS_TELEMETRIA)_[A-Z0-9_]{1,50}$"
+        }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bloquearAPartirDe": {
+          "enum": ["nunca", "baixa", "media", "alta"]
         }
       }
     },

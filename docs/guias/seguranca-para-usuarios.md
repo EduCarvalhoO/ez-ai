@@ -24,3 +24,16 @@ Para saber o que o ez-ai garante, o que não garante e como reduzir risco ao ins
 3. Mantenha `aprovadores` com mais de uma pessoa e o ruleset de `docs/modelos/ruleset.json`.
 4. Rode `ez-ai validate --ci` no CI.
 5. Relate vulnerabilidades pelo canal privado do [SECURITY.md](../../SECURITY.md); não abra issue pública.
+
+## Varredura de conteúdo (`ez-ai scan`)
+
+O manifesto e a policy dizem o que um pacote *declara*; o `scan` olha o que os arquivos *dizem*. Ele procura, sem rede e sem executar nada, Unicode invisível, comando remoto (`curl | bash`), seção de pré-requisitos que manda rodar comando, imagem remota que vaza dados, hosts de captura, frontmatter que tenta se autoaprovar e frases de injeção de instrução ([ADR-0038](../adr/0038-scan-de-conteudo-agents-md-e-import.md)).
+
+- `ez-ai scan` varre todos os pacotes instalados; `ez-ai scan <login/pacote>` ou `ez-ai scan <pasta>` varre um só.
+- `plan`, `apply` e `update` mostram um resumo dos achados. Por padrão só avisam.
+- Para bloquear: `"scan": { "bloquearAPartirDe": "alta" }` em `.harness/config.json` (vale também no `validate --ci`) ou `ez-ai scan --bloquear alta` no CI. Níveis: `baixa`, `media`, `alta`.
+- **Não é prova de segurança.** Ajuda a revisão humana; texto malicioso novo ou ofuscado de outro jeito passa. Proteja `.harness/config.json` com CODEOWNERS para ninguém afrouxar o bloqueio sem revisão.
+
+## Trazer regras que você já tem (`ez-ai import`) e AGENTS.md
+
+`ez-ai import` lê `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md` e `AGENTS.md` e grava uma proposta de pacote local em `pacotes-locais/<nome>` (nunca sobrescreve e não mexe nos originais). Revise, rode `ez-ai add local:pacotes-locais/<nome>` e `ez-ai plan`. Para projetar as instruções num `AGENTS.md`, acrescente `agents-md` em `ambientes` da configuração: cada instrução vira um bloco `<!-- ez-ai:inicio ... -->` e o resto do arquivo continua seu.

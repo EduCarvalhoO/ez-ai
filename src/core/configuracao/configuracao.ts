@@ -11,6 +11,7 @@ import {
   procurarInvisiveis,
 } from '../manifesto/manifesto.js';
 import { LIMITES, LIMITES_AJUSTAVEIS } from '../manifesto/schema.js';
+import type { ModoDeBloqueio } from '../seguranca/scan.js';
 import { problemaNoEndpoint } from '../telemetria/endpoint.js';
 import { atendeConfiancaMinima, type NIVEIS_DE_CONFIANCA, nivelDeConfianca } from './confianca.js';
 import { canonizarRepositorio, lerOrigem, ORIGENS_OFICIAIS, type Origem, pastaDentroDe } from './origem.js';
@@ -45,6 +46,8 @@ export interface Configuracao {
   readonly aprovadores: readonly string[];
   /** Exportação opt-in de telemetria (ADR-0029); ausente = desligada, zero rede. */
   readonly telemetria?: { readonly endpoint: string; readonly variavelDoToken?: string };
+  /** Varredura de conteúdo dos pacotes (ADR-0038); ausente = só avisa. */
+  readonly scan?: { readonly bloquearAPartirDe: ModoDeBloqueio };
 }
 
 type Json = Record<string, unknown>;
@@ -85,6 +88,9 @@ function configuracaoDe(dado: Json): Configuracao {
     aprovadores: lista<unknown>(dado.aprovadores).map(String),
     ...(typeof dado.telemetria === 'object' && dado.telemetria !== null
       ? { telemetria: telemetriaDe(dado.telemetria as Json) }
+      : {}),
+    ...(typeof dado.scan === 'object' && dado.scan !== null && typeof (dado.scan as Json).bloquearAPartirDe === 'string'
+      ? { scan: { bloquearAPartirDe: (dado.scan as Json).bloquearAPartirDe as ModoDeBloqueio } }
       : {}),
   };
 }

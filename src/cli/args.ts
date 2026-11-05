@@ -1,4 +1,6 @@
 // Leitura dos argumentos da linha de comando (sem I/O): comandos, uso e validação das opções.
+import { type ModoDeBloqueio, SEVERIDADES } from '../core/seguranca/scan.js';
+
 export const COMANDOS = [
   'init',
   'list',
@@ -15,6 +17,8 @@ export const COMANDOS = [
   'conhecimento',
   'benchmark',
   'hash-pacote',
+  'scan',
+  'import',
 ] as const;
 export type Comando = (typeof COMANDOS)[number];
 
@@ -34,6 +38,10 @@ export const USO = [
   '  conhecimento indexar | buscar <consulta> [--limite <n>] | mapa [pasta] | avaliar [--exportar] | servir',
   '                                        servir = servidor MCP (stdio) com buscar/abrir/mapa; fontes extras em .harness/conhecimento.json; mapa C0, índice C1 (node:sqlite) e métricas',
   '  hash-pacote <pasta>                   imprime o hash do conteúdo de uma pasta de pacote (o texto que o workflow de release assina com Sigstore)',
+  '  scan [<login/pacote>|<pasta>] [--bloquear baixa|media|alta]',
+  '                                        varre o conteúdo dos pacotes atrás de Unicode oculto, comando remoto, URL de exfiltração, frontmatter perigoso e injeção de instrução; só avisa, salvo com --bloquear ou "scan.bloquearAPartirDe" na configuração (offline)',
+  '  import [--pacote <login/nome>] [--saida <pasta>]',
+  '                                        lê CLAUDE.md, .cursorrules, .github/copilot-instructions.md e AGENTS.md e grava uma proposta de pacote local (nunca sobrescreve; --dry-run só mostra)',
   '  benchmark [--exportar]                pontua as tarefas de referência pelo log de auditoria (--exportar grava o dataset)',
   '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
   '  validate --ci          recalcula policy e aprovações a partir do commit travado',
@@ -71,6 +79,9 @@ export interface Argumentos {
   readonly exportar: boolean;
   readonly limite?: number;
   readonly detalhes: boolean;
+  readonly bloquear?: ModoDeBloqueio;
+  readonly pacote?: string;
+  readonly saida?: string;
 }
 
 /** Quantos argumentos soltos (sem `--`) cada comando aceita; `undefined` = qualquer quantidade. */
@@ -90,6 +101,8 @@ const POSICIONAIS: Record<Comando, number | undefined> = {
   conhecimento: 2,
   benchmark: 0,
   'hash-pacote': 1,
+  scan: 1,
+  import: 0,
 };
 
 export function lerArgumentos(args: readonly string[]): Argumentos | string {
@@ -120,6 +133,9 @@ export function lerArgumentos(args: readonly string[]): Argumentos | string {
   let exportar = false;
   let limite: number | undefined;
   let detalhes = false;
+  let bloquear: ModoDeBloqueio | undefined;
+  let pacote: string | undefined;
+  let saida: string | undefined;
   const aprovar: string[] = [];
   const posicionais: string[] = [];
   for (let i = 0; i < resto.length; i++) {
@@ -148,6 +164,12 @@ export function lerArgumentos(args: readonly string[]): Argumentos | string {
     else if (a === '--evidencia' && valor !== undefined && cmd === 'workflow') evidencia = resto[++i];
     else if (a === '--exportar' && (cmd === 'conhecimento' || cmd === 'benchmark')) exportar = true;
     else if (a === '--limite' && valor !== undefined && cmd === 'conhecimento') limite = Number(resto[++i]);
+    else if (a === '--bloquear' && valor !== undefined && cmd === 'scan') {
+      const modo = resto[++i] ?? '';
+      if (!(SEVERIDADES as readonly string[]).includes(modo)) return '--bloquear aceita baixa, media ou alta';
+      bloquear = modo as ModoDeBloqueio;
+    } else if (a === '--pacote' && valor !== undefined && cmd === 'import') pacote = resto[++i];
+    else if (a === '--saida' && valor !== undefined && cmd === 'import') saida = resto[++i];
     else if (a === '--aceitar-permissoes' && instala) aceitarPermissoes = true;
     else if (!a.startsWith('--')) posicionais.push(a);
     else return `argumento(s) não reconhecido(s): ${resto.slice(i).join(' ')}`;
@@ -171,7 +193,8 @@ export function lerArgumentos(args: readonly string[]): Argumentos | string {
     cmd !== 'workflow' &&
     cmd !== 'conhecimento' &&
     cmd !== 'benchmark' &&
-    cmd !== 'hash-pacote';
+    cmd !== 'hash-pacote' &&
+    cmd !== 'scan';
   // export --dry-run não grava nada: mostra o que enviaria.
   if (dryRun && !gravaArquivos) return `--dry-run não se aplica a "${cmd}" (ele não altera arquivos)`;
   return {
@@ -189,6 +212,9 @@ export function lerArgumentos(args: readonly string[]): Argumentos | string {
     exportar,
     detalhes,
     ...(limite !== undefined ? { limite } : {}),
+    ...(bloquear ? { bloquear } : {}),
+    ...(pacote ? { pacote } : {}),
+    ...(saida ? { saida } : {}),
     ...(base ? { base } : {}),
     ...(pr !== undefined ? { pr } : {}),
     ...(sha ? { sha } : {}),

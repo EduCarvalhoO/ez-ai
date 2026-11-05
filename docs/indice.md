@@ -68,6 +68,7 @@
 | [specs/policy.md](specs/policy.md) | Policy v0: regras só restritivas, casamento com as permissões, níveis e precedência, explicação da decisão, garantia por ambiente e policy do núcleo |
 | [adr/0036-versionamento-compatibilidade-e-pipeline-de-release.md](adr/0036-versionamento-compatibilidade-e-pipeline-de-release.md) | ADR-0036: semver, compatibilidade de schemas, depreciação e pipeline de release (npm com provenance por OIDC) |
 | [adr/0037-nome-do-produto-ez-ai.md](adr/0037-nome-do-produto-ez-ai.md) | ADR-0037: o produto se chama ez-ai; o que foi renomeado e o que ficou |
+| [adr/0038-scan-de-conteudo-agents-md-e-import.md](adr/0038-scan-de-conteudo-agents-md-e-import.md) | ADR-0038: `scan` (varredura offline de conteúdo malicioso nos pacotes, avisa por padrão e bloqueia por configuração), adapter AGENTS.md (blocos delimitados) e `import` (proposta de pacote a partir de CLAUDE.md, .cursorrules, copilot-instructions e AGENTS.md) |
 | [guias/quickstart.md](guias/quickstart.md) | Quickstart: instalar o ez-ai num projeto em 5 minutos, com sessão completa de workflow |
 | [guias/prova-manual-claude-code-e-copilot.md](guias/prova-manual-claude-code-e-copilot.md) | Roteiro para provar no Claude Code e no Copilot (`/agents`, `/hooks`, `/mcp`, `git push --force`) o que o `apply` gera |
 | [guias/criar-pacotes.md](guias/criar-pacotes.md) | Como criar, versionar e assinar um pacote |
