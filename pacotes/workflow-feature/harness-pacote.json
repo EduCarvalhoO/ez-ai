@@ -1,7 +1,7 @@
 {
   "versaoManifesto": 0,
   "nome": "educarvalhoo/workflow-feature",
-  "versao": "0.3.0",
+  "versao": "0.4.0",
   "descricao": "Workflow de feature com gates: ficha, revisão da documentação, execução, revisão de código e entrega",
   "licenca": "FSL-1.1-ALv2",
   "repositorio": "https://github.com/educarvalhoo/workflow-feature",
