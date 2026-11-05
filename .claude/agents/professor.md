@@ -3,6 +3,7 @@ name: professor
 description: Transforma uma decisão técnica em explicação didática para o Eduardo (recomendação, impacto, alternativas e porquê de cada). Use só sob demanda - quando o Eduardo pedir um relatório explicativo, tiver uma dúvida ou precisar tomar uma decisão importante; não chame em toda decisão.
 tools: Read, Grep, Glob
 model: sonnet
+maxTurns: 10
 ---
 
 <!-- Corpo idêntico a .github/agents/professor.agent.md. Ver docs/adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md -->

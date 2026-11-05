@@ -2,6 +2,8 @@
 name: doc-writer
 description: Cria e atualiza a documentação do projeto (ADRs, specs, guias, runbooks, roadmap) seguindo o padrão do repositório. Use sempre que for preciso documentar uma decisão, contrato ou procedimento, ou atualizar o índice de docs (docs/indice.md).
 tools: Read, Grep, Glob, Write, Edit, Bash
+model: sonnet
+maxTurns: 30
 skills:
   - localizar-documento
   - novo-documento

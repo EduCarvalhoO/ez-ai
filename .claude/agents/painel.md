@@ -3,6 +3,7 @@ name: painel
 description: Atualiza e republica o painel do roadmap (fases e entregas) a partir do roadmap e do registro de encerramento da thread. Use no encerramento de cada entrega, logo após o merge.
 tools: Read, Edit, Artifact, ArtifactData
 model: sonnet
+maxTurns: 15
 ---
 
 <!-- Corpo idêntico a .github/agents/painel.agent.md. Ver docs/adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md -->

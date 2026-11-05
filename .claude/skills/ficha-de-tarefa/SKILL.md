@@ -1,6 +1,6 @@
 ---
 name: ficha-de-tarefa
-description: Cria a ficha de uma tarefa do roadmap (item, critérios de aceite, plano, testes, riscos e registro de gates) em .tmp/tarefas/, já com o trecho da fase copiado do roadmap. Use ao começar qualquer entrega do roadmap.
+description: Cria a ficha de uma tarefa do roadmap (item, critérios de aceite, plano, testes, riscos e registro de gates) em .tmp/tarefas/, já com o trecho da fase copiado do roadmap. Use ao começar qualquer entrega do roadmap. Não use para tarefa que não vem do roadmap.
 ---
 
 # Ficha de tarefa
@@ -15,3 +15,8 @@ Primeira etapa do [fluxo do time](../../../docs/guias/time-de-agentes.md#2-fluxo
 
 ## Verificação
 Todo critério de aceite aponta um comando, teste ou arquivo que o comprova, e a seção `Em aberto` está vazia ou respondida pelo usuário antes do G1.
+
+## Gotchas
+- O script não sobrescreve ficha existente; se a ficha já existe, continue dela em vez de recriar.
+- A ficha vive em `.tmp/`, que não vai para o Git; o que precisa durar vai para ADR ou doc.
+- Critério sem comando, teste ou arquivo que o prove não entra na ficha.

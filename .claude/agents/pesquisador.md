@@ -3,6 +3,7 @@ name: pesquisador
 description: Pesquisa ferramentas e padrões externos (Claude Code, Copilot, Langfuse, npm, Sigstore) e devolve fatos com fonte, data e versão, separando fato de hipótese. Use antes de decidir ou implementar algo que dependa de comportamento externo.
 tools: Read, Grep, Glob, Write, WebSearch, WebFetch
 model: sonnet
+maxTurns: 25
 ---
 
 <!-- Corpo idêntico a .github/agents/pesquisador.agent.md. Ver docs/adr/0008-agentes-por-ambiente-com-regras-em-fonte-unica.md -->

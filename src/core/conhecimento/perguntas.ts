@@ -2,6 +2,7 @@
 // Puro: valida o JSON e monta os itens do dataset; quem lê e grava arquivo é o comando.
 import { lerJsonSeguro } from '../contratos/json-seguro.js';
 import type { ErroDeContrato, Resultado } from '../contratos/resultado.js';
+import type { Chunk } from './chunks.js';
 import type { PerguntaDeReferencia } from './metricas.js';
 
 export const CAMINHO_DAS_PERGUNTAS = 'conhecimento/perguntas.json';
@@ -85,4 +86,52 @@ export function datasetDeConhecimento(perguntas: readonly PerguntaCompleta[]): D
       metadata: { tipo: p.tipo },
     })),
   };
+}
+
+export const CAMINHO_DO_MODELO_DE_PERGUNTAS = '.harness/evals/perguntas-modelo.json';
+const POR_TIPO = 10;
+const EXPORTADO = /^export\s+(?:async\s+)?(?:function|const|class|interface|type)\s+([A-Za-z_][A-Za-z0-9_]{2,60})/m;
+
+/**
+ * Rascunho de perguntas de referência a partir dos chunks indexados (ADR-0039): até 10 por tipo, ordenadas por
+ * arquivo. É só um modelo: o humano revisa, ajusta e move para `conhecimento/perguntas.json`. Determinístico.
+ */
+export function perguntasModelo(chunks: readonly Chunk[]): PerguntaCompleta[] {
+  const porArquivo = new Map<string, Chunk[]>();
+  for (const c of chunks) porArquivo.set(c.arquivo, [...(porArquivo.get(c.arquivo) ?? []), c]);
+  const arquivos = [...porArquivo.keys()].sort();
+  const identificadores: PerguntaCompleta[] = [];
+  const conceitos: PerguntaCompleta[] = [];
+  const ondeFica: PerguntaCompleta[] = [];
+  for (const arquivo of arquivos) {
+    const doArquivo = porArquivo.get(arquivo) ?? [];
+    const primeiro = doArquivo[0];
+    if (!primeiro) continue;
+    const nome = doArquivo.map((c) => EXPORTADO.exec(c.texto)?.[1]).find((n) => n !== undefined);
+    if (nome && identificadores.length < POR_TIPO) {
+      identificadores.push({
+        id: '',
+        pergunta: `Onde está definido ${nome}?`,
+        tipo: 'identificador',
+        esperado: [arquivo],
+      });
+    }
+    const titulo = primeiro.contexto.split('>')[0]?.trim() ?? '';
+    if (titulo && titulo !== arquivo && !nome && conceitos.length < POR_TIPO) {
+      conceitos.push({
+        id: '',
+        pergunta: `O que o projeto diz sobre "${titulo.slice(0, 120)}"?`,
+        tipo: 'conceito',
+        esperado: [arquivo],
+      });
+    } else if (!nome && ondeFica.length < POR_TIPO) {
+      ondeFica.push({
+        id: '',
+        pergunta: `Onde fica ${arquivo.split('/').pop() ?? arquivo}?`,
+        tipo: 'onde-fica',
+        esperado: [arquivo],
+      });
+    }
+  }
+  return [...identificadores, ...conceitos, ...ondeFica].map((p, i) => ({ ...p, id: `modelo-${i + 1}` }));
 }

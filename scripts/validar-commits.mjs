@@ -118,6 +118,10 @@ function relatar(rotulo, mensagem, erros) {
  * @returns {Promise<number>}
  */
 export async function executar(args) {
+  if (args.includes('--help')) {
+    process.stdout.write(USO);
+    return 0;
+  }
   if (args[0] === '--arquivo') {
     const caminho = args[1];
     if (args.length !== 2 || caminho === undefined) {

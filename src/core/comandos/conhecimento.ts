@@ -9,7 +9,13 @@ import {
 } from '../conhecimento/busca.js';
 import { fontesDoProjeto, reunirChunks } from '../conhecimento/fontes.js';
 import { calcularMetricasDaBase, type MetricasDaBase } from '../conhecimento/metricas.js';
-import { CAMINHO_DAS_PERGUNTAS, datasetDeConhecimento, validarPerguntas } from '../conhecimento/perguntas.js';
+import {
+  CAMINHO_DAS_PERGUNTAS,
+  CAMINHO_DO_MODELO_DE_PERGUNTAS,
+  datasetDeConhecimento,
+  perguntasModelo,
+  validarPerguntas,
+} from '../conhecimento/perguntas.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import type { Contexto, ResultadoDoComando } from './base.js';
 
@@ -127,4 +133,23 @@ export async function avaliarBase(ctx: Contexto, o: OpcoesDeAvaliacao): Promise<
     saida.push(`gravado em ${CAMINHO_DOS_DATASETS}/ (dataset-conhecimento.json e metricas-conhecimento.json).`);
   }
   return { codigo: 0, saida, erros };
+}
+
+/** `conhecimento perguntas`: grava um rascunho de perguntas de referência para o humano revisar (nunca sobrescreve `conhecimento/perguntas.json`). */
+export async function gerarPerguntasModelo(
+  ctx: Contexto,
+  o: { readonly dryRun: boolean },
+): Promise<ResultadoDoComando> {
+  const base = await reunirChunks(ctx.arquivos, await fontesDoProjeto(ctx.arquivos));
+  const perguntas = perguntasModelo(base.chunks);
+  if (perguntas.length === 0) return falha('a base está vazia: não há de onde tirar perguntas.');
+  const saida = [`${perguntas.length} pergunta(s)-modelo a partir de ${base.arquivos} arquivo(s).`];
+  for (const p of perguntas)
+    saida.push(`  ${p.id} [${p.tipo}] ${escaparInvisiveis(p.pergunta)} -> ${escaparInvisiveis(p.esperado.join(', '))}`);
+  if (o.dryRun) return { codigo: 0, saida: [...saida, 'dry-run: nada foi gravado.'], erros: [] };
+  await ctx.arquivos.gravar(CAMINHO_DO_MODELO_DE_PERGUNTAS, `${JSON.stringify(perguntas, null, 2)}\n`);
+  saida.push(
+    `gravado em ${CAMINHO_DO_MODELO_DE_PERGUNTAS}. Revise (o esperado é um palpite), ajuste e mova para ${CAMINHO_DAS_PERGUNTAS}; depois rode "conhecimento avaliar".`,
+  );
+  return { codigo: 0, saida, erros: [] };
 }
