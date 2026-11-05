@@ -109,10 +109,15 @@ export const SCHEMA_DA_CONFIGURACAO = {
     catalogo: {
       type: 'object',
       additionalProperties: false,
-      required: ['repositorio', 'workflow'],
+      required: ['repositorio', 'repositorioId', 'workflow'],
       properties: {
         repositorio: { type: 'string', pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}$` },
+        // ID numérico imutável do repositório (GitHub `databaseId`), que o certificado Sigstore carrega: renomear ou
+        // recriar o repositório com o mesmo nome não herda a confiança.
+        repositorioId: { type: 'string', pattern: '^[1-9][0-9]{0,19}$' },
         workflow: { type: 'string', pattern: '^[A-Za-z0-9._-]{1,100}\\.ya?ml$' },
+        // Piso de versão: o `search` recusa um catálogo de tag menor (defesa contra voltar a uma versão antiga assinada).
+        versaoMinima: { type: 'string', pattern: '^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$' },
       },
     },
     limites: {

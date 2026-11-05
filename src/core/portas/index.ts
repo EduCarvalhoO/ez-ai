@@ -29,6 +29,17 @@ export interface Git {
   resolverTag(repositorio: string, tag: string): Promise<string>;
   /** Lê os arquivos de um commit, indexados por caminho relativo. */
   lerArquivos(repositorio: string, commit: string): Promise<ReadonlyMap<string, string>>;
+  /**
+   * Lê só os arquivos pedidos de um commit, em bytes brutos (sem decodificar). Arquivo ausente fica de fora do mapa;
+   * link simbólico, submódulo e arquivo maior que `limiteDeBytes` são recusados (lança). Serve ao catálogo, que não
+   * precisa da árvore inteira e assina os bytes exatos (ADR-0039).
+   */
+  lerArquivosDe(
+    repositorio: string,
+    commit: string,
+    caminhos: readonly string[],
+    limiteDeBytes: number,
+  ): Promise<ReadonlyMap<string, Uint8Array>>;
 }
 
 /** Fonte de data e hora, para evidências e eventos reproduzíveis em teste. */

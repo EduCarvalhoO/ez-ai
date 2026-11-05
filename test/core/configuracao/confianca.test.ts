@@ -59,3 +59,11 @@ describe('confiancaMinima na configuração', () => {
     expect(validarConfiguracao(base('supremo', 'https://github.com/acme/pkg')).ok).toBe(false);
   });
 });
+
+describe('ORIGENS_OFICIAIS (ADR-0040 D7)', () => {
+  it('toda entrada é URL canônica do GitHub, em minúsculas e sem repetição', async () => {
+    const { ORIGENS_OFICIAIS } = await import('../../../src/core/configuracao/origem.js');
+    for (const o of ORIGENS_OFICIAIS) expect(o).toMatch(/^https:\/\/github\.com\/[a-z0-9-]+\/[a-z0-9._-]+$/);
+    expect(new Set(ORIGENS_OFICIAIS).size).toBe(ORIGENS_OFICIAIS.length);
+  });
+});

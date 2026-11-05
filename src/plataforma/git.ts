@@ -12,23 +12,27 @@ import { escaparInvisiveis } from '../core/seguranca/caminhos.js';
 const REPOSITORIO = /^https:\/\/github\.com\/[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?\/[A-Za-z0-9._-]{1,100}$/;
 const TAG = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/;
 const COMMIT = /^[0-9a-f]{40}$/;
+// Caminho de arquivo na raiz do repositório, sem diretório e sem começar por `-` (nunca vira opção do git).
+const CAMINHO_PEDIDO = /^[A-Za-z0-9._][A-Za-z0-9._-]{0,99}$/;
 const MAXIMO_DE_ARQUIVOS = 1000;
 const MAXIMO_DE_BYTES_POR_ARQUIVO = 1024 * 1024;
 
 /** Executa `git` com os argumentos; injetável para teste. Devolve o stdout. */
-export type ExecutorDeGit = (argumentos: readonly string[], cwd?: string) => Promise<string>;
+export type ExecutorDeGit = (argumentos: readonly string[], cwd?: string, binario?: boolean) => Promise<string>;
 
 const executar = promisify(execFile);
 
 const TRAVAS = ['-c', 'protocol.allow=never', '-c', 'protocol.https.allow=always', '-c', 'core.hooksPath=/dev/null'];
 
 /** Executor real: sem shell, sem prompt de credencial, só https. */
-export const executorDoSistema: ExecutorDeGit = async (argumentos, cwd) => {
+export const executorDoSistema: ExecutorDeGit = async (argumentos, cwd, binario) => {
   try {
     const { stdout } = await executar('git', [...TRAVAS, ...argumentos], {
       ...(cwd ? { cwd } : {}),
       maxBuffer: 16 * 1024 * 1024,
       timeout: 120_000,
+      // Modo binário: `latin1` preserva cada byte como um caractere, e `Buffer.from(texto, 'latin1')` os devolve exatos.
+      ...(binario ? { encoding: 'latin1' as const } : {}),
       env: { ...process.env, GIT_ALLOW_PROTOCOL: 'https', GIT_TERMINAL_PROMPT: '0', GIT_CONFIG_NOSYSTEM: '1' },
     });
     return stdout;
@@ -132,6 +136,32 @@ export function criarGit(executor: ExecutorDeGit = executorDoSistema): Git {
           arquivos.set(e.caminho, conteudo);
         }
         return arquivos;
+      } finally {
+        await rm(pasta, { recursive: true, force: true });
+      }
+    },
+    async lerArquivosDe(repositorio, commit, caminhos, limiteDeBytes) {
+      exigirRepositorio(repositorio);
+      if (!COMMIT.test(commit)) throw new Error('commit inválido: use o SHA completo de 40 caracteres.');
+      const pasta = await mkdtemp(join(tmpdir(), 'ez-ai-git-'));
+      try {
+        await executor(['init', '--quiet'], pasta);
+        await executor(['fetch', '--quiet', '--depth', '1', '--no-tags', '--', repositorio, commit], pasta);
+        const lidos = new Map<string, Uint8Array>();
+        for (const caminho of caminhos) {
+          if (!CAMINHO_PEDIDO.test(caminho)) throw new Error(`caminho "${escaparInvisiveis(caminho)}" recusado.`);
+          const [entrada] = entradasDaArvore(await executor(['ls-tree', '-z', commit, '--', caminho], pasta));
+          if (!entrada) continue;
+          if (entrada.modo !== '100644' && entrada.modo !== '100755') {
+            throw new Error(`"${escaparInvisiveis(caminho)}" não é um arquivo comum; recusado.`);
+          }
+          const tamanho = Number((await executor(['cat-file', '-s', entrada.sha], pasta)).trim());
+          if (!Number.isInteger(tamanho) || tamanho > limiteDeBytes) {
+            throw new Error(`"${escaparInvisiveis(caminho)}" passa de ${limiteDeBytes} bytes.`);
+          }
+          lidos.set(caminho, Buffer.from(await executor(['cat-file', 'blob', entrada.sha], pasta, true), 'latin1'));
+        }
+        return lidos;
       } finally {
         await rm(pasta, { recursive: true, force: true });
       }

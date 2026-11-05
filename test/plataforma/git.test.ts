@@ -85,6 +85,39 @@ describe('criarGit', () => {
   });
 });
 
+describe('lerArquivosDe (só os arquivos pedidos, em bytes brutos)', () => {
+  const executor = (modo = '100644', tamanho = '5') =>
+    (async (args: readonly string[], _cwd?: string, binario?: boolean) => {
+      if (args[0] === 'ls-tree') {
+        return args[4] === 'catalogo.json' ? `${modo} blob ${'c'.repeat(40)}\tcatalogo.json${NUL}` : '';
+      }
+      if (args[0] === 'cat-file' && args[1] === '-s') return `${tamanho}\n`;
+      if (args[0] === 'cat-file') return binario ? '\xff\xfeabc' : 'texto';
+      return '';
+    }) as Parameters<typeof criarGit>[0];
+
+  it('devolve bytes exatos (inclusive inválidos em UTF-8) e deixa de fora o que não existe', async () => {
+    const r = await criarGit(executor()).lerArquivosDe(REPO, SHA, ['catalogo.json', 'ausente.json'], 1000);
+    expect([...(r.get('catalogo.json') ?? [])]).toEqual([0xff, 0xfe, 0x61, 0x62, 0x63]);
+    expect(r.has('ausente.json')).toBe(false);
+  });
+
+  it('recusa link simbólico, arquivo grande, caminho com diretório ou opção e commit curto', async () => {
+    await expect(criarGit(executor('120000')).lerArquivosDe(REPO, SHA, ['catalogo.json'], 1000)).rejects.toThrow(
+      /link simbólico/,
+    );
+    await expect(
+      criarGit(executor('100644', '5000')).lerArquivosDe(REPO, SHA, ['catalogo.json'], 1000),
+    ).rejects.toThrow(/passa de/);
+    for (const c of ['a/b.json', '-x', '../x']) {
+      await expect(criarGit(executor()).lerArquivosDe(REPO, SHA, [c], 1000)).rejects.toThrow(/recusado/);
+    }
+    await expect(criarGit(executor()).lerArquivosDe(REPO, 'main', ['catalogo.json'], 1000)).rejects.toThrow(
+      /SHA completo/,
+    );
+  });
+});
+
 describe('entradasDaArvore', () => {
   it('recusa symlink e submódulo', () => {
     expect(() => entradasDaArvore(`120000 blob ${SHA}	link${NUL}`)).toThrow(/link simbólico/);

@@ -90,7 +90,7 @@ const CONFIG = (extra: Record<string, unknown> = {}) =>
     ambientes: ['claude-code'],
     origensPermitidas: [REPO],
     pacotes: {},
-    catalogo: { repositorio: REPO, workflow: 'assinar.yml' },
+    catalogo: { repositorio: REPO, repositorioId: '123456', workflow: 'assinar.yml' },
     ...extra,
   });
 
@@ -99,6 +99,7 @@ function projetoComCatalogo(opcoes: {
   arquivosDoCatalogo?: Record<string, string>;
   verificador?: VerificadorDeAssinatura | null;
   tags?: Record<string, string>;
+  projeto?: Record<string, string>;
 }) {
   const arquivosDoCatalogo = opcoes.arquivosDoCatalogo ?? {
     'catalogo.json': CATALOGO,
@@ -115,7 +116,7 @@ function projetoComCatalogo(opcoes: {
           },
         });
   const ctx = ctxBase(
-    { '.harness/config.json': opcoes.config ?? CONFIG() },
+    { '.harness/config.json': opcoes.config ?? CONFIG(), ...opcoes.projeto },
     {
       git: gitEmMemoria({
         [REPO]: { tags: opcoes.tags ?? { 'v1.0.0': 'a', 'v1.2.0': 'b' }, commits: { a: {}, b: arquivosDoCatalogo } },
@@ -135,12 +136,13 @@ describe('search (catálogo assinado)', () => {
     expect(r.saida.join('\n')).toContain('bia/revisao [revisao]');
     expect(r.saida.join('\n')).toContain('ez-ai add https://github.com/bia/revisao');
     expect(r.saida.join('\n')).toContain('não aprova o pacote');
-    const esperado = hashDoCatalogo(CATALOGO);
+    const esperado = hashDoCatalogo(new TextEncoder().encode(CATALOGO));
     expect(pedidos).toHaveLength(1);
     expect(pedidos[0]).toMatchObject({
       identidade: `${REPO}/.github/workflows/assinar.yml@refs/tags/v1.2.0`,
       emissor: 'https://token.actions.githubusercontent.com',
       artefato: esperado,
+      idDoRepositorio: '123456',
     });
   });
 
@@ -215,8 +217,9 @@ describe('search (catálogo assinado)', () => {
     expect((await procurarPacotes(semCatalogo.ctx, { termos: ['x'] })).erros.join('')).toContain(
       'não fixou um catálogo',
     );
-    const origem = projetoComCatalogo({ config: CONFIG({ origensPermitidas: ['https://github.com/ana/outro'] }) });
-    expect((await procurarPacotes(origem.ctx, { termos: ['x'] })).erros.join('')).toContain('origensPermitidas');
+    // A origem do catálogo vale pela configuração `catalogo`; não precisa estar em origensPermitidas (lista de pacotes).
+    const origem = projetoComCatalogo({ config: CONFIG({ origensPermitidas: [] }) });
+    expect((await procurarPacotes(origem.ctx, { termos: ['revisao'] })).codigo).toBe(0);
     expect((await procurarPacotes(projetoComCatalogo({}).ctx, { termos: [] })).codigo).toBe(1);
     const semConfig = ctxBase({});
     expect((await procurarPacotes(semConfig, { termos: ['x'] })).codigo).toBe(1);
@@ -228,7 +231,96 @@ describe('search (catálogo assinado)', () => {
   });
 
   it('a configuração rejeita workflow fora do padrão e preserva o catálogo ao regravar', async () => {
-    const ruim = projetoComCatalogo({ config: CONFIG({ catalogo: { repositorio: REPO, workflow: '../x.yml' } }) });
+    const ruim = projetoComCatalogo({
+      config: CONFIG({ catalogo: { repositorio: REPO, repositorioId: '123456', workflow: '../x.yml' } }),
+    });
     expect((await procurarPacotes(ruim.ctx, { termos: ['x'] })).codigo).toBe(1);
+  });
+});
+
+describe('search: endurecimento do catálogo (ADR-0040)', () => {
+  const VISTO = (tag: string, commit: string) => JSON.stringify({ tag, commit });
+  const SHA_A = 'a'.repeat(40);
+  const SHA_B = 'b'.repeat(40);
+  const config = (catalogo: Record<string, unknown>) =>
+    CONFIG({ catalogo: { repositorio: REPO, repositorioId: '123456', workflow: 'assinar.yml', ...catalogo } });
+  // tags v1.0.0 -> 'a', v1.2.0 -> 'b' no helper; o commit "SHA" do helper é o nome do commit em memória.
+  it('grava a última tag vista depois de aceitar o catálogo', async () => {
+    const { ctx } = projetoComCatalogo({});
+    expect((await procurarPacotes(ctx, { termos: ['revisao'] })).codigo).toBe(0);
+    expect(JSON.parse(await ctx.arquivos.ler('.harness/catalogo-visto.json'))).toEqual({ tag: 'v1.2.0', commit: 'b' });
+  });
+
+  it('não grava nada quando a assinatura é recusada', async () => {
+    const { ctx } = projetoComCatalogo({ verificador: { verificar: async () => ({ ok: false, motivo: 'x' }) } });
+    await procurarPacotes(ctx, { termos: ['revisao'] });
+    expect(await ctx.arquivos.existe('.harness/catalogo-visto.json')).toBe(false);
+  });
+
+  it('recusa voltar a uma tag menor que a já vista (replay de catálogo antigo assinado)', async () => {
+    const { ctx } = projetoComCatalogo({
+      tags: { 'v1.0.0': 'a' },
+      projeto: { '.harness/catalogo-visto.json': VISTO('v1.2.0', SHA_B) },
+    });
+    const r = await procurarPacotes(ctx, { termos: ['revisao'] });
+    expect(r.codigo).toBe(1);
+    expect(r.erros.join('')).toContain('já aceitou v1.2.0');
+  });
+
+  it('recusa a mesma tag apontando para outro commit', async () => {
+    const { ctx } = projetoComCatalogo({ projeto: { '.harness/catalogo-visto.json': VISTO('v1.2.0', SHA_A) } });
+    const r = await procurarPacotes(ctx, { termos: ['revisao'] });
+    expect(r.codigo).toBe(1);
+    expect(r.erros.join('')).toContain('mudou de commit');
+  });
+
+  it('recusa arquivo de tag vista ilegível', async () => {
+    const { ctx } = projetoComCatalogo({ projeto: { '.harness/catalogo-visto.json': 'lixo' } });
+    expect((await procurarPacotes(ctx, { termos: ['revisao'] })).erros.join('')).toContain('ilegível');
+  });
+
+  it('aplica versaoMinima da configuração', async () => {
+    const { ctx } = projetoComCatalogo({ config: config({ versaoMinima: '2.0.0' }) });
+    const r = await procurarPacotes(ctx, { termos: ['revisao'] });
+    expect(r.codigo).toBe(1);
+    expect(r.erros.join('')).toContain('versaoMinima');
+    expect(
+      (
+        await procurarPacotes(projetoComCatalogo({ config: config({ versaoMinima: '1.2.0' }) }).ctx, {
+          termos: ['revisao'],
+        })
+      ).codigo,
+    ).toBe(0);
+  });
+
+  it('exige repositorioId na configuração', async () => {
+    const { ctx } = projetoComCatalogo({
+      config: CONFIG({ catalogo: { repositorio: REPO, workflow: 'assinar.yml' } }),
+    });
+    expect((await procurarPacotes(ctx, { termos: ['x'] })).codigo).toBe(1);
+  });
+
+  it('lê só catalogo.json e o bundle e hasheia os bytes brutos', async () => {
+    const pedidos: string[][] = [];
+    const git = gitEmMemoria({
+      [REPO]: {
+        tags: { 'v1.0.0': 'a' },
+        commits: { a: { 'catalogo.json': CATALOGO, 'harness-pacote.sigstore.json': '{}', 'outro.md': 'x' } },
+      },
+    });
+    const original = git.lerArquivosDe.bind(git);
+    git.lerArquivosDe = async (r, c, caminhos, limite) => {
+      pedidos.push([...caminhos]);
+      return original(r, c, caminhos, limite);
+    };
+    git.lerArquivos = async () => {
+      throw new Error('não deveria ler a árvore inteira');
+    };
+    const ctx = ctxBase(
+      { '.harness/config.json': CONFIG() },
+      { git, verificador: { verificar: async () => ({ ok: true }) } },
+    );
+    expect((await procurarPacotes(ctx, { termos: ['revisao'] })).codigo).toBe(0);
+    expect(pedidos).toEqual([['catalogo.json', 'harness-pacote.sigstore.json']]);
   });
 });

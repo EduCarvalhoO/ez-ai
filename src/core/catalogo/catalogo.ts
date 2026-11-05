@@ -7,12 +7,41 @@ import { lerJsonSeguro } from '../contratos/json-seguro.js';
 export const ARQUIVO_DO_CATALOGO = 'catalogo.json';
 
 /**
- * O texto que o workflow de release assina: `sha256:<hex>` dos bytes UTF-8 de `catalogo.json` (e só dele). Em shell:
- * `echo "sha256:$(sha256sum catalogo.json | cut -d' ' -f1)"`. O catálogo não é um pacote, então não usa o hash de pacote.
+ * O texto que o workflow de release assina: `sha256:<hex>` dos BYTES BRUTOS de `catalogo.json` (e só dele), do jeito que
+ * estão no Git, antes de qualquer decodificação. Em shell: `echo "sha256:$(sha256sum catalogo.json | cut -d' ' -f1)"`.
+ * O catálogo não é um pacote, então não usa o hash de pacote.
  */
-export function hashDoCatalogo(texto: string): string {
-  return `sha256:${createHash('sha256').update(texto, 'utf8').digest('hex')}`;
+export function hashDoCatalogo(bytes: Uint8Array): string {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 }
+
+/** Decodifica o catálogo como UTF-8 estrito (byte inválido recusa em vez de virar caractere de substituição). */
+export function decodificarCatalogo(bytes: Uint8Array): string | undefined {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Última tag do catálogo já aceita neste projeto (`.harness/catalogo-visto.json`), contra regressão e tag movida. */
+export interface CatalogoVisto {
+  readonly tag: string;
+  readonly commit: string;
+}
+
+export const CAMINHO_DO_CATALOGO_VISTO = '.harness/catalogo-visto.json';
+
+export function lerCatalogoVisto(texto: string): CatalogoVisto | undefined {
+  const lido = lerJsonSeguro(texto, { bytes: 1024, profundidade: 2 });
+  if (!lido.ok || !ehObjeto(lido.valor)) return undefined;
+  const { tag, commit } = lido.valor;
+  if (typeof tag !== 'string' || typeof commit !== 'string') return undefined;
+  if (!/^v?\d+\.\d+\.\d+$/.test(tag) || !/^[0-9a-f]{40}$/.test(commit)) return undefined;
+  return { tag, commit };
+}
+
+export const textoDoCatalogoVisto = (v: CatalogoVisto): string => `${JSON.stringify(v, null, 2)}\n`;
 
 export const LIMITES_DO_CATALOGO = {
   bytes: 256 * 1024,
