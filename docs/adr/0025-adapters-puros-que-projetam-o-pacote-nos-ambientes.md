@@ -25,3 +25,6 @@ O [ADR-0027](0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md)
 
 ## Gatilhos de revisão
 Mudança de formato de hooks ou MCP em algum ambiente; chegada da F4 (hooks e policy); pedido de adapter para outro ambiente; resultado do spike do Copilot mostrando que `.claude/` e `.github/` aparecem duplicados.
+
+## Atualização (Sprint 17, 2026-11-05)
+`plan`, `apply` e `update` mostram por padrão um **resumo por componente** do diff das instruções (`+N -M linha(s)`); o texto completo vem com `--detalhes`. Os comandos de hook e MCP, o diff dos scripts do pacote e as linhas de aprovação própria continuam sempre visíveis, porque são o que roda no ambiente. O `plan` também imprime os `--aprovar <id>` que faltam.

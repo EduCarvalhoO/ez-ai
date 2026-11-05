@@ -13,20 +13,20 @@ Pasta `D:\WorkSpace\ez-ai-simulacao\app` (fora do repo, Git novo, um `soma.js`).
 |---|---|---|---|
 | 1 | `ez-ai --help` era recusado como "argumento não reconhecido" (código 2) | Alta | Corrigido: `--help`, `-h` mostram o uso e saem com 0 |
 | 2 | `add local:/caminho/absoluto` e `local:../pasta` recusados sem dizer o formato aceito | Média | Corrigido: a mensagem agora mostra as duas formas de origem. Falta decidir se pacote local fora do projeto deve ser permitido (ver P2) |
-| 3 | `workflow etapa ... E4 executado` recusado; só `verificado`/`falhou` | Média | Mensagem corrigida (explica que E4 registra o veredito). O quickstart do workflow deveria mostrar uma sessão completa (P3) |
+| 3 | `workflow etapa ... E4 executado` recusado; só `verificado`/`falhou` | Média | Mensagem corrigida (explica que E4 registra o veredito). Sprint 17: quickstart com sessão completa |
 | 4 | Mensagem "só cabem as etapas E2" (plural com uma etapa) | Baixa | Corrigido |
-| 5 | Após E1, a E2 (opcional) precisa ser registrada como `ignorado`; não dá para ir direto ao G0/G1 | Média | Aberto (P3) |
-| 6 | `plan` e `apply` imprimem o texto inteiro de cada instrução do pacote (mais de 80 linhas para 6 componentes) | Alta | Aberto (P1) |
-| 7 | `export` com telemetria desligada sai com código 1 (erro) embora seja estado normal | Baixa | Aberto (P4); mudar exige ajustar ADR-0029 |
+| 5 | Após E1, a E2 (opcional) precisa ser registrada como `ignorado`; não dá para ir direto ao G0/G1 | Média | Corrigido na Sprint 17: depois da E1 o G0 é aceito direto e a E2 fica ignorada |
+| 6 | `plan` e `apply` imprimem o texto inteiro de cada instrução do pacote (mais de 80 linhas para 6 componentes) | Alta | Corrigido na Sprint 17: resumo por componente; `--detalhes` mostra o texto |
+| 7 | `export` com telemetria desligada sai com código 1 (erro) embora seja estado normal | Baixa | Corrigido na Sprint 17: sai com 0 e avisa (ADR-0029 ajustado) |
 | 8 | `conhecimento mapa`/`indexar` só enxergam Markdown: num projeto só com código devolve "nenhum arquivo" | Média | Aberto (P2) |
-| 9 | `custo` mostra US$ 0,0000 com "sem medida"; fica ambíguo para quem lê rápido | Baixa | Aberto (P4): mostrar "indisponível" no lugar do zero |
-| 10 | O nome do dono do pacote local vem do login do Git (`educarvalhoo/...`), sem aviso | Baixa | Aberto (P4) |
-| 11 | O quickstart cita o pacote oficial só em termos genéricos; não existe repositório publicado para `add https://github.com/...` do `workflow-feature` | Alta | Aberto (P1, depende do release) |
+| 9 | `custo` mostra US$ 0,0000 com "sem medida"; fica ambíguo para quem lê rápido | Baixa | Corrigido na Sprint 17: mostra "indisponível" |
+| 10 | O nome do dono do pacote local vem do login do Git (`educarvalhoo/...`), sem aviso | Baixa | Corrigido na Sprint 17: o `add local:` avisa que o dono vem do manifesto |
+| 11 | O quickstart cita o pacote oficial só em termos genéricos; não existe repositório publicado para `add https://github.com/...` do `workflow-feature` | Alta | Sprint 17: pacote 0.4.0 pronto para publicar (README, estrutura); falta o Eduardo criar o repositório e a tag |
 
 ## Validação da estrutura e da arquitetura
 - Camadas respeitam o [ADR-0015](../adr/0015-nucleo-sem-io-com-portas-e-adapters-puros.md): 1085 testes passam, `npm audit` sem vulnerabilidades, lint e tipos limpos.
-- [Mapa de módulos](mapa-de-modulos.md) está defasado (atualizado em 2026-11-02): cita `src/exportadores/`, que não existe (a telemetria vive em `src/core/telemetria`), e não lista assinatura, papéis, servidor, workflow, conhecimento. **P2: atualizar.**
-- Maiores arquivos: `src/core/comandos/escrita.ts` (587 linhas) e `src/cli/main.ts` (435). Ainda administráveis, mas `main.ts` mistura parsing de argumentos, uso e despacho; separar em `args.ts` quando passar de 500. **P3.**
+- [Mapa de módulos](mapa-de-modulos.md) está defasado (atualizado em 2026-11-02): cita `src/exportadores/`, que não existe (a telemetria vive em `src/core/telemetria`), e não lista assinatura, papéis, servidor, workflow, conhecimento. Atualizado na Sprint 17.
+- Maiores arquivos: `src/core/comandos/escrita.ts` (587 linhas) e `src/cli/main.ts` (435). Ainda administráveis, mas `main.ts` mistura parsing de argumentos, uso e despacho; `args.ts` separado na Sprint 17.
 - `.github/pull_request_template.md` ainda diz "harness-ai"; ADRs 0028 a 0034 usam o nome antigo no texto (registro histórico, tolerável). O modelo de PR exige autorização escrita para mexer em `.github/`. **P1 (trivial, depende de autorização).**
 - `release-npm.yml` foi ativado em `.github/workflows/` (autorizado em 2026-11-05). `release-assinada.yml` é para repositórios de pacote e segue como modelo.
 - Cobertura do benchmark (`conhecimento avaliar`) exige `conhecimento/perguntas.json`; num projeto novo a mensagem de erro não diz como criar. **P3.**
@@ -61,5 +61,5 @@ Feita na pasta de simulação com o pacote `workflow-feature` e um pacote de tes
 **Atritos novos**
 | # | Atrito | Prioridade |
 |---|---|---|
-| 12 | `plan` não mostra os ids para `--aprovar`; só o `apply` recusado os mostra (com `%2F` no id) | P3 |
+| 12 | `plan` não mostra os ids para `--aprovar`; só o `apply` recusado os mostra (com `%2F` no id) | Corrigido na Sprint 17: o `plan` imprime os `--aprovar` |
 | 13 | O MCP do pacote precisa de `ez-ai@<versão>` fixa; com a versão `0.0.0` não publicada, `npx` falharia no Claude Code | P1 (resolve com o release) |
