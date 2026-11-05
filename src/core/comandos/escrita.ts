@@ -128,7 +128,10 @@ export function adicionar(ctx: Contexto, opcoes: OpcoesDeAdd): Promise<Resultado
     const config = await carregarConfiguracao(ctx.arquivos);
     if (!config.ok) return falha(config.erros);
     const { origem, problema } = lerOrigem(opcoes.origem);
-    if (problema) return falha([`origem inválida: ${e(problema)}`]);
+    if (problema)
+      return falha([
+        `origem inválida: ${e(problema)}. Origem local: "local:<pasta dentro do projeto>"; remota: "https://github.com/<dono>/<repo>".`,
+      ]);
     if (!origemPermitida(config.valor, textoDaOrigem(origem))) {
       return falha([
         `origem "${e(textoDaOrigem(origem))}" fora da lista permitida; se confia nela, acrescente em origensPermitidas de ${CAMINHO_DA_CONFIGURACAO} (ADR-0018).`,

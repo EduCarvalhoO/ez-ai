@@ -48,6 +48,7 @@
 | [arquitetura/spike-node-sqlite.md](arquitetura/spike-node-sqlite.md) | Spike: `node:sqlite` com FTS5 serve para a camada C1 do RAG; vetores não vêm embutidos |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [arquitetura/modelo-de-ameacas.md](arquitetura/modelo-de-ameacas.md) | Ameaças STRIDE com severidade, controle, fase e teste previsto; riscos residuais aceitos |
+| [arquitetura/validacao-e-simulacao-sprint-16.md](arquitetura/validacao-e-simulacao-sprint-16.md) | Validação da estrutura e simulação de uso da CLI: atritos, correções feitas e próximos passos priorizados |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
 | [guias/padrao-de-documentacao.md](guias/padrao-de-documentacao.md) | Caminhos, estrutura, fluxo e checklist de documentação |
 | [guias/padrao-de-agentes-e-skills.md](guias/padrao-de-agentes-e-skills.md) | Onde e como criar agentes, skills e rules; inventário (inclui os agentes `painel` e `professor`) |

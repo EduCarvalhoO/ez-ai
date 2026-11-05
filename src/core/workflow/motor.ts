@@ -149,7 +149,7 @@ export function avancar(
   if (!estado.permitidas.includes(etapa)) {
     return {
       ok: false,
-      motivo: `agora só cabem as etapas ${estado.permitidas.join(' ou ')}; "${etapa}" fica fora da ordem do workflow`,
+      motivo: `agora ${estado.permitidas.length > 1 ? 'só cabem as etapas' : 'só cabe a etapa'} ${estado.permitidas.join(' ou ')}; "${etapa}" fica fora da ordem do workflow`,
     };
   }
   // Decisão humana depois de uma escala ou de um G3 reprovado: o destino (E1 ou E3) zera os laços de agentes.
@@ -170,7 +170,9 @@ export function avancar(
   if (resultado === 'falhou') return { ok: true, estado: falhar(base, etapa, cfg) };
 
   if (EXIGE_VERIFICADO.includes(etapa) && resultado !== 'verificado') {
-    return { ok: false, motivo: `"${etapa}" só passa com resultado "verificado", não com "${resultado}"` };
+    const dica =
+      etapa === 'E4' ? ' (E4 registra o veredito do revisor: "verificado" se aprovou, "falhou" se reprovou)' : '';
+    return { ok: false, motivo: `"${etapa}" só passa com resultado "verificado", não com "${resultado}"${dica}` };
   }
   const prox = seguinte(etapa, cfg);
   if (prox === 'concluido') return { ok: true, estado: com(base, { situacao: 'concluido', permitidas: [] }) };

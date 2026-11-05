@@ -311,6 +311,10 @@ export async function main(
     saidas.stdout(`${lerVersao()}\n`);
     return 0;
   }
+  if (args.length === 1 && (primeiro === '--help' || primeiro === '-h' || primeiro === 'help')) {
+    saidas.stdout(USO);
+    return 0;
+  }
   const lido = lerArgumentos(args);
   if (typeof lido === 'string') {
     saidas.stderr(`ez-ai: ${lido}.\n${USO}`);
