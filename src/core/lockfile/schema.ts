@@ -21,7 +21,7 @@ export const ENTRADA_DE_APROVACAO = {
 export const SCHEMA_DO_LOCKFILE = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   $id: ID_DO_SCHEMA_DO_LOCKFILE,
-  title: 'Lockfile do harness-ai (v0)',
+  title: 'Lockfile do ez-ai (v0)',
   type: 'object',
   additionalProperties: false,
   required: ['versaoLockfile', 'pacotes'],

@@ -241,7 +241,7 @@ export async function retomarWorkflow(ctx: Contexto): Promise<ResultadoDoComando
         saida.push(`  ${p} exige ${pedidos}`);
       }
     }
-    saida.push(`  retome com: harness-ai workflow status ${escaparInvisiveis(item)}`);
+    saida.push(`  retome com: ez-ai workflow status ${escaparInvisiveis(item)}`);
   }
   return { codigo: 0, saida: saida.length > 0 ? saida : ['nenhum item aberto'], erros: [] };
 }

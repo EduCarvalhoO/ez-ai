@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/lockfile.v0.schema.json",
-  "title": "Lockfile do harness-ai (v0)",
+  "title": "Lockfile do ez-ai (v0)",
   "type": "object",
   "additionalProperties": false,
   "required": ["versaoLockfile", "pacotes"],

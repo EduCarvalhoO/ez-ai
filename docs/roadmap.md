@@ -1,6 +1,6 @@
 # Roadmap até a v1.0
 
-> Status: Aceito (revisável a cada fase) · Atualizado: 2026-11-04 · Relacionados: [contexto](contexto.md), [ADRs](adr/README.md)
+> Status: Aceito (revisável a cada fase) · Atualizado: 2026-11-05 · Relacionados: [contexto](contexto.md), [ADRs](adr/README.md)
 
 ## Premissas
 
@@ -37,7 +37,7 @@ gantt
 | **M3 — MVP comprovado** | F6 | Workflow com gates rodando, com métricas no Langfuse |
 | **M4 — v1.0 distribuída** | F8 | Publicado no npm com provenance, docs e garantias de compatibilidade |
 
-**Situação em 2026-11-04** (Sprints 01 a 13 entregues; as pendências do Eduardo são testes manuais que fecham os marcos):
+**Situação em 2026-11-05** (Sprints 01 a 15 entregues; as pendências do Eduardo são testes manuais que fecham os marcos):
 
 | Fase | Situação | Falta para fechar |
 |---|---|---|
@@ -47,7 +47,7 @@ gantt
 | F5 Observabilidade | Entregue (Sprints 08 e 09) | Rodar o [runbook do Langfuse](guias/runbook-langfuse.md) uma vez |
 | F6 Workflow MVP | Código entregue (Sprints 10 a 13) | **M3:** executar as 3 tarefas do benchmark nos dois ambientes |
 | F7 Supply chain | Código entregue (Sprints 13 e 14) | **Primeira assinatura real:** publicar um pacote de teste assinado e instalar com `confiancaMinima: "verificado"` ([runbook](guias/runbook-assinatura.md)); copiar o workflow de release para `.github/` quando autorizar |
-| F8 Beta e release | Não iniciada | Depende da F7, de licença (decidida: FSL) e de nome |
+| F8 Beta e release | Preparação entregue (Sprint 15): política de versionamento, docs de usuário, nome **ez-ai**, modelo de release | [Checklist de release](guias/checklist-de-release.md): marca, trusted publisher no npm, autorizar workflow, beta com 3 a 5 projetos, instalação limpa nos 3 SOs |
 
 ---
 
@@ -146,7 +146,7 @@ Entregas:
 - Dashboards/consultas para as [métricas de sucesso](#métricas-de-sucesso), cobrindo as [visões do painel do pipeline](specs/pipeline-agentico.md#painel).
 - Métricas da base de conhecimento (recall@k, MRR, acerto de citação) exportadas ao Langfuse ([ADR-0021](adr/0021-rag-em-camadas-local-first-e-medido.md)).
 
-**Andamento (sprint 08, 2026-11-04):** parte 1 entregue: `harness-ai export` envia a auditoria como spans OTLP ao Langfuse, só com `telemetria` na configuração, com redação de segredos em três barreiras e zero rede quando desligado ([ADR-0029](adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md)); `nomeProjetado` deixa de colidir. **Andamento (sprint 09, 2026-11-04):** parte 2 entregue: Docker Compose e [runbook](guias/runbook-langfuse.md) do Langfuse, comando `custo` (tokens e custo por agente), funções de métricas da base de conhecimento (recall@k, MRR, citação) e correções da revisão de segurança Opus da Sprint 08 ([ADR-0030](adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md)). Pendente: datasets e evals (após o workflow da F6), ligar as métricas ao índice C1 e gravar `consumo` pelo workflow.
+**Andamento (sprint 08, 2026-11-04):** parte 1 entregue: `ez-ai export` envia a auditoria como spans OTLP ao Langfuse, só com `telemetria` na configuração, com redação de segredos em três barreiras e zero rede quando desligado ([ADR-0029](adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md)); `nomeProjetado` deixa de colidir. **Andamento (sprint 09, 2026-11-04):** parte 2 entregue: Docker Compose e [runbook](guias/runbook-langfuse.md) do Langfuse, comando `custo` (tokens e custo por agente), funções de métricas da base de conhecimento (recall@k, MRR, citação) e correções da revisão de segurança Opus da Sprint 08 ([ADR-0030](adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md)). Pendente: datasets e evals (após o workflow da F6), ligar as métricas ao índice C1 e gravar `consumo` pelo workflow.
 
 Critérios de saída: trace completo de uma execução visível no Langfuse local; teste garante que segredos de fixture nunca chegam ao exportador; telemetria desligada = zero chamadas de rede.
 

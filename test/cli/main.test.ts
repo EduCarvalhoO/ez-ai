@@ -21,7 +21,7 @@ function capturar(): SaidasCapturadas {
 }
 
 const versaoValida = /^\d+\.\d+\.\d+\n$/;
-const usoEsperado = /Uso: harness-ai --version/;
+const usoEsperado = /Uso: ez-ai --version/;
 
 describe('main', () => {
   it('--version escreve a versão no stdout e retorna 0', async () => {
@@ -64,10 +64,10 @@ describe('lerVersao', () => {
   });
 
   it('falha com mensagem acionável quando o package.json não tem "version" string', async () => {
-    pasta = mkdtempSync(join(tmpdir(), 'harness-ai-versao-'));
+    pasta = mkdtempSync(join(tmpdir(), 'ez-ai-versao-'));
     const caminho = join(pasta, 'package.json');
     writeFileSync(caminho, JSON.stringify({ name: 'x', version: 1 }), 'utf8');
-    expect(() => lerVersao(caminho)).toThrow(/Campo "version" ausente ou inválido .*Reinstale o pacote harness-ai/);
+    expect(() => lerVersao(caminho)).toThrow(/Campo "version" ausente ou inválido .*Reinstale o pacote ez-ai/);
   });
 });
 
@@ -79,7 +79,7 @@ describe('main com comandos', () => {
   });
 
   it('init --dry-run não grava; init grava; doctor e list rodam no projeto temporário', async () => {
-    pasta = mkdtempSync(join(tmpdir(), 'harness-ai-cli-'));
+    pasta = mkdtempSync(join(tmpdir(), 'ez-ai-cli-'));
     const seco = capturar();
     expect(await main(['init', '--dry-run', '--projeto', pasta], seco.saidas)).toBe(0);
     expect(existsSync(join(pasta, '.harness'))).toBe(false);

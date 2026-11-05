@@ -27,7 +27,7 @@ O workflow e o ruleset prontos estão em [docs/modelos/aprovacao.yml](../modelos
 
 ## Chamada do job
 ```bash
-harness-ai validate --servidor --base origin/develop --repo dono/repo --pr 12 --exigir-evidencias --checks "qualidade,workflows"
+ez-ai validate --servidor --base origin/develop --repo dono/repo --pr 12 --exigir-evidencias --checks "qualidade,workflows"
 ```
 `--checks` lista os check runs que devem estar `success` no SHA da head.
 

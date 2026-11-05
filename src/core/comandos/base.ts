@@ -51,7 +51,7 @@ export type Carregado<T> = { readonly ok: true; readonly valor: T } | { readonly
 
 export async function carregarConfiguracao(arquivos: SistemaDeArquivos): Promise<Carregado<Configuracao>> {
   if (!(await arquivos.existe(CAMINHO_DA_CONFIGURACAO))) {
-    return { ok: false, erros: [`${CAMINHO_DA_CONFIGURACAO} não existe; rode "harness-ai init" no projeto.`] };
+    return { ok: false, erros: [`${CAMINHO_DA_CONFIGURACAO} não existe; rode "ez-ai init" no projeto.`] };
   }
   const r = validarConfiguracao(await arquivos.ler(CAMINHO_DA_CONFIGURACAO));
   return r.ok ? r : { ok: false, erros: formatarErros(CAMINHO_DA_CONFIGURACAO, r.erros) };

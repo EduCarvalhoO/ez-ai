@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SBOM (lista de componentes) do próprio harness-ai em CycloneDX 1.5, gerada do package-lock.json (ADR-0035).
+// SBOM (lista de componentes) do próprio ez-ai em CycloneDX 1.5, gerada do package-lock.json (ADR-0035).
 // Determinística: sem data, sem UUID aleatório, sem rede. O número de série vem do hash do lockfile, então o mesmo
 // lockfile gera sempre o mesmo SBOM e a verificação detecta qualquer desvio.
 // Uso:

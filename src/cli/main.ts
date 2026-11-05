@@ -56,7 +56,7 @@ export interface Saidas {
 export function lerVersao(caminho: string = caminhoDoPacote): string {
   const pacote: unknown = JSON.parse(readFileSync(caminho, 'utf8'));
   if (typeof pacote !== 'object' || pacote === null || !('version' in pacote) || typeof pacote.version !== 'string') {
-    throw new Error(`Campo "version" ausente ou inválido em ${caminho}. Reinstale o pacote harness-ai.`);
+    throw new Error(`Campo "version" ausente ou inválido em ${caminho}. Reinstale o pacote ez-ai.`);
   }
   return pacote.version;
 }
@@ -81,8 +81,8 @@ const COMANDOS = [
 type Comando = (typeof COMANDOS)[number];
 
 const USO = [
-  'Uso: harness-ai --version (ou -v) para ver a versão instalada.',
-  '     harness-ai <comando> [--projeto <pasta>] [--dry-run]',
+  'Uso: ez-ai --version (ou -v) para ver a versão instalada.',
+  '     ez-ai <comando> [--projeto <pasta>] [--dry-run]',
   'Comandos: init [--ambientes claude-code,copilot], list, validate, plan, doctor,',
   '  add <origem> [--versao <intervalo>]   registra um pacote (https://github.com/<dono>/<repo> ou local:<pasta>)',
   '  remove <login/pacote>                 tira o pacote e apaga os arquivos instalados',
@@ -313,7 +313,7 @@ export async function main(
   }
   const lido = lerArgumentos(args);
   if (typeof lido === 'string') {
-    saidas.stderr(`harness-ai: ${lido}.\n${USO}`);
+    saidas.stderr(`ez-ai: ${lido}.\n${USO}`);
     return 2;
   }
   let resultado: ResultadoDoComando;
@@ -327,7 +327,7 @@ export async function main(
       resultado = await executar(lido, ctx);
     }
   } catch (erro: unknown) {
-    saidas.stderr(`harness-ai: ${erro instanceof Error ? erro.message : String(erro)}\n`);
+    saidas.stderr(`ez-ai: ${erro instanceof Error ? erro.message : String(erro)}\n`);
     return 1;
   }
   for (const l of resultado.saida) saidas.stdout(`${l}\n`);
@@ -336,10 +336,10 @@ export async function main(
 }
 
 const USO_DO_WORKFLOW = [
-  'uso: harness-ai workflow status <item>',
-  '     harness-ai workflow docs <arquivo>',
-  '     harness-ai workflow retomar',
-  '     harness-ai workflow etapa <item> <E0..E5|G0..G3> <solicitado|executado|verificado|falhou|ignorado> --agente <id> [--consumo <arquivo.json>] [--documento <arquivo>] [--evidencia <arquivo>]',
+  'uso: ez-ai workflow status <item>',
+  '     ez-ai workflow docs <arquivo>',
+  '     ez-ai workflow retomar',
+  '     ez-ai workflow etapa <item> <E0..E5|G0..G3> <solicitado|executado|verificado|falhou|ignorado> --agente <id> [--consumo <arquivo.json>] [--documento <arquivo>] [--evidencia <arquivo>]',
 ];
 
 function executarWorkflow(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
@@ -362,11 +362,11 @@ function executarWorkflow(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComa
 }
 
 const USO_DO_CONHECIMENTO = [
-  'uso: harness-ai conhecimento indexar',
-  '     harness-ai conhecimento buscar <consulta> [--limite <n>]',
-  '     harness-ai conhecimento mapa [pasta]',
-  '     harness-ai conhecimento avaliar [--exportar]',
-  '     harness-ai conhecimento servir',
+  'uso: ez-ai conhecimento indexar',
+  '     ez-ai conhecimento buscar <consulta> [--limite <n>]',
+  '     ez-ai conhecimento mapa [pasta]',
+  '     ez-ai conhecimento avaliar [--exportar]',
+  '     ez-ai conhecimento servir',
 ];
 
 function executarConhecimento(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {

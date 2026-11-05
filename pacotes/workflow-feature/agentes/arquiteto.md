@@ -12,7 +12,7 @@ A ficha tem, nesta ordem:
 4. `Em aberto`: perguntas que só o humano responde, cada uma com recomendação, impacto, alternativas e por que cada uma foi ou não recomendada.
 
 Regras:
-- Use a base de conhecimento (`harness-ai conhecimento buscar`) antes de afirmar como o projeto funciona; cite `arquivo:linha`.
+- Use a base de conhecimento (`ez-ai conhecimento buscar`) antes de afirmar como o projeto funciona; cite `arquivo:linha`.
 - Decisão de arquitetura vira ADR; atualize o índice de documentos no mesmo trabalho.
 - Quando o gate G0 ou G1 devolver, corrija a ficha; não abra código.
 - Não implemente nada. Ao terminar, registre a etapa com a skill `registrar-etapa` (E1).

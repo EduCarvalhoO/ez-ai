@@ -1,8 +1,8 @@
-# Runbook: Langfuse self-host para o harness-ai
+# Runbook: Langfuse self-host para o ez-ai
 
 > Status: Vivo · Atualizado: 2026-11-04 · Relacionados: [ADR-0030](../adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md), [ADR-0029](../adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md)
 
-Sobe o Langfuse (painel de custo, tokens e latência) na sua máquina e liga o `harness-ai export` a ele. Precisa de Docker com Compose v2 e ~4 GB de memória livre.
+Sobe o Langfuse (painel de custo, tokens e latência) na sua máquina e liga o `ez-ai export` a ele. Precisa de Docker com Compose v2 e ~4 GB de memória livre.
 
 ## Subir
 1. `cd ops/langfuse` e `cp .env.example .env` (o `.env` não vai para o Git).
@@ -17,8 +17,8 @@ Tudo escuta só em `127.0.0.1`. Para acessar de outra máquina, use túnel SSH o
 1. No Langfuse: Settings → API Keys → crie um par de chaves.
 2. No ambiente (não no repositório): `LANGFUSE_AUTH="Basic <base64 de chavePublica:chaveSecreta>"`. O nome da variável precisa começar com `LANGFUSE_` ou `HARNESS_TELEMETRIA_`.
 3. Em `.harness/config.json`: `"telemetria": { "endpoint": "http://localhost:3000/api/public/otel/v1/traces", "variavelDoToken": "LANGFUSE_AUTH" }` (`http` só vale em localhost).
-4. `harness-ai export --dry-run` mostra quantos eventos iriam, para onde e qual variável seria usada. Depois `harness-ai export`.
-5. Custo por agente sem o painel: `harness-ai custo`.
+4. `ez-ai export --dry-run` mostra quantos eventos iriam, para onde e qual variável seria usada. Depois `ez-ai export`.
+5. Custo por agente sem o painel: `ez-ai custo`.
 
 ## Operação
 | Tarefa | Comando |

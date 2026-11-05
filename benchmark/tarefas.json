@@ -2,7 +2,7 @@
   {
     "id": "adicionar-flag-versao-curta",
     "titulo": "Adicionar alias curto em uma flag da CLI",
-    "pedido": "Na CLI do harness-ai, aceite --json como alias de uma saída estruturada do comando custo, com teste e documentação no uso.",
+    "pedido": "Na CLI do ez-ai, aceite --json como alias de uma saída estruturada do comando custo, com teste e documentação no uso.",
     "criterios": [
       "o comando custo --json imprime um objeto JSON por agente",
       "há teste cobrindo a flag nova e o caso sem a flag",

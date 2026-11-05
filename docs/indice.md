@@ -1,6 +1,6 @@
 # Índice da documentação
 
-> Status: Vivo · Atualizado: 2026-11-04 · Relacionados: [padrão de documentação](guias/padrao-de-documentacao.md)
+> Status: Vivo · Atualizado: 2026-11-05 · Relacionados: [padrão de documentação](guias/padrao-de-documentacao.md)
 >
 > Leia este índice primeiro e abra só os documentos de que precisar. Uma linha por documento; ao criar ou mudar um doc, atualize a linha no mesmo PR (a skill `validar-docs` confere).
 
@@ -37,7 +37,7 @@
 | [adr/0026-policy-ligada-ao-plan-apply-e-gate-de-validate-ci.md](adr/0026-policy-ligada-ao-plan-apply-e-gate-de-validate-ci.md) | ADR-0026: policy dos quatro níveis no `plan`/`apply`/`update`, falha fechada, `validate --ci` e gate de evidências `confirmado` |
 | [adr/0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md](adr/0027-hooks-e-mcp-de-pacote-mesclados-em-arquivos-compartilhados.md) | ADR-0027: hooks e MCP de pacote mesclados em `.claude/settings.json` e `.mcp.json`, hook fail-closed, MCP só com comando do manifesto |
 | [adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md](adr/0028-job-de-servidor-aprovadores-e-evidencia-de-ci.md) | ADR-0028: `validate --servidor` compara com a base (aprovadores, policy, config), exige review de aprovador no SHA da head e confere o CI pela API; S-aud1 em camadas |
-| [adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md](adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md) | ADR-0029: `harness-ai export` envia a auditoria como spans OTLP ao Langfuse, só com opt-in, com redação de segredos e zero rede quando desligado |
+| [adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md](adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md) | ADR-0029: `ez-ai export` envia a auditoria como spans OTLP ao Langfuse, só com opt-in, com redação de segredos e zero rede quando desligado |
 | [adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md](adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md) | ADR-0030: Compose do Langfuse, comando `custo` (tokens por agente), métricas da base de conhecimento e correções da revisão de segurança da Sprint 08 |
 | [adr/0031-motor-de-workflow-com-estado-no-log-e-pacote-oficial.md](adr/0031-motor-de-workflow-com-estado-no-log-e-pacote-oficial.md) | ADR-0031: motor de workflow (etapas, gates e laços) com estado no log, comando `workflow` e pacote oficial `workflow-feature` |
 | [adr/0032-base-de-conhecimento-c0-c1-agentes-do-pacote-e-benchmark.md](adr/0032-base-de-conhecimento-c0-c1-agentes-do-pacote-e-benchmark.md) | ADR-0032: base de conhecimento C0/C1 (comando `conhecimento`), agentes do pacote `workflow-feature`, benchmark (`benchmark`) e datasets no formato Langfuse |
@@ -65,4 +65,13 @@
 | [specs/manifesto-de-pacote.md](specs/manifesto-de-pacote.md) | Manifesto de pacote v0: campos, tipos de componente, permissões declaradas, limites, regras de comando e diff de permissões |
 | [specs/pipeline-agentico.md](specs/pipeline-agentico.md) | Etapas, gates, laços, eventos, customização e economia de tokens do pipeline |
 | [specs/policy.md](specs/policy.md) | Policy v0: regras só restritivas, casamento com as permissões, níveis e precedência, explicação da decisão, garantia por ambiente e policy do núcleo |
+| [adr/0036-versionamento-compatibilidade-e-pipeline-de-release.md](adr/0036-versionamento-compatibilidade-e-pipeline-de-release.md) | ADR-0036: semver, compatibilidade de schemas, depreciação e pipeline de release (npm com provenance por OIDC) |
+| [adr/0037-nome-do-produto-ez-ai.md](adr/0037-nome-do-produto-ez-ai.md) | ADR-0037: o produto se chama ez-ai; o que foi renomeado e o que ficou |
+| [guias/quickstart.md](guias/quickstart.md) | Quickstart: instalar o ez-ai num projeto em 5 minutos |
+| [guias/criar-pacotes.md](guias/criar-pacotes.md) | Como criar, versionar e assinar um pacote |
+| [guias/versionamento-e-compatibilidade.md](guias/versionamento-e-compatibilidade.md) | Semver, versão de schemas, depreciação e migração |
+| [guias/seguranca-para-usuarios.md](guias/seguranca-para-usuarios.md) | O que o ez-ai garante e não garante; boas práticas |
+| [guias/checklist-de-release.md](guias/checklist-de-release.md) | Checklist de release com evidências (fecha o M4) |
+| [modelos/release-npm.yml](modelos/release-npm.yml) | Modelo de workflow de release no npm com provenance por OIDC (não ativo) |
+| [../CONTRIBUTING.md](../CONTRIBUTING.md) | Como contribuir: fluxo, commits, checks e changesets |
 | [_templates/](_templates/) | Modelos de ADR, spec e guia (fora da checagem do índice) |

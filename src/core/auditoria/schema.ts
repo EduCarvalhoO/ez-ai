@@ -205,7 +205,7 @@ const DADOS: Record<(typeof TIPOS_DE_EVENTO)[number], object> = {
 export const SCHEMA_DO_EVENTO = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   $id: ID_DO_SCHEMA_DO_EVENTO,
-  title: 'Evento de auditoria do harness-ai (v0), uma linha do JSONL',
+  title: 'Evento de auditoria do ez-ai (v0), uma linha do JSONL',
   type: 'object',
   additionalProperties: false,
   required: ['versaoEvento', 'seq', 'em', 'tipo', 'ator', 'harness', 'resultado', 'dados', 'anterior', 'hash'],

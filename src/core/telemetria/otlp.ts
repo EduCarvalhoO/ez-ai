@@ -121,11 +121,11 @@ export function montarPayloadOtlp(eventos: readonly EventoDeAuditoria[], versaoD
       {
         resource: {
           attributes: [
-            { key: 'service.name', value: { stringValue: 'harness-ai' } },
+            { key: 'service.name', value: { stringValue: 'ez-ai' } },
             { key: 'service.version', value: { stringValue: redigirSegredos(versaoDoHarness) } },
           ],
         },
-        scopeSpans: [{ scope: { name: 'harness-ai/auditoria' }, spans: eventos.map(eventoParaSpan) }],
+        scopeSpans: [{ scope: { name: 'ez-ai/auditoria' }, spans: eventos.map(eventoParaSpan) }],
       },
     ],
   };
