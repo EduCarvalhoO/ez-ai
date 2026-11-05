@@ -41,6 +41,17 @@ describe('motor do workflow', () => {
     expect(fim.permitidas).toEqual([]);
   });
 
+  it('E2 é opcional: depois da E1 o G0 é aceito direto e a E2 fica ignorada', () => {
+    const fim = percorrer([
+      ['E0', 'executado'],
+      ['E1', 'executado'],
+      ['G0', 'verificado'],
+      ['G1', 'verificado'],
+    ]);
+    expect(fim.ignorados).toContain('E2');
+    expect(fim.permitidas).toEqual(['E3']);
+  });
+
   it('recusa etapa fora da ordem e explica', () => {
     const t = avancar(estadoInicial('feat-x'), 'E3', 'executado');
     expect(t).toMatchObject({ ok: false });

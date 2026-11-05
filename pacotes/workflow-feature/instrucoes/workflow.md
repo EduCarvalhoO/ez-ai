@@ -6,7 +6,7 @@ Toda feature percorre as etapas abaixo, nesta ordem. Quem confere cada gate est�
 |---|---|---|
 | E0 Conhecer o projeto (opcional) | Base do projeto | — |
 | E1 Ficha e documentação | Ficha com critérios de aceite verificáveis | — |
-| E2 Revisão da documentação (opcional) | Relatório do revisor | G0 (agente) |
+| E2 Revisão da documentação (opcional) | Relatório do revisor | G0 (agente); sem E2, registre o G0 direto depois da E1 |
 | — | — | G1 Plano (humano aprova a ficha) |
 | E3 Execução | Código e testes | G2 Verificação (o revisor reexecuta, não confia no relato) |
 | E4 Code review | Relatório do revisor | — |

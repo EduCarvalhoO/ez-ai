@@ -2,12 +2,12 @@
 import { conferirAssinatura, descreverAssinatura, type IdentidadeAssinante } from '../assinatura/assinatura.js';
 import type { Configuracao } from '../configuracao/configuracao.js';
 import type { Origem } from '../configuracao/origem.js';
-import type { PacoteTravado } from '../lockfile/lockfile.js';
-import type { Manifesto } from '../manifesto/manifesto.js';
-import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import { problemaNaPastaLocal } from '../configuracao/origem.js';
 import { hashDoConteudo } from '../lockfile/hash.js';
 import { arquivosParaHash } from '../lockfile/integridade.js';
+import type { PacoteTravado } from '../lockfile/lockfile.js';
+import type { Manifesto } from '../manifesto/manifesto.js';
+import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import { type Contexto, lerPastaLocal, type ResultadoDoComando } from './base.js';
 
 const e = escaparInvisiveis;

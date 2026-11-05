@@ -1,10 +1,11 @@
 // Servidor MCP da base de conhecimento (ADR-0034): JSON-RPC 2.0 em linhas (stdio), com as ferramentas
 // `buscar`, `abrir` e `mapa`. Núcleo sem I/O: recebe as linhas de entrada e uma função de saída.
 // Todo texto devolvido é dado citado, nunca instrução; `abrir` só lê arquivos que a base indexa.
-import { buscarNaBase, mapaDaBase } from './conhecimento.js';
-import type { Contexto } from './base.js';
-import { escaparInvisiveis } from '../seguranca/caminhos.js';
+
 import { fonteAlcanca, fontesDoProjeto } from '../conhecimento/fontes.js';
+import { escaparInvisiveis } from '../seguranca/caminhos.js';
+import type { Contexto } from './base.js';
+import { buscarNaBase, mapaDaBase } from './conhecimento.js';
 
 export const VERSAO_DO_PROTOCOLO = '2025-06-18';
 export const LIMITE_DA_LINHA = 1024 * 1024;

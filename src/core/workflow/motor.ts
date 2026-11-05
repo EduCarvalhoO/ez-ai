@@ -160,6 +160,10 @@ export function avancar(
 
   if (resultado === 'solicitado') return { ok: true, estado: base };
 
+  // E2 é opcional: depois da E1 o G0 também é aceito, e a E2 fica registrada como ignorada (nunca como feita).
+  const pulouE2 = etapa === 'G0' && estado.permitidas.includes('E2');
+  const saltos = pulouE2 ? [...base.ignorados, 'E2' as Etapa] : base.ignorados;
+
   if (resultado === 'ignorado') {
     const ignorados = [...base.ignorados, etapa];
     if (etapa !== 'E0' && etapa !== 'E2' && etapa !== 'E5') return { ok: true, estado: com(base, { ignorados }) };
@@ -167,7 +171,7 @@ export function avancar(
     return { ok: true, estado: com(base, { ignorados, permitidas: prox === 'concluido' ? [] : [prox] }) };
   }
 
-  if (resultado === 'falhou') return { ok: true, estado: falhar(base, etapa, cfg) };
+  if (resultado === 'falhou') return { ok: true, estado: falhar(com(base, { ignorados: saltos }), etapa, cfg) };
 
   if (EXIGE_VERIFICADO.includes(etapa) && resultado !== 'verificado') {
     const dica =
@@ -175,8 +179,11 @@ export function avancar(
     return { ok: false, motivo: `"${etapa}" só passa com resultado "verificado", não com "${resultado}"${dica}` };
   }
   const prox = seguinte(etapa, cfg);
-  if (prox === 'concluido') return { ok: true, estado: com(base, { situacao: 'concluido', permitidas: [] }) };
-  return { ok: true, estado: com(base, { permitidas: [prox] }) };
+  if (prox === 'concluido')
+    return { ok: true, estado: com(base, { situacao: 'concluido', permitidas: [], ignorados: saltos }) };
+  // Com a E2 ligada, depois da E1 cabem a E2 ou, pulando-a, o G0.
+  const permitidas: readonly Etapa[] = etapa === 'E1' && prox === 'E2' ? ['E2', 'G0'] : [prox];
+  return { ok: true, estado: com(base, { permitidas, ignorados: saltos }) };
 }
 
 type Json = Record<string, unknown>;

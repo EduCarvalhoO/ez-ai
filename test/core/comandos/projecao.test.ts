@@ -83,7 +83,8 @@ describe('apply com adapters', () => {
     expect(await ctx.arquivos.existe('.github/skills/eduardo-starter-revisao/SKILL.md')).toBe(true);
     const texto = r.saida.join('\n');
     expect(texto).toContain('+ claude-code: .claude/rules/eduardo-starter-convencoes.md');
-    expect(texto).toContain('+ - Escreva testes antes de abrir o PR.');
+    expect(texto).toMatch(/instruções: instrucoes\/convencoes\.md \(instrucao convencoes\): \+\d+ -0 linha/);
+    expect(texto).not.toContain('Escreva testes antes de abrir o PR');
     expect(texto).toContain('aviso  Copilot (VS Code, harness Local)');
   });
 
@@ -141,7 +142,9 @@ describe('update e edição à mão do arquivo projetado', () => {
     const config = JSON.parse(await ctx.arquivos.ler('.harness/config.json'));
     config.pacotes['eduardo/starter'].versao = '^1.0.0';
     await ctx.arquivos.gravar('.harness/config.json', JSON.stringify(config));
-    const r = await atualizar(ctx, SEM_OPCOES);
+    const resumo = await atualizar(ctx, { ...SEM_OPCOES, dryRun: true });
+    expect(resumo.saida.join('\n')).not.toContain('Escreva testes antes');
+    const r = await atualizar(ctx, { ...SEM_OPCOES, detalhes: true });
     expect(r.erros).toEqual([]);
     expect(r.saida.join('\n')).toContain('- - Escreva testes antes de abrir o PR.');
     expect(r.saida.join('\n')).toContain('+ - Nova regra.');
@@ -290,6 +293,8 @@ describe('hooks e MCP de pacote (ADR-0027)', () => {
     const usuario = JSON.stringify({ permissions: { deny: ['Bash(rm *)'] } });
     const { ctx, arquivos } = await comHook({ '.claude/settings.json': usuario });
     // Hook e MCP mexem em arquivo de enforcement: sem aprovação própria nomeada o apply para (policy do núcleo).
+    const plano = await planejar(ctx);
+    expect(plano.saida.join('\n')).toContain('--aprovar comp/gh/configurarAmbiente/.mcp.json');
     const sem = await aplicar(ctx, SEM_OPCOES);
     expect(sem.erros.join('\n')).toContain('aprovação própria pendente');
     expect(await arquivos.ler('.claude/settings.json')).toBe(usuario);

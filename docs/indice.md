@@ -46,7 +46,7 @@
 | [adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md](adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md) | ADR-0035: assinatura Sigstore de pacotes (`verificado`/`oficial` de verdade), papéis em `.harness/papeis.json`, SBOM/provenance do harness e comando `hash-pacote` |
 | [arquitetura/spike-enforcement-copilot.md](arquitetura/spike-enforcement-copilot.md) | Spike do Copilot: procedimento de teste manual no VS Code (resultados pendentes) |
 | [arquitetura/spike-node-sqlite.md](arquitetura/spike-node-sqlite.md) | Spike: `node:sqlite` com FTS5 serve para a camada C1 do RAG; vetores não vêm embutidos |
-| [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
+| [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código (inclui `src/cli/args.ts`), responsabilidades, regras de dependência e fluxo de `add`/`apply` |
 | [arquitetura/modelo-de-ameacas.md](arquitetura/modelo-de-ameacas.md) | Ameaças STRIDE com severidade, controle, fase e teste previsto; riscos residuais aceitos |
 | [arquitetura/validacao-e-simulacao-sprint-16.md](arquitetura/validacao-e-simulacao-sprint-16.md) | Validação da estrutura e simulação de uso da CLI: atritos, correções feitas e próximos passos priorizados |
 | [arquitetura/matriz-de-capacidades.md](arquitetura/matriz-de-capacidades.md) | O que Claude Code e Copilot suportam (agentes, skills, hooks, MCP, permissões), com fonte, data e lacunas de enforcement |
@@ -68,7 +68,8 @@
 | [specs/policy.md](specs/policy.md) | Policy v0: regras só restritivas, casamento com as permissões, níveis e precedência, explicação da decisão, garantia por ambiente e policy do núcleo |
 | [adr/0036-versionamento-compatibilidade-e-pipeline-de-release.md](adr/0036-versionamento-compatibilidade-e-pipeline-de-release.md) | ADR-0036: semver, compatibilidade de schemas, depreciação e pipeline de release (npm com provenance por OIDC) |
 | [adr/0037-nome-do-produto-ez-ai.md](adr/0037-nome-do-produto-ez-ai.md) | ADR-0037: o produto se chama ez-ai; o que foi renomeado e o que ficou |
-| [guias/quickstart.md](guias/quickstart.md) | Quickstart: instalar o ez-ai num projeto em 5 minutos |
+| [guias/quickstart.md](guias/quickstart.md) | Quickstart: instalar o ez-ai num projeto em 5 minutos, com sessão completa de workflow |
+| [guias/prova-manual-claude-code-e-copilot.md](guias/prova-manual-claude-code-e-copilot.md) | Roteiro para provar no Claude Code e no Copilot (`/agents`, `/hooks`, `/mcp`, `git push --force`) o que o `apply` gera |
 | [guias/criar-pacotes.md](guias/criar-pacotes.md) | Como criar, versionar e assinar um pacote |
 | [guias/versionamento-e-compatibilidade.md](guias/versionamento-e-compatibilidade.md) | Semver, versão de schemas, depreciação e migração |
 | [guias/seguranca-para-usuarios.md](guias/seguranca-para-usuarios.md) | O que o ez-ai garante e não garante; boas práticas |

@@ -13,7 +13,7 @@ meu-pacote/
   instrucoes/regras.md
   skills/minha-skill/SKILL.md
 ```
-Exemplo de manifesto (modelo completo em `pacotes/workflow-feature/`):
+Exemplo de manifesto (modelo completo em `pacotes/workflow-feature/`, que já está na estrutura de um repositório de pacote: manifesto na raiz, README e pastas por tipo):
 ```json
 {
   "versaoManifesto": 0,

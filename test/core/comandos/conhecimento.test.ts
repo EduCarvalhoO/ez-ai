@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import type { Chunk } from '../../../src/core/conhecimento/chunks.js';
 import {
   avaliarBase,
   buscarNaBase,
   type Contexto,
   indexarBase,
   mapaDaBase,
-  relatarBenchmark,
   registrarEtapa,
+  relatarBenchmark,
 } from '../../../src/core/index.js';
-import type { Chunk } from '../../../src/core/conhecimento/chunks.js';
 import type { IndiceDeBusca, TrechoDoIndice } from '../../../src/core/portas/index.js';
 import { arquivosEmMemoria, gitEmMemoria, identidadeFixa, relogioFixo } from '../../helpers/memoria.js';
 
