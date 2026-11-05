@@ -47,7 +47,7 @@ gantt
 | F5 Observabilidade | Entregue (Sprints 08 e 09) | Rodar o [runbook do Langfuse](guias/runbook-langfuse.md) uma vez |
 | F6 Workflow MVP | Código entregue (Sprints 10 a 13) | **M3:** executar as 3 tarefas do benchmark nos dois ambientes |
 | F7 Supply chain | Código entregue (Sprints 13 e 14) | **Primeira assinatura real:** publicar um pacote de teste assinado e instalar com `confiancaMinima: "verificado"` ([runbook](guias/runbook-assinatura.md)); copiar o workflow de release para `.github/` quando autorizar |
-| F8 Beta e release | Preparação entregue (Sprint 15): política de versionamento, docs de usuário, nome **ez-ai**, modelo de release | [Checklist de release](guias/checklist-de-release.md): marca, trusted publisher no npm, autorizar workflow, beta com 3 a 5 projetos, instalação limpa nos 3 SOs |
+| F8 Beta e release | Preparação entregue (Sprint 15): política de versionamento, docs de usuário, nome **ez-ai**, modelo de release. Sprint 16: validação e simulação de uso ([relatório](arquitetura/validacao-e-simulacao-sprint-16.md)), `--help` e mensagens corrigidos | [Checklist de release](guias/checklist-de-release.md): marca, trusted publisher no npm, autorizar workflow, beta com 3 a 5 projetos, instalação limpa nos 3 SOs |
 
 ---
 

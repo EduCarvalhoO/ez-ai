@@ -46,6 +46,15 @@ describe('main', () => {
     expect(stderr.join('')).toContain('nenhum argumento');
   });
 
+  it('--help e -h mostram o uso no stdout e retornam 0', async () => {
+    for (const flag of ['--help', '-h']) {
+      const { stdout, stderr, saidas } = capturar();
+      expect(await main([flag], saidas)).toBe(0);
+      expect(stdout.join('')).toMatch(usoEsperado);
+      expect(stderr).toEqual([]);
+    }
+  });
+
   it('argumento desconhecido retorna 2 e cita o argumento no stderr', async () => {
     const { stdout, stderr, saidas } = capturar();
     expect(await main(['--desconhecido'], saidas)).toBe(2);
