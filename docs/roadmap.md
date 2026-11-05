@@ -1,6 +1,6 @@
 # Roadmap até a v1.0
 
-> Status: Aceito (revisável a cada fase) · Atualizado: 2026-11-02 · Relacionados: [contexto](contexto.md), [ADRs](adr/README.md)
+> Status: Aceito (revisável a cada fase) · Atualizado: 2026-11-04 · Relacionados: [contexto](contexto.md), [ADRs](adr/README.md)
 
 ## Premissas
 
@@ -36,6 +36,18 @@ gantt
 | **M2 — Alpha interno** | F3 | CLI instala um pacote real nos dois ambientes |
 | **M3 — MVP comprovado** | F6 | Workflow com gates rodando, com métricas no Langfuse |
 | **M4 — v1.0 distribuída** | F8 | Publicado no npm com provenance, docs e garantias de compatibilidade |
+
+**Situação em 2026-11-04** (Sprints 01 a 13 entregues; as pendências do Eduardo são testes manuais que fecham os marcos):
+
+| Fase | Situação | Falta para fechar |
+|---|---|---|
+| F0 a F2 | Entregues | - |
+| F3 Adapters | Código entregue (Sprint 04) | **M2:** spike do Copilot ([guia](arquitetura/spike-enforcement-copilot.md), ~30 min) e instalação real nos dois ambientes |
+| F4 Governança | Entregue (Sprints 05 a 07) | Aplicar `docs/modelos/ruleset.json` em Settings > Rules; hooks/MCP do Copilot depois do spike |
+| F5 Observabilidade | Entregue (Sprints 08 e 09) | Rodar o [runbook do Langfuse](guias/runbook-langfuse.md) uma vez |
+| F6 Workflow MVP | Código entregue (Sprints 10 a 13) | **M3:** executar as 3 tarefas do benchmark nos dois ambientes |
+| F7 Supply chain | Iniciada (Sprint 13: níveis de confiança) | Assinatura Sigstore, origens oficiais, papéis, SBOM e provenance |
+| F8 Beta e release | Não iniciada | Depende da F7, de licença (decidida: FSL) e de nome |
 
 ---
 
@@ -154,6 +166,10 @@ Entregas:
   
   **Andamento (sprint 11, 2026-11-04):** parte 2 entregue: comando `conhecimento` (mapa C0 e índice C1 com `node:sqlite`; recall@5 0,77 na C0 e 0,90 na C0+C1 nas 30 perguntas de referência), quatro agentes no pacote `workflow-feature` 0.2.0, comando `benchmark` (golden tasks pontuadas pelo log) e datasets no formato Langfuse com `--exportar` ([ADR-0032](adr/0032-base-de-conhecimento-c0-c1-agentes-do-pacote-e-benchmark.md)). Pendente para fechar o M3: executar o benchmark nos dois ambientes com resultados no Langfuse (runbook e spike M2 do Eduardo), servidor MCP da base e fontes por manifesto.
 
+**Andamento (sprint 12, 2026-11-04):** disjuntor contra laço infinito (ligado por padrão), orçamento opcional de tokens e minutos, saídas exigidas por etapa (`--documento`, `--evidencia`), verificador `workflow docs` e `workflow retomar` ([ADR-0033](adr/0033-protecao-contra-laco-orcamento-saidas-por-etapa-e-retomada.md)).
+
+**Andamento (sprint 13, 2026-11-04):** servidor MCP da base (`conhecimento servir`: `buscar`, `abrir`, `mapa`), fontes do projeto em `.harness/conhecimento.json` e o pacote `workflow-feature` 0.3.0 passa a citar as flags de saídas, proteção e retomada ([ADR-0034](adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)). Pendente: fontes declaradas por pacote (depois da assinatura) e, para fechar o M3, o benchmark nos dois ambientes com resultados no Langfuse (com o Eduardo).
+
 Critérios de saída (**M3**): benchmark executado nos dois ambientes com resultados no Langfuse; relatório comparativo de qualidade, custo e conformidade; recall@5 da base de conhecimento (C0 + C1) ≥ C0 sozinha nas perguntas de referência do harness.
 
 ## F7 — Supply chain e identidade (S23–S24)
@@ -168,6 +184,8 @@ Entregas:
 - SBOM e provenance (SLSA) do próprio harness.
 - *(corte)* Sandbox de execução para scripts de pacotes.
 - Rever a lista de origens permitidas diante da assinatura e dos níveis de confiança ([ADR-0018](adr/0018-invariantes-de-seguranca-da-instalacao.md)).
+
+**Andamento (sprint 13, 2026-11-04):** parte 1 entregue: nível de confiança derivado da origem (`local`, `comunidade`, `verificado`, `oficial`), mostrado no `list` e exigível por `confiancaMinima` na configuração ([ADR-0034](adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)). Troca de dono bloqueada até aprovação já vinha da F2/F4 ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)). Pendente: assinatura e verificação Sigstore (única forma de chegar a `verificado`), lista de origens oficiais, identidade via Git e papéis, SBOM e provenance do harness.
 
 Critérios de saída: pacote não assinado/adulterado é rejeitado conforme política; testes cobrindo as ameaças altas do modelo da F1.
 

@@ -8,7 +8,7 @@ import {
   mesclarResultados,
 } from '../conhecimento/busca.js';
 import { calcularMetricasDaBase, type MetricasDaBase } from '../conhecimento/metricas.js';
-import { reunirChunks } from '../conhecimento/fontes.js';
+import { fontesDoProjeto, reunirChunks } from '../conhecimento/fontes.js';
 import { CAMINHO_DAS_PERGUNTAS, datasetDeConhecimento, validarPerguntas } from '../conhecimento/perguntas.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import type { Contexto, ResultadoDoComando } from './base.js';
@@ -22,11 +22,11 @@ const falha = (...erros: string[]): ResultadoDoComando => ({ codigo: 1, saida: [
 const SEM_INDICE = 'índice C1 indisponível (precisa de Node 22.13 ou mais, com node:sqlite); usando só o mapa C0.';
 
 async function mapaAtual(ctx: Contexto): Promise<EntradaDoMapa[]> {
-  return mapaDosChunks((await reunirChunks(ctx.arquivos)).chunks);
+  return mapaDosChunks((await reunirChunks(ctx.arquivos, await fontesDoProjeto(ctx.arquivos))).chunks);
 }
 
 export async function indexarBase(ctx: Contexto): Promise<ResultadoDoComando> {
-  const base = await reunirChunks(ctx.arquivos);
+  const base = await reunirChunks(ctx.arquivos, await fontesDoProjeto(ctx.arquivos));
   const saida = [`${base.arquivos} arquivo(s) lido(s), ${base.chunks.length} trecho(s).`];
   for (const p of base.pulados) saida.push(`pulado: ${p}`);
   if (!ctx.indice) return { codigo: 0, saida, erros: [SEM_INDICE] };
@@ -96,7 +96,7 @@ export async function avaliarBase(ctx: Contexto, o: OpcoesDeAvaliacao): Promise<
     for (const a of p.esperado) if (!(await ctx.arquivos.existe(a))) ausentes.push(`${p.id}: ${escaparInvisiveis(a)}`);
   }
   if (ausentes.length > 0) return falha('arquivo esperado não existe:', ...ausentes.map((a) => `  ${a}`));
-  const base = await reunirChunks(ctx.arquivos);
+  const base = await reunirChunks(ctx.arquivos, await fontesDoProjeto(ctx.arquivos));
   const mapa = mapaDosChunks(base.chunks);
   if (ctx.indice) await ctx.indice.reconstruir(base.chunks);
   const c0 = perguntas.map((p) => ({ id: p.id, arquivos: buscarNoMapa(mapa, p.pergunta, 10) }));

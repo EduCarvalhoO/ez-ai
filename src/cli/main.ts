@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { createInterface } from 'node:readline';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { adapterClaudeCode } from '../adapters/claude-code/index.js';
@@ -24,6 +25,7 @@ import {
   relatarCusto,
   remover,
   retomarWorkflow,
+  servirMcp,
   statusDoWorkflow,
   validar,
   validarNoServidor,
@@ -88,8 +90,8 @@ const USO = [
   '  workflow status <item> | etapa <item> <etapa> <resultado> --agente <id> [--consumo <json>] [--documento <arq>] [--evidencia <arq>]',
   '  workflow docs <arquivo> | workflow retomar',
   '                                        registra etapas e gates, confere a completude de um documento e lista itens abertos ou parados',
-  '  conhecimento indexar | buscar <consulta> [--limite <n>] | mapa [pasta] | avaliar [--exportar]',
-  '                                        base de conhecimento local: mapa C0, índice C1 (node:sqlite) e métricas',
+  '  conhecimento indexar | buscar <consulta> [--limite <n>] | mapa [pasta] | avaliar [--exportar] | servir',
+  '                                        servir = servidor MCP (stdio) com buscar/abrir/mapa; fontes extras em .harness/conhecimento.json; mapa C0, índice C1 (node:sqlite) e métricas',
   '  benchmark [--exportar]                pontua as tarefas de referência pelo log de auditoria (--exportar grava o dataset)',
   '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
   '  validate --ci          recalcula policy e aprovações a partir do commit travado',
@@ -287,6 +289,8 @@ function atorDoAmbiente(env: NodeJS.ProcessEnv): 'humano' | 'agente' | 'ci' {
 
 export interface Dependencias {
   readonly criarContexto: (projeto: string) => Promise<Contexto>;
+  /** Linhas da entrada padrão, para o servidor MCP (conhecimento servir); injetável para teste. */
+  readonly linhasDeEntrada?: () => AsyncIterable<string>;
 }
 
 /** Executa a CLI com os argumentos dados e devolve o código de saída. */
@@ -308,7 +312,13 @@ export async function main(
   let resultado: ResultadoDoComando;
   try {
     const ctx = await deps.criarContexto(lido.projeto);
-    resultado = await executar(lido, ctx);
+    if (lido.comando === 'conhecimento' && lido.posicionais[0] === 'servir' && lido.posicionais.length === 1) {
+      const linhas = deps.linhasDeEntrada ?? (() => createInterface({ input: process.stdin, crlfDelay: Infinity }));
+      await servirMcp(ctx, linhas(), saidas.stdout);
+      resultado = { codigo: 0, saida: [], erros: [] };
+    } else {
+      resultado = await executar(lido, ctx);
+    }
   } catch (erro: unknown) {
     saidas.stderr(`harness-ai: ${erro instanceof Error ? erro.message : String(erro)}\n`);
     return 1;
@@ -349,6 +359,7 @@ const USO_DO_CONHECIMENTO = [
   '     harness-ai conhecimento buscar <consulta> [--limite <n>]',
   '     harness-ai conhecimento mapa [pasta]',
   '     harness-ai conhecimento avaliar [--exportar]',
+  '     harness-ai conhecimento servir',
 ];
 
 function executarConhecimento(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {

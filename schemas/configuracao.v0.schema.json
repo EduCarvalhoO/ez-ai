@@ -72,6 +72,9 @@
       "maxLength": 104,
       "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
     },
+    "confiancaMinima": {
+      "enum": ["comunidade", "verificado", "oficial"]
+    },
     "aprovadores": {
       "type": "array",
       "maxItems": 50,

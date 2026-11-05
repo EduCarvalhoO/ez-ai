@@ -12,6 +12,7 @@ import {
 } from '../manifesto/manifesto.js';
 import { LIMITES, LIMITES_AJUSTAVEIS } from '../manifesto/schema.js';
 import { problemaNoEndpoint } from '../telemetria/endpoint.js';
+import { atendeConfiancaMinima, type NIVEIS_DE_CONFIANCA, nivelDeConfianca } from './confianca.js';
 import { canonizarRepositorio, lerOrigem, ORIGENS_OFICIAIS, type Origem, pastaDentroDe } from './origem.js';
 import { SCHEMA_DA_CONFIGURACAO } from './schema.js';
 
@@ -38,6 +39,8 @@ export interface Configuracao {
   readonly limites: Readonly<Partial<Record<LimiteAjustavel, number>>>;
   /** Pacote (origem GitHub) cujos componentes `policy` são o nível organização (docs/specs/policy.md). */
   readonly policyDaOrganizacao?: string;
+  /** Nível mínimo de confiança exigido dos pacotes do GitHub (ADR-0034); ausente = sem exigência. */
+  readonly confiancaMinima?: (typeof NIVEIS_DE_CONFIANCA)[number];
   /** Logins ou `@org/time` que aprovam a aprovação própria no PR; vazio = o que a proteção de branch exigir. */
   readonly aprovadores: readonly string[];
   /** Exportação opt-in de telemetria (ADR-0029); ausente = desligada, zero rede. */
@@ -76,6 +79,9 @@ function configuracaoDe(dado: Json): Configuracao {
       LIMITES_AJUSTAVEIS.filter((nome) => typeof limites[nome] === 'number').map((nome) => [nome, limites[nome]]),
     ),
     ...(typeof dado.policyDaOrganizacao === 'string' ? { policyDaOrganizacao: dado.policyDaOrganizacao } : {}),
+    ...(typeof dado.confiancaMinima === 'string'
+      ? { confiancaMinima: dado.confiancaMinima as (typeof NIVEIS_DE_CONFIANCA)[number] }
+      : {}),
     aprovadores: lista<unknown>(dado.aprovadores).map(String),
     ...(typeof dado.telemetria === 'object' && dado.telemetria !== null
       ? { telemetria: telemetriaDe(dado.telemetria as Json) }
@@ -128,6 +134,14 @@ function regrasSemanticas(dado: Json, config: Configuracao): ErroDeContrato[] {
     const { problema } = lerOrigem(String((entradas[pacote.nome] as Json).origem));
     if (problema) falha(`${base}/origem`, pacote.origem.tipo === 'local' ? 'caminho' : 'url-canonica', problema);
     regrasDoNome(pacote.nome, pacote.origem, base, falha);
+    const nivel = nivelDeConfianca(pacote.origem);
+    if (config.confiancaMinima !== undefined && !atendeConfiancaMinima(nivel, config.confiancaMinima)) {
+      falha(
+        `${base}/origem`,
+        'confianca-insuficiente',
+        `nível de confiança "${nivel}" abaixo do mínimo "${config.confiancaMinima}" exigido pelo projeto (ADR-0034)`,
+      );
+    }
     if (pacote.origem.tipo === 'github') {
       if (pacote.versao === undefined) {
         falha(`${base}/versao`, 'versao-obrigatoria', 'pacote do GitHub precisa de "versao" (ex.: "^1.2.0")');
