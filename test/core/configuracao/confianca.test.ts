@@ -8,7 +8,10 @@ describe('nível de confiança (ADR-0034)', () => {
   it('pasta local é local; GitHub comum é comunidade; origem oficial é oficial', () => {
     expect(nivelDeConfianca(origem('local:pacotes/x'))).toBe('local');
     expect(nivelDeConfianca(origem('https://github.com/acme/pkg'))).toBe('comunidade');
-    expect(nivelDeConfianca(origem('https://github.com/acme/pkg'), { oficiais: ['https://github.com/acme/pkg'] })).toBe(
+    // Estar na lista não basta: sem assinatura conferida continua comunidade (ADR-0035).
+    const oficiais = ['https://github.com/acme/pkg'];
+    expect(nivelDeConfianca(origem('https://github.com/acme/pkg'), { oficiais })).toBe('comunidade');
+    expect(nivelDeConfianca(origem('https://github.com/acme/pkg'), { oficiais, assinaturaVerificada: true })).toBe(
       'oficial',
     );
   });

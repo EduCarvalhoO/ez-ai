@@ -1,6 +1,7 @@
 // Base dos comandos (ADR-0015): o núcleo recebe as portas e devolve um resultado com as linhas de saída e o código;
 // quem imprime e liga o mundo real é src/cli. Nenhum comando aqui grava fora da porta de arquivos.
 import type { Adapter } from '../adaptadores/contrato.js';
+import type { VerificadorDeAssinatura } from '../assinatura/assinatura.js';
 import { type ContextoDeAuditoria, registrarEvento } from '../auditoria/registro.js';
 import type { COMANDOS_DA_CLI } from '../auditoria/schema.js';
 import { type Configuracao, validarConfiguracao } from '../configuracao/configuracao.js';
@@ -19,6 +20,8 @@ export const CAMINHO_DO_LOCKFILE = '.harness/lock.json';
 /** Tudo o que um comando precisa do mundo, por portas. */
 export interface Contexto extends ContextoDeAuditoria {
   readonly git: Git;
+  /** Verificador Sigstore (ADR-0035). Sem ele, nenhum pacote chega a `verificado` e `confiancaMinima` acima de comunidade recusa. */
+  readonly verificador?: VerificadorDeAssinatura;
   /** Adapters de ambiente (ADR-0025), compostos pela CLI. Sem eles, `apply` só instala em `.harness/pacotes/`. */
   readonly adapters?: readonly Adapter[];
   /** Porta de rede da telemetria (ADR-0029); só o comando `export` a usa. Sem ela, nada sai da máquina. */

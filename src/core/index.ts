@@ -21,6 +21,19 @@ export {
   nomeProjetado,
   projetarComModelo,
 } from './adaptadores/projecao.js';
+export type { Papeis, Papel } from './papeis/papeis.js';
+export { aprovadoresDosPapeis, CAMINHO_DOS_PAPEIS, papelDe, validarPapeis } from './papeis/papeis.js';
+export type {
+  IdentidadeAssinante,
+  PedidoDeVerificacao,
+  ResultadoDaAssinatura,
+  VerificadorDeAssinatura,
+} from './assinatura/assinatura.js';
+export {
+  ARQUIVO_DA_ASSINATURA,
+  conferirAssinatura,
+  identidadeDoRepositorio,
+} from './assinatura/assinatura.js';
 export type { EntradaDeAprovacao, EntradaParaAprovacao } from './auditoria/aprovacoes.js';
 export { idDeItem, itensDeAprovacaoPropria, pendentesDeAprovacao, problemaNoId } from './auditoria/aprovacoes.js';
 export type { CabecaDaCorrente, ResultadoDaCadeia } from './auditoria/cadeia.js';
@@ -35,6 +48,7 @@ export { lerAuditoria, PASTA_DA_AUDITORIA, registrarEvento } from './auditoria/r
 export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
 export { pareceSegredo, redigirSegredos } from './auditoria/segredos.js';
 export type { Contexto, ResultadoDoComando } from './comandos/base.js';
+export { hashDoPacote } from './comandos/assinatura.js';
 export { relatarBenchmark } from './comandos/benchmark.js';
 export { avaliarBase, buscarNaBase, indexarBase, mapaDaBase } from './comandos/conhecimento.js';
 export { responderMcp, servirMcp } from './comandos/mcp.js';

@@ -46,7 +46,7 @@ gantt
 | F4 Governança | Entregue (Sprints 05 a 07) | Aplicar `docs/modelos/ruleset.json` em Settings > Rules; hooks/MCP do Copilot depois do spike |
 | F5 Observabilidade | Entregue (Sprints 08 e 09) | Rodar o [runbook do Langfuse](guias/runbook-langfuse.md) uma vez |
 | F6 Workflow MVP | Código entregue (Sprints 10 a 13) | **M3:** executar as 3 tarefas do benchmark nos dois ambientes |
-| F7 Supply chain | Iniciada (Sprint 13: níveis de confiança) | Assinatura Sigstore, origens oficiais, papéis, SBOM e provenance |
+| F7 Supply chain | Código entregue (Sprints 13 e 14) | **Primeira assinatura real:** publicar um pacote de teste assinado e instalar com `confiancaMinima: "verificado"` ([runbook](guias/runbook-assinatura.md)); copiar o workflow de release para `.github/` quando autorizar |
 | F8 Beta e release | Não iniciada | Depende da F7, de licença (decidida: FSL) e de nome |
 
 ---
@@ -186,6 +186,8 @@ Entregas:
 - Rever a lista de origens permitidas diante da assinatura e dos níveis de confiança ([ADR-0018](adr/0018-invariantes-de-seguranca-da-instalacao.md)).
 
 **Andamento (sprint 13, 2026-11-04):** parte 1 entregue: nível de confiança derivado da origem (`local`, `comunidade`, `verificado`, `oficial`), mostrado no `list` e exigível por `confiancaMinima` na configuração ([ADR-0034](adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)). Troca de dono bloqueada até aprovação já vinha da F2/F4 ([ADR-0017](adr/0017-propriedade-de-pacotes-por-identidade-github.md)). Pendente: assinatura e verificação Sigstore (única forma de chegar a `verificado`), lista de origens oficiais, identidade via Git e papéis, SBOM e provenance do harness.
+
+**Andamento (sprint 14, 2026-11-05):** parte 2 entregue ([ADR-0035](adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md)): verificação de assinatura Sigstore (offline, raiz fixada), `verificado` e `oficial` só com assinatura conferida, assinante gravado no lockfile e troca de assinante bloqueada, papéis em `.harness/papeis.json` somados aos `aprovadores` do job de servidor, `hash-pacote`, SBOM CycloneDX (`npm run sbom`) e modelo de workflow de release com provenance SLSA. Corrigido: `add`/`remove` apagavam `confiancaMinima` e `telemetria`. Pendente: primeira assinatura real de ponta a ponta, lista de origens oficiais (aguarda o repositório do pacote starter) e o sandbox de scripts (corte).
 
 Critérios de saída: pacote não assinado/adulterado é rejeitado conforme política; testes cobrindo as ameaças altas do modelo da F1.
 

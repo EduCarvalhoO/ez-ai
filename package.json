@@ -17,6 +17,7 @@
     "lint": "biome lint",
     "format": "biome format --write",
     "format:check": "biome format",
+    "sbom": "node scripts/gerar-sbom.mjs",
     "commits:check": "node scripts/validar-commits.mjs",
     "schemas": "npm run build && node scripts/gerar-schemas.mjs && biome format --write schemas"
   },
@@ -29,6 +30,8 @@
     "vitest": "5.0.5"
   },
   "dependencies": {
-    "@cfworker/json-schema": "4.1.1"
+    "@cfworker/json-schema": "4.1.1",
+    "@sigstore/bundle": "5.0.0",
+    "@sigstore/verify": "4.1.2"
   }
 }
