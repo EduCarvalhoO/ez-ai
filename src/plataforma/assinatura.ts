@@ -11,6 +11,8 @@ export interface OpcoesDoVerificador {
   readonly raiz?: string;
 }
 
+const escaparRegex = (texto: string): string => texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export function criarVerificadorSigstore(o: OpcoesDoVerificador = {}): VerificadorDeAssinatura {
   let verificador: Verifier | undefined;
   // As bibliotecas carregam só quando há o que verificar: o @sigstore/verify pede Node >= 22.22.2, e num Node mais
@@ -29,7 +31,8 @@ export function criarVerificadorSigstore(o: OpcoesDoVerificador = {}): Verificad
         const entidade = toSignedEntity(bundle, Buffer.from(pedido.artefato, 'utf8'));
         // Identidade e emissor exatos (sem regex): o certificado precisa ser do workflow esperado.
         v.verify(entidade, {
-          subjectAlternativeName: pedido.identidade,
+          // O @sigstore/verify trata o valor como regex sem âncora: escapa e ancora para valer só a identidade inteira.
+          subjectAlternativeName: `^${escaparRegex(pedido.identidade)}$`,
           extensions: { issuer: pedido.emissor },
         });
         return { ok: true as const };

@@ -36,8 +36,11 @@ O `search` lê a maior tag `vX.Y.Z` do repositório, confere o bundle Sigstore c
 2. Crie `.github/workflows/assinar-catalogo.yml`, disparado por tag `v*`, com `id-token: write`. Ele grava o texto `sha256:<hex>` do `catalogo.json` (e só dele, em UTF-8, com quebras de linha LF e sem BOM) com `printf '%s' "sha256:$(sha256sum catalogo.json | cut -d' ' -f1)" > hash.txt` e o assina com `cosign sign-blob --yes --bundle harness-pacote.sigstore.json hash.txt`. O modelo de assinatura de pacote, que serve de base, está em [release-assinada.yml](../modelos/release-assinada.yml); aqui o hash é do catálogo, não de `ez-ai hash-pacote`.
 3. Marque a tag (`v1.0.0`). O arquivo `harness-pacote.sigstore.json` precisa estar no commit da tag, ao lado do `catalogo.json`.
 
+## Proteja o repositório do catálogo
+Quem pode criar tag no repositório do catálogo assina qualquer conteúdo, porque o GitHub roda o workflow do commit da tag. Ative um ruleset que proteja as tags `v*` (só mantenedores criam e ninguém apaga ou move) e rode o workflow num `environment` com revisores. Use letras minúsculas no nome do repositório do catálogo: a identidade é comparada com a caixa canônica (minúscula).
+
 ## O que o `search` recusa
 Sem `catalogo` na configuração; repositório fora de `origensPermitidas`; sem verificador de assinatura; sem tag de versão; sem `catalogo.json` ou sem bundle; bundle com mais de 256 KB; assinatura que não confere (workflow, tag ou conteúdo diferentes); catálogo inválido (uma entrada ruim recusa o arquivo inteiro).
 
 ## Limites
-O catálogo não revoga: para retirar um pacote, publique uma tag nova sem ele. Estar na lista não significa que o pacote foi revisado.
+O `search` não guarda a última tag vista: quem tem escrita no repositório pode apagar tags novas e fazer o `search` servir uma tag antiga ainda assinada. A proteção de tags acima é o controle por enquanto. A regra `Q-X1` do `qualidade` é higiene, não controle de segurança (o `add` não a usa). O catálogo não revoga: para retirar um pacote, publique uma tag nova sem ele. Estar na lista não significa que o pacote foi revisado.
