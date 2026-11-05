@@ -41,4 +41,4 @@ jobs:
       - name: Release no GitHub com SBOM
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --generate-notes sbom.cdx.json *.tgz
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes sbom.cdx.json ./*.tgz
