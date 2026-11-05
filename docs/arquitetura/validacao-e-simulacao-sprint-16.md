@@ -28,7 +28,7 @@ Pasta `D:\WorkSpace\ez-ai-simulacao\app` (fora do repo, Git novo, um `soma.js`).
 - [Mapa de módulos](mapa-de-modulos.md) está defasado (atualizado em 2026-11-02): cita `src/exportadores/`, que não existe (a telemetria vive em `src/core/telemetria`), e não lista assinatura, papéis, servidor, workflow, conhecimento. **P2: atualizar.**
 - Maiores arquivos: `src/core/comandos/escrita.ts` (587 linhas) e `src/cli/main.ts` (435). Ainda administráveis, mas `main.ts` mistura parsing de argumentos, uso e despacho; separar em `args.ts` quando passar de 500. **P3.**
 - `.github/pull_request_template.md` ainda diz "harness-ai"; ADRs 0028 a 0034 usam o nome antigo no texto (registro histórico, tolerável). O modelo de PR exige autorização escrita para mexer em `.github/`. **P1 (trivial, depende de autorização).**
-- Dois modelos de workflow (`release-npm.yml`, `release-assinada.yml`) seguem em `docs/modelos/`; a promoção a `.github/workflows/` depende da autorização do Eduardo. **P1.**
+- `release-npm.yml` foi ativado em `.github/workflows/` (autorizado em 2026-11-05). `release-assinada.yml` é para repositórios de pacote e segue como modelo.
 - Cobertura do benchmark (`conhecimento avaliar`) exige `conhecimento/perguntas.json`; num projeto novo a mensagem de erro não diz como criar. **P3.**
 
 ## Próximos passos propostos

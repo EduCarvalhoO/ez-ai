@@ -17,7 +17,7 @@ Antes de criar a tag `v*` que publica no npm. Cada item fecha com uma evidência
 ## Itens do Eduardo (manuais)
 - [ ] **Marca:** busca no INPI e no EUIPO para "ez-ai" sem conflito na classe de software.
 - [ ] **npm:** reservar o nome `ez-ai`; configurar o trusted publisher (repositório + `release-npm.yml`); criar o ambiente `release` com aprovação sua.
-- [ ] **Workflow:** autorizar por escrito a cópia de `docs/modelos/release-npm.yml` para `.github/workflows/` (com `uses:` fixados por SHA).
+- [x] **Workflow:** autorizado pelo Eduardo em 2026-11-05; ativo em `.github/workflows/release-npm.yml` com `uses:` fixados por SHA. Só dispara com tag `v*`; o ambiente `release` e o trusted publisher precisam existir antes da primeira tag.
 - [ ] **Testes dos marcos:** spike do Copilot (M2), runbook do Langfuse, 3 tarefas do benchmark (M3), primeira assinatura real de pacote.
 - [ ] **Instalação limpa:** `npx ez-ai --version` e `npx ez-ai init` numa pasta nova no Windows, Linux e macOS.
 - [ ] **Beta:** 3 a 5 projetos reais usaram a versão beta; problemas abertos triados.
