@@ -6,6 +6,7 @@ import { resumirEvidencias } from '../auditoria/evidencias.js';
 import { lerAuditoria, PASTA_DA_AUDITORIA } from '../auditoria/registro.js';
 import type { Configuracao } from '../configuracao/configuracao.js';
 import { origemPermitida } from '../configuracao/configuracao.js';
+import { nivelDeConfianca } from '../configuracao/confianca.js';
 import { hashDoConteudo } from '../lockfile/hash.js';
 import {
   arquivosParaHash,
@@ -54,7 +55,8 @@ export function listar(ctx: Contexto): Promise<ResultadoDoComando> {
       const t = travados.get(nome);
       const origem = c?.origem ?? t?.origem;
       const onde = origem?.tipo === 'local' ? `local:${origem.caminho}` : (origem?.url ?? '');
-      return `${e(nome)}  pedido: ${e(c?.versao ?? '-')}  travado: ${e(t?.versao ?? '-')}  ${estado}  ${e(onde)}`;
+      const nivel = origem ? nivelDeConfianca(origem) : '-';
+      return `${e(nome)}  pedido: ${e(c?.versao ?? '-')}  travado: ${e(t?.versao ?? '-')}  ${estado}  ${e(onde)}  confiança: ${nivel}`;
     });
     return { codigo: 0, saida: linhas.length > 0 ? linhas : ['Nenhum pacote configurado.'], erros: [] };
   });

@@ -13,6 +13,8 @@ Inclui declaração de fontes, regras de indexação, formato do chunk e do resu
 ## Especificação
 
 ### Fontes declaradas
+
+> **Estado da implementação (Sprint 13, [ADR-0034](../adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)):** por ora só o projeto declara fontes, em `.harness/conhecimento.json` (`{ "versao": 0, "fontes": [{ "id", "tipo", "pasta", "extensoes" }] }`), somadas às padrão. Fontes declaradas no manifesto de pacote seguem como alvo e dependem da assinatura de pacotes. O servidor MCP (`conhecimento servir`) já expõe `buscar`, `abrir` e `mapa`.
 Um pacote ou o projeto declara fontes só como **dados**, nunca como código (ADR-0018). No manifesto (`harness-pacote.json`) e na configuração do projeto, um campo opcional `conhecimento`:
 
 ```json
