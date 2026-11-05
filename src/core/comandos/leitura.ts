@@ -4,9 +4,9 @@
 import { itensDeAprovacaoPropria, pendentesDeAprovacao } from '../auditoria/aprovacoes.js';
 import { resumirEvidencias } from '../auditoria/evidencias.js';
 import { lerAuditoria, PASTA_DA_AUDITORIA } from '../auditoria/registro.js';
+import { nivelDeConfianca } from '../configuracao/confianca.js';
 import type { Configuracao } from '../configuracao/configuracao.js';
 import { origemPermitida } from '../configuracao/configuracao.js';
-import { nivelDeConfianca } from '../configuracao/confianca.js';
 import { hashDoConteudo } from '../lockfile/hash.js';
 import {
   arquivosParaHash,
@@ -17,9 +17,9 @@ import {
 import type { Lockfile, PacoteTravado } from '../lockfile/lockfile.js';
 import { diferencaDePermissoes } from '../manifesto/permissoes.js';
 import { diffDoPacote } from '../plano/diff.js';
-import { decidirAssinatura } from './assinatura.js';
 import { avaliarPacote } from '../policy/avaliar.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
+import { decidirAssinatura } from './assinatura.js';
 import {
   CAMINHO_DA_CONFIGURACAO,
   CAMINHO_DO_LOCKFILE,
@@ -175,7 +175,7 @@ async function conferirPoliticaDoTravado(
 }
 
 /** `plan`: o que um `apply` faria, sem gravar nada. Recalcula tudo a partir da origem. */
-export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
+export function planejar(ctx: Contexto, opcoes: { readonly detalhes?: boolean } = {}): Promise<ResultadoDoComando> {
   return executarComAuditoria(ctx, 'plan', true, async () => {
     const config = await carregarConfiguracao(ctx.arquivos);
     if (!config.ok) return falha(config.erros);
@@ -248,6 +248,16 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
           }
           for (const motivo of explicarDecisao(decisao, ['exigir-aprovacao'])) saida.push(`    aprovação: ${motivo}`);
           for (const motivo of explicarDecisao(decisao, ['avisar'])) saida.push(`    aviso: ${motivo}`);
+          const exigidas = itensDeAprovacaoPropria({
+            chave: p.nome,
+            componentes: lido.manifesto.componentes,
+            decisao,
+            afrouxamentos: politicas.afrouxamentos,
+          });
+          const faltam = pendentesDeAprovacao(exigidas, t?.aprovacoesProprias ?? []).pendentes;
+          if (faltam.length > 0) {
+            saida.push(`    para aplicar, rode apply com: ${faltam.map((x) => `--aprovar ${e(x.id)}`).join(' ')}`);
+          }
           for (const a of politicas.afrouxamentos) {
             saida.push(`    policy afrouxada (${a.nivel}): ${e(JSON.stringify(a.afrouxamento))}`);
           }
@@ -258,7 +268,8 @@ export function planejar(ctx: Contexto): Promise<ResultadoDoComando> {
           }
         }
         // Diff das instruções e projeção nos ambientes (ADR-0018, ADR-0025): só leitura, nada é gravado.
-        if (estado !== 'inalterado') saida.push(...diffDoPacote(instalado, lido.arquivos, lido.manifesto));
+        if (estado !== 'inalterado')
+          saida.push(...diffDoPacote(instalado, lido.arquivos, lido.manifesto, 30, opcoes.detalhes === true));
         const antigo = pacoteInstalado(p.nome, instalado);
         const projecao = await planejarProjecao(ctx, {
           nome: p.nome,

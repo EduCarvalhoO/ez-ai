@@ -82,6 +82,14 @@ describe('consumo por agente', () => {
     expect(r.saida.at(-1)).toBe('total: US$ 0,0123');
   });
 
+  it('custo sem nenhuma medida mostra indisponível, não zero', async () => {
+    const ctx = ctxVazio();
+    await etapa(ctx, 'revisor', { fonte: 'indisponivel' });
+    const r = await relatarCusto(ctx);
+    expect(r.saida.join(' ')).toContain('indisponíveis');
+    expect(r.saida.at(-1)).toBe('total: indisponível');
+  });
+
   it('o span leva o agente do consumo e a fonte da medida', async () => {
     const ctx = ctxVazio();
     const e = await etapa(ctx, 'implementador', { fonte: 'estimado', agente: 'sub-agente', tokensEntrada: 7 });

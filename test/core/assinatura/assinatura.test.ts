@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ARQUIVO_DA_ASSINATURA,
   adicionar,
   aplicar,
-  ARQUIVO_DA_ASSINATURA,
   atualizar,
   type Contexto,
   conferirAssinatura,
@@ -10,9 +10,9 @@ import {
   init,
   listar,
   type PedidoDeVerificacao,
+  type VerificadorDeAssinatura,
   validar,
   validarLockfile,
-  type VerificadorDeAssinatura,
 } from '../../../src/core/index.js';
 import { hashDoConteudo } from '../../../src/core/lockfile/hash.js';
 import { arquivosParaHash } from '../../../src/core/lockfile/integridade.js';

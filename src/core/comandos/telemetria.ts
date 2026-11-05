@@ -32,9 +32,13 @@ export async function exportarTelemetria(ctx: Contexto, opcoes: OpcoesDeExportac
   if (!config.ok) return falha(...config.erros);
   const destino = config.valor.telemetria;
   if (!destino) {
-    return falha(
-      'telemetria desligada: nada foi enviado. Para ligar, acrescente "telemetria": { "endpoint": "https://..." } em .harness/config.json (ADR-0029).',
-    );
+    return {
+      codigo: 0,
+      saida: [
+        'telemetria desligada: nada foi enviado (estado normal). Para ligar, acrescente "telemetria": { "endpoint": "https://..." } em .harness/config.json (ADR-0029).',
+      ],
+      erros: [],
+    };
   }
   const lido = await lerAuditoria(ctx.arquivos);
   if (!lido.ok) return falha(escaparInvisiveis(lido.mensagem));

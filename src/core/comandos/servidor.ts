@@ -1,8 +1,9 @@
 // `validate --servidor` (ADR-0028): o gate do job de CI. Roda o `validate --ci` e compara com a branch base:
 // aprovadores, policy do projeto, config e lockfile mudados exigem review de aprovador da BASE; os checks do CI
 // são conferidos na API do provedor em vez do log local (que o agente escreve).
-import { validarConfiguracao } from '../configuracao/configuracao.js';
+
 import { NIVEIS_DE_CONFIANCA } from '../configuracao/confianca.js';
+import { validarConfiguracao } from '../configuracao/configuracao.js';
 import { validarLockfile } from '../lockfile/lockfile.js';
 import { aprovadoresDosPapeis, CAMINHO_DOS_PAPEIS, validarPapeis } from '../papeis/papeis.js';
 import type { LeitorDaBase, ProvedorDoPr } from '../portas/index.js';

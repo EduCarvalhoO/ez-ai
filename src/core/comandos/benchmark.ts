@@ -2,7 +2,6 @@
 // `--exportar`, grava o dataset e as pontuações para o Langfuse. Não executa agente e não usa a rede.
 import { lerAuditoria } from '../auditoria/registro.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
-import { CAMINHO_DO_WORKFLOW, validarConfiguracaoDoWorkflow } from '../workflow/configuracao.js';
 import {
   AMBIENTES_DO_BENCHMARK,
   CAMINHO_DAS_TAREFAS,
@@ -12,6 +11,7 @@ import {
   relatorioComparativo,
   validarTarefas,
 } from '../workflow/benchmark.js';
+import { CAMINHO_DO_WORKFLOW, validarConfiguracaoDoWorkflow } from '../workflow/configuracao.js';
 import { WORKFLOW_PADRAO } from '../workflow/motor.js';
 import type { Contexto, ResultadoDoComando } from './base.js';
 import { CAMINHO_DOS_DATASETS } from './conhecimento.js';

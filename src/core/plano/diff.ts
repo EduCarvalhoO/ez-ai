@@ -44,13 +44,14 @@ export function diffDeLinhas(antes: string, depois: string): string[] {
 
 /**
  * Diff dos arquivos dos componentes do pacote novo contra o instalado (vazio = instalação nova). Cada arquivo mostra
- * até `limite` linhas; o resto vira uma linha de resumo.
+ * até `limite` linhas; o resto vira uma linha de resumo. Com `detalhes` falso, só a contagem de linhas por arquivo.
  */
 export function diffDoPacote(
   instalado: ReadonlyMap<string, string>,
   novo: ReadonlyMap<string, string>,
   manifesto: Manifesto,
   limite = 30,
+  detalhes = true,
 ): string[] {
   const saida: string[] = [];
   const vistos = new Set<string>();
@@ -61,7 +62,13 @@ export function diffDoPacote(
     const depois = novo.get(c.arquivo) ?? '';
     if (antes === depois) continue;
     const linhas = diffDeLinhas(antes, depois);
-    saida.push(`    instruções: ${escaparInvisiveis(c.arquivo)} (${c.tipo} ${escaparInvisiveis(c.id)})`);
+    const cabecalho = `    instruções: ${escaparInvisiveis(c.arquivo)} (${c.tipo} ${escaparInvisiveis(c.id)})`;
+    if (!detalhes) {
+      const mais = linhas.filter((l) => l.startsWith('+ ')).length;
+      saida.push(`${cabecalho}: +${mais} -${linhas.length - mais} linha(s)`);
+      continue;
+    }
+    saida.push(cabecalho);
     for (const l of linhas.slice(0, limite)) saida.push(`      ${l}`);
     if (linhas.length > limite) saida.push(`      ... mais ${linhas.length - limite} linha(s) alterada(s)`);
   }

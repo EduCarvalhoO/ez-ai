@@ -1,8 +1,9 @@
 // Configuração opcional do workflow (`.harness/workflow.json`, ADR-0031). Arquivo ausente = padrão da spec.
 // Fechada: campo desconhecido é recusado, e as etapas do núcleo fixo (E1, E3, E4, G1, G2, G3) não se desligam.
+
+import { ETAPAS } from '../auditoria/schema.js';
 import { lerJsonSeguro } from '../contratos/json-seguro.js';
 import type { ErroDeContrato, Resultado } from '../contratos/resultado.js';
-import { ETAPAS } from '../auditoria/schema.js';
 import { type ConfiguracaoDoWorkflow, ETAPAS_DESLIGAVEIS, type EtapaDesligavel, WORKFLOW_PADRAO } from './motor.js';
 import { type OrcamentoDoWorkflow, PROTECAO_PADRAO, type ProtecaoContraLaco, type SaidaExigida } from './protecao.js';
 

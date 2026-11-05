@@ -1,8 +1,9 @@
 // Verificação de integridade (spec da configuração e do lockfile, "Obrigações da F2"): recalcula o hash do conteúdo
 // lido do commit travado ou da pasta local e confere contra o lockfile, mais a chave e a origem contra o manifesto.
+
+import { ARQUIVO_DA_ASSINATURA } from '../assinatura/assinatura.js';
 import type { Configuracao } from '../configuracao/configuracao.js';
 import type { Manifesto } from '../manifesto/manifesto.js';
-import { ARQUIVO_DA_ASSINATURA } from '../assinatura/assinatura.js';
 import { type ArquivoDoPacote, hashDoConteudo } from './hash.js';
 import type { Lockfile, PacoteTravado } from './lockfile.js';
 

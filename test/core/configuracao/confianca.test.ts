@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { atendeConfiancaMinima, nivelDeConfianca, validarConfiguracao } from '../../../src/core/index.js';
 import { lerOrigem } from '../../../src/core/configuracao/origem.js';
+import { atendeConfiancaMinima, nivelDeConfianca, validarConfiguracao } from '../../../src/core/index.js';
 
 const origem = (texto: string) => lerOrigem(texto).origem;
 
