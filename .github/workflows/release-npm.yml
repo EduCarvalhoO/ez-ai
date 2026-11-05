@@ -1,0 +1,70 @@
+# Publica o ez-ai no npm com provenance (prova de qual workflow gerou o pacote) por OIDC
+# (trusted publishing: o npm confia no workflow, então não há token guardado nos Secrets).
+# Dois jobs: `construir` roda o código do repositório (testes, SBOM, pack) SEM poder de publicar;
+# `publicar` não roda código do repositório: só atesta e publica o .tgz que o primeiro gerou.
+# Antes da primeira tag: no npm, Settings do pacote ez-ai > Trusted publisher, apontar para este repositório e este arquivo;
+# criar o ambiente `release` (aprovação do Eduardo; branches/tags permitidos: v*); proteger as tags v* por ruleset;
+# tirar `"private": true` do package.json no PR de release.
+name: release-npm
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: A tag bate com a versão e o commit está na main
+        run: |
+          test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+      - run: npm audit
+      - run: npm test
+      - run: npm run sbom
+      - run: npm pack
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pacote
+          path: |
+            *.tgz
+            sbom.cdx.json
+          if-no-files-found: error
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment: release          # ambiente com aprovação manual do Eduardo
+    permissions:
+      contents: write             # criar a release no GitHub
+      id-token: write             # OIDC: é ele que o npm confere
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pacote
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: '*.tgz'
+      - name: Publicar o mesmo .tgz atestado, com provenance
+        run: npm publish ./*.tgz --provenance --access public --ignore-scripts
+      - name: Release no GitHub com SBOM
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes sbom.cdx.json ./*.tgz

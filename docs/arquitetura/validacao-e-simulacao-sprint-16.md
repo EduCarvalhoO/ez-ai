@@ -28,7 +28,7 @@ Pasta `D:\WorkSpace\ez-ai-simulacao\app` (fora do repo, Git novo, um `soma.js`).
 - [Mapa de módulos](mapa-de-modulos.md) está defasado (atualizado em 2026-11-02): cita `src/exportadores/`, que não existe (a telemetria vive em `src/core/telemetria`), e não lista assinatura, papéis, servidor, workflow, conhecimento. **P2: atualizar.**
 - Maiores arquivos: `src/core/comandos/escrita.ts` (587 linhas) e `src/cli/main.ts` (435). Ainda administráveis, mas `main.ts` mistura parsing de argumentos, uso e despacho; separar em `args.ts` quando passar de 500. **P3.**
 - `.github/pull_request_template.md` ainda diz "harness-ai"; ADRs 0028 a 0034 usam o nome antigo no texto (registro histórico, tolerável). O modelo de PR exige autorização escrita para mexer em `.github/`. **P1 (trivial, depende de autorização).**
-- Dois modelos de workflow (`release-npm.yml`, `release-assinada.yml`) seguem em `docs/modelos/`; a promoção a `.github/workflows/` depende da autorização do Eduardo. **P1.**
+- `release-npm.yml` foi ativado em `.github/workflows/` (autorizado em 2026-11-05). `release-assinada.yml` é para repositórios de pacote e segue como modelo.
 - Cobertura do benchmark (`conhecimento avaliar`) exige `conhecimento/perguntas.json`; num projeto novo a mensagem de erro não diz como criar. **P3.**
 
 ## Próximos passos propostos
@@ -42,3 +42,24 @@ Decisões maiores (P1 e a questão do `local:`) pedem um G1 curto com o Eduardo.
 ## Pesquisa pública de marca e nome (feita nesta sprint)
 - npm: `https://registry.npmjs.org/ez-ai` devolve 404, ou seja, o nome `ez-ai` está livre em 2026-11-05. **Reserve logo**, antes que alguém pegue.
 - GitHub: há repositórios com nomes parecidos (`ez-ai-agent`, `ezwork-ai-doc-translation`), sem relação aparente. Isso não substitui a busca oficial no INPI (Brasil) e no EUIPO (União Europeia), que é do Eduardo; passo a passo no [checklist de release](../guias/checklist-de-release.md).
+
+## Validação no Claude Code e no Copilot (arquivos gerados)
+Feita na pasta de simulação com o pacote `workflow-feature` e um pacote de teste `guardas` (um hook que barra `git push --force`/`rm -rf` e um servidor MCP da base).
+
+**Resultados que passaram**
+- Claude Code: `apply` gera `.claude/agents/*.md` (4 agentes, com `name` e `description`), `.claude/rules/*.md` (a instrução do workflow), `.claude/skills/*/SKILL.md`, `.claude/settings.json` (hook `PreToolUse` com `onFailure: "block"`, `args` em forma exec e caminho com `${CLAUDE_PROJECT_DIR}`) e `.mcp.json` (servidor `stdio`). Não gera `CLAUDE.md`: as instruções vão para `.claude/rules/`, que o Claude Code carrega sozinho.
+- O script do hook, alimentado com o JSON que o Claude Code envia, sai com código 2 (bloqueia) para `git push --force` e 0 para `ls`.
+- O servidor `conhecimento servir`, falado por JSON-RPC em linhas (protocolo MCP), responde `initialize`, `tools/list` e `tools/call buscar` com trecho citado.
+- Copilot: `apply` gera `.github/agents/*.agent.md`, `.github/instructions/*.instructions.md` (com `applyTo: "**"`) e `.github/skills/*/SKILL.md`. Hooks e MCP **não** são gravados no Copilot (aviso claro no `plan`).
+- A aprovação própria de `configurarAmbiente` foi exigida e só passou com `--aprovar`, como o ADR-0027 manda.
+
+**O que não foi possível provar nesta sprint**
+- Não há o executável `claude` neste PC (fora do PATH), então a sessão headless (`claude -p`) não rodou: falta provar que o Claude Code carrega os agentes/skills/regras gerados, aprova o MCP e que o hook barra de fato dentro dele. Procedimento manual: na pasta de simulação, abrir `claude`, rodar `/agents`, `/mcp`, `/hooks` e pedir `git push --force`.
+- O nome da pasta da skill (com prefixo e hash) difere do `name` do frontmatter; confirmar que o Claude Code aceita.
+- Copilot no VS Code: só o spike M2 manual prova que o ambiente lê agentes, instruções e skills gerados ([procedimento](spike-enforcement-copilot.md)).
+
+**Atritos novos**
+| # | Atrito | Prioridade |
+|---|---|---|
+| 12 | `plan` não mostra os ids para `--aprovar`; só o `apply` recusado os mostra (com `%2F` no id) | P3 |
+| 13 | O MCP do pacote precisa de `ez-ai@<versão>` fixa; com a versão `0.0.0` não publicada, `npx` falharia no Claude Code | P1 (resolve com o release) |

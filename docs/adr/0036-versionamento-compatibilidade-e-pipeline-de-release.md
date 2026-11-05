@@ -20,7 +20,7 @@ Para o release: (1) changesets (já no repositório) gera changelog e versão; (
 3. **Versão dos schemas:** campo de versão no próprio arquivo (`versao*`). Mudança compatível (campo opcional novo) mantém o número; incompatível sobe o número e a CLI lê as **duas últimas** versões por pelo menos um major, com os passos de migração documentados no guia.
 4. **Depreciação:** o que sai da superfície pública é anunciado em um minor (aviso na saída e no changelog) e removido só no major seguinte.
 5. **Changelog:** gerado dos changesets; todo PR que muda a superfície pública traz um changeset (`.changeset/*.md`).
-6. **Release:** tag `v*` dispara o workflow de modelo `docs/modelos/release-npm.yml` (testes, SBOM, `npm publish --provenance` com OIDC, atestado). O workflow **não está ativo**: copiar para `.github/workflows/` exige autorização escrita do Eduardo. O pacote hoje é `private: true`; só sai de `private` no PR de release.
+6. **Release:** tag `v*` dispara o workflow de modelo `docs/modelos/release-npm.yml` (testes, SBOM, `npm publish --provenance` com OIDC, atestado). O workflow foi ativado em 2026-11-05 com autorização escrita do Eduardo (`.github/workflows/release-npm.yml`, `uses:` por SHA). O pacote hoje é `private: true`; só sai de `private` no PR de release.
 7. **Checklist de release** com evidências anexadas em [checklist-de-release.md](../guias/checklist-de-release.md); o marco M4 só fecha com ele completo.
 
 ## Consequências
