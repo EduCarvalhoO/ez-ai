@@ -13,7 +13,7 @@ const REPOSITORIO = /^https:\/\/github\.com\/[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-
 const TAG = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/;
 const COMMIT = /^[0-9a-f]{40}$/;
 // Caminho de arquivo na raiz do repositório, sem diretório e sem começar por `-` (nunca vira opção do git).
-const CAMINHO_PEDIDO = /^[A-Za-z0-9._][A-Za-z0-9._-]{0,99}$/;
+const CAMINHO_PEDIDO = /^[A-Za-z0-9_][A-Za-z0-9._-]{0,99}$/;
 const MAXIMO_DE_ARQUIVOS = 1000;
 const MAXIMO_DE_BYTES_POR_ARQUIVO = 1024 * 1024;
 
@@ -152,6 +152,8 @@ export function criarGit(executor: ExecutorDeGit = executorDoSistema): Git {
           if (!CAMINHO_PEDIDO.test(caminho)) throw new Error(`caminho "${escaparInvisiveis(caminho)}" recusado.`);
           const [entrada] = entradasDaArvore(await executor(['ls-tree', '-z', commit, '--', caminho], pasta));
           if (!entrada) continue;
+          if (entrada.caminho !== caminho)
+            throw new Error(`"${escaparInvisiveis(caminho)}" não confere com a árvore; recusado.`);
           if (entrada.modo !== '100644' && entrada.modo !== '100755') {
             throw new Error(`"${escaparInvisiveis(caminho)}" não é um arquivo comum; recusado.`);
           }

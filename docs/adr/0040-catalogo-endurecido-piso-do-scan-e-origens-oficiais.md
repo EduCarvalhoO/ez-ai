@@ -22,7 +22,7 @@ Aplicar D1 a D7. Regras `conteudo` não casam com item declarado de pacote: quem
 ## Consequências
 - Positivas: um catálogo velho, trocado ou de repositório recriado deixa de ser aceito; menos superfície lida do Git; uma organização consegue impor um piso de scan que o projeto não afrouxa.
 - Custos: o `search` agora grava `.harness/catalogo-visto.json` (vale versionar ou ignorar: apagar o arquivo recomeça a confiança); config do catálogo exige o ID.
-- Riscos aceitos: quem hospeda a tag ainda pode esconder tags novas (só se detecta se o projeto já viu uma maior); o ID vem da extensão Fulcio, que só existe em certificados emitidos pelas versões recentes do Fulcio (certificado sem ela é recusado, falha fechada).
+- Riscos aceitos: o `git fetch` ainda baixa os blobs do commit (só a leitura fica restrita; filtro parcial exige teste com git real e fica para depois, limitado pelo timeout de 120 s); o certificado também precisa trazer o commit (extensão `.1.13`), conferido contra o commit lido da tag; quem hospeda a tag ainda pode esconder tags novas (só se detecta se o projeto já viu uma maior); o ID vem da extensão Fulcio, que só existe em certificados emitidos pelas versões recentes do Fulcio (certificado sem ela é recusado, falha fechada).
 
 ## Em aberto
 Qual repositório entra em `ORIGENS_OFICIAIS` (decisão do Eduardo). Piso do scan também na `policyDaOrganizacao` ao rodar `ez-ai scan` (hoje o comando lê só a policy do projeto; plan, apply, update e validate --ci leem todas).

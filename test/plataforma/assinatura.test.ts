@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { criarVerificadorSigstore } from '../../src/plataforma/index.js';
-import { oidDoRepositorio } from '../../src/plataforma/assinatura.js';
+import { oidDoCommit, oidDoRepositorio } from '../../src/plataforma/assinatura.js';
 import { RAIZ_DE_CONFIANCA_JSON } from '../../src/plataforma/raiz-de-confianca.js';
 
 const PEDIDO = {
@@ -39,6 +39,8 @@ describe('verificador Sigstore (plataforma)', () => {
     const par = oidDoRepositorio('123456');
     expect(par.oid.id.join('.')).toBe('1.3.6.1.4.1.57264.1.15');
     expect([...par.value]).toEqual([0x0c, 6, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36]);
+    expect(oidDoCommit('a'.repeat(40)).oid.id.join('.')).toBe('1.3.6.1.4.1.57264.1.13');
+    expect(() => oidDoCommit('xyz')).toThrow();
     expect(() => oidDoRepositorio('abc')).toThrow();
     expect(() => oidDoRepositorio('0123')).toThrow();
   });

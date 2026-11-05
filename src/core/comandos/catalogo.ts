@@ -75,7 +75,7 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
       );
     }
     commit = await ctx.git.resolverTag(repositorio, tag);
-    if (visto && visto.tag === tag && visto.commit !== commit) {
+    if (visto && (compararTags(tag, visto.tag) ?? -1) === 0 && visto.commit !== commit) {
       return falha(`a tag ${e(tag)} do catálogo mudou de commit desde a última vez; recusado.`);
     }
     // Só `catalogo.json` e o bundle, em bytes brutos: nada mais da árvore do repositório entra na máquina.
@@ -95,7 +95,7 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
   if (bundleBytes === undefined)
     return falha(`falta ${ARQUIVO_DA_ASSINATURA} em ${e(repositorio)}@${e(tag)}; catálogo sem assinatura é recusado.`);
   if (bundleBytes.length > LIMITE_DO_BUNDLE)
-    return falha(`${ARQUIVO_DA_ASSINATURA} passa de ${LIMITE_DO_BUNDLE} caracteres.`);
+    return falha(`${ARQUIVO_DA_ASSINATURA} passa de ${LIMITE_DO_BUNDLE} bytes.`);
   const bundle = decodificarCatalogo(bundleBytes);
   if (bundle === undefined) return falha(`${ARQUIVO_DA_ASSINATURA} não é UTF-8 válido.`);
 
@@ -112,6 +112,7 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
       identidade,
       emissor: EMISSOR,
       idDoRepositorio: cat.repositorioId,
+      commit,
     });
   } catch (erro: unknown) {
     conferido = { ok: false, motivo: erro instanceof Error ? erro.message : String(erro) };
@@ -123,7 +124,7 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
   const catalogo = lerCatalogo(texto);
   if (!catalogo.ok) return falha(`catálogo inválido: ${e(catalogo.erro)}.`);
   // Só depois de tudo conferir é que a tag vira "a última vista" (a pesquisa em si continua só leitura do catálogo).
-  if (visto?.tag !== tag) {
+  if (visto?.tag !== tag || visto.commit !== commit) {
     try {
       await ctx.arquivos.gravar(CAMINHO_DO_CATALOGO_VISTO, textoDoCatalogoVisto({ tag, commit }));
     } catch (erro: unknown) {

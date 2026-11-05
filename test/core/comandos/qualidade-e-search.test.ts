@@ -143,6 +143,7 @@ describe('search (catálogo assinado)', () => {
       emissor: 'https://token.actions.githubusercontent.com',
       artefato: esperado,
       idDoRepositorio: '123456',
+      commit: 'b',
     });
   });
 
@@ -322,5 +323,13 @@ describe('search: endurecimento do catálogo (ADR-0040)', () => {
     );
     expect((await procurarPacotes(ctx, { termos: ['revisao'] })).codigo).toBe(0);
     expect(pedidos).toEqual([['catalogo.json', 'harness-pacote.sigstore.json']]);
+  });
+
+  it('tag com outro nome mas a mesma versão em outro commit também é recusada', async () => {
+    const { ctx } = projetoComCatalogo({
+      tags: { '1.2.0': 'b', 'v1.0.0': 'a' },
+      projeto: { '.harness/catalogo-visto.json': JSON.stringify({ tag: 'v1.2.0', commit: 'a'.repeat(40) }) },
+    });
+    expect((await procurarPacotes(ctx, { termos: ['revisao'] })).erros.join('')).toContain('mudou de commit');
   });
 });

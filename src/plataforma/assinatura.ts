@@ -25,6 +25,15 @@ export function oidDoRepositorio(id: string): { oid: { id: number[] }; value: Bu
   };
 }
 
+// Extensão Fulcio "Source Repository Digest": o SHA do commit que o workflow rodou (40 hex), também UTF8String DER.
+export function oidDoCommit(commit: string): { oid: { id: number[] }; value: Buffer } {
+  if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error('commit inválido');
+  return {
+    oid: { id: [1, 3, 6, 1, 4, 1, 57264, 1, 13] },
+    value: Buffer.concat([Buffer.from([0x0c, commit.length]), Buffer.from(commit, 'ascii')]),
+  };
+}
+
 export function criarVerificadorSigstore(o: OpcoesDoVerificador = {}): VerificadorDeAssinatura {
   let verificador: Verifier | undefined;
   // As bibliotecas carregam só quando há o que verificar: o @sigstore/verify pede Node >= 22.22.2, e num Node mais
@@ -46,7 +55,14 @@ export function criarVerificadorSigstore(o: OpcoesDoVerificador = {}): Verificad
           // O @sigstore/verify trata o valor como regex sem âncora: escapa e ancora para valer só a identidade inteira.
           subjectAlternativeName: `^${escaparRegex(pedido.identidade)}$`,
           extensions: { issuer: pedido.emissor },
-          ...(pedido.idDoRepositorio !== undefined ? { oids: [oidDoRepositorio(pedido.idDoRepositorio)] } : {}),
+          ...(pedido.idDoRepositorio !== undefined || pedido.commit !== undefined
+            ? {
+                oids: [
+                  ...(pedido.idDoRepositorio !== undefined ? [oidDoRepositorio(pedido.idDoRepositorio)] : []),
+                  ...(pedido.commit !== undefined ? [oidDoCommit(pedido.commit)] : []),
+                ],
+              }
+            : {}),
         });
         return { ok: true as const };
       } catch (erro: unknown) {
