@@ -11,10 +11,10 @@ import type { Lockfile, PacoteTravado } from '../lockfile/lockfile.js';
 import { validarLockfile } from '../lockfile/lockfile.js';
 import { diferencaDePermissoes } from '../manifesto/permissoes.js';
 import { diffDoPacote } from '../plano/diff.js';
-import { decidirAssinatura } from './assinatura.js';
 import { avaliarPacote } from '../policy/avaliar.js';
 import { resolverVersao } from '../resolucao/semver.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
+import { decidirAssinatura } from './assinatura.js';
 import {
   CAMINHO_DA_CONFIGURACAO,
   CAMINHO_DO_LOCKFILE,
@@ -170,7 +170,15 @@ export function adicionar(ctx: Contexto, opcoes: OpcoesDeAdd): Promise<Resultado
     await ctx.arquivos.gravar(CAMINHO_DA_CONFIGURACAO, texto);
     return {
       codigo: 0,
-      saida: [`Registrado: ${resumo}.`, 'Nada foi instalado ainda: rode "ez-ai plan" e depois "ez-ai apply".'],
+      saida: [
+        `Registrado: ${resumo}.`,
+        ...(origem.tipo === 'local'
+          ? [
+              `aviso  o dono "${e(nome.split('/')[0] ?? '')}" vem do manifesto do pacote local, não de uma conta verificada; confira se é o esperado (ADR-0017).`,
+            ]
+          : []),
+        'Nada foi instalado ainda: rode "ez-ai plan" e depois "ez-ai apply".',
+      ],
       erros: [],
       pacotes: [{ chave: nome, versao: lido.manifesto.versao, ...(lido.commit ? { commit: lido.commit } : {}) }],
     };
@@ -269,6 +277,8 @@ export interface OpcoesDeInstalacao {
   /** Aceita permissões novas do pacote (vale para `update` e para `apply` que resolve versão nova). */
   readonly aceitarPermissoes: boolean;
   readonly dryRun: boolean;
+  /** Mostra o texto completo do diff das instruções (padrão: só a contagem de linhas por componente). */
+  readonly detalhes?: boolean;
 }
 
 interface Acao {
@@ -464,7 +474,8 @@ async function preparar(
       const locais = await contarLocal(ctx, p.nome);
       if (locais > 0) linhas.push(`    customização local preservada: ${locais} arquivo(s)`);
       // Diff das instruções (ADR-0018): a pessoa vê o texto que muda antes de aceitar.
-      if (mudou) linhas.push(...diffDoPacote(instalado.arquivos, lido.arquivos, lido.manifesto));
+      if (mudou)
+        linhas.push(...diffDoPacote(instalado.arquivos, lido.arquivos, lido.manifesto, 30, opcoes.detalhes === true));
       const antigo = pacoteInstalado(p.nome, instalado.arquivos);
       const projecao = await planejarProjecao(ctx, {
         nome: p.nome,

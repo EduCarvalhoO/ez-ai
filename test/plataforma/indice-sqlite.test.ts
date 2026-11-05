@@ -2,8 +2,8 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { cortarEmChunks } from '../../src/core/conhecimento/chunks.js';
 import { consultaParaIndice } from '../../src/core/conhecimento/busca.js';
+import { cortarEmChunks } from '../../src/core/conhecimento/chunks.js';
 import { criarIndiceSqlite } from '../../src/plataforma/indice-sqlite.js';
 
 const pastas: string[] = [];

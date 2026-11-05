@@ -21,8 +21,6 @@ export {
   nomeProjetado,
   projetarComModelo,
 } from './adaptadores/projecao.js';
-export type { Papeis, Papel } from './papeis/papeis.js';
-export { aprovadoresDosPapeis, CAMINHO_DOS_PAPEIS, papelDe, validarPapeis } from './papeis/papeis.js';
 export type {
   IdentidadeAssinante,
   PedidoDeVerificacao,
@@ -47,13 +45,10 @@ export type { ContextoDeAuditoria, PedidoDeEvento } from './auditoria/registro.j
 export { lerAuditoria, PASTA_DA_AUDITORIA, registrarEvento } from './auditoria/registro.js';
 export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
 export { pareceSegredo, redigirSegredos } from './auditoria/segredos.js';
-export type { Contexto, ResultadoDoComando } from './comandos/base.js';
 export { hashDoPacote } from './comandos/assinatura.js';
+export type { Contexto, ResultadoDoComando } from './comandos/base.js';
 export { relatarBenchmark } from './comandos/benchmark.js';
 export { avaliarBase, buscarNaBase, indexarBase, mapaDaBase } from './comandos/conhecimento.js';
-export { responderMcp, servirMcp } from './comandos/mcp.js';
-export type { FatosDeConfianca, NivelDeConfianca } from './configuracao/confianca.js';
-export { atendeConfiancaMinima, NIVEIS_DE_CONFIANCA, nivelDeConfianca } from './configuracao/confianca.js';
 export { relatarCusto } from './comandos/custo.js';
 export type { OpcoesDeAdd, OpcoesDeInstalacao, OpcoesDeRemove } from './comandos/escrita.js';
 export {
@@ -70,12 +65,15 @@ export {
 } from './comandos/escrita.js';
 export { init } from './comandos/init.js';
 export { diagnosticar, listar, planejar, validar } from './comandos/leitura.js';
+export { responderMcp, servirMcp } from './comandos/mcp.js';
 export type { OpcoesDoServidor } from './comandos/servidor.js';
 export { validarNoServidor } from './comandos/servidor.js';
 export type { OpcoesDeExportacao } from './comandos/telemetria.js';
 export { exportarTelemetria } from './comandos/telemetria.js';
 export type { OpcoesDeEtapa } from './comandos/workflow.js';
 export { registrarEtapa, retomarWorkflow, statusDoWorkflow, verificarDocumento } from './comandos/workflow.js';
+export type { FatosDeConfianca, NivelDeConfianca } from './configuracao/confianca.js';
+export { atendeConfiancaMinima, NIVEIS_DE_CONFIANCA, nivelDeConfianca } from './configuracao/confianca.js';
 export type {
   Configuracao,
   LimiteAjustavel,
@@ -115,6 +113,8 @@ export { validarManifesto } from './manifesto/manifesto.js';
 export type { Aumento, ComComponentes, MarcaDeEscrita, MarcaDeLeitura } from './manifesto/permissoes.js';
 export { diferencaDePermissoes, marcarEscrita, marcarLeitura, permissoesDoPacote } from './manifesto/permissoes.js';
 export { LIMITES, LIMITES_AJUSTAVEIS, SCHEMA_DO_MANIFESTO } from './manifesto/schema.js';
+export type { Papeis, Papel } from './papeis/papeis.js';
+export { aprovadoresDosPapeis, CAMINHO_DOS_PAPEIS, papelDe, validarPapeis } from './papeis/papeis.js';
 export { diffDeLinhas, diffDoPacote } from './plano/diff.js';
 export type { Afrouxamento } from './policy/afrouxamentos.js';
 export { afrouxamentosDePolicy, conferirPacoteDaOrganizacao } from './policy/afrouxamentos.js';
@@ -160,18 +160,11 @@ export { formatarUsd, resumirConsumoPorAgente } from './telemetria/consumo.js';
 export { problemaNoEndpoint } from './telemetria/endpoint.js';
 export type { PayloadOtlp, SpanOtlp } from './telemetria/otlp.js';
 export { eventoParaSpan, montarPayloadOtlp } from './telemetria/otlp.js';
+export type { Pontuacao, TarefaDeReferencia } from './workflow/benchmark.js';
+export { pontuarExecucao, relatorioComparativo, validarTarefas } from './workflow/benchmark.js';
 export type { ProblemaDeDocumento, TipoDeDocumento } from './workflow/completude.js';
 export { tipoPeloCaminho, verificarCompletude } from './workflow/completude.js';
 export { CAMINHO_DO_WORKFLOW, validarConfiguracaoDoWorkflow } from './workflow/configuracao.js';
-export type {
-  JanelaDeControle,
-  OrcamentoDoWorkflow,
-  ProtecaoContraLaco,
-  SaidaExigida,
-} from './workflow/protecao.js';
-export { causaDeParada, PROTECAO_PADRAO, repeticaoNaTrilha } from './workflow/protecao.js';
-export type { Pontuacao, TarefaDeReferencia } from './workflow/benchmark.js';
-export { pontuarExecucao, relatorioComparativo, validarTarefas } from './workflow/benchmark.js';
 export type {
   ConfiguracaoDoWorkflow,
   EstadoDoWorkflow,
@@ -179,3 +172,10 @@ export type {
   Transicao,
 } from './workflow/motor.js';
 export { aplicarEvento, avancar, estadoDoItem, estadoInicial, WORKFLOW_PADRAO } from './workflow/motor.js';
+export type {
+  JanelaDeControle,
+  OrcamentoDoWorkflow,
+  ProtecaoContraLaco,
+  SaidaExigida,
+} from './workflow/protecao.js';
+export { causaDeParada, PROTECAO_PADRAO, repeticaoNaTrilha } from './workflow/protecao.js';

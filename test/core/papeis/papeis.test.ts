@@ -4,8 +4,8 @@ import {
   type Contexto,
   type DadosDoPr,
   type LeitorDaBase,
-  papelDe,
   type ProvedorDoPr,
+  papelDe,
   validarNoServidor,
   validarPapeis,
 } from '../../../src/core/index.js';

@@ -11,6 +11,8 @@ export async function relatarCusto(ctx: Contexto): Promise<ResultadoDoComando> {
   if (agentes.length === 0)
     return { codigo: 0, saida: ['nenhuma etapa de agente registrada na auditoria.'], erros: [] };
   const saida = agentes.map((a) => {
+    if (a.etapasComMedida === 0)
+      return `${escaparInvisiveis(a.agente)}: ${a.etapas} etapa(s), consumo e custo indisponíveis (nenhuma etapa trouxe medida)`;
     const base = `${escaparInvisiveis(a.agente)}: ${a.etapas} etapa(s), entrada ${a.tokensEntrada}, saída ${a.tokensSaida}, cache lido ${a.tokensCacheLeitura}, cache gravado ${a.tokensCacheEscrita}, custo ${formatarUsd(a.custoMicroUsd)}`;
     const avisos = [
       a.etapasSemMedida > 0 ? `${a.etapasSemMedida} etapa(s) sem medida` : '',
@@ -19,5 +21,6 @@ export async function relatarCusto(ctx: Contexto): Promise<ResultadoDoComando> {
     return avisos.length > 0 ? `${base} (${avisos.join('; ')})` : base;
   });
   const total = agentes.reduce((s, a) => s + a.custoMicroUsd, 0);
-  return { codigo: 0, saida: [...saida, `total: ${formatarUsd(total)}`], erros: [] };
+  const semNenhuma = agentes.every((a) => a.etapasComMedida === 0);
+  return { codigo: 0, saida: [...saida, `total: ${semNenhuma ? 'indisponível' : formatarUsd(total)}`], erros: [] };
 }

@@ -7,8 +7,8 @@ import {
   mapaDosChunks,
   mesclarResultados,
 } from '../conhecimento/busca.js';
-import { calcularMetricasDaBase, type MetricasDaBase } from '../conhecimento/metricas.js';
 import { fontesDoProjeto, reunirChunks } from '../conhecimento/fontes.js';
+import { calcularMetricasDaBase, type MetricasDaBase } from '../conhecimento/metricas.js';
 import { CAMINHO_DAS_PERGUNTAS, datasetDeConhecimento, validarPerguntas } from '../conhecimento/perguntas.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import type { Contexto, ResultadoDoComando } from './base.js';

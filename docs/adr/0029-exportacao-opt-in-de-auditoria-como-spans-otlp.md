@@ -30,3 +30,6 @@ Para usar com o Langfuse: `"telemetria": { "endpoint": "https://<host>/api/publi
 
 ## Gatilhos de revisão
 Mudança na API OTLP do Langfuse; demanda por outro backend (Phoenix, Grafana); necessidade de envio automático; consumo de tokens por agente capturado (a captura entra em sprint própria).
+
+## Atualização (Sprint 17, 2026-11-05)
+`ez-ai export` com a telemetria desligada agora **sai com código 0** e avisa "nada foi enviado (estado normal)": desligado é o estado padrão, não um erro. Continua sem abrir nenhuma conexão de rede (teste mantido). Os demais erros (marcador inconsistente, segredo no payload, coletor com falha) seguem com código 1.

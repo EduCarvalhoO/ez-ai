@@ -166,8 +166,8 @@ describe('comando export', () => {
     const { ctx, enviar } = montar(CONFIG_DESLIGADA);
     await registrar(ctx, 2);
     const r = await exportarTelemetria(ctx, { dryRun: false });
-    expect(r.codigo).toBe(1);
-    expect(r.erros.join(' ')).toMatch(/desligada/);
+    expect(r.codigo).toBe(0);
+    expect(r.saida.join(' ')).toMatch(/desligada/);
     expect(enviar).not.toHaveBeenCalled();
   });
 
