@@ -1,0 +1,53 @@
+# MODELO (não é workflow ativo; fica em docs/modelos, fora de .github/). ADR-0035, runbook-assinatura.
+# Para um repositório de PACOTE: assina o hash do conteúdo com Sigstore (keyless) e publica o bundle.
+# Antes de usar: fixe cada `uses:` por SHA de commit (não por tag) e confira a versão do harness-ai.
+name: release-assinada
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  assinar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # para commitar o bundle na branch de release
+      id-token: write   # token OIDC: é ele que vira o certificado Sigstore
+    steps:
+      - uses: actions/checkout@<SHA-FIXADO>
+      - uses: actions/setup-node@<SHA-FIXADO>
+        with:
+          node-version: 24
+      - uses: sigstore/cosign-installer@<SHA-FIXADO>
+      - name: Calcular o hash do conteúdo do pacote
+        run: |
+          # A árvore do commit, sem untracked nem .git: é o que quem instala lê.
+          mkdir pacote && git archive HEAD | tar -x -C pacote
+          printf '%s' "$(npx --yes harness-ai@<VERSAO-EXATA> hash-pacote pacote)" > hash.txt
+          cat hash.txt
+      - name: Assinar o hash (keyless)
+        run: cosign sign-blob --yes --bundle harness-pacote.sigstore.json hash.txt
+      # O bundle precisa estar no commit da tag: publique-o numa branch de release e aponte a tag para ele.
+      # A identidade do manifesto deve citar este arquivo e esta tag:
+      #   https://github.com/<dono>/<repo>/.github/workflows/release-assinada.yml@refs/tags/<tag>
+---
+# Para o repositório do PRÓPRIO harness-ai (SBOM + provenance SLSA). Copiar para .github/workflows/ só com
+# autorização escrita do Eduardo.
+# name: release-harness
+# on: { push: { tags: ['v*'] } }
+# permissions: { contents: read }
+# jobs:
+#   sbom-e-provenance:
+#     runs-on: ubuntu-latest
+#     permissions: { contents: read, id-token: write, attestations: write }
+#     steps:
+#       - uses: actions/checkout@<SHA-FIXADO>
+#       - uses: actions/setup-node@<SHA-FIXADO>
+#         with: { node-version: 24 }
+#       - run: npm ci
+#       - run: npm run sbom
+#       - run: npm pack
+#       - uses: actions/attest-build-provenance@<SHA-FIXADO>
+#         with: { subject-path: '*.tgz' }
+#       - uses: actions/attest-sbom@<SHA-FIXADO>
+#         with: { subject-path: '*.tgz', sbom-path: sbom.cdx.json }

@@ -40,6 +40,7 @@
 | [0032](0032-base-de-conhecimento-c0-c1-agentes-do-pacote-e-benchmark.md) | Base de conhecimento C0/C1, agentes do pacote e benchmark com datasets | Aceito |
 | [0033](0033-protecao-contra-laco-orcamento-saidas-por-etapa-e-retomada.md) | Proteção contra laço infinito, orçamento, saídas por etapa, verificador de documentação e retomada | Aceito |
 | [0034](0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md) | Servidor MCP da base de conhecimento, fontes do projeto e níveis de confiança de pacotes | Aceito |
+| [0035](0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md) | Assinatura Sigstore de pacotes, papéis versionados, SBOM e confiança verificada | Aceito |
 
 ## Decisões em aberto
 

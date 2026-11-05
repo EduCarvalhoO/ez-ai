@@ -1,7 +1,7 @@
 // Schema do lockfile v0 (docs/specs/configuracao-e-lockfile.md). Fonte única: o arquivo
 // schemas/lockfile.v0.schema.json é gerado daqui (`npm run schemas`) e um teste confere os dois.
 import { NOME_DE_PACOTE, ORIGEM_GITHUB, ORIGEM_LOCAL } from '../configuracao/schema.js';
-import { DEFS_DO_COMPONENTE, LIMITES, PRERELEASE, SEMVER } from '../manifesto/schema.js';
+import { ASSINATURA_DO_PACOTE, DEFS_DO_COMPONENTE, LIMITES, PRERELEASE, SEMVER } from '../manifesto/schema.js';
 
 export const ID_DO_SCHEMA_DO_LOCKFILE =
   'https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/lockfile.v0.schema.json';
@@ -42,6 +42,8 @@ export const SCHEMA_DO_LOCKFILE = {
           // SHA-1 (40) ou SHA-256 (64) do Git, em minúsculas.
           commit: { type: 'string', pattern: '^(?:[0-9a-f]{40}|[0-9a-f]{64})$' },
           hash: { type: 'string', pattern: PADRAO_HASH },
+          // Assinante Sigstore conferido na instalação (ADR-0035).
+          assinatura: { $ref: '#/$defs/assinatura' },
           // Aprovação própria (docs/specs/auditoria-e-evidencias.md): precisa ser igual à lista que a policy exige.
           aprovacoesProprias: {
             type: 'array',
@@ -58,5 +60,5 @@ export const SCHEMA_DO_LOCKFILE = {
       },
     },
   },
-  $defs: DEFS_DO_COMPONENTE,
+  $defs: { ...DEFS_DO_COMPONENTE, assinatura: ASSINATURA_DO_PACOTE },
 } as const;

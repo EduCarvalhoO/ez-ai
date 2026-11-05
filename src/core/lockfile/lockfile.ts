@@ -1,5 +1,6 @@
 // Validação do lockfile v0 (docs/specs/configuracao-e-lockfile.md). O harness grava o lockfile, mas qualquer pessoa
 // ou agente pode editá-lo (T4), então ele é lido como entrada não confiável, com a mesma leitura segura do manifesto.
+import type { IdentidadeAssinante } from '../assinatura/assinatura.js';
 import { type EntradaDeAprovacao, problemaNoId } from '../auditoria/aprovacoes.js';
 import { partesDoNome, regrasDoNome } from '../configuracao/configuracao.js';
 import { lerOrigem, type Origem } from '../configuracao/origem.js';
@@ -30,6 +31,8 @@ export interface PacoteTravado {
   readonly commit?: string;
   /** `sha256:<hex>` de `hashDoConteudo`. Aqui só o formato é conferido; a F2 recalcula. */
   readonly hash: string;
+  /** Assinante conferido na instalação (Sigstore, ADR-0035). Ausente = nunca verificado. Mudar de assinante exige remove + add. */
+  readonly assinatura?: IdentidadeAssinante;
   /** Itens de aprovação própria aprovados nominalmente; igual à lista que a policy exige (`pendentesDeAprovacao`). */
   readonly aprovacoesProprias: readonly EntradaDeAprovacao[];
   /** Retrato do que foi aprovado; base de `diferencaDePermissoes` no `update`. */
@@ -62,6 +65,14 @@ function lockfileDe(dado: Json): Lockfile {
           ...(typeof e.tag === 'string' ? { tag: e.tag } : {}),
           ...(typeof e.commit === 'string' ? { commit: e.commit } : {}),
           hash: String(e.hash),
+          ...(e.assinatura
+            ? {
+                assinatura: {
+                  identidade: String((e.assinatura as Json).identidade),
+                  emissor: String((e.assinatura as Json).emissor),
+                },
+              }
+            : {}),
           aprovacoesProprias: lista<Json>(e.aprovacoesProprias).map((a) => ({
             id: String(a.id),
             impressao: String(a.impressao),

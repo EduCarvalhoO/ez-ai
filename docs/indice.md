@@ -43,6 +43,7 @@
 | [adr/0032-base-de-conhecimento-c0-c1-agentes-do-pacote-e-benchmark.md](adr/0032-base-de-conhecimento-c0-c1-agentes-do-pacote-e-benchmark.md) | ADR-0032: base de conhecimento C0/C1 (comando `conhecimento`), agentes do pacote `workflow-feature`, benchmark (`benchmark`) e datasets no formato Langfuse |
 | [adr/0033-protecao-contra-laco-orcamento-saidas-por-etapa-e-retomada.md](adr/0033-protecao-contra-laco-orcamento-saidas-por-etapa-e-retomada.md) | ADR-0033: disjuntor contra laço infinito, orçamento de tokens e tempo, saídas exigidas por etapa, verificador de completude da documentação (`workflow docs`) e retomada (`workflow retomar`) |
 | [adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md](adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md) | ADR-0034: servidor MCP da base (`conhecimento servir`), fontes do projeto em `.harness/conhecimento.json` e níveis de confiança de pacotes (`confiancaMinima`) |
+| [adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md](adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md) | ADR-0035: assinatura Sigstore de pacotes (`verificado`/`oficial` de verdade), papéis em `.harness/papeis.json`, SBOM/provenance do harness e comando `hash-pacote` |
 | [arquitetura/spike-enforcement-copilot.md](arquitetura/spike-enforcement-copilot.md) | Spike do Copilot: procedimento de teste manual no VS Code (resultados pendentes) |
 | [arquitetura/spike-node-sqlite.md](arquitetura/spike-node-sqlite.md) | Spike: `node:sqlite` com FTS5 serve para a camada C1 do RAG; vetores não vêm embutidos |
 | [arquitetura/mapa-de-modulos.md](arquitetura/mapa-de-modulos.md) | Camadas do código, responsabilidades, regras de dependência e fluxo de `add`/`apply` |
@@ -55,6 +56,8 @@
 | [guias/revisao-de-seguranca.md](guias/revisao-de-seguranca.md) | Checklist de segurança para código, pacotes, CI e agentes |
 | [guias/guia-do-aprovador.md](guias/guia-do-aprovador.md) | Como aprovar PR com aprovação própria: review no SHA da head, dois aprovadores, token de escopo mínimo e chamada do job |
 | [guias/runbook-langfuse.md](guias/runbook-langfuse.md) | Como subir o Langfuse self-host com Docker Compose (`ops/langfuse/`), ligar o `export` e operar |
+| [guias/runbook-assinatura.md](guias/runbook-assinatura.md) | Como publicar pacote assinado, gerar o SBOM do harness e renovar a raiz de confiança do Sigstore |
+| [modelos/release-assinada.yml](modelos/release-assinada.yml) | Modelo de workflow de release: assina o hash do pacote (Sigstore) e, para o harness, SBOM + provenance (não ativo) |
 | [modelos/aprovacao.yml](modelos/aprovacao.yml) | Modelo do workflow do job de servidor e do ruleset ([modelos/ruleset.json](modelos/ruleset.json)) para copiar num projeto |
 | [specs/auditoria-e-evidencias.md](specs/auditoria-e-evidencias.md) | Evento de auditoria v0: envelope, tipos, evidência, consumo, encadeamento, aprovação própria e recusa de segredo |
 | [specs/base-de-conhecimento.md](specs/base-de-conhecimento.md) | Base de conhecimento (RAG) v0: fontes declaradas, chunk, resultado, limites, avaliação e 30 perguntas de referência |

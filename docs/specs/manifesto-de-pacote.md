@@ -49,7 +49,7 @@ Mais exemplos, válidos e inválidos, em `test/fixtures/manifestos/`.
 | `descricao` | sim | Até 500 caracteres |
 | `licenca` | sim | Identificador SPDX ou expressão com `AND`/`OR`/`WITH` |
 | `repositorio` | sim | Exatamente `https://github.com/<login>/<repo>`, com o mesmo `<login>` do nome; sem credencial, porta, query, fragmento nem `.git` |
-| `assinatura` | não | `identidade`: workflow do próprio repositório (`.../.github/workflows/<arquivo>.yml@refs/tags/...`); `emissor`: `https://token.actions.githubusercontent.com`. **Autodeclarada: não prova nada até a verificação Sigstore da F7**, que compara com o certificado e grava no lockfile |
+| `assinatura` | não | `identidade`: workflow do próprio repositório (`.../.github/workflows/<arquivo>.yml@refs/tags/...`); `emissor`: `https://token.actions.githubusercontent.com`. **Autodeclarada até a conferência**: o harness só aceita se a identidade for workflow do repositório de origem e o bundle `harness-pacote.sigstore.json` (fora do hash) confirmar o certificado ([ADR-0035](../adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md)); o assinante conferido vai para o lockfile |
 | `compatibilidade` | não | `harness`: até dois comparadores semver (`>=0.1.0 <1.0.0`); `ambientes`: `claude-code`, `copilot` |
 | `componentes` | sim | 1 a 100 |
 

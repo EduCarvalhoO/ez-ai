@@ -11,6 +11,7 @@ import type { Lockfile, PacoteTravado } from '../lockfile/lockfile.js';
 import { validarLockfile } from '../lockfile/lockfile.js';
 import { diferencaDePermissoes } from '../manifesto/permissoes.js';
 import { diffDoPacote } from '../plano/diff.js';
+import { decidirAssinatura } from './assinatura.js';
 import { avaliarPacote } from '../policy/avaliar.js';
 import { resolverVersao } from '../resolucao/semver.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
@@ -65,6 +66,9 @@ export function serializarConfiguracao(c: Configuracao): string {
     ...(Object.keys(c.limites).length > 0 ? { limites: c.limites } : {}),
     ...(c.policyDaOrganizacao ? { policyDaOrganizacao: c.policyDaOrganizacao } : {}),
     ...(c.aprovadores.length > 0 ? { aprovadores: [...c.aprovadores] } : {}),
+    // Campos que `add` e `remove` não podem apagar em silêncio: um deles é o piso de confiança do projeto (ADR-0034/0035).
+    ...(c.confiancaMinima ? { confiancaMinima: c.confiancaMinima } : {}),
+    ...(c.telemetria ? { telemetria: c.telemetria } : {}),
   };
   return `${JSON.stringify(objeto, null, 2)}\n`;
 }
@@ -82,6 +86,7 @@ export function serializarLockfile(l: Lockfile): string {
           ...(p.tag ? { tag: p.tag } : {}),
           ...(p.commit ? { commit: p.commit } : {}),
           hash: p.hash,
+          ...(p.assinatura ? { assinatura: p.assinatura } : {}),
           aprovacoesProprias: p.aprovacoesProprias,
           componentes: p.componentes,
         },
@@ -370,6 +375,11 @@ async function preparar(
         erros.push(...desvios.map(e));
         continue;
       }
+      const decisaoDaAssinatura = await decidirAssinatura(ctx, config, p.nome, p.origem, t, lido);
+      if (decisaoDaAssinatura.erros.length > 0) {
+        erros.push(...decisaoDaAssinatura.erros);
+        continue;
+      }
       const instaladoAntes = t ? await lerInstalado(ctx, t) : { arquivos: new Map<string, string>(), editado: false };
       const politicas = await carregarPoliticas(
         ctx,
@@ -428,6 +438,7 @@ async function preparar(
         ...(lido.tag ? { tag: lido.tag } : {}),
         ...(lido.commit ? { commit: lido.commit } : {}),
         hash: lido.hash,
+        ...(decisaoDaAssinatura.assinatura ? { assinatura: decisaoDaAssinatura.assinatura } : {}),
         aprovacoesProprias: exigidas,
         componentes: lido.manifesto.componentes,
       };

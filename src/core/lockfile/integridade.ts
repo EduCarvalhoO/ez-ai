@@ -2,6 +2,7 @@
 // lido do commit travado ou da pasta local e confere contra o lockfile, mais a chave e a origem contra o manifesto.
 import type { Configuracao } from '../configuracao/configuracao.js';
 import type { Manifesto } from '../manifesto/manifesto.js';
+import { ARQUIVO_DA_ASSINATURA } from '../assinatura/assinatura.js';
 import { type ArquivoDoPacote, hashDoConteudo } from './hash.js';
 import type { Lockfile, PacoteTravado } from './lockfile.js';
 
@@ -9,7 +10,10 @@ const codificador = new TextEncoder();
 
 /** Arquivos em texto (porta Git e porta de arquivos devolvem UTF-8) viram os bytes do hash. */
 export function arquivosParaHash(arquivos: ReadonlyMap<string, string>): ArquivoDoPacote[] {
-  return [...arquivos].map(([caminho, texto]) => ({ caminho, bytes: codificador.encode(texto) }));
+  // O bundle Sigstore assina este hash, então não pode entrar nele (ADR-0035).
+  return [...arquivos]
+    .filter(([caminho]) => caminho !== ARQUIVO_DA_ASSINATURA)
+    .map(([caminho, texto]) => ({ caminho, bytes: codificador.encode(texto) }));
 }
 
 export type ResultadoDeIntegridade =

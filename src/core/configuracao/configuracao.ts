@@ -134,7 +134,9 @@ function regrasSemanticas(dado: Json, config: Configuracao): ErroDeContrato[] {
     const { problema } = lerOrigem(String((entradas[pacote.nome] as Json).origem));
     if (problema) falha(`${base}/origem`, pacote.origem.tipo === 'local' ? 'caminho' : 'url-canonica', problema);
     regrasDoNome(pacote.nome, pacote.origem, base, falha);
-    const nivel = nivelDeConfianca(pacote.origem);
+    // Melhor nível que a origem pode alcançar: o GitHub chega a `verificado` com assinatura conferida na instalação
+    // (ADR-0035); a conferência real acontece em add/apply/update/validate.
+    const nivel = nivelDeConfianca(pacote.origem, { assinaturaVerificada: pacote.origem.tipo === 'github' });
     if (config.confiancaMinima !== undefined && !atendeConfiancaMinima(nivel, config.confiancaMinima)) {
       falha(
         `${base}/origem`,

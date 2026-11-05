@@ -54,6 +54,9 @@
             "type": "string",
             "pattern": "^sha256:[0-9a-f]{64}$"
           },
+          "assinatura": {
+            "$ref": "#/$defs/assinatura"
+          },
           "aprovacoesProprias": {
             "type": "array",
             "maxItems": 1000,
@@ -272,6 +275,21 @@
           ]
         }
       ]
+    },
+    "assinatura": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identidade", "emissor"],
+      "properties": {
+        "identidade": {
+          "type": "string",
+          "maxLength": 512,
+          "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}/\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml@refs/(?:tags|heads)/[A-Za-z0-9._/-]+$"
+        },
+        "emissor": {
+          "const": "https://token.actions.githubusercontent.com"
+        }
+      }
     }
   }
 }

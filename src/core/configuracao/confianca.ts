@@ -16,8 +16,9 @@ export interface FatosDeConfianca {
 export function nivelDeConfianca(origem: Origem, fatos: FatosDeConfianca = {}): NivelDeConfianca {
   if (origem.tipo === 'local') return 'local';
   const oficiais = fatos.oficiais ?? ORIGENS_OFICIAIS;
-  if (oficiais.some((o) => canonizarRepositorio(o) === origem.url)) return 'oficial';
-  return fatos.assinaturaVerificada === true ? 'verificado' : 'comunidade';
+  if (fatos.assinaturaVerificada !== true) return 'comunidade';
+  // Oficial = origem da lista E assinatura conferida: só estar na lista não basta (repositório sequestrado, ADR-0035).
+  return oficiais.some((o) => canonizarRepositorio(o) === origem.url) ? 'oficial' : 'verificado';
 }
 
 /** `local` sempre passa (é código do próprio projeto); os demais precisam estar no mínimo exigido. */

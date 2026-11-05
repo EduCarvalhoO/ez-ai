@@ -38,7 +38,7 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 | `pacotes.*.versao` | GitHub: sim; local: proibido | Intervalo com até dois comparadores (`^1.2.0`, `>=0.3.0 <1.0.0`); o lockfile fixa a exata. Pacote local usa a versão do manifesto da pasta |
 | `aprovadores` | não | Logins do GitHub ou `@org/time` que aprovam a aprovação própria no PR (até 50, sem repetição). O job da F4 lê a lista da branch base ([spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores)) |
 | `policyDaOrganizacao` | não | Chave de `pacotes` com origem do GitHub (pasta `local:` é recusada) cujos componentes `policy` formam o nível organização ([spec da policy](policy.md#níveis)) |
-| `confiancaMinima` | não | Nível mínimo de confiança dos pacotes do GitHub: `comunidade`, `verificado` ou `oficial` ([ADR-0034](../adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)). O nível é derivado da origem (nunca declarado pelo pacote); pacote `local:` sempre passa; abaixo do mínimo a validação falha com `confianca-insuficiente`. Ausente = sem exigência. |
+| `confiancaMinima` | não | Nível mínimo de confiança dos pacotes do GitHub: `comunidade`, `verificado` ou `oficial` ([ADR-0034](../adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)). O nível é derivado da origem (nunca declarado pelo pacote); pacote `local:` sempre passa; abaixo do mínimo a validação falha com `confianca-insuficiente`. O piso é conferido na instalação e na validação: `verificado` e `oficial` exigem assinatura conferida ([ADR-0035](../adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md)). Ausente = sem exigência. |
 | `telemetria` | não | Exportação opt-in ([ADR-0029](../adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md)): `endpoint` (`https`, ou `http` só em localhost/127.0.0.1/[::1]; sem usuário, query ou fragmento) e `variavelDoToken` (NOME da variável de ambiente com o cabeçalho `Authorization`, que precisa começar com `LANGFUSE_` ou `HARNESS_TELEMETRIA_` ([ADR-0030](../adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md)); o segredo nunca fica no arquivo). Ausente = nenhuma chamada de rede |
 | `limites` | não | Só `bytesDoManifesto`, `componentes`, `arquivosDoPacote`, `bytesDoPacote`, `bytesPorArquivo`; inteiro de 1 até o valor do núcleo |
 
@@ -73,6 +73,7 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 | `origem` | Como na configuração; login da chave = login da origem |
 | `tag`, `commit` | Obrigatórios em origem GitHub e proibidos em local. `tag` é `<versao>` ou `v<versao>`; `commit` com 40 ou 64 hex minúsculos (SHA-1 ou SHA-256 do Git) |
 | `hash` | Só `sha256:` + 64 hex minúsculos; outro prefixo é erro, nunca pula a verificação |
+| `assinatura` | Opcional. `{identidade, emissor}` do assinante Sigstore conferido na instalação ([ADR-0035](../adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md)). Ausente = nunca verificado (nível `comunidade`). Mudar de assinante, ou perdê-la, é recusado: troca de dono exige `remove` + `add`. |
 | `aprovacoesProprias` | Opcional. Lista de `{id, impressao}` dos itens de aprovação própria aprovados nominalmente (sem repetir id); precisa ser igual à lista que a policy exige ([spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores)) |
 | `componentes` | Retrato do que foi aprovado (id, tipo, arquivo, evento, comando, permissões), com o schema e as regras semânticas do manifesto |
 
@@ -81,7 +82,7 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 
 ### Hash de conteúdo
 `hashDoConteudo(arquivos)` (`src/core/lockfile/hash.ts`, puro), no desenho do `dirhash` do Go:
-1. Entra **a árvore inteira do pacote no commit**, inclusive o `harness-pacote.json`. É exatamente o conjunto que a F2 copia para `.harness/pacotes/<login>/<pacote>/`: nada é instalado fora do hash.
+1. Entra **a árvore inteira do pacote no commit**, inclusive o `harness-pacote.json`. É exatamente o conjunto que a F2 copia para `.harness/pacotes/<login>/<pacote>/`: nada é instalado fora do hash. Exceção: `harness-pacote.sigstore.json` (o bundle da assinatura) fica fora, porque assina este hash.
 2. Para cada arquivo, a linha `<sha256 hex minúsculo dos bytes>  <caminho>\n` (dois espaços). Os bytes são os do blob do Git, sem conversão de fim de linha.
 3. Linhas em ordem de bytes do caminho; `sha256` do texto todo → `sha256:<hex>`.
 4. Caminho com `/`, só ASCII e com as regras de caminho do manifesto; repetido, inclusive só por caixa (`A.md` e `a.md`) ou arquivo com o nome de uma pasta (`Agentes` e `agentes/x.md`), é recusado. O modo do arquivo (bit de execução) fica fora do hash.
