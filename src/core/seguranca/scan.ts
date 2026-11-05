@@ -55,6 +55,18 @@ function categoriaInvisivel(c: number): { severidade: Severidade; nome: string }
     return { severidade: 'media', nome: 'espaço de largura zero' };
   }
   if (c === 0xfeff) return { severidade: 'media', nome: 'marca de ordem de bytes fora do início' };
+  if (
+    intervalo(c, 0xfe00, 0xfe0f) ||
+    c === 0x061c ||
+    c === 0x2028 ||
+    c === 0x2029 ||
+    c === 0x115f ||
+    c === 0x3164 ||
+    c === 0xffa0 ||
+    c === 0x034f
+  ) {
+    return { severidade: 'media', nome: 'caractere invisível' };
+  }
   if (c === 0xad) return { severidade: 'baixa', nome: 'hífen condicional' };
   return undefined;
 }
@@ -65,8 +77,18 @@ function achadosDeUnicode(arquivo: string, linha: string, numero: number, saida:
   const invisiveis = new Map<string, { severidade: Severidade; codigos: Set<string> }>();
   let controle: Set<string> | undefined;
   let indice = 0;
+  let anteriorCp = 0;
   for (const caractere of linha) {
     const c = caractere.codePointAt(0) ?? 0;
+    const anterior = anteriorCp;
+    anteriorCp = c;
+    // Seletor de variação 16 depois de emoji ou símbolo (e de dígito, #, * em teclas) é legítimo.
+    if (
+      c === 0xfe0f &&
+      (anterior >= 0x203c || anterior === 0x23 || anterior === 0x2a || (anterior >= 0x30 && anterior <= 0x39))
+    ) {
+      continue;
+    }
     const inicioDoArquivo = numero === 1 && indice === 0;
     indice += 1;
     if (c === 0x1b) {
@@ -74,7 +96,7 @@ function achadosDeUnicode(arquivo: string, linha: string, numero: number, saida:
       controle.add(hex(c));
       continue;
     }
-    if ((c < 0x20 && c !== 0x09 && c !== 0x0d) || c === 0x7f) {
+    if ((c < 0x20 && c !== 0x09) || (c >= 0x7f && c <= 0x9f)) {
       controle ??= new Set();
       controle.add(hex(c));
       continue;
@@ -121,8 +143,14 @@ const PADROES: readonly Padrao[] = [
     regra: 'comando-remoto',
     severidade: 'alta',
     regex:
-      /\b(?:curl|wget|iwr|irm|invoke-webrequest|invoke-restmethod)\b[^\n|]{0,300}\|\s*(?:sudo\s+)?(?:ba|z|da|k)?sh\b/iu,
+      /\b(?:curl|wget|iwr|irm|invoke-webrequest|invoke-restmethod)\b[^\n|]{0,300}\|\s*(?:sudo(?:\s+-\S{1,20}){0,5}\s+)?(?:env\s+)?(?:\S{1,40}\/)?(?:(?:ba|z|da|k)?sh|python3?|perl|ruby|node)\b/iu,
     mensagem: 'baixa da rede e entrega direto a um shell',
+  },
+  {
+    regra: 'comando-remoto',
+    severidade: 'alta',
+    regex: /(?:bash|sh|zsh|source|\.)\s+<\(\s*(?:curl|wget)\b/iu,
+    mensagem: 'executa a saída de curl/wget por substituição de processo',
   },
   {
     regra: 'comando-remoto',
@@ -270,7 +298,7 @@ function achadosDePrerequisitos(arquivo: string, linhas: readonly string[], said
   let dentro = false;
   let cerca = false;
   linhas.forEach((bruta, i) => {
-    const linha = bruta.slice(0, MAX_CARACTERES_POR_LINHA);
+    const linha = bruta;
     if (/^\s{0,3}(?:```|~~~)/u.test(linha)) {
       cerca = !cerca;
       return;
@@ -298,18 +326,18 @@ function achadosDePrerequisitos(arquivo: string, linhas: readonly string[], said
 
 const PALAVRAS_SUSPEITAS_EM_COMENTARIO =
   /\b(?:ignore|curl|wget|exec|eval|system prompt|instru[cç][õo]es?|secret|segredo|token|password|senha)\b/iu;
-const LIMITE_DO_COMENTARIO = 2000;
+const MARCADOR_DO_EZ_AI = /^\s*ez-ai:(?:inicio|fim) [a-z0-9-]{1,200}\s*$/u;
 
 function achadosDeComentarios(arquivo: string, texto: string, saida: Achado[]): void {
   let posicao = texto.indexOf('<!--');
-  while (posicao !== -1) {
+  let contadoAte = 0;
+  let linha = 1;
+  while (posicao !== -1 && saida.length < MAX_ACHADOS) {
     const fim = texto.indexOf('-->', posicao + 4);
-    const corpo = texto.slice(
-      posicao + 4,
-      fim === -1 ? posicao + 4 + LIMITE_DO_COMENTARIO : Math.min(fim, posicao + 4 + LIMITE_DO_COMENTARIO),
-    );
-    if (PALAVRAS_SUSPEITAS_EM_COMENTARIO.test(corpo) && !/^\s*ez-ai:/u.test(corpo)) {
-      const linha = texto.slice(0, posicao).split('\n').length;
+    const corpo = texto.slice(posicao + 4, fim === -1 ? texto.length : fim);
+    if (!MARCADOR_DO_EZ_AI.test(corpo) && PALAVRAS_SUSPEITAS_EM_COMENTARIO.test(corpo)) {
+      for (let k = contadoAte; k < posicao; k++) if (texto.charCodeAt(k) === 10) linha++;
+      contadoAte = posicao;
       saida.push({
         regra: 'comentario-oculto',
         severidade: 'media',
@@ -353,19 +381,39 @@ function achadosDeFrontmatter(arquivo: string, texto: string, saida: Achado[]): 
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/** Varre um arquivo de texto. */
+const SOBREPOSICAO = 500;
+
+/** Pedaços de até MAX_CARACTERES_POR_LINHA com sobreposição: nada depois da coluna 4.000 escapa dos padrões. */
+function janelas(linha: string): string[] {
+  if (linha.length <= MAX_CARACTERES_POR_LINHA) return [linha];
+  const saida: string[] = [];
+  for (let i = 0; i < linha.length; i += MAX_CARACTERES_POR_LINHA - SOBREPOSICAO) {
+    saida.push(linha.slice(i, i + MAX_CARACTERES_POR_LINHA));
+    if (i + MAX_CARACTERES_POR_LINHA >= linha.length) break;
+  }
+  return saida;
+}
+
+/** Varre um arquivo de texto. Para de coletar ao chegar no teto de achados (custo e memória limitados). */
 export function escanearTexto(arquivo: string, texto: string): Achado[] {
   const saida: Achado[] = [];
   const linhas = texto.split(/\r?\n/u);
-  linhas.forEach((bruta, i) => {
-    const linha = bruta.slice(0, MAX_CARACTERES_POR_LINHA);
-    achadosDeUnicode(arquivo, linha, i + 1, saida);
-    for (const p of PADROES) {
-      if (p.regex.test(linha)) {
-        saida.push({ regra: p.regra, severidade: p.severidade, arquivo, linha: i + 1, mensagem: p.mensagem });
+  for (let i = 0; i < linhas.length && saida.length < MAX_ACHADOS; i++) {
+    const bruta = linhas[i] ?? '';
+    achadosDeUnicode(arquivo, bruta, i + 1, saida);
+    // Linha terminada em "\" continua na seguinte: o padrão é testado sobre a linha lógica (até 5 emendas).
+    let logica = bruta;
+    for (let j = i; logica.trimEnd().endsWith('\\') && j + 1 < linhas.length && j - i < 5; j++) {
+      logica = `${logica.trimEnd().slice(0, -1)} ${linhas[j + 1] ?? ''}`;
+    }
+    for (const trecho of janelas(logica)) {
+      for (const p of PADROES) {
+        if (p.regex.test(trecho)) {
+          saida.push({ regra: p.regra, severidade: p.severidade, arquivo, linha: i + 1, mensagem: p.mensagem });
+        }
       }
     }
-  });
+  }
   achadosDePrerequisitos(arquivo, linhas, saida);
   achadosDeComentarios(arquivo, texto, saida);
   achadosDeFrontmatter(arquivo, texto, saida);

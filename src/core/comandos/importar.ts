@@ -37,6 +37,15 @@ export async function importar(ctx: Contexto, opcoes: OpcoesDeImport): Promise<R
   } catch (erro: unknown) {
     return { codigo: 1, saida: [], erros: [e(erro instanceof Error ? erro.message : String(erro))] };
   }
+  if (/^(?:\.harness|\.git|\.github)(?:\/|$)/iu.test(pasta.replace(/^\.\//u, ''))) {
+    return {
+      codigo: 1,
+      saida: [],
+      erros: [
+        'a proposta não pode ir para .harness/, .git/ nem .github/; use uma pasta do projeto como pacotes-locais/.',
+      ],
+    };
+  }
   const saida: string[] = [];
   const avisos: string[] = [];
   const arquivos = new Map<string, string>();

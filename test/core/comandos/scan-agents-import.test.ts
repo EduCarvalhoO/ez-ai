@@ -231,6 +231,14 @@ describe('import', () => {
     expect(texto).toContain('@arquivo');
   });
 
+  it('recusa destino dentro de .harness, .git ou .github', async () => {
+    for (const saida of ['.harness/pacotes/x/y', '.git/x', '.github/p']) {
+      const r = await importar(await comRegras(), { dryRun: false, saida });
+      expect(r.codigo, saida).toBe(1);
+      expect(r.erros.join('\n')).toContain('não pode ir para');
+    }
+  });
+
   it('nome de pacote inválido falha com mensagem', async () => {
     const r = await importar(await comRegras(), { dryRun: false, pacote: 'Maiusculo/Ruim' });
     expect(r.codigo).toBe(1);

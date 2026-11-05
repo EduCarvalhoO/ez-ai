@@ -27,7 +27,10 @@ export function corpoDoBloco(texto: string): string {
 
 /** O texto do pacote não pode trazer o marcador reservado: com ele um pacote fecharia o bloco e forjaria outro. */
 export function textoSeguroParaBloco(texto: string): boolean {
-  return !texto.toLowerCase().includes(PREFIXO_RESERVADO);
+  // Comentário HTML aberto e não fechado esconderia, na renderização, o resto do arquivo do usuário.
+  const abre = texto.split('<!--').length - 1;
+  const fecha = texto.split('-->').length - 1;
+  return !texto.toLowerCase().includes(PREFIXO_RESERVADO) && abre === fecha;
 }
 
 /** Bloco completo (com marcadores), em `\n` e sem quebra de linha no fim. */

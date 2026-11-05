@@ -135,7 +135,12 @@ describe('scan: conjunto de arquivos e bloqueio', () => {
     const { achados, omitidos } = escanearArquivos(arquivos);
     expect(achados.map((x) => x.severidade)).toEqual(['alta', 'media', 'baixa']);
     expect(omitidos).toBe(0);
-    const muitos = new Map([['c.md', Array.from({ length: 300 }, () => `x${bidi}`).join('\n')]]);
+    const cem = Array.from({ length: 100 }, () => `x${bidi}`).join('\n');
+    const muitos = new Map([
+      ['c1.md', cem],
+      ['c2.md', cem],
+      ['c3.md', cem],
+    ]);
     const r = escanearArquivos(muitos);
     expect(r.achados).toHaveLength(200);
     expect(r.omitidos).toBe(100);
