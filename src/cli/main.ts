@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
+import { adapterAgentsMd } from '../adapters/agents-md/index.js';
 import { adapterClaudeCode } from '../adapters/claude-code/index.js';
 import { adapterCopilot } from '../adapters/copilot/index.js';
 import type { Contexto } from '../core/index.js';
@@ -12,8 +13,10 @@ import {
   avaliarBase,
   buscarNaBase,
   diagnosticar,
+  escanear,
   exportarTelemetria,
   hashDoPacote,
+  importar,
   indexarBase,
   init,
   listar,
@@ -81,7 +84,7 @@ export async function criarContexto(projeto: string, ator: 'humano' | 'agente' |
     arquivos: await criarArquivos(raiz),
     git: criarGit(),
     verificador: criarVerificadorSigstore(),
-    adapters: [adapterClaudeCode, adapterCopilot],
+    adapters: [adapterClaudeCode, adapterCopilot, adapterAgentsMd],
     relogio: relogioDoSistema,
     identidade: criarIdentidade(undefined, raiz),
     harness: lerVersao(),
@@ -235,5 +238,16 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
       return relatarBenchmark(ctx, { exportar: a.exportar });
     case 'hash-pacote':
       return hashDoPacote(ctx, a.posicionais[0] ?? '');
+    case 'scan':
+      return escanear(ctx, {
+        ...(a.posicionais[0] !== undefined ? { alvo: a.posicionais[0] } : {}),
+        ...(a.bloquear ? { bloquear: a.bloquear } : {}),
+      });
+    case 'import':
+      return importar(ctx, {
+        dryRun: a.dryRun,
+        ...(a.pacote ? { pacote: a.pacote } : {}),
+        ...(a.saida ? { saida: a.saida } : {}),
+      });
   }
 }

@@ -63,7 +63,11 @@ export {
   serializarConfiguracao,
   serializarLockfile,
 } from './comandos/escrita.js';
+export type { OpcoesDeImport } from './comandos/importar.js';
+export { importar } from './comandos/importar.js';
 export { init } from './comandos/init.js';
+export type { OpcoesDeScan } from './comandos/scan.js';
+export { escanear } from './comandos/scan.js';
 export { diagnosticar, listar, planejar, validar } from './comandos/leitura.js';
 export { responderMcp, servirMcp } from './comandos/mcp.js';
 export type { OpcoesDoServidor } from './comandos/servidor.js';
