@@ -1,14 +1,25 @@
 {
-  "name": "harness-ai",
+  "name": "ez-ai",
   "version": "0.0.0",
+  "description": "Plataforma modular de engenharia e governança de agentes de IA, instalável por CLI.",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EduCarvalhoO/ez-ai.git"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "LICENSE.md",
+    "README.md"
+  ],
   "license": "FSL-1.1-ALv2",
   "type": "module",
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || ^26.0.0"
   },
   "bin": {
-    "harness-ai": "dist/cli/index.js"
+    "ez-ai": "dist/cli/index.js"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

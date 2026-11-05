@@ -1,4 +1,4 @@
-# harness-ai
+# ez-ai
 
 > Codinome provisório. Plataforma modular de engenharia e governança de agentes de IA, instalável por CLI.
 
@@ -42,13 +42,17 @@ Justificativas em [ADRs](docs/adr/README.md).
 | [docs/contexto.md](docs/contexto.md) | Visão, princípios e decisões resumidas |
 | [docs/roadmap.md](docs/roadmap.md) | Fases até a v1.0, marcos, métricas e riscos |
 | [docs/adr/](docs/adr/README.md) | Decisões arquiteturais |
+| [docs/guias/quickstart.md](docs/guias/quickstart.md) | Instalar o ez-ai num projeto em 5 minutos |
+| [docs/guias/criar-pacotes.md](docs/guias/criar-pacotes.md) | Criar e assinar um pacote |
+| [docs/guias/versionamento-e-compatibilidade.md](docs/guias/versionamento-e-compatibilidade.md) | Semver, schemas e migração |
+| [docs/guias/seguranca-para-usuarios.md](docs/guias/seguranca-para-usuarios.md) | O que o ez-ai garante e o que não |
 | [docs/guias/padrao-de-documentacao.md](docs/guias/padrao-de-documentacao.md) | Como documentar neste repositório |
 | [docs/guias/padrao-de-agentes-e-skills.md](docs/guias/padrao-de-agentes-e-skills.md) | Como criar agentes, skills e rules |
 | [docs/guias/time-de-agentes.md](docs/guias/time-de-agentes.md) | Como o time de agentes executa o roadmap |
 
 ## Contribuindo
 
-Ainda não aceitamos contribuições externas. Para trabalho interno com agentes de IA, veja [AGENTS.md](AGENTS.md). Arquivos temporários e auxiliares ficam em `.tmp/` (ignorado pelo Git).
+Ainda não aceitamos contribuições externas (veja [CONTRIBUTING.md](CONTRIBUTING.md)). Para trabalho interno com agentes de IA, veja [AGENTS.md](AGENTS.md). Arquivos temporários e auxiliares ficam em `.tmp/` (ignorado pelo Git).
 
 ## Licença
 

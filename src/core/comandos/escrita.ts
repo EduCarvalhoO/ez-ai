@@ -167,10 +167,7 @@ export function adicionar(ctx: Contexto, opcoes: OpcoesDeAdd): Promise<Resultado
     await ctx.arquivos.gravar(CAMINHO_DA_CONFIGURACAO, texto);
     return {
       codigo: 0,
-      saida: [
-        `Registrado: ${resumo}.`,
-        'Nada foi instalado ainda: rode "harness-ai plan" e depois "harness-ai apply".',
-      ],
+      saida: [`Registrado: ${resumo}.`, 'Nada foi instalado ainda: rode "ez-ai plan" e depois "ez-ai apply".'],
       erros: [],
       pacotes: [{ chave: nome, versao: lido.manifesto.versao, ...(lido.commit ? { commit: lido.commit } : {}) }],
     };

@@ -95,7 +95,7 @@ describe('scripts/validar-commits.mjs', () => {
   let pasta: string;
 
   beforeAll(async () => {
-    pasta = mkdtempSync(join(tmpdir(), 'harness-ai-commits-'));
+    pasta = mkdtempSync(join(tmpdir(), 'ez-ai-commits-'));
     const git = (...args: string[]) => rodar('git', args, pasta);
     await git('init', '--quiet', '--initial-branch=main');
     await git('config', 'user.email', 'teste@example.invalid');

@@ -303,7 +303,7 @@ export function diagnosticar(ctx: Contexto): Promise<ResultadoDoComando> {
     if (config.ok && lock.ok) {
       const soltos = diferencaDeConfiguracao(config.valor, lock.valor).filter((d) => d.estado !== 'em-dia');
       if (soltos.length > 0) {
-        saida.push(`aviso  ${soltos.length} pacote(s) fora do lockfile ou diferentes dele; rode "harness-ai plan".`);
+        saida.push(`aviso  ${soltos.length} pacote(s) fora do lockfile ou diferentes dele; rode "ez-ai plan".`);
       }
     }
     if (config.ok && config.valor.pacotes.length > 0 && config.valor.aprovadores.length === 0) {

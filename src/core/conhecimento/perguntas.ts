@@ -76,7 +76,7 @@ export interface Dataset {
 
 export function datasetDeConhecimento(perguntas: readonly PerguntaCompleta[]): Dataset {
   return {
-    nome: 'harness-ai/conhecimento',
+    nome: 'ez-ai/conhecimento',
     descricao: 'Perguntas de referência da base de conhecimento (recall@k e MRR).',
     itens: perguntas.map((p) => ({
       id: `conhecimento-${p.id}`,

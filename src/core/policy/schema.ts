@@ -41,7 +41,7 @@ const listaDePadroes = {
 export const SCHEMA_DA_POLICY = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   $id: ID_DO_SCHEMA_DA_POLICY,
-  title: 'Policy do harness-ai (v0)',
+  title: 'Policy do ez-ai (v0)',
   type: 'object',
   additionalProperties: false,
   required: ['versaoPolicy', 'regras'],

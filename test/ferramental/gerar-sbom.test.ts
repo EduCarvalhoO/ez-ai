@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { gerarSbom, serializarSbom } from '../../scripts/gerar-sbom.mjs';
 
 const PACOTE = JSON.stringify({
-  name: 'harness-ai',
+  name: 'ez-ai',
   version: '0.0.0',
   dependencies: { '@scope/a': '1.0.0' },
   devDependencies: { b: '2.0.0' },
@@ -11,7 +11,7 @@ const INTEGRIDADE = `sha512-${Buffer.from('conteudo').toString('base64')}`;
 const LOCK = JSON.stringify({
   lockfileVersion: 3,
   packages: {
-    '': { name: 'harness-ai' },
+    '': { name: 'ez-ai' },
     'node_modules/@scope/a': { version: '1.0.0', integrity: INTEGRIDADE, license: 'MIT' },
     'node_modules/b': { version: '2.0.0', dev: true },
     'node_modules/b/node_modules/c': { version: '3.0.0', optional: true, integrity: 'formato-desconhecido' },

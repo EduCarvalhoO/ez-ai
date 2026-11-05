@@ -118,7 +118,7 @@ export function criarGit(executor: ExecutorDeGit = executorDoSistema): Git {
     async lerArquivos(repositorio, commit) {
       exigirRepositorio(repositorio);
       if (!COMMIT.test(commit)) throw new Error('commit inválido: use o SHA completo de 40 caracteres.');
-      const pasta = await mkdtemp(join(tmpdir(), 'harness-ai-git-'));
+      const pasta = await mkdtemp(join(tmpdir(), 'ez-ai-git-'));
       try {
         await executor(['init', '--quiet'], pasta);
         await executor(['fetch', '--quiet', '--depth', '1', '--no-tags', '--', repositorio, commit], pasta);

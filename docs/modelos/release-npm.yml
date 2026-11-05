@@ -1,0 +1,44 @@
+# MODELO (não é workflow ativo; fica em docs/modelos, fora de .github/). ADR-0036.
+# Publica o ez-ai no npm com provenance (prova de qual workflow gerou o pacote) por OIDC
+# (trusted publishing: o npm confia no workflow, então não há token guardado nos Secrets).
+# Antes de usar:
+#   1. Autorização escrita do Eduardo para copiar para .github/workflows/release-npm.yml.
+#   2. Fixar cada `uses:` por SHA de commit (não por tag).
+#   3. No npm, em Settings do pacote ez-ai > Trusted publisher, apontar para este repositório e este arquivo.
+#   4. Tirar `"private": true` do package.json no PR de release (e conferir `files`).
+name: release-npm
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment: release          # ambiente com aprovação manual do Eduardo
+    permissions:
+      contents: write             # criar a release no GitHub
+      id-token: write             # OIDC: é ele que o npm confere
+      attestations: write
+    steps:
+      - uses: actions/checkout@<SHA-FIXADO>
+      - uses: actions/setup-node@<SHA-FIXADO>
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm ci --ignore-scripts
+      - run: npm audit
+      - run: npm test
+      - name: A tag bate com a versão do package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm run sbom
+      - run: npm pack
+      - uses: actions/attest-build-provenance@<SHA-FIXADO>
+        with:
+          subject-path: '*.tgz'
+      - name: Publicar com provenance
+        run: npm publish --provenance --access public
+      - name: Release no GitHub com SBOM
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes sbom.cdx.json *.tgz

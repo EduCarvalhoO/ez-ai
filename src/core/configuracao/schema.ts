@@ -38,7 +38,7 @@ export const ORIGEM_LOCAL = {
 export const SCHEMA_DA_CONFIGURACAO = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   $id: ID_DO_SCHEMA_DA_CONFIGURACAO,
-  title: 'Configuração do projeto do harness-ai (v0)',
+  title: 'Configuração do projeto do ez-ai (v0)',
   type: 'object',
   additionalProperties: false,
   required: ['versaoConfig', 'ambientes'],

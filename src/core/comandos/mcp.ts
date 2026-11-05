@@ -117,7 +117,7 @@ export async function responderMcp(ctx: Contexto, linha: string): Promise<object
       return resposta(id, {
         protocolVersion: VERSAO_DO_PROTOCOLO,
         capabilities: { tools: {} },
-        serverInfo: { name: 'harness-ai-conhecimento', version: ctx.harness },
+        serverInfo: { name: 'ez-ai-conhecimento', version: ctx.harness },
       });
     case 'ping':
       return resposta(id, {});

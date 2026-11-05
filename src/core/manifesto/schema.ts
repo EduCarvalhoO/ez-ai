@@ -172,7 +172,7 @@ export const DEFS_DO_COMPONENTE = {
 export const SCHEMA_DO_MANIFESTO = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   $id: ID_DO_SCHEMA,
-  title: 'Manifesto de pacote do harness-ai (v0)',
+  title: 'Manifesto de pacote do ez-ai (v0)',
   type: 'object',
   additionalProperties: false,
   required: ['versaoManifesto', 'nome', 'versao', 'descricao', 'licenca', 'repositorio', 'componentes'],

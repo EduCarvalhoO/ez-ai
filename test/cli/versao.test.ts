@@ -17,7 +17,7 @@ function versaoDoPacote(): string {
   return pacote.version;
 }
 
-const usoEsperado = /Uso: harness-ai --version/;
+const usoEsperado = /Uso: ez-ai --version/;
 
 interface ResultadoComFalha {
   readonly code: unknown;
