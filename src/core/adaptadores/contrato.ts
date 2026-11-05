@@ -37,8 +37,8 @@ export interface AvisoDeProjecao {
 export interface FragmentoDeConfig {
   readonly caminho: string;
   readonly componente: string;
-  readonly tipo: 'hook' | 'mcp';
-  /** Nome do evento do ambiente (hook) ou nome do servidor (mcp). */
+  readonly tipo: 'hook' | 'mcp' | 'bloco';
+  /** Nome do evento do ambiente (hook), do servidor (mcp) ou do bloco de texto (bloco, ADR-0038); no bloco o `valor` é o texto. */
   readonly chave: string;
   readonly valor: unknown;
 }

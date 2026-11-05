@@ -85,7 +85,9 @@ export const EVENTOS_DE_HOOK = [
   'inicio-de-sessao',
   'fim-de-sessao',
 ] as const;
-export const AMBIENTES = ['claude-code', 'copilot'] as const;
+export const AMBIENTES = ['claude-code', 'copilot', 'agents-md'] as const;
+/** Ambientes que o `init` liga sozinho; `agents-md` (ADR-0038) é opt-in. */
+export const AMBIENTES_PADRAO = ['claude-code', 'copilot'] as const;
 
 /** Definições de componente, comando e permissões; o lockfile reusa para o retrato do que foi aprovado. */
 /** Assinante Sigstore esperado (manifesto) ou conferido (lockfile): workflow do GitHub Actions do repositório (ADR-0035). */

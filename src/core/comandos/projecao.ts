@@ -3,6 +3,7 @@
 // instalado projetava antes (recalculado do pacote em `.harness/pacotes/`, sem campo novo no lockfile). Arquivo
 // existente que não é nosso, ou que foi editado à mão, nunca é pisado sem `--forcar`; com `--forcar` a cópia vai para
 // `.harness/local/<pacote>/anterior/`.
+import { mesclarBlocos } from '../adaptadores/blocos.js';
 import { mesclarFragmentos } from '../adaptadores/configuracao.js';
 import type { Adapter, ArquivoProjetado, FragmentoDeConfig } from '../adaptadores/contrato.js';
 import type { Manifesto } from '../manifesto/manifesto.js';
@@ -181,13 +182,11 @@ async function mesclarCompartilhados(
     // Uma leitura só, sem checar a existência antes (AGENTS.md): ausente = arquivo novo.
     const noDisco = await ctx.arquivos.ler(caminho).catch(() => undefined);
     const base = pedido.compartilhados?.get(caminho) ?? noDisco;
-    const r = mesclarFragmentos(
-      caminho,
-      base,
-      antigos.filter((f) => f.caminho === caminho),
-      novos.filter((f) => f.caminho === caminho),
-      pedido.forcar,
-    );
+    const dosAntigos = antigos.filter((f) => f.caminho === caminho);
+    const dosNovos = novos.filter((f) => f.caminho === caminho);
+    // Arquivo de texto com blocos delimitados (AGENTS.md, ADR-0038) ou JSON com hooks/MCP (ADR-0027).
+    const emBlocos = [...dosAntigos, ...dosNovos].some((f) => f.tipo === 'bloco');
+    const r = (emBlocos ? mesclarBlocos : mesclarFragmentos)(caminho, base, dosAntigos, dosNovos, pedido.forcar);
     if (r.erros.length > 0) {
       saida.erros.push(...r.erros.map((m) => `${e(pedido.nome)}: ${e(m)}`));
       continue;
@@ -244,6 +243,10 @@ interface Chamada {
 function detalhesDosFragmentos(novos: readonly FragmentoDeConfig[], pedido: PedidoDeProjecao): string[] {
   const saida: string[] = [];
   for (const f of novos) {
+    if (f.tipo === 'bloco') {
+      saida.push(`      instrução ${e(f.componente)}: entra no bloco "${e(f.chave)}" de ${e(f.caminho)}`);
+      continue;
+    }
     const v = (f.valor ?? {}) as { hooks?: Chamada[] } & Chamada;
     const chamadas: Chamada[] = f.tipo === 'hook' ? (v.hooks ?? []) : [v];
     const args = chamadas.flatMap((c) => (Array.isArray(c.args) ? c.args.map(String) : []));
