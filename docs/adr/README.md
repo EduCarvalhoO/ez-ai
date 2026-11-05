@@ -41,6 +41,8 @@
 | [0033](0033-protecao-contra-laco-orcamento-saidas-por-etapa-e-retomada.md) | Proteção contra laço infinito, orçamento, saídas por etapa, verificador de documentação e retomada | Aceito |
 | [0034](0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md) | Servidor MCP da base de conhecimento, fontes do projeto e níveis de confiança de pacotes | Aceito |
 | [0035](0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md) | Assinatura Sigstore de pacotes, papéis versionados, SBOM e confiança verificada | Aceito |
+| [0036](0036-versionamento-compatibilidade-e-pipeline-de-release.md) | Versionamento, compatibilidade e pipeline de release da v1.0 | Aceito |
+| [0037](0037-nome-do-produto-ez-ai.md) | Nome do produto é ez-ai | Aceito |
 
 ## Decisões em aberto
 

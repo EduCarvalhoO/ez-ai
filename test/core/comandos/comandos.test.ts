@@ -111,7 +111,7 @@ describe('list', () => {
   it('sem config diz para rodar init', async () => {
     const r = await listar(contexto({}));
     expect(r.codigo).toBe(1);
-    expect(r.erros[0]).toMatch(/harness-ai init/);
+    expect(r.erros[0]).toMatch(/ez-ai init/);
   });
 
   it('mostra pedido, travado e estado', async () => {

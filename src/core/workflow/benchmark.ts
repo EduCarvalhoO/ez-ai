@@ -197,7 +197,7 @@ export function relatorioComparativo(pontuacoes: readonly Pontuacao[]): string[]
 
 export function datasetDoBenchmark(tarefas: readonly TarefaDeReferencia[]): Dataset {
   return {
-    nome: 'harness-ai/benchmark-workflow',
+    nome: 'ez-ai/benchmark-workflow',
     descricao: 'Tarefas de referência do workflow de feature (golden tasks).',
     itens: tarefas.map((t) => ({
       id: `benchmark-${t.id}`,

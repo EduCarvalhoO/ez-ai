@@ -9,7 +9,7 @@ let projeto: string;
 let fora: string;
 
 beforeEach(() => {
-  base = mkdtempSync(join(tmpdir(), 'harness-ai-arq-'));
+  base = mkdtempSync(join(tmpdir(), 'ez-ai-arq-'));
   projeto = join(base, 'projeto');
   fora = join(base, 'fora');
   mkdirSync(projeto);

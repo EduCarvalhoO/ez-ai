@@ -9,7 +9,7 @@ Responder, no VS Code real, as hipóteses que a [matriz](matriz-de-capacidades.m
 Harness Local do VS Code ([ADR-0025](../adr/0025-adapters-puros-que-projetam-o-pacote-nos-ambientes.md), D6). Não cobre o cloud agent nem o Copilot CLI.
 
 ## Especificação
-Preparação: um projeto de teste com `harness-ai init`, o pacote starter (`test/fixtures/starter`) em `local:` e `harness-ai apply`.
+Preparação: um projeto de teste com `ez-ai init`, o pacote starter (`test/fixtures/starter`) em `local:` e `ez-ai apply`.
 
 | # | Pergunta | Como verificar | Resultado |
 |---|---|---|---|

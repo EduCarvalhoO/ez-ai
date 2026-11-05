@@ -1,4 +1,4 @@
-# Langfuse v3 self-hosted para o harness-ai (ADR-0030). Uso local: tudo escuta só em 127.0.0.1.
+# Langfuse v3 self-hosted para o ez-ai (ADR-0030). Uso local: tudo escuta só em 127.0.0.1.
 # Segredos vêm do arquivo .env (copie de .env.example); nenhum valor padrão inseguro fica aqui.
 # Passo a passo: docs/guias/runbook-langfuse.md
 name: harness-langfuse

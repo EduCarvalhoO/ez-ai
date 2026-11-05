@@ -130,7 +130,7 @@ describe('fronteiras entre camadas (ADR-0010, ADR-0015)', () => {
   let pasta: string;
 
   beforeAll(() => {
-    pasta = mkdtempSync(join(tmpdir(), 'harness-ai-fronteiras-'));
+    pasta = mkdtempSync(join(tmpdir(), 'ez-ai-fronteiras-'));
     const config: unknown = JSON.parse(readFileSync(join(raiz, 'biome.json'), 'utf8'));
     if (typeof config !== 'object' || config === null) throw new Error('biome.json da raiz não é um objeto JSON');
     // O $schema aponta para node_modules relativo à raiz; fora dela não resolve.

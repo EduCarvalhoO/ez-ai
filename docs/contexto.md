@@ -1,6 +1,6 @@
 # Contexto do Projeto — AI Harness Extensível
 
-> Status: Vivo · Atualizado: 2026-11-02 · Relacionados: [roadmap](roadmap.md), [ADRs](adr/README.md)
+> Status: Vivo · Atualizado: 2026-11-05 · Relacionados: [roadmap](roadmap.md), [ADRs](adr/README.md)
 >
 > Este arquivo espelha o documento `AI_Harness_Contexto_Inicial.md` do Project no claude.ai. Ao alterar um, atualize o outro.
 
@@ -175,7 +175,7 @@ Agentes de IA tratam este documento como contexto e princípios, não como autor
 | Testes de pacotes antes do compartilhamento | Em aberto — F7 |
 | Quando a orquestração própria será necessária | Em aberto — pós-v1 |
 | Licença do projeto | Decidido — [ADR-0012](adr/0012-licenca-fsl-e-modelo-open-core.md) |
-| Nome do produto/CLI | Em aberto — antes da F8 (codinome `harness-ai`) |
+| Nome do produto/CLI | Em aberto — antes da F8 (codinome `ez-ai`) |
 
 ## 13. Resultado esperado da fase de descoberta
 
@@ -210,6 +210,7 @@ Ao final da F1: problema e usuários claros; escopo de MVP com critérios de ace
 | Proteção contra laço, orçamento e retomada (Sprint 12) | Disjuntor ligado por padrão (60 passos, 10 por etapa, 3 repetições seguidas) escala ao humano; orçamento opcional de tokens e minutos ativos; saídas exigidas por etapa (`--documento`, `--evidencia`); `workflow docs` confere a completude de ficha/spec/ADR; `workflow retomar` lista itens abertos e parados | [0033](adr/0033-protecao-contra-laco-orcamento-saidas-por-etapa-e-retomada.md) |
 | Servidor MCP da base e níveis de confiança (Sprint 13) | `conhecimento servir` expõe `buscar`, `abrir` e `mapa` por MCP (stdio, sem dependência nova, `abrir` só no que a base indexa); fontes extras em `.harness/conhecimento.json`; nível de confiança derivado da origem (`local`, `comunidade`, `verificado`, `oficial`) mostrado no `list` e exigível por `confiancaMinima` na configuração | [0034](adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md) |
 | Assinatura, papéis e SBOM (Sprint 14) | Pacote assinado com Sigstore (workflow do próprio repositório, bundle fora do hash) chega a `verificado`; `oficial` exige origem na lista **e** assinatura; troca de assinante exige `remove` + `add`; papéis em `.harness/papeis.json` (mantenedor/aprovador/leitor) somam-se aos `aprovadores`; `hash-pacote` e `npm run sbom`; raiz de confiança fixada no código (verificação offline) | [0035](adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md) |
+| Nome, versionamento e release (Sprint 15) | Produto, pacote e CLI se chamam **ez-ai** (pasta `.harness/` e `harness-pacote.json` mantidos); semver da CLI, schemas com versão própria e leitura das duas últimas; depreciação em um minor e remoção no major; release por tag com npm provenance via OIDC (modelo, não ativo); checklist de release | [0036](adr/0036-versionamento-compatibilidade-e-pipeline-de-release.md), [0037](adr/0037-nome-do-produto-ez-ai.md) |
 | Ferramental | Biome para lint e format (o typescript-eslint não suporta o TypeScript 7); Conventional Commits por script próprio sem dependência e hook `commit-msg` via `core.hooksPath`; cobertura V8 com 80% de linhas; changesets 3.0.3; dependências com idade mínima de 7 dias e sem scripts de instalação (`min-release-age=7` e `ignore-scripts=true` no `.npmrc`; idade conferida no CI por `scripts/verificar-idade-deps.mjs`) | [padrão de código](guias/padrao-de-codigo-e-testes.md) |
 | CI | GitHub Actions em Ubuntu e Windows (macOS suspenso temporariamente desde 2026-11-02) com Node 22, 24 e 26 (última correção) mais o piso 22.12.0; token só leitura, actions fixadas por SHA, sem cache | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [0007](adr/0007-suporte-multiplataforma.md) |
 | Segurança do repositório e da cadeia de suprimentos | Repositório público (decisão do Eduardo em 2026-10-17) para ter de graça branch protection, CodeQL, secret scanning com push protection e reporte privado de vulnerabilidade; `npm audit` sem nível de corte e `npm audit signatures` no CI; zizmor e actionlint nos workflows; Dependabot (npm, actions, pip) com cooldown de 7 dias; `SECURITY.md` | [padrão de código §5](guias/padrao-de-codigo-e-testes.md#5-ci), [SECURITY.md](../SECURITY.md) |

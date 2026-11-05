@@ -22,6 +22,6 @@ Thumbs.db
 # ConfiguraÃ§Ãµes locais do Claude Code
 .claude/settings.local.json
 
-# Gerados pelo harness-ai neste repositório (índice C1 e exportações de evals)
+# Gerados pelo ez-ai neste repositï¿½rio (ï¿½ndice C1 e exportaï¿½ï¿½es de evals)
 .harness/cache/
 .harness/evals/

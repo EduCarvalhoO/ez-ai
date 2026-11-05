@@ -1,6 +1,6 @@
 # MODELO do job de servidor (ADR-0028) para um projeto que usa o harness: copie para .github/workflows/aprovacao.yml
 # e proteja o arquivo com CODEOWNERS e ruleset. Não roda neste repositório (o ez-ai não tem .harness/ próprio).
-# Ajuste HARNESS_VERSAO (versão fixa do pacote harness-ai) e CHECKS (nomes dos jobs do CI que devem estar verdes).
+# Ajuste HARNESS_VERSAO (versão fixa do pacote ez-ai) e CHECKS (nomes dos jobs do CI que devem estar verdes).
 name: Aprovação própria
 
 on:
@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  HARNESS_VERSAO: '0.0.0' # troque pela versão publicada do harness-ai
+  HARNESS_VERSAO: '0.0.0' # troque pela versão publicada do ez-ai
   CHECKS: 'qualidade,workflows'
 
 jobs:
@@ -42,8 +42,8 @@ jobs:
           node-version: '24.x'
           package-manager-cache: false
       # O harness vem do npm em versão fixa, nunca do código do PR: o agente não troca a regra que o confere.
-      - name: Instala o harness-ai em versão fixa (sem scripts)
-        run: npm install --ignore-scripts --no-save --prefix "$RUNNER_TEMP/h" "harness-ai@$HARNESS_VERSAO"
+      - name: Instala o ez-ai em versão fixa (sem scripts)
+        run: npm install --ignore-scripts --no-save --prefix "$RUNNER_TEMP/h" "ez-ai@$HARNESS_VERSAO"
       - name: Confere aprovadores, policy e CI contra a base
         working-directory: projeto
         env:
@@ -61,5 +61,5 @@ jobs:
             # --sha: a head do evento; se o PR andou depois do checkout, o job falha e roda de novo.
             args=(--base "origin/$BASE_REF" --pr "$PR_NUMBER" --sha "$HEAD_SHA")
           fi
-          node "$RUNNER_TEMP/h/node_modules/harness-ai/dist/cli/index.js" validate --servidor \
+          node "$RUNNER_TEMP/h/node_modules/ez-ai/dist/cli/index.js" validate --servidor \
             --repo "$GITHUB_REPOSITORY" "${args[@]}" --exigir-evidencias --checks "$CHECKS"

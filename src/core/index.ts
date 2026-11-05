@@ -1,4 +1,4 @@
-// Núcleo do harness-ai: lógica pura, sem dependência dos adapters (ADR-0010).
+// Núcleo do ez-ai: lógica pura, sem dependência dos adapters (ADR-0010).
 
 export type { ModeloDeConfiguracao } from './adaptadores/configuracao.js';
 export { mesclarFragmentos } from './adaptadores/configuracao.js';
