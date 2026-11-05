@@ -1,6 +1,6 @@
 // Evals de regressão da qualidade (ADR-0039): os componentes do próprio repositório precisam continuar passando no
 // checklist. É a "tarefa de referência" determinística: sem modelo, sem custo, roda no CI a cada mudança de prompt.
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { avaliarQualidade } from '../../../src/core/qualidade/checklist.js';
@@ -9,11 +9,13 @@ const RAIZ = join(__dirname, '..', '..', '..');
 
 function lerPasta(pasta: string): Map<string, string> {
   const mapa = new Map<string, string>();
+  // Dirent vem da própria listagem: não há "checar e depois usar" o mesmo caminho (regra do AGENTS.md).
   const andar = (dir: string): void => {
-    for (const nome of readdirSync(dir)) {
-      const caminho = join(dir, nome);
-      if (statSync(caminho).isDirectory()) andar(caminho);
-      else mapa.set(caminho.slice(RAIZ.length + 1).replaceAll('\\', '/'), readFileSync(caminho, 'utf8'));
+    for (const entrada of readdirSync(dir, { withFileTypes: true })) {
+      const caminho = join(dir, entrada.name);
+      if (entrada.isDirectory()) andar(caminho);
+      else if (entrada.isFile())
+        mapa.set(caminho.slice(RAIZ.length + 1).replaceAll('\\', '/'), readFileSync(caminho, 'utf8'));
     }
   };
   andar(join(RAIZ, pasta));
