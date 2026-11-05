@@ -56,7 +56,7 @@ export function resumirScan(arquivos: ReadonlyMap<string, string>, modo: ModoDeB
   };
 }
 
-async function alvos(
+export async function alvosDeVarredura(
   ctx: Contexto,
   alvo: string | undefined,
 ): Promise<{ nome: string; arquivos: ReadonlyMap<string, string> }[] | string> {
@@ -90,9 +90,9 @@ export async function escanear(ctx: Contexto, opcoes: OpcoesDeScan = {}): Promis
     : undefined;
   const doProjeto: ModoDeBloqueio = config?.ok ? modoDoScan(config.valor) : 'nunca';
   const modo = modoMaisRigido(doProjeto, opcoes.bloquear ?? 'nunca');
-  let lista: Awaited<ReturnType<typeof alvos>>;
+  let lista: Awaited<ReturnType<typeof alvosDeVarredura>>;
   try {
-    lista = await alvos(ctx, opcoes.alvo);
+    lista = await alvosDeVarredura(ctx, opcoes.alvo);
   } catch (erro: unknown) {
     return { codigo: 1, saida: [], erros: [e(erro instanceof Error ? erro.message : String(erro))] };
   }

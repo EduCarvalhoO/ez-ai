@@ -48,7 +48,7 @@ export { pareceSegredo, redigirSegredos } from './auditoria/segredos.js';
 export { hashDoPacote } from './comandos/assinatura.js';
 export type { Contexto, ResultadoDoComando } from './comandos/base.js';
 export { relatarBenchmark } from './comandos/benchmark.js';
-export { avaliarBase, buscarNaBase, indexarBase, mapaDaBase } from './comandos/conhecimento.js';
+export { avaliarBase, buscarNaBase, gerarPerguntasModelo, indexarBase, mapaDaBase } from './comandos/conhecimento.js';
 export { relatarCusto } from './comandos/custo.js';
 export type { OpcoesDeAdd, OpcoesDeInstalacao, OpcoesDeRemove } from './comandos/escrita.js';
 export {
@@ -66,6 +66,10 @@ export {
 export type { OpcoesDeImport } from './comandos/importar.js';
 export { importar } from './comandos/importar.js';
 export { init } from './comandos/init.js';
+export type { OpcoesDeSearch } from './comandos/catalogo.js';
+export { procurarPacotes } from './comandos/catalogo.js';
+export type { OpcoesDeQualidade } from './comandos/qualidade.js';
+export { avaliarComponentes } from './comandos/qualidade.js';
 export type { OpcoesDeScan } from './comandos/scan.js';
 export { escanear } from './comandos/scan.js';
 export { diagnosticar, listar, planejar, validar } from './comandos/leitura.js';

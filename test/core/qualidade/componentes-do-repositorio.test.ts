@@ -1,0 +1,51 @@
+// Evals de regressão da qualidade (ADR-0039): os componentes do próprio repositório precisam continuar passando no
+// checklist. É a "tarefa de referência" determinística: sem modelo, sem custo, roda no CI a cada mudança de prompt.
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { avaliarQualidade } from '../../../src/core/qualidade/checklist.js';
+
+const RAIZ = join(__dirname, '..', '..', '..');
+
+function lerPasta(pasta: string): Map<string, string> {
+  const mapa = new Map<string, string>();
+  const andar = (dir: string): void => {
+    for (const nome of readdirSync(dir)) {
+      const caminho = join(dir, nome);
+      if (statSync(caminho).isDirectory()) andar(caminho);
+      else mapa.set(caminho.slice(RAIZ.length + 1).replaceAll('\\', '/'), readFileSync(caminho, 'utf8'));
+    }
+  };
+  andar(join(RAIZ, pasta));
+  return mapa;
+}
+
+// Metas numéricas do ADR-0039. Subir um teto exige justificar no PR.
+const METAS = {
+  pacoteOficial: { limpos: 8, tokensDeMetadadosMax: 700, tokensDeCorpoMax: 3500 },
+  repositorio: { componentes: 14, errosMax: 0, avisosMax: 4 },
+  scripts: { errosMax: 0 },
+};
+
+describe('qualidade dos componentes do repositório', () => {
+  it('o pacote oficial workflow-feature passa limpo (agentes, skills e referências)', () => {
+    const r = avaliarQualidade(lerPasta('pacotes/workflow-feature'));
+    expect(r.achados).toEqual([]);
+    expect(r.limpos).toBe(METAS.pacoteOficial.limpos);
+    expect(r.tokensDeMetadados).toBeLessThanOrEqual(METAS.pacoteOficial.tokensDeMetadadosMax);
+    expect(r.tokensDeCorpo).toBeLessThanOrEqual(METAS.pacoteOficial.tokensDeCorpoMax);
+  });
+
+  it('agentes e skills do repositório não têm erro e têm no máximo os avisos conhecidos', () => {
+    const r = avaliarQualidade(lerPasta('.claude'));
+    expect(r.achados.filter((a) => a.gravidade === 'erro')).toEqual([]);
+    expect(r.componentes).toBeGreaterThanOrEqual(METAS.repositorio.componentes);
+    expect(r.achados.filter((a) => a.gravidade === 'aviso').length).toBeLessThanOrEqual(METAS.repositorio.avisosMax);
+  });
+
+  it('os scripts do repositório têm --help e só usam rede com declaração', () => {
+    const r = avaliarQualidade(lerPasta('scripts'));
+    expect(r.achados.filter((a) => a.gravidade === 'erro')).toHaveLength(METAS.scripts.errosMax);
+    expect(r.componentes).toBeGreaterThanOrEqual(5);
+  });
+});

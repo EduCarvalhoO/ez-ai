@@ -104,6 +104,17 @@ export const SCHEMA_DA_CONFIGURACAO = {
       additionalProperties: false,
       properties: { bloquearAPartirDe: { enum: MODOS_DE_BLOQUEIO } },
     },
+    // Catálogo assinado de pacotes (ADR-0039): repositório Git com `catalogo.json` e o bundle Sigstore, assinado pelo
+    // workflow indicado. O `search` só aceita o catálogo se a assinatura confere com este repositório e este workflow.
+    catalogo: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['repositorio', 'workflow'],
+      properties: {
+        repositorio: { type: 'string', pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}$` },
+        workflow: { type: 'string', pattern: '^[A-Za-z0-9._-]{1,100}\\.ya?ml$' },
+      },
+    },
     limites: {
       type: 'object',
       additionalProperties: false,

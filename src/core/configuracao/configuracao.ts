@@ -48,6 +48,8 @@ export interface Configuracao {
   readonly telemetria?: { readonly endpoint: string; readonly variavelDoToken?: string };
   /** Varredura de conteúdo dos pacotes (ADR-0038); ausente = só avisa. */
   readonly scan?: { readonly bloquearAPartirDe: ModoDeBloqueio };
+  /** Catálogo assinado de pacotes (ADR-0039); ausente = `search` indisponível. */
+  readonly catalogo?: { readonly repositorio: string; readonly workflow: string };
 }
 
 type Json = Record<string, unknown>;
@@ -91,6 +93,14 @@ function configuracaoDe(dado: Json): Configuracao {
       : {}),
     ...(typeof dado.scan === 'object' && dado.scan !== null && typeof (dado.scan as Json).bloquearAPartirDe === 'string'
       ? { scan: { bloquearAPartirDe: (dado.scan as Json).bloquearAPartirDe as ModoDeBloqueio } }
+      : {}),
+    ...(typeof dado.catalogo === 'object' && dado.catalogo !== null
+      ? {
+          catalogo: {
+            repositorio: canonizarRepositorio(String((dado.catalogo as Json).repositorio)),
+            workflow: String((dado.catalogo as Json).workflow),
+          },
+        }
       : {}),
   };
 }
