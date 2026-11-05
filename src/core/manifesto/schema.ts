@@ -88,6 +88,21 @@ export const EVENTOS_DE_HOOK = [
 export const AMBIENTES = ['claude-code', 'copilot'] as const;
 
 /** Definições de componente, comando e permissões; o lockfile reusa para o retrato do que foi aprovado. */
+/** Assinante Sigstore esperado (manifesto) ou conferido (lockfile): workflow do GitHub Actions do repositório (ADR-0035). */
+export const ASSINATURA_DO_PACOTE = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['identidade', 'emissor'],
+  properties: {
+    identidade: {
+      type: 'string',
+      maxLength: LIMITES.texto,
+      pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}/\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml@refs/(?:tags|heads)/[A-Za-z0-9._/-]+$`,
+    },
+    emissor: { const: 'https://token.actions.githubusercontent.com' },
+  },
+} as const;
+
 export const DEFS_DO_COMPONENTE = {
   comando: {
     type: 'object',
@@ -177,19 +192,7 @@ export const SCHEMA_DO_MANIFESTO = {
       maxLength: 160,
       pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}$`,
     },
-    assinatura: {
-      type: 'object',
-      additionalProperties: false,
-      required: ['identidade', 'emissor'],
-      properties: {
-        identidade: {
-          type: 'string',
-          maxLength: LIMITES.texto,
-          pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}/\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml@refs/(?:tags|heads)/[A-Za-z0-9._/-]+$`,
-        },
-        emissor: { const: 'https://token.actions.githubusercontent.com' },
-      },
-    },
+    assinatura: ASSINATURA_DO_PACOTE,
     compatibilidade: {
       type: 'object',
       additionalProperties: false,

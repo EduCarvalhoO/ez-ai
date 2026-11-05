@@ -21,6 +21,7 @@ import {
   planejar,
   type ResultadoDoComando,
   registrarEtapa,
+  hashDoPacote,
   relatarBenchmark,
   relatarCusto,
   remover,
@@ -39,6 +40,7 @@ import {
   criarIndiceSqlite,
   criarLeitorDaBase,
   criarProvedorDoPr,
+  criarVerificadorSigstore,
   relogioDoSistema,
 } from '../plataforma/index.js';
 
@@ -74,6 +76,7 @@ const COMANDOS = [
   'workflow',
   'conhecimento',
   'benchmark',
+  'hash-pacote',
 ] as const;
 type Comando = (typeof COMANDOS)[number];
 
@@ -92,6 +95,7 @@ const USO = [
   '                                        registra etapas e gates, confere a completude de um documento e lista itens abertos ou parados',
   '  conhecimento indexar | buscar <consulta> [--limite <n>] | mapa [pasta] | avaliar [--exportar] | servir',
   '                                        servir = servidor MCP (stdio) com buscar/abrir/mapa; fontes extras em .harness/conhecimento.json; mapa C0, índice C1 (node:sqlite) e métricas',
+  '  hash-pacote <pasta>                   imprime o hash do conteúdo de uma pasta de pacote (o texto que o workflow de release assina com Sigstore)',
   '  benchmark [--exportar]                pontua as tarefas de referência pelo log de auditoria (--exportar grava o dataset)',
   '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
   '  validate --ci          recalcula policy e aprovações a partir do commit travado',
@@ -145,6 +149,7 @@ const POSICIONAIS: Record<Comando, number | undefined> = {
   workflow: 4,
   conhecimento: 2,
   benchmark: 0,
+  'hash-pacote': 1,
 };
 
 function lerArgumentos(args: readonly string[]): Argumentos | string {
@@ -223,7 +228,8 @@ function lerArgumentos(args: readonly string[]): Argumentos | string {
     cmd !== 'custo' &&
     cmd !== 'workflow' &&
     cmd !== 'conhecimento' &&
-    cmd !== 'benchmark';
+    cmd !== 'benchmark' &&
+    cmd !== 'hash-pacote';
   // export --dry-run não grava nada: mostra o que enviaria.
   if (dryRun && !gravaArquivos) return `--dry-run não se aplica a "${cmd}" (ele não altera arquivos)`;
   return {
@@ -270,6 +276,7 @@ export async function criarContexto(projeto: string, ator: 'humano' | 'agente' |
   return {
     arquivos: await criarArquivos(raiz),
     git: criarGit(),
+    verificador: criarVerificadorSigstore(),
     adapters: [adapterClaudeCode, adapterCopilot],
     relogio: relogioDoSistema,
     identidade: criarIdentidade(undefined, raiz),
@@ -418,5 +425,7 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
       return executarConhecimento(a, ctx);
     case 'benchmark':
       return relatarBenchmark(ctx, { exportar: a.exportar });
+    case 'hash-pacote':
+      return hashDoPacote(ctx, a.posicionais[0] ?? '');
   }
 }

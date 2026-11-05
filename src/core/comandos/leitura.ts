@@ -17,6 +17,7 @@ import {
 import type { Lockfile, PacoteTravado } from '../lockfile/lockfile.js';
 import { diferencaDePermissoes } from '../manifesto/permissoes.js';
 import { diffDoPacote } from '../plano/diff.js';
+import { decidirAssinatura } from './assinatura.js';
 import { avaliarPacote } from '../policy/avaliar.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
 import {
@@ -55,7 +56,7 @@ export function listar(ctx: Contexto): Promise<ResultadoDoComando> {
       const t = travados.get(nome);
       const origem = c?.origem ?? t?.origem;
       const onde = origem?.tipo === 'local' ? `local:${origem.caminho}` : (origem?.url ?? '');
-      const nivel = origem ? nivelDeConfianca(origem) : '-';
+      const nivel = origem ? nivelDeConfianca(origem, { assinaturaVerificada: t?.assinatura !== undefined }) : '-';
       return `${e(nome)}  pedido: ${e(c?.versao ?? '-')}  travado: ${e(t?.versao ?? '-')}  ${estado}  ${e(onde)}  confiança: ${nivel}`;
     });
     return { codigo: 0, saida: linhas.length > 0 ? linhas : ['Nenhum pacote configurado.'], erros: [] };
@@ -101,6 +102,7 @@ export function validar(ctx: Contexto, opcoes: OpcoesDeValidacao = {}): Promise<
         const integridade = verificarIntegridade(t, p.arquivos);
         if (!integridade.ok) problemas.push(e(integridade.motivo));
         problemas.push(...conferirManifesto(t, p.manifesto).map(e));
+        problemas.push(...(await decidirAssinatura(ctx, config.valor, t.nome, t.origem, t, p)).erros);
         if (p.manifesto.versao !== t.versao) {
           problemas.push(`${e(t.nome)}: o manifesto declara ${e(p.manifesto.versao)} e o lockfile ${e(t.versao)}.`);
         }
