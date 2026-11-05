@@ -3,6 +3,7 @@ name: revisor
 description: Avaliador independente que confere uma mudança contra a ficha e os guias, reexecuta as verificações e emite veredito com achados. Use sempre depois do implementador e antes do commit.
 tools: Read, Grep, Glob, Bash
 model: sonnet
+maxTurns: 20
 skills:
   - escopo-da-mudanca
   - verificar

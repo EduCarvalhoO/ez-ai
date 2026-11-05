@@ -1,6 +1,6 @@
 ---
 name: verificar
-description: Roda as verificações determinísticas do repositório (scripts do package.json, validar-docs, git diff --check) e gera o bloco de evidências com cada uma como verificado, falhou ou ignorado. Use antes de declarar uma tarefa pronta e em toda revisão.
+description: Roda as verificações determinísticas do repositório (scripts do package.json, validar-docs, git diff --check) e gera o bloco de evidências com cada uma como verificado, falhou ou ignorado. Use antes de declarar uma tarefa pronta e em toda revisão. Não use para revisar o mérito da mudança (isso é do revisor).
 ---
 
 # Verificar
@@ -16,3 +16,8 @@ Gate G2 do [fluxo do time](../../../docs/guias/time-de-agentes.md#2-fluxo-com-ga
 
 ## Verificação
 Código de saída 0 e nenhuma linha `falhou`. `ignorado` nunca é apresentado como aprovado.
+
+## Gotchas
+- `ignorado` nunca é apresentado como aprovado e precisa de motivo na ficha.
+- Não altere teste, limite ou configuração só para a verificação passar.
+- O revisor roda de novo; o relato do implementador não substitui a execução.

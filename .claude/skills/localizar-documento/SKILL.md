@@ -1,6 +1,6 @@
 ---
 name: localizar-documento
-description: Encontra o documento dono de um assunto em docs/ e as linhas exatas a ler, sem abrir arquivos inteiros. Use antes de criar ou editar qualquer documento.
+description: Encontra o documento dono de um assunto em docs/ e as linhas exatas a ler, sem abrir arquivos inteiros. Use antes de criar ou editar qualquer documento. Não use para buscar código-fonte (use a busca do repositório).
 ---
 
 # Localizar documento
@@ -16,3 +16,8 @@ Passo 1 do fluxo do [padrão de documentação](../../../docs/guias/padrao-de-do
 
 ## Verificação
 Antes de criar um documento, a busca pelos termos principais não pode apontar outro documento que já trate do assunto.
+
+## Gotchas
+- Sem resultado significa assunto novo, não erro de busca: siga para `novo-documento`.
+- Use termos do assunto, não do arquivo; acentos e maiúsculas não importam.
+- Não abra o arquivo inteiro: leia as linhas indicadas.

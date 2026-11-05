@@ -1,6 +1,6 @@
 ---
 name: novo-documento
-description: Cria ADR, spec, documento de arquitetura, guia ou runbook a partir do template certo, com nome, numeração, cabeçalho e índices já corretos. Use sempre que um documento novo for necessário.
+description: Cria ADR, spec, documento de arquitetura, guia ou runbook a partir do template certo, com nome, numeração, cabeçalho e índices já corretos. Use sempre que um documento novo for necessário. Não use para editar documento que já existe.
 ---
 
 # Novo documento
@@ -17,3 +17,8 @@ Passo 3 do fluxo do [padrão de documentação](../../../docs/guias/padrao-de-do
 
 ## Verificação
 Rode a skill `validar-docs` no arquivo criado; ela acusa texto do template esquecido e o marcador `PREENCHER` no índice.
+
+## Gotchas
+- ADR novo nasce `Proposto`; o ADR antigo só vira `Substituído por` depois do aceite do usuário.
+- Deixar `PREENCHER` no índice faz o `validar-docs` falhar.
+- Crie o documento só depois de `localizar-documento` não achar dono para o assunto.

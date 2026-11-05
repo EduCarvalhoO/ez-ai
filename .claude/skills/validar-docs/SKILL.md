@@ -1,6 +1,6 @@
 ---
 name: validar-docs
-description: Confere de forma automática o checklist do padrão de documentação (cabeçalho, links e âncoras, índices, ADRs, texto de template esquecido, tamanho). Use antes de concluir qualquer mudança em docs/.
+description: Confere de forma automática o checklist do padrão de documentação (cabeçalho, links e âncoras, índices, ADRs, texto de template esquecido, tamanho). Use antes de concluir qualquer mudança em docs/. Não use para validar código (use a skill ``verificar``).
 ---
 
 # Validar docs
@@ -15,3 +15,8 @@ Passos 5 e 6 do [padrão de documentação](../../../docs/guias/padrao-de-docume
 
 ## Verificação
 Saída `OK` e código de saída 0.
+
+## Gotchas
+- `aviso` não bloqueia, mas precisa ser citado na resposta.
+- A saída `OK` não julga conteúdo: parágrafo duplicado de outro documento e decisão sem ADR continuam por sua conta.
+- Sem argumentos o script valida todo `docs/`; passe os arquivos alterados para ganhar tempo.
