@@ -55,7 +55,7 @@ function policiesDoManifesto(
   return lista;
 }
 
-async function policyDoProjeto(ctx: Contexto, erros: string[]): Promise<FonteDePolicy | undefined> {
+export async function policyDoProjeto(ctx: Contexto, erros: string[]): Promise<FonteDePolicy | undefined> {
   // Uma leitura só (sem checar e depois usar o caminho); a porta lança se o arquivo não existe.
   let texto: string;
   try {

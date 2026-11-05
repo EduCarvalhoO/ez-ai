@@ -156,6 +156,50 @@ describe('scan: comando e ligação com plan/apply/validate', () => {
     expect(ci.erros.join('\n')).toContain('bloqueado pelo scan');
   });
 
+  it('piso na policy (categoria conteudo) tranca mesmo com a configuração frouxa e vale o mais rígido', async () => {
+    const regra = (nivel: string, id = 'piso') =>
+      JSON.stringify({
+        versaoPolicy: 0,
+        regras: [{ id, efeito: 'negar', categoria: 'conteudo', padroes: [nivel], motivo: 'Piso da organização' }],
+      });
+    const ctx = await projeto({ extra: malicioso, scan: 'nunca' });
+    await ctx.arquivos.gravar('.harness/policy.json', regra('alta'));
+    const plano = await planejar(ctx);
+    expect(plano.codigo).toBe(1);
+    expect(plano.erros.join('\n')).toContain('bloqueado pelo scan');
+    expect((await aplicar(ctx, SEM_OPCOES)).codigo).toBe(1);
+    expect((await escanear(ctx, { alvo: PASTA })).codigo).toBe(1);
+    // A configuração mais rígida que o piso continua valendo.
+    await ctx.arquivos.gravar('.harness/policy.json', regra('alta'));
+    const cfg = JSON.parse(await ctx.arquivos.ler('.harness/config.json'));
+    cfg.scan = { bloquearAPartirDe: 'baixa' };
+    await ctx.arquivos.gravar('.harness/config.json', JSON.stringify(cfg));
+    expect((await planejar(ctx)).codigo).toBe(1);
+    // Sem piso e sem bloqueio na configuração, só avisa.
+    cfg.scan = { bloquearAPartirDe: 'nunca' };
+    await ctx.arquivos.gravar('.harness/config.json', JSON.stringify(cfg));
+    await ctx.arquivos.remover('.harness/policy.json');
+    expect((await planejar(ctx)).codigo).toBe(0);
+  });
+
+  it('regra conteudo malformada é recusada (efeito, padrão e campos extras)', async () => {
+    const ctx = await projeto({ extra: malicioso });
+    for (const r of [
+      { efeito: 'avisar', padroes: ['alta'] },
+      { efeito: 'negar', padroes: ['grave'] },
+      { efeito: 'negar', padroes: ['alta', 'media'] },
+      { efeito: 'negar', padroes: ['alta'], pacotes: ['a/*'] },
+    ]) {
+      await ctx.arquivos.gravar(
+        '.harness/policy.json',
+        JSON.stringify({ versaoPolicy: 0, regras: [{ id: 'x', categoria: 'conteudo', motivo: 'm', ...r }] }),
+      );
+      const plano = await planejar(ctx);
+      expect(plano.codigo).toBe(1);
+      expect(plano.erros.join('\n')).toContain('policy inválida');
+    }
+  });
+
   it('varre uma pasta qualquer do projeto e recusa alvo inexistente ou fora do projeto', async () => {
     const ctx = await projeto();
     for (const [caminho, conteudo] of Object.entries(malicioso))

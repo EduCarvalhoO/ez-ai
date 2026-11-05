@@ -42,7 +42,7 @@ Os 4 avisos que restam (`Q-A7`, falta de formato de saída em quatro agentes de 
 ## Em aberto
 Revisão de segurança (Opus) aprovou sem bloqueante e apontou itens que ficam como dívida declarada: guardar a última tag vista e aceitar `versaoMinima` (downgrade e replay), ler só `catalogo.json` e o bundle do Git em vez da árvore inteira, fixar o ID imutável do repositório nas extensões Fulcio, hashear os bytes brutos do arquivo e separar a lista de origens de pacote da origem do catálogo. Corrigidos neste PR: âncora e escape da identidade no verificador, e a descrição do catálogo marcada como dado.
 
-Nível de bloqueio do scan na policy (categoria `conteudo`): decisão levada ao Eduardo em 2026-11-05. Recomendação: manter `scan.bloquearAPartirDe` na config e acrescentar um piso na policy (vale o mais rígido). Sem resposta, nada muda (ADR-0038 D3).
+**Atualização (Sprint 20):** as cinco dívidas e o piso do scan na policy (categoria `conteudo`) foram resolvidos no [ADR-0040](0040-catalogo-endurecido-piso-do-scan-e-origens-oficiais.md).
 
 ## Gatilhos de revisão
 Falso positivo frequente nas regras `Q-*`; um modelo novo que torne `maxTurns` ou `tools` irrelevantes; pedido de revogação de pacote no catálogo; catálogo acima de 2.000 pacotes; necessidade de juiz LLM opt-in (com a chave do usuário) para qualidade de descrição.

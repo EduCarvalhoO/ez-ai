@@ -6,6 +6,7 @@ import { criarValidador } from '../contratos/validar-schema.js';
 import { problemaNoCaminho } from '../manifesto/caminhos.js';
 import { type Falha, lista, procurarInvisiveis } from '../manifesto/manifesto.js';
 import { LIMITES, TIPOS_DE_COMPONENTE } from '../manifesto/schema.js';
+import { SEVERIDADES } from '../seguranca/scan.js';
 import { type CATEGORIAS_DE_POLICY, type EFEITOS, LIMITES_DA_POLICY, type MARCAS, SCHEMA_DA_POLICY } from './schema.js';
 
 export type Efeito = (typeof EFEITOS)[number];
@@ -79,6 +80,8 @@ export function problemaNoPadrao(categoria: CategoriaDePolicy, padrao: string): 
       return padrao === '*' || SEGREDO.test(padrao) ? undefined : 'use um nome de variável de ambiente ou "*"';
     case 'executar':
       return padrao === '*' || PROGRAMA.test(padrao) ? undefined : 'use um nome de programa sem caminho ou "*"';
+    case 'conteudo':
+      return (SEVERIDADES as readonly string[]).includes(padrao) ? undefined : `use ${SEVERIDADES.join(', ')}`;
     case 'tipo':
       return padrao === '*' || (TIPOS_DE_COMPONENTE as readonly string[]).includes(padrao)
         ? undefined
@@ -106,6 +109,17 @@ function regrasSemanticas(policy: Policy, nivel: NivelDePolicy): ErroDeContrato[
         'marca-da-categoria',
         `a marca "${r.marca}" só existe em "${MARCA_DA_CATEGORIA[r.marca]}"`,
       );
+    }
+    if (r.categoria === 'conteudo') {
+      const ruim =
+        r.efeito !== 'negar'
+          ? 'só aceita efeito "negar" (é um piso que tranca)'
+          : (r.padroes?.length ?? 0) !== 1
+            ? 'precisa de exatamente um padrão: baixa, media ou alta'
+            : r.exceto.length > 0 || r.pacotes.length > 0 || r.critica
+              ? 'não aceita "exceto", "pacotes" nem "critica" (o piso vale para todos os pacotes)'
+              : undefined;
+      if (ruim) falha(`${base}/categoria`, 'conteudo', `a categoria "conteudo" ${ruim}`);
     }
     if (nivel === 'pacote' && r.pacotes.length > 0) {
       falha(

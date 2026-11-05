@@ -166,7 +166,7 @@ async function conferirPoliticaDoTravado(
     explicarDecisao(decisao).map((m) => `${e(t.nome)}: bloqueado pela policy: ${m}`),
   );
   if (decisao.falhaFechada) problemas.push(`${e(t.nome)}: policy falha fechada (regra crítica sem garantia).`);
-  for (const b of resumirScan(lido.arquivos, modoDoScan(config)).bloqueios) {
+  for (const b of resumirScan(lido.arquivos, modoDoScan(config, politicas.fontes)).bloqueios) {
     problemas.push(`${e(t.nome)}: bloqueado pelo scan: ${b}`);
   }
   const exigidas = itensDeAprovacaoPropria({ chave: t.nome, componentes: lido.manifesto.componentes, decisao });
@@ -252,7 +252,7 @@ export function planejar(ctx: Contexto, opcoes: { readonly detalhes?: boolean } 
           }
           for (const motivo of explicarDecisao(decisao, ['exigir-aprovacao'])) saida.push(`    aprovação: ${motivo}`);
           for (const motivo of explicarDecisao(decisao, ['avisar'])) saida.push(`    aviso: ${motivo}`);
-          const scan = resumirScan(lido.arquivos, modoDoScan(config.valor));
+          const scan = resumirScan(lido.arquivos, modoDoScan(config.valor, politicas.fontes));
           if (scan.total > 0) {
             saida.push(`    scan: ${scan.total} achado(s) de conteúdo suspeito (detalhe: ez-ai scan ${e(p.nome)})`);
             const mostrar = opcoes.detalhes === true ? scan.linhas : scan.linhas.slice(0, 5);
