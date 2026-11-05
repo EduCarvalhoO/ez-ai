@@ -81,7 +81,7 @@ describe('disjuntor do workflow', () => {
     expect(e.situacao).toBe('em-andamento');
     expect(e.motivoDaEscala).toBeUndefined();
     expect(e.janela.passos).toBe(1);
-    expect(e.permitidas).toEqual(['E2']);
+    expect(e.permitidas).toEqual(['E2', 'G0']);
   });
 
   it('o limite de passos por etapa vale mesmo sem repetição seguida', () => {
