@@ -73,6 +73,6 @@
 | [guias/versionamento-e-compatibilidade.md](guias/versionamento-e-compatibilidade.md) | Semver, versão de schemas, depreciação e migração |
 | [guias/seguranca-para-usuarios.md](guias/seguranca-para-usuarios.md) | O que o ez-ai garante e não garante; boas práticas |
 | [guias/checklist-de-release.md](guias/checklist-de-release.md) | Checklist de release com evidências (fecha o M4) |
-| [modelos/release-npm.yml](modelos/release-npm.yml) | Modelo de workflow de release no npm com provenance por OIDC (não ativo) |
+| [modelos/release-npm.yml](modelos/release-npm.yml) | Modelo de origem do workflow de release no npm (ativo em `.github/workflows/release-npm.yml`) |
 | [../CONTRIBUTING.md](../CONTRIBUTING.md) | Como contribuir: fluxo, commits, checks e changesets |
 | [_templates/](_templates/) | Modelos de ADR, spec e guia (fora da checagem do índice) |
