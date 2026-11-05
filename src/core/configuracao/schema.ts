@@ -11,6 +11,7 @@ import {
   PADRAO_PACOTE,
   PADRAO_REPO,
 } from '../manifesto/schema.js';
+import { MODOS_DE_BLOQUEIO } from '../seguranca/scan.js';
 import { NIVEIS_DE_CONFIANCA } from './confianca.js';
 
 export const ID_DO_SCHEMA_DA_CONFIGURACAO =
@@ -95,6 +96,13 @@ export const SCHEMA_DA_CONFIGURACAO = {
           pattern: '^(?:LANGFUSE|HARNESS_TELEMETRIA)_[A-Z0-9_]{1,50}$',
         },
       },
+    },
+    // Varredura de conteúdo dos pacotes (ADR-0038). Sem este campo o scan só avisa; com ele, achado igual ou mais
+    // grave que o nível dado tranca plan/apply/update e o `validate --ci`.
+    scan: {
+      type: 'object',
+      additionalProperties: false,
+      properties: { bloquearAPartirDe: { enum: MODOS_DE_BLOQUEIO } },
     },
     limites: {
       type: 'object',

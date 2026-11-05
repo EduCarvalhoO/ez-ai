@@ -14,6 +14,7 @@ import { diffDoPacote } from '../plano/diff.js';
 import { avaliarPacote } from '../policy/avaliar.js';
 import { resolverVersao } from '../resolucao/semver.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
+import { modoDoScan, resumirScan } from './scan.js';
 import { decidirAssinatura } from './assinatura.js';
 import {
   CAMINHO_DA_CONFIGURACAO,
@@ -69,6 +70,8 @@ export function serializarConfiguracao(c: Configuracao): string {
     // Campos que `add` e `remove` não podem apagar em silêncio: um deles é o piso de confiança do projeto (ADR-0034/0035).
     ...(c.confiancaMinima ? { confiancaMinima: c.confiancaMinima } : {}),
     ...(c.telemetria ? { telemetria: c.telemetria } : {}),
+    // O nível de bloqueio do scan (ADR-0038) também não pode sumir quando `add`/`remove` regravam a configuração.
+    ...(c.scan ? { scan: c.scan } : {}),
   };
   return `${JSON.stringify(objeto, null, 2)}\n`;
 }
@@ -421,6 +424,19 @@ async function preparar(
         decisao,
         afrouxamentos: politicas.afrouxamentos,
       });
+      // Varredura de conteúdo (ADR-0038): só avisa, a menos que a configuração peça bloqueio.
+      const scan = resumirScan(lido.arquivos, modoDoScan(config));
+      if (scan.bloqueios.length > 0) {
+        erros.push(...scan.bloqueios.map((b) => `${e(p.nome)}: bloqueado pelo scan: ${b}`));
+        continue;
+      }
+      const linhasDoScan =
+        scan.total > 0
+          ? [
+              `    scan: ${scan.total} achado(s) de conteúdo suspeito (detalhe: ez-ai scan ${e(p.nome)})`,
+              ...scan.linhas.slice(0, opcoes.detalhes === true ? scan.linhas.length : 5).map((l) => `      ${l}`),
+            ]
+          : [];
       const nomeadas: EntradaDeAprovacao[] = exigidas.filter((x) => opcoes.aprovar.includes(x.id));
       for (const x of nomeadas) aprovacoesUsadas.add(x.id);
       const conf = pendentesDeAprovacao(exigidas, [...(t?.aprovacoesProprias ?? []), ...nomeadas]);
@@ -490,7 +506,7 @@ async function preparar(
         erros.push(...projecao.erros);
         continue;
       }
-      linhas.push(...projecao.linhas);
+      linhas.push(...projecao.linhas, ...linhasDoScan);
       acoes.push({ travado, arquivos: lido.arquivos, linhas, copiar, mudou, projecao });
     } catch (erro: unknown) {
       erros.push(e(erro instanceof Error ? erro.message : String(erro)));
