@@ -1,4 +1,4 @@
-<!-- Modelo de PR do harness-ai. Regras: docs/guias/padrao-de-codigo-e-testes.md §4. Apague as seções que não se aplicam. -->
+<!-- Modelo de PR do ez-ai. Regras: docs/guias/padrao-de-codigo-e-testes.md §4. Apague as seções que não se aplicam. -->
 
 ## O que muda
 <!-- Uma a três frases: o que o PR faz e por quê. Siglas e termos técnicos ganham legenda curta entre parênteses na primeira aparição. -->
