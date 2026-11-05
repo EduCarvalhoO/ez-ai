@@ -3,7 +3,7 @@
 import { PASTA_DA_AUDITORIA } from '../auditoria/registro.js';
 import { validarConfiguracao } from '../configuracao/configuracao.js';
 import type { Ambiente } from '../manifesto/manifesto.js';
-import { AMBIENTES } from '../manifesto/schema.js';
+import { AMBIENTES, AMBIENTES_PADRAO } from '../manifesto/schema.js';
 import { CAMINHO_DA_CONFIGURACAO, type Contexto, formatarErros, type ResultadoDoComando } from './base.js';
 
 export interface OpcoesDeInit {
@@ -12,7 +12,7 @@ export interface OpcoesDeInit {
 }
 
 export async function init(ctx: Contexto, opcoes: OpcoesDeInit): Promise<ResultadoDoComando> {
-  const ambientes = opcoes.ambientes?.length ? opcoes.ambientes : AMBIENTES;
+  const ambientes = opcoes.ambientes?.length ? opcoes.ambientes : AMBIENTES_PADRAO;
   const desconhecido = ambientes.find((a) => !(AMBIENTES as readonly string[]).includes(a));
   if (desconhecido) {
     return { codigo: 1, saida: [], erros: [`ambiente "${desconhecido}" desconhecido; use: ${AMBIENTES.join(', ')}.`] };

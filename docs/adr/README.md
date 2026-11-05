@@ -43,6 +43,7 @@
 | [0035](0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md) | Assinatura Sigstore de pacotes, papéis versionados, SBOM e confiança verificada | Aceito |
 | [0036](0036-versionamento-compatibilidade-e-pipeline-de-release.md) | Versionamento, compatibilidade e pipeline de release da v1.0 | Aceito |
 | [0037](0037-nome-do-produto-ez-ai.md) | Nome do produto é ez-ai | Aceito |
+| [0038](0038-scan-de-conteudo-agents-md-e-import.md) | Varredura de conteúdo dos pacotes (`scan`), adapter AGENTS.md e `import` | Aceito |
 
 ## Decisões em aberto
 

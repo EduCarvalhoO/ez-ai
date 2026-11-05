@@ -31,7 +31,9 @@
   },
   "linter": {
     "enabled": true,
-    "rules": { "preset": "recommended" }
+    "rules": {
+      "preset": "recommended"
+    }
   },
   "overrides": [
     {
@@ -299,6 +301,10 @@
                     "message": "um adapter não importa outro adapter (ADR-0015)."
                   },
                   {
+                    "group": ["**/agents-md/**", "**/agents-md"],
+                    "message": "um adapter não importa outro adapter (ADR-0015)."
+                  },
+                  {
                     "group": ["**/cli/**", "**/cli"],
                     "message": "um adapter não importa src/cli (ADR-0015)."
                   },
@@ -396,6 +402,114 @@
                 "patterns": [
                   {
                     "group": ["**/claude-code/**", "**/claude-code"],
+                    "message": "um adapter não importa outro adapter (ADR-0015)."
+                  },
+                  {
+                    "group": ["**/agents-md/**", "**/agents-md"],
+                    "message": "um adapter não importa outro adapter (ADR-0015)."
+                  },
+                  {
+                    "group": ["**/cli/**", "**/cli"],
+                    "message": "um adapter não importa src/cli (ADR-0015)."
+                  },
+                  {
+                    "group": ["**/plataforma/**", "**/plataforma"],
+                    "message": "um adapter não importa src/plataforma (ADR-0015): gera conteúdo em memória e o núcleo grava."
+                  },
+                  {
+                    "group": ["**/exportadores/**", "**/exportadores"],
+                    "message": "um adapter não importa src/exportadores (ADR-0015)."
+                  }
+                ]
+              }
+            },
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "process": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "globalThis": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "global": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "self": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "fetch": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "WebSocket": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "EventSource": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "XMLHttpRequest": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "Worker": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória.",
+                  "Function": "um adapter não usa globais de I/O (ADR-0015): devolve arquivos em memória."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/adapters/agents-md/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "node:fs": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "fs": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:fs/promises": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "fs/promises": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:child_process": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "child_process": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:net": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "net": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:http": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "http": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:https": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "https": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:http2": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "http2": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:tls": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "tls": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:dgram": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "dgram": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:dns": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "dns": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:dns/promises": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "dns/promises": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:worker_threads": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "worker_threads": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:cluster": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "cluster": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:vm": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "vm": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:module": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "module": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:inspector": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "inspector": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:inspector/promises": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "inspector/promises": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:wasi": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "wasi": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:repl": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "repl": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:readline": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "readline": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:readline/promises": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "readline/promises": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:process": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "process": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:v8": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "v8": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:trace_events": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "trace_events": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta.",
+                  "node:sqlite": "um adapter não faz I/O direto (ADR-0015): devolve arquivos em memória e o núcleo grava pela porta."
+                },
+                "patterns": [
+                  {
+                    "group": ["**/claude-code/**", "**/claude-code"],
+                    "message": "um adapter não importa outro adapter (ADR-0015)."
+                  },
+                  {
+                    "group": ["**/copilot/**", "**/copilot"],
                     "message": "um adapter não importa outro adapter (ADR-0015)."
                   },
                   {
