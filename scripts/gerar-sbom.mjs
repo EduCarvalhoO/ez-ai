@@ -96,6 +96,12 @@ export function serializarSbom(/** @type {unknown} */ sbom) {
 }
 
 async function principal(/** @type {string[]} */ args) {
+  if (args.includes('--help')) {
+    console.log(
+      'uso: node scripts/gerar-sbom.mjs [saida] | --verificar <sbom.cdx.json>\nGera o SBOM CycloneDX do package-lock.json (padrão: sbom.cdx.json) ou confere se um SBOM existente está em dia. Saída: 0 ok, 1 diverge, 2 uso incorreto ou erro de leitura.',
+    );
+    return 0;
+  }
   const verificar = args[0] === '--verificar';
   if ((verificar && args.length !== 2) || (!verificar && args.length > 1)) {
     console.error('uso: node scripts/gerar-sbom.mjs [saida] | --verificar <sbom.cdx.json>');

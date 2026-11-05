@@ -19,6 +19,7 @@ const NOME = /^(@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*$/;
 // Versão semver exata; impede chaves como "created" ou "modified" do campo time do registro.
 const VERSAO = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
 const PARALELO = 8;
+// qualidade: rede (consulta o registro do npm para ler a data de publicação de cada versão; ADR-0014)
 const USO = 'Uso: node scripts/verificar-idade-deps.mjs [--desde <ref>]\n';
 
 /**
@@ -153,6 +154,10 @@ const PADRAO = {
  * @returns {Promise<number>}
  */
 export async function executar(args, injetadas = {}) {
+  if (args.includes('--help')) {
+    process.stdout.write(USO);
+    return 0;
+  }
   const deps = { ...PADRAO, ...injetadas };
   const desde = args[0] === '--desde' ? args[1] : undefined;
   if (!(args.length === 0 || (args.length === 2 && desde !== undefined && desde !== '' && !desde.startsWith('-')))) {

@@ -11,10 +11,12 @@ import {
   aplicar,
   atualizar,
   avaliarBase,
+  avaliarComponentes,
   buscarNaBase,
   diagnosticar,
   escanear,
   exportarTelemetria,
+  gerarPerguntasModelo,
   hashDoPacote,
   importar,
   indexarBase,
@@ -23,6 +25,7 @@ import {
   mapaDaBase,
   type OpcoesDeInstalacao,
   planejar,
+  procurarPacotes,
   type ResultadoDoComando,
   registrarEtapa,
   relatarBenchmark,
@@ -177,6 +180,7 @@ const USO_DO_CONHECIMENTO = [
   '     ez-ai conhecimento buscar <consulta> [--limite <n>]',
   '     ez-ai conhecimento mapa [pasta]',
   '     ez-ai conhecimento avaliar [--exportar]',
+  '     ez-ai conhecimento perguntas [--dry-run]',
   '     ez-ai conhecimento servir',
 ];
 
@@ -186,6 +190,7 @@ function executarConhecimento(a: Argumentos, ctx: Contexto): Promise<ResultadoDo
   if (sub === 'buscar' && arg !== undefined) return buscarNaBase(ctx, arg, a.limite);
   if (sub === 'mapa') return mapaDaBase(ctx, arg);
   if (sub === 'avaliar' && arg === undefined) return avaliarBase(ctx, { exportar: a.exportar });
+  if (sub === 'perguntas' && arg === undefined) return gerarPerguntasModelo(ctx, { dryRun: a.dryRun });
   return Promise.resolve({ codigo: 1, saida: [], erros: USO_DO_CONHECIMENTO });
 }
 
@@ -242,6 +247,14 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
       return escanear(ctx, {
         ...(a.posicionais[0] !== undefined ? { alvo: a.posicionais[0] } : {}),
         ...(a.bloquear ? { bloquear: a.bloquear } : {}),
+      });
+    case 'search':
+      return procurarPacotes(ctx, { termos: a.posicionais, ...(a.limite !== undefined ? { limite: a.limite } : {}) });
+    case 'qualidade':
+      return avaliarComponentes(ctx, {
+        ...(a.posicionais[0] !== undefined ? { alvo: a.posicionais[0] } : {}),
+        estrito: a.estrito,
+        json: a.json,
       });
     case 'import':
       return importar(ctx, {

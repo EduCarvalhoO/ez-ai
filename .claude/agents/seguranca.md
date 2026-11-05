@@ -3,6 +3,7 @@ name: seguranca
 description: Revisa ameaças e controles em mudanças sensíveis (caminhos, execução de processos, permissões, policies, integridade, telemetria, CI, dependências) e apoia o modelo de ameaças. Use quando escopo-da-mudanca indicar mudança sensível e nas fases F1 e F7.
 tools: Read, Grep, Glob, Bash
 model: opus
+maxTurns: 25
 skills:
   - escopo-da-mudanca
 ---

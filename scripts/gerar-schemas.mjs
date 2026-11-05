@@ -4,6 +4,13 @@ import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+if (process.argv.includes('--help')) {
+  console.log(
+    'uso: npm run schemas\nGera schemas/*.schema.json a partir do dist (rode o build antes; "npm run schemas" já faz). Saída: 0 ok; qualquer erro lança e sai com 1.',
+  );
+  process.exit(0);
+}
+
 const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
 // Caminho calculado: o dist só existe depois do build, e o typecheck roda antes dele.
 const nucleo = await import(pathToFileURL(join(raiz, 'dist', 'core', 'index.js')).href);

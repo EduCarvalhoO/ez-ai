@@ -72,6 +72,8 @@ export function serializarConfiguracao(c: Configuracao): string {
     ...(c.telemetria ? { telemetria: c.telemetria } : {}),
     // O nível de bloqueio do scan (ADR-0038) também não pode sumir quando `add`/`remove` regravam a configuração.
     ...(c.scan ? { scan: c.scan } : {}),
+    // O catálogo fixado (ADR-0039) é a raiz de confiança do `search`; `add`/`remove` não podem apagá-lo.
+    ...(c.catalogo ? { catalogo: c.catalogo } : {}),
   };
   return `${JSON.stringify(objeto, null, 2)}\n`;
 }

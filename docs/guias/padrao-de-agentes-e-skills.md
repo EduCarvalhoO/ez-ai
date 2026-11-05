@@ -84,3 +84,14 @@
 | `escopo-da-mudanca` | Skill | `.claude/skills/escopo-da-mudanca/` | [time de agentes §2](time-de-agentes.md#2-fluxo-com-gates) |
 | `verificar` | Skill | `.claude/skills/verificar/` | [time de agentes §2](time-de-agentes.md#2-fluxo-com-gates), [padrão de código e testes §4](padrao-de-codigo-e-testes.md#4-commits) |
 | `doc-writer-limites` | Hook | `.claude/hooks/doc-writer-limites.mjs`, registrado em `.claude/settings.json`. Só age quando `agent_type` é `doc-writer`: Bash só para os três scripts das skills, Edit e Write só em `docs/`. `Em aberto`: sem `agent_type` no input o hook libera tudo; no Copilot não há equivalente | [regra 8 da seção 3](#3-regras-comuns) |
+
+## 8. Qualidade medida (Sprint 19, ADR-0039)
+Rode `npx ez-ai qualidade <pasta ou pacote>` antes do PR (`--estrito` trata aviso como erro). O mesmo checklist roda no CI sobre o pacote oficial e o `.claude/`.
+
+| Componente | O que o checklist cobra |
+|---|---|
+| Skill | `name` igual à pasta; `description` de até 1024 caracteres com "use quando" e "não use para"; corpo até 500 linhas (detalhe em `references/`); seção `## Gotchas`; links `references/` existentes |
+| Agente | descrição curta com gatilho; `tools` mínimas (nunca `*`); `model` pelo papel (haiku para busca, sonnet padrão, opus só decisão); `maxTurns`; corpo até 120 linhas; formato da saída dito |
+| Script | `--help` com uso e códigos de saída; `process.exitCode` explícito (0 ok, 1 falha do conteúdo, 2 uso incorreto); saída legível e mensagem que diz como corrigir; sem rede, salvo `// qualidade: rede (motivo)` |
+
+Frontmatter de agente do Claude Code (`tools`, `model`, `maxTurns`) não vale para o Copilot; nos espelhos de `.github/agents/` o corpo continua idêntico (ADR-0008). Para medir o antes e o depois, guarde a saída de `ez-ai qualidade <alvo> --json` no PR.

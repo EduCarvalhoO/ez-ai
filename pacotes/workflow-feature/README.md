@@ -1,13 +1,13 @@
 # workflow-feature
 
-Pacote oficial do [ez-ai](https://github.com/educarvalhoo/ez-ai): workflow de feature com gates (ficha, revisão da documentação, execução, revisão de código e entrega), quatro agentes (cartógrafo, arquiteto, implementador, revisor), a instrução do fluxo e a skill `registrar-etapa`.
+Pacote oficial do [ez-ai](https://github.com/educarvalhoo/ez-ai): workflow de feature com gates (ficha, revisão da documentação, execução, revisão de código e entrega), quatro agentes (cartógrafo, arquiteto, implementador, revisor), a instrução do fluxo e quatro skills: `registrar-etapa`, `revisao-de-pr` (com checklist em `references/`), `depuracao-estruturada` e `gotchas-do-projeto`.
 
 ## Instalar
 
 No projeto onde quer usar (com `npx ez-ai init` já feito):
 
 ```bash
-npx ez-ai add https://github.com/educarvalhoo/workflow-feature --versao "^0.4.0"
+npx ez-ai add https://github.com/educarvalhoo/workflow-feature --versao "^0.5.0"
 npx ez-ai plan
 npx ez-ai apply
 ```
@@ -17,7 +17,7 @@ A origem `https://github.com/educarvalhoo/workflow-feature` precisa estar em `or
 ## O que entra no projeto
 - `.claude/agents/*.md` e `.github/agents/*.agent.md`: os quatro agentes.
 - `.claude/rules/` e `.github/instructions/`: a instrução do workflow.
-- `.claude/skills/` e `.github/skills/`: a skill `registrar-etapa`.
+- `.claude/skills/` e `.github/skills/`: as quatro skills.
 
 ## Usar
 Registre cada etapa com `npx ez-ai workflow etapa <item> <etapa> <resultado> --agente <id>`; veja o exemplo completo no [quickstart do ez-ai](https://github.com/educarvalhoo/ez-ai/blob/main/docs/guias/quickstart.md).
