@@ -120,6 +120,10 @@ Vetor de teste fixo em `test/core/lockfile/hash.test.ts`, conferido com `sha256s
 - Origem por conta inteira (`https://github.com/<login>/*`): reavaliar na F7, quando a assinatura prova quem publicou.
 - Pacote local fora do projeto (`../`): recusado no v0; reavaliar se o uso pedir.
 
+## Campo opcional `catalogo` (Sprint 19, ADR-0039)
+
+`"catalogo": { "repositorio": "https://github.com/<dono>/<repo>", "workflow": "<arquivo>.yml" }`. É a raiz de confiança do `ez-ai search`: o repositório do catálogo e o arquivo do workflow que o assina. O repositório também precisa estar em `origensPermitidas`. `add` e `remove` preservam o campo. Campo aditivo: `versaoConfig` continua 0.
+
 ## Campo opcional `scan` (Sprint 18, ADR-0038)
 
 `"scan": { "bloquearAPartirDe": "nunca" | "baixa" | "media" | "alta" }`. Sem o campo (ou com `nunca`) o scan de conteúdo só avisa; com um nível, achado igual ou mais grave recusa `plan`, `apply`, `update` e `validate --ci`. Campo aditivo: `versaoConfig` continua 0. O ambiente `agents-md` também passa a ser aceito em `ambientes` (e em `compatibilidade.ambientes` do manifesto).

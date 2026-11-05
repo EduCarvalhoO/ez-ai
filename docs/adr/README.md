@@ -44,6 +44,7 @@
 | [0036](0036-versionamento-compatibilidade-e-pipeline-de-release.md) | Versionamento, compatibilidade e pipeline de release da v1.0 | Aceito |
 | [0037](0037-nome-do-produto-ez-ai.md) | Nome do produto é ez-ai | Aceito |
 | [0038](0038-scan-de-conteudo-agents-md-e-import.md) | Varredura de conteúdo dos pacotes (`scan`), adapter AGENTS.md e `import` | Aceito |
+| [0039](0039-qualidade-de-componentes-evals-e-catalogo-assinado.md) | Qualidade de agentes, skills e scripts (`qualidade`), evals determinísticos, catálogo assinado (`search`) e perguntas-modelo | Aceito |
 
 ## Decisões em aberto
 
