@@ -36,7 +36,7 @@
           "enum": ["avisar", "exigir-aprovacao", "negar"]
         },
         "categoria": {
-          "enum": ["ler", "escrever", "executar", "rede", "segredos", "configurarAmbiente", "tipo"]
+          "enum": ["ler", "escrever", "executar", "rede", "segredos", "configurarAmbiente", "tipo", "conteudo"]
         },
         "padroes": {
           "type": "array",

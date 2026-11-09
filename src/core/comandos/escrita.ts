@@ -427,7 +427,7 @@ async function preparar(
         afrouxamentos: politicas.afrouxamentos,
       });
       // Varredura de conteúdo (ADR-0038): só avisa, a menos que a configuração peça bloqueio.
-      const scan = resumirScan(lido.arquivos, modoDoScan(config));
+      const scan = resumirScan(lido.arquivos, modoDoScan(config, politicas.fontes));
       if (scan.bloqueios.length > 0) {
         erros.push(...scan.bloqueios.map((b) => `${e(p.nome)}: bloqueado pelo scan: ${b}`));
         continue;

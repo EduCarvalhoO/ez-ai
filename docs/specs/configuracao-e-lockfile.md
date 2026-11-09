@@ -122,7 +122,7 @@ Vetor de teste fixo em `test/core/lockfile/hash.test.ts`, conferido com `sha256s
 
 ## Campo opcional `catalogo` (Sprint 19, ADR-0039)
 
-`"catalogo": { "repositorio": "https://github.com/<dono>/<repo>", "workflow": "<arquivo>.yml" }`. É a raiz de confiança do `ez-ai search`: o repositório do catálogo e o arquivo do workflow que o assina. O repositório também precisa estar em `origensPermitidas`. `add` e `remove` preservam o campo. Campo aditivo: `versaoConfig` continua 0.
+`"catalogo": { "repositorio": "https://github.com/<dono>/<repo>", "repositorioId": "<id numérico>", "workflow": "<arquivo>.yml", "versaoMinima": "1.0.0" }`. É a raiz de confiança do `ez-ai search`: o repositório do catálogo, o **ID numérico imutável** dele (`gh api repos/<dono>/<repo> --jq .id`, conferido no certificado Sigstore), o arquivo do workflow que o assina e, opcional, a menor versão aceita. A origem do catálogo vale por este campo e **não** precisa estar em `origensPermitidas` (que é só de pacotes). O `search` guarda a última tag aceita em `.harness/catalogo-visto.json` e recusa tag menor ou a mesma tag em outro commit (ADR-0040). `add` e `remove` preservam o campo. Campo aditivo: `versaoConfig` continua 0.
 
 ## Campo opcional `scan` (Sprint 18, ADR-0038)
 
