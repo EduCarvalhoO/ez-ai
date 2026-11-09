@@ -32,7 +32,7 @@ Inclui formato, casamento com o que o manifesto declara, níveis, combinação, 
 |---|---|---|
 | `id` | sim | `a-z0-9-`, único no arquivo |
 | `efeito` | sim | `negar` > `exigir-aprovacao` > `avisar`. Não existe `permitir`: nenhum nível afrouxa outro (E5) |
-| `categoria` | sim | `ler`, `escrever`, `executar`, `rede`, `segredos`, `configurarAmbiente` (as do manifesto) ou `tipo` (tipo de componente) |
+| `categoria` | sim | `ler`, `escrever`, `executar`, `rede`, `segredos`, `configurarAmbiente` (as do manifesto) ou `tipo` (tipo de componente) ou `conteudo` (piso do scan, ADR-0040: só `negar`, com um `padroes` entre `baixa`, `media` e `alta`; tranca o pacote com achado dessa severidade ou pior, vale o mais rígido entre os níveis e a config) |
 | `padroes` | um entre `padroes` e `marca` | 1 a 50, na forma da categoria (abaixo); padrão que nunca casaria é recusado, não ignorado |
 | `marca` | idem | `executavel` (só `escrever`), `amplo` e `sensivel` (só `ler`): casa com o item que o manifesto marca |
 | `exceto` | não | Só com `padroes`, mesma forma; tira o item **desta** regra só se o declarado estiver inteiro dentro da exceção |

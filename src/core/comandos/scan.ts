@@ -8,6 +8,7 @@ import {
   type ModoDeBloqueio,
   modoMaisRigido,
 } from '../seguranca/scan.js';
+import type { FontesDePolicy } from '../policy/avaliar.js';
 import { escaparInvisiveis, exigirCaminhoDoProjeto } from '../seguranca/caminhos.js';
 import {
   CAMINHO_DA_CONFIGURACAO,
@@ -17,6 +18,7 @@ import {
   pastaDoPacote,
   type ResultadoDoComando,
 } from './base.js';
+import { policyDoProjeto } from './politicas.js';
 
 const e = escaparInvisiveis;
 
@@ -36,8 +38,29 @@ export interface ResumoDoScan {
 }
 
 /** O nível de bloqueio da configuração do projeto (`nunca` quando não há). */
-export function modoDoScan(config: { readonly scan?: { readonly bloquearAPartirDe: ModoDeBloqueio } }): ModoDeBloqueio {
-  return config.scan?.bloquearAPartirDe ?? 'nunca';
+export function modoDoScan(
+  config: { readonly scan?: { readonly bloquearAPartirDe: ModoDeBloqueio } },
+  fontes?: FontesDePolicy,
+): ModoDeBloqueio {
+  const doProjeto = config.scan?.bloquearAPartirDe ?? 'nunca';
+  return fontes ? modoMaisRigido(doProjeto, pisoDoScanNaPolicy(fontes)) : doProjeto;
+}
+
+/** O piso do scan imposto por regras `conteudo` (organização, projeto e pacote): vale o mais rígido (ADR-0040). */
+export function pisoDoScanNaPolicy(fontes: FontesDePolicy): ModoDeBloqueio {
+  let piso: ModoDeBloqueio = 'nunca';
+  for (const f of [
+    ...(fontes.organizacao ?? []),
+    ...(fontes.projeto ? [fontes.projeto] : []),
+    ...(fontes.pacote ?? []),
+  ]) {
+    for (const r of f.policy.regras) {
+      if (r.categoria !== 'conteudo' || r.efeito !== 'negar') continue;
+      const nivel = r.padroes?.[0];
+      if (nivel === 'baixa' || nivel === 'media' || nivel === 'alta') piso = modoMaisRigido(piso, nivel);
+    }
+  }
+  return piso;
 }
 
 export function formatarAchado(a: Achado): string {
@@ -88,7 +111,15 @@ export async function escanear(ctx: Contexto, opcoes: OpcoesDeScan = {}): Promis
   const config = (await ctx.arquivos.existe(CAMINHO_DA_CONFIGURACAO))
     ? await carregarConfiguracao(ctx.arquivos)
     : undefined;
-  const doProjeto: ModoDeBloqueio = config?.ok ? modoDoScan(config.valor) : 'nunca';
+  // Piso da policy do projeto (só ela: a da organização vem de pacote e exige resolver pacotes, o que o scan não faz).
+  const errosDaPolicy: string[] = [];
+  const policy = await policyDoProjeto(ctx, errosDaPolicy);
+  if (errosDaPolicy.length > 0) return { codigo: 1, saida: [], erros: errosDaPolicy };
+  const doProjeto: ModoDeBloqueio = config?.ok
+    ? modoDoScan(config.valor, policy ? { projeto: policy } : {})
+    : policy
+      ? pisoDoScanNaPolicy({ projeto: policy })
+      : 'nunca';
   const modo = modoMaisRigido(doProjeto, opcoes.bloquear ?? 'nunca');
   let lista: Awaited<ReturnType<typeof alvosDeVarredura>>;
   try {

@@ -49,7 +49,12 @@ export interface Configuracao {
   /** Varredura de conteúdo dos pacotes (ADR-0038); ausente = só avisa. */
   readonly scan?: { readonly bloquearAPartirDe: ModoDeBloqueio };
   /** Catálogo assinado de pacotes (ADR-0039); ausente = `search` indisponível. */
-  readonly catalogo?: { readonly repositorio: string; readonly workflow: string };
+  readonly catalogo?: {
+    readonly repositorio: string;
+    readonly repositorioId: string;
+    readonly workflow: string;
+    readonly versaoMinima?: string;
+  };
 }
 
 type Json = Record<string, unknown>;
@@ -98,7 +103,11 @@ function configuracaoDe(dado: Json): Configuracao {
       ? {
           catalogo: {
             repositorio: canonizarRepositorio(String((dado.catalogo as Json).repositorio)),
+            repositorioId: String((dado.catalogo as Json).repositorioId),
             workflow: String((dado.catalogo as Json).workflow),
+            ...(typeof (dado.catalogo as Json).versaoMinima === 'string'
+              ? { versaoMinima: String((dado.catalogo as Json).versaoMinima) }
+              : {}),
           },
         }
       : {}),
