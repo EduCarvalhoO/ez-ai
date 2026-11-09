@@ -45,6 +45,7 @@
 | [0037](0037-nome-do-produto-ez-ai.md) | Nome do produto é ez-ai | Aceito |
 | [0038](0038-scan-de-conteudo-agents-md-e-import.md) | Varredura de conteúdo dos pacotes (`scan`), adapter AGENTS.md e `import` | Aceito |
 | [0039](0039-qualidade-de-componentes-evals-e-catalogo-assinado.md) | Qualidade de agentes, skills e scripts (`qualidade`), evals determinísticos, catálogo assinado (`search`) e perguntas-modelo | Aceito |
+| [0040](0040-catalogo-endurecido-piso-do-scan-e-origens-oficiais.md) | Catálogo endurecido (tag vista, ID do repositório, bytes brutos), piso do scan na policy e origens oficiais | Aceito |
 
 ## Decisões em aberto
 

@@ -25,6 +25,9 @@ export const CATEGORIAS_DE_POLICY = [
   'segredos',
   'configurarAmbiente',
   'tipo',
+  // Piso do scan de conteúdo (ADR-0038/0040): `negar` + `padroes: ["baixa"|"media"|"alta"]` tranca o pacote que tiver
+  // achado dessa severidade ou pior. Não casa com item declarado; quem lê é o scan, e vale a regra mais rígida.
+  'conteudo',
 ] as const;
 export const MARCAS = ['amplo', 'sensivel', 'executavel'] as const;
 

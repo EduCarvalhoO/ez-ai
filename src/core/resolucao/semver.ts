@@ -80,3 +80,10 @@ export function resolverVersao(
   }
   return melhor && { tag: melhor.tag, versao: `${melhor.v.maior}.${melhor.v.menor}.${melhor.v.correcao}` };
 }
+
+/** Compara duas versões (`1.2.3` ou `v1.2.3`): negativo se a < b. `undefined` se algum texto não é versão. */
+export function compararTags(a: string, b: string): number | undefined {
+  const x = lerVersao(a);
+  const y = lerVersao(b);
+  return x && y ? comparar(x, y) : undefined;
+}

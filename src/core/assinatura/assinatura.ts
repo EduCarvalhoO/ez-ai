@@ -23,6 +23,13 @@ export interface PedidoDeVerificacao extends IdentidadeAssinante {
   readonly bundle: string;
   /** Texto assinado: o hash do conteúdo do pacote (`sha256:<hex>`). */
   readonly artefato: string;
+  /**
+   * ID numérico imutável do repositório de origem (extensão Fulcio 1.3.6.1.4.1.57264.1.15). Quando dado, o certificado
+   * precisa carregá-lo igual: nome de repositório pode ser renomeado ou recriado por outra pessoa, o ID não.
+   */
+  readonly idDoRepositorio?: string;
+  /** SHA do commit assinado (extensão Fulcio 1.3.6.1.4.1.57264.1.13): amarra a assinatura ao commit exato da tag. */
+  readonly commit?: string;
 }
 
 /** Porta: confere um bundle Sigstore. Nunca lança por assinatura ruim; devolve o motivo. */

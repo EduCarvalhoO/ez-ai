@@ -63,5 +63,18 @@ export function gitEmMemoria(repos: Record<string, RepositorioFalso>): Git {
       if (!arquivos) throw new Error(`commit ${commit} inexistente`);
       return new Map(Object.entries(arquivos));
     },
+    async lerArquivosDe(r, commit, caminhos, limite) {
+      const arquivos = repo(r).commits[commit];
+      if (!arquivos) throw new Error(`commit ${commit} inexistente`);
+      const lidos = new Map<string, Uint8Array>();
+      for (const c of caminhos) {
+        const texto = arquivos[c];
+        if (texto === undefined) continue;
+        const bytes = new TextEncoder().encode(texto);
+        if (bytes.length > limite) throw new Error(`"${c}" passa de ${limite} bytes.`);
+        lidos.set(c, bytes);
+      }
+      return lidos;
+    },
   };
 }
