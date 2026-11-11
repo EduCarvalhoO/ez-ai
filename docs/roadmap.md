@@ -58,7 +58,7 @@ gantt
 Entregas:
 - Estrutura TS estrita, Node LTS; decisão monorepo vs. pacote único (ADR).
 - Ferramental: lint/format, Vitest, cobertura, Conventional Commits, changesets.
-- CI (GitHub Actions) em Windows/Linux, com macOS suspenso temporariamente desde 2026-11-02 ([ADR-0007](adr/0007-suporte-multiplataforma.md)).
+- CI (GitHub Actions) em Windows, Linux e macOS (macOS suspenso em 2026-11-02 e religado na Sprint 21; [ADR-0007](adr/0007-suporte-multiplataforma.md)).
 - Baseline de segurança: Renovate/Dependabot, CodeQL, secret scanning, `npm audit` no CI, branch protection, `SECURITY.md`.
 - Padrão de documentação e agente `doc-writer` ([guia](guias/padrao-de-documentacao.md)).
 
