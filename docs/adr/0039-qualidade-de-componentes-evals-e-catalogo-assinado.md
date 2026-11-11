@@ -25,10 +25,10 @@ Aplicar D1 a D6.
 | Alvo | Antes (Sprint 18) | Depois (Sprint 19) | Meta |
 |---|---|---|---|
 | Pacote `workflow-feature` | 0 de 5 componentes sem achado, 15 avisos | 8 de 8 sem achado, 0 avisos | 0 achados; metadados até 700 tokens, corpo até 3.500 |
-| `.claude/` (agentes e skills do repositório) | 0 de 14 sem achado, 25 avisos | 10 de 14 sem achado, 4 avisos | 0 erros; no máximo 4 avisos |
+| `.claude/` (agentes e skills do repositório) | 0 de 14 sem achado, 25 avisos | 14 de 14 sem achado, 0 avisos | 0 erros; 0 avisos |
 | `scripts/` | 0 de 5 com `--help`, 1 usa rede sem declarar | 5 de 5 com `--help`, rede declarada | 0 erros |
 
-Os 4 avisos que restam (`Q-A7`, falta de formato de saída em quatro agentes de `.claude/agents`) dependem de mudar o corpo, que é espelhado em `.github/agents/` (ADR-0008); editar `.github/` exige autorização escrita do Eduardo, então ficam como dívida declarada com o teto no teste.
+Os 4 avisos `Q-A7` restantes (falta de formato de saída em quatro agentes de `.claude/agents`) foram fechados depois, com autorização escrita do Eduardo para editar `.github/`: o corpo foi atualizado nos dois espelhos (ADR-0008) e o teto no teste caiu para 0.
 
 **Comandos:** `ez-ai qualidade [<login/pacote>|<pasta>] [--estrito] [--json]` (somente leitura); `ez-ai search <termo...> [--limite <n>]`; `ez-ai conhecimento perguntas [--dry-run]`.
 

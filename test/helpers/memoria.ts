@@ -40,6 +40,8 @@ export function identidadeFixa(id = 'teste@exemplo.com'): Identidade {
 export interface RepositorioFalso {
   readonly tags: Record<string, string>;
   readonly commits: Record<string, Record<string, string>>;
+  /** Pai de cada commit; sem entrada, o falso devolve o próprio commit (sem bundle em commit filho). */
+  readonly pais?: Record<string, string>;
 }
 
 /** Git em memória: repositório → tags → commits → arquivos. */
@@ -57,6 +59,9 @@ export function gitEmMemoria(repos: Record<string, RepositorioFalso>): Git {
       const sha = repo(r).tags[tag];
       if (!sha) throw new Error(`tag ${tag} inexistente`);
       return sha;
+    },
+    async paiDoCommit(r, commit) {
+      return repo(r).pais?.[commit] ?? commit;
     },
     async lerArquivos(r, commit) {
       const arquivos = repo(r).commits[commit];
