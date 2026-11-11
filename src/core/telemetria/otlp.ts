@@ -45,49 +45,49 @@ const nano = (iso: string): string => {
 };
 
 function atributosDe(e: EventoDeAuditoria): Atributo[] {
-  const d = e.dados as Json;
+  const d = e.data as Json;
   const comuns = [
-    ...txt('harness.evento.tipo', e.tipo),
-    ...txt('harness.resultado', e.resultado),
-    ...txt('harness.motivo', e.codigoDoMotivo),
-    ...txt('harness.ator.tipo', e.ator.tipo),
+    ...txt('harness.evento.tipo', e.type),
+    ...txt('harness.resultado', e.result),
+    ...txt('harness.motivo', e.reasonCode),
+    ...txt('harness.ator.tipo', e.actor.type),
     ...num('harness.evento.seq', e.seq),
   ];
-  if (e.tipo === 'operacao') {
+  if (e.type === 'operation') {
     return [
       ...comuns,
-      ...txt('harness.comando', d.comando),
+      ...txt('harness.comando', d.command),
       ...bool('harness.dry_run', d.dryRun),
-      ...num('harness.pacotes', Array.isArray(d.pacotes) ? d.pacotes.length : undefined),
+      ...num('harness.pacotes', Array.isArray(d.packages) ? d.packages.length : undefined),
     ];
   }
-  if (e.tipo === 'verificacao') {
+  if (e.type === 'verification') {
     return [
       ...comuns,
-      ...txt('harness.verificacao.nome', d.nome),
-      ...txt('harness.verificacao.nivel', d.nivel),
-      ...num('harness.verificacao.codigo_de_saida', d.codigoDeSaida),
-      ...num('harness.verificacao.duracao_ms', d.duracaoMs),
+      ...txt('harness.verificacao.nome', d.name),
+      ...txt('harness.verificacao.nivel', d.level),
+      ...num('harness.verificacao.codigo_de_saida', d.exitCode),
+      ...num('harness.verificacao.duracao_ms', d.durationMs),
     ];
   }
-  if (e.tipo === 'etapa') {
-    const c = (d.consumo ?? {}) as Json;
+  if (e.type === 'step') {
+    const c = (d.usage ?? {}) as Json;
     return [
       ...comuns,
       ...txt('harness.item', d.item),
-      ...txt('harness.etapa', d.etapa),
-      ...txt('harness.agente', d.agente),
-      ...num('harness.ciclo', d.ciclo),
-      ...num('harness.rodada', d.rodada),
-      ...txt('harness.consumo.fonte', c.fonte),
-      ...txt('harness.consumo.agente', c.agente),
-      ...txt('gen_ai.request.model', c.modelo),
-      ...num('gen_ai.usage.input_tokens', c.tokensEntrada),
-      ...num('gen_ai.usage.output_tokens', c.tokensSaida),
-      ...num('harness.tokens.cache_leitura', c.tokensCacheLeitura),
-      ...num('harness.tokens.cache_escrita', c.tokensCacheEscrita),
-      ...num('harness.custo_micro_usd', c.custoMicroUsd),
-      ...txt('harness.custo.fonte', c.fonteDoCusto),
+      ...txt('harness.etapa', d.step),
+      ...txt('harness.agente', d.agent),
+      ...num('harness.ciclo', d.cycle),
+      ...num('harness.rodada', d.round),
+      ...txt('harness.consumo.fonte', c.source),
+      ...txt('harness.consumo.agente', c.agent),
+      ...txt('gen_ai.request.model', c.model),
+      ...num('gen_ai.usage.input_tokens', c.inputTokens),
+      ...num('gen_ai.usage.output_tokens', c.outputTokens),
+      ...num('harness.tokens.cache_leitura', c.cacheReadTokens),
+      ...num('harness.tokens.cache_escrita', c.cacheWriteTokens),
+      ...num('harness.custo_micro_usd', c.costMicroUsd),
+      ...txt('harness.custo.fonte', c.costSource),
     ];
   }
   return comuns;
@@ -95,11 +95,11 @@ function atributosDe(e: EventoDeAuditoria): Atributo[] {
 
 /** Um evento vira um span; eventos de etapa do mesmo item dividem o trace (a visão por workflow/etapa). */
 export function eventoParaSpan(e: EventoDeAuditoria): SpanOtlp {
-  const d = e.dados as Json;
-  const etapa = e.tipo === 'etapa';
-  const inicio = etapa && typeof d.inicio === 'string' ? d.inicio : e.em;
-  const fim = etapa && typeof d.fim === 'string' ? d.fim : e.em;
-  const nome = etapa ? `etapa ${String(d.etapa)}` : e.tipo;
+  const d = e.data as Json;
+  const etapa = e.type === 'step';
+  const inicio = etapa && typeof d.start === 'string' ? d.start : e.at;
+  const fim = etapa && typeof d.end === 'string' ? d.end : e.at;
+  const nome = etapa ? `etapa ${String(d.step)}` : e.type;
   return {
     traceId: hex(etapa ? `etapa:${String(d.item)}` : `evento:${e.hash}`, 32),
     spanId: hex(`span:${e.hash}`, 16),
@@ -109,7 +109,7 @@ export function eventoParaSpan(e: EventoDeAuditoria): SpanOtlp {
     endTimeUnixNano: nano(fim),
     attributes: atributosDe(e),
     status: {
-      code: e.resultado === 'falhou' ? 2 : e.resultado === 'executado' || e.resultado === 'verificado' ? 1 : 0,
+      code: e.result === 'failed' ? 2 : e.result === 'executed' || e.result === 'verified' ? 1 : 0,
     },
   };
 }

@@ -10,7 +10,7 @@ let fora: string;
 
 beforeEach(() => {
   base = mkdtempSync(join(tmpdir(), 'ez-ai-arq-'));
-  projeto = join(base, 'projeto');
+  projeto = join(base, 'project');
   fora = join(base, 'fora');
   mkdirSync(projeto);
   mkdirSync(fora);
@@ -34,7 +34,7 @@ describe('criarArquivos', () => {
     const f = await criarArquivos(projeto);
     await f.gravar('.harness/config.json', '{}');
     await f.gravar('a/b/c.md', 'oi');
-    expect(await f.ler('a/b/c.md')).toBe('oi');
+    expect(await f.read('a/b/c.md')).toBe('oi');
     expect(await f.existe('a/b/c.md')).toBe(true);
     expect(await f.existe('nada.md')).toBe(false);
     expect(await f.listar('')).toEqual(['.harness/config.json', 'a/b/c.md']);
@@ -45,7 +45,7 @@ describe('criarArquivos', () => {
   it.each(['../fora/x', '/etc/x', 'a/../../x', 'C:/x', 'a\\b'])('recusa o caminho %s', async (c) => {
     const f = await criarArquivos(projeto);
     await expect(f.gravar(c, 'x')).rejects.toThrow(/fora do escopo/);
-    await expect(f.ler(c)).rejects.toThrow(/fora do escopo/);
+    await expect(f.read(c)).rejects.toThrow(/fora do escopo/);
   });
 
   it('recusa raiz inexistente', async () => {
@@ -56,7 +56,7 @@ describe('criarArquivos', () => {
     if (!ligar(fora, join(projeto, 'atalho'))) return;
     const f = await criarArquivos(projeto);
     await expect(f.gravar('atalho/novo.txt', 'x')).rejects.toThrow(/link simbólico/);
-    await expect(f.ler('atalho/segredo.txt')).rejects.toThrow(/link simbólico/);
+    await expect(f.read('atalho/segredo.txt')).rejects.toThrow(/link simbólico/);
   });
 
   it('recusa listar pasta com link simbólico', async () => {
@@ -74,6 +74,6 @@ describe('criarArquivos', () => {
     const f = await criarArquivos(projeto);
     await expect(f.gravar('grande.txt', 'a'.repeat(8 * 1024 * 1024 + 1))).rejects.toThrow(/passa de/);
     writeFileSync(join(projeto, 'grande.bin'), Buffer.alloc(8 * 1024 * 1024 + 1));
-    await expect(f.ler('grande.bin')).rejects.toThrow(/passa de/);
+    await expect(f.read('grande.bin')).rejects.toThrow(/passa de/);
   });
 });

@@ -14,8 +14,8 @@ const fixtures = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'fixt
 const ler = (pasta: string, arquivo: string) => readFileSync(join(fixtures, pasta, arquivo), 'utf8');
 
 interface Caso {
-  readonly arquivo: string;
-  readonly regra: string;
+  readonly file: string;
+  readonly rule: string;
   readonly caminho: string;
 }
 const casos: Caso[] = JSON.parse(ler('invalidos', 'casos.json'));
@@ -28,83 +28,83 @@ function valida(texto: string, nivel?: Parameters<typeof validarPolicy>[1]): Pol
 
 describe('policies válidas', () => {
   it.each(readdirSync(join(fixtures, 'validos')))('%s é aceita', (arquivo) => {
-    expect(valida(ler('validos', arquivo)).versaoPolicy).toBe(0);
+    expect(valida(ler('validos', arquivo)).policyVersion).toBe(0);
   });
 
   it('monta as regras campo a campo, com padrões vazios onde não há', () => {
     const p = valida(ler('validos', 'completo.json'));
-    expect(p.regras[0]).toEqual({
+    expect(p.rules[0]).toEqual({
       id: 'sem-rede-externa',
-      efeito: 'negar',
-      categoria: 'rede',
-      padroes: ['*'],
-      exceto: ['api.github.com', '*.npmjs.org'],
-      pacotes: [],
-      critica: true,
-      motivo: 'Agentes não falam com a internet, salvo GitHub e npm',
+      effect: 'deny',
+      category: 'network',
+      patterns: ['*'],
+      except: ['api.github.com', '*.npmjs.org'],
+      packages: [],
+      critical: true,
+      reason: 'Agentes não falam com a internet, salvo GitHub e npm',
     });
-    expect(p.regras[1]).toMatchObject({ marca: 'executavel', pacotes: ['terceiro/*'], critica: false, exceto: [] });
-    expect(p.regras[1]).not.toHaveProperty('padroes');
+    expect(p.rules[1]).toMatchObject({ mark: 'executable', packages: ['terceiro/*'], critical: false, except: [] });
+    expect(p.rules[1]).not.toHaveProperty('patterns');
   });
 
   it('a policy do núcleo passa pelo mesmo validador', () => {
-    expect(POLICY_DO_NUCLEO.regras.map((r) => r.id)).toEqual(REGRAS_DO_NUCLEO.regras.map((r) => r.id));
+    expect(POLICY_DO_NUCLEO.rules.map((r) => r.id)).toEqual(REGRAS_DO_NUCLEO.rules.map((r) => r.id));
   });
 
   it('policy escrita no código que não valida é bug e lança', () => {
-    expect(() => carregarPolicyDoCodigo({ versaoPolicy: 0, regras: [{ id: 'x' }] })).toThrow(/policy do núcleo/);
+    expect(() => carregarPolicyDoCodigo({ policyVersion: 0, rules: [{ id: 'x' }] })).toThrow(/policy do núcleo/);
   });
 });
 
 describe('policies inválidas', () => {
   it('toda fixture inválida tem um caso esperado', () => {
     const arquivos = readdirSync(join(fixtures, 'invalidos')).filter((a) => a !== 'casos.json');
-    expect(arquivos.sort()).toEqual(casos.map((c) => c.arquivo).sort());
+    expect(arquivos.sort()).toEqual(casos.map((c) => c.file).sort());
   });
 
-  it.each(casos)('$arquivo é recusada por $regra em "$caminho"', ({ arquivo, regra, caminho }) => {
+  it.each(casos)('$arquivo é recusada por $regra em "$caminho"', ({ file: arquivo, rule: regra, caminho }) => {
     const resultado = validarPolicy(ler('invalidos', arquivo));
     expect(resultado.ok).toBe(false);
     if (resultado.ok) return;
-    expect(resultado.erros).toContainEqual(expect.objectContaining({ regra, caminho }));
+    expect(resultado.erros).toContainEqual(expect.objectContaining({ rule: regra, caminho }));
     for (const erro of resultado.erros) expect(erro.mensagem.length).toBeGreaterThan(10);
   });
 
   it('policy de pacote não pode usar "pacotes" (só restringe a si mesma)', () => {
     const texto = JSON.stringify({
-      versaoPolicy: 0,
-      regras: [{ id: 'r', efeito: 'negar', categoria: 'tipo', padroes: ['*'], pacotes: ['outro/*'], motivo: 'm' }],
+      policyVersion: 0,
+      rules: [{ id: 'r', effect: 'deny', category: 'type', patterns: ['*'], packages: ['outro/*'], reason: 'm' }],
     });
-    expect(validarPolicy(texto, 'projeto').ok).toBe(true);
-    const resultado = validarPolicy(texto, 'pacote');
-    expect(resultado.ok ? '' : resultado.erros[0]?.regra).toBe('pacotes-no-pacote');
+    expect(validarPolicy(texto, 'project').ok).toBe(true);
+    const resultado = validarPolicy(texto, 'package');
+    expect(resultado.ok ? '' : resultado.erros[0]?.rule).toBe('pacotes-no-pacote');
   });
 
   it('recusa policy acima de 64 KiB em bytes', () => {
-    const resultado = validarPolicy(JSON.stringify({ versaoPolicy: 0, regras: [], x: 'é'.repeat(33 * 1024) }));
-    expect(resultado.ok ? '' : resultado.erros[0]?.regra).toBe('tamanho');
+    const resultado = validarPolicy(JSON.stringify({ policyVersion: 0, rules: [], x: 'é'.repeat(33 * 1024) }));
+    expect(resultado.ok ? '' : resultado.erros[0]?.rule).toBe('tamanho');
   });
 
   it('recusa profundidade acima de 32', () => {
     const resultado = validarPolicy(`${'['.repeat(33)}${']'.repeat(33)}`);
-    expect(resultado.ok ? '' : resultado.erros[0]?.regra).toBe('profundidade');
+    expect(resultado.ok ? '' : resultado.erros[0]?.rule).toBe('profundidade');
   });
 
   it('recusa mais de 200 regras', () => {
     const regras = Array.from({ length: 201 }, (_, i) => ({
       id: `r${i}`,
-      efeito: 'avisar',
-      categoria: 'rede',
-      padroes: ['*'],
-      motivo: 'm',
+      effect: 'warn',
+      category: 'network',
+      patterns: ['*'],
+      reason: 'm',
     }));
-    const resultado = validarPolicy(JSON.stringify({ versaoPolicy: 0, regras }));
-    expect(resultado.ok ? '' : resultado.erros[0]?.regra).toBe('maxItems');
+    const resultado = validarPolicy(JSON.stringify({ policyVersion: 0, rules: regras }));
+    expect(resultado.ok ? '' : resultado.erros[0]?.rule).toBe('maxItems');
   });
 
   it('__proto__ nunca chega ao objeto montado', () => {
     const texto =
-      '{"versaoPolicy":0,"regras":[{"id":"r","efeito":"negar","categoria":"rede","padroes":["*"],"motivo":"m","__proto__":{"x":1}}]}';
+      '{"policyVersion":0,"rules":[{"id":"r","effect":"negar","category":"rede","patterns":["*"],"reason":"m","__proto__":{"x":1}}]}';
     const resultado = validarPolicy(texto);
     expect(resultado.ok).toBe(false);
   });

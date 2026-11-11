@@ -37,49 +37,49 @@ describe('diferencaDePermissoes', () => {
   });
 
   it('ordem diferente não conta como aumento', () => {
-    const depois = manifesto((m) => m.componentes[0].permissoes.ler.reverse());
+    const depois = manifesto((m) => m.components[0].permissions.read.reverse());
     expect(diferencaDePermissoes(manifesto(), depois)).toEqual([]);
   });
 
   it('redução de permissão não é aumento', () => {
     const depois = manifesto((m) => {
-      m.componentes[0].permissoes.ler = ['src/**'];
+      m.components[0].permissions.read = ['src/**'];
     });
     expect(diferencaDePermissoes(manifesto(), depois)).toEqual([]);
   });
 
   it('item novo em qualquer categoria é aumento', () => {
     const depois = manifesto((m) => {
-      m.componentes[2].permissoes.rede.push('uploads.github.com');
-      m.componentes[0].permissoes.executar.push({ programa: 'npm', argumentos: ['run', 'lint'] });
+      m.components[2].permissions.network.push('uploads.github.com');
+      m.components[0].permissions.execute.push({ program: 'npm', arguments: ['run', 'lint'] });
     });
     expect(diferencaDePermissoes(manifesto(), depois)).toEqual([
-      { tipo: 'permissao-nova', componente: 'revisor', categoria: 'executar', item: '["npm","run","lint"]' },
-      { tipo: 'permissao-nova', componente: 'github', categoria: 'rede', item: 'uploads.github.com' },
+      { type: 'permissao-nova', componente: 'revisor', category: 'execute', item: '["npm","run","lint"]' },
+      { type: 'permissao-nova', componente: 'github', category: 'network', item: 'uploads.github.com' },
     ]);
   });
 
   it('glob novo conta como aumento mesmo coberto por um antigo (conservador)', () => {
-    const depois = manifesto((m) => m.componentes[0].permissoes.ler.push('src/a.ts'));
+    const depois = manifesto((m) => m.components[0].permissions.read.push('src/a.ts'));
     expect(diferencaDePermissoes(manifesto(), depois)).toEqual([
-      { tipo: 'permissao-nova', componente: 'revisor', categoria: 'ler', item: 'src/a.ts' },
+      { type: 'permissao-nova', componente: 'revisor', category: 'read', item: 'src/a.ts' },
     ]);
   });
 
   it('componente novo é aumento', () => {
-    const depois = manifesto((m) => m.componentes.push({ id: 'novo', tipo: 'instrucao', arquivo: 'novo.md' }));
-    expect(diferencaDePermissoes(manifesto(), depois)).toEqual([{ tipo: 'componente-novo', componente: 'novo' }]);
+    const depois = manifesto((m) => m.components.push({ id: 'novo', type: 'instruction', file: 'novo.md' }));
+    expect(diferencaDePermissoes(manifesto(), depois)).toEqual([{ type: 'componente-novo', componente: 'novo' }]);
   });
 
   it('trocar o pacote que o MCP roda é aumento', () => {
     const depois = manifesto((m) => {
-      m.componentes[2].comando.argumentos = ['-y', '@outro/servidor@1.0.0'];
+      m.components[2].command.arguments = ['-y', '@outro/servidor@1.0.0'];
     });
     expect(diferencaDePermissoes(manifesto(), depois)).toEqual([
       {
-        tipo: 'execucao-alterada',
+        type: 'execucao-alterada',
         componente: 'github',
-        campo: 'comando',
+        campo: 'command',
         antes: '["npx","-y","@modelcontextprotocol/server-github@2025.4.8"]',
         depois: '["npx","-y","@outro/servidor@1.0.0"]',
       },
@@ -88,36 +88,36 @@ describe('diferencaDePermissoes', () => {
 
   it('juntar ou separar argumentos do comando é aumento', () => {
     const depois = manifesto((m) => {
-      m.componentes[1].comando.argumentos = ['hooks/lint.mjs x'];
+      m.components[1].command.arguments = ['hooks/lint.mjs x'];
     });
     const antes = manifesto((m) => {
-      m.componentes[1].comando.argumentos = ['hooks/lint.mjs', 'x'];
+      m.components[1].command.arguments = ['hooks/lint.mjs', 'x'];
     });
     expect(diferencaDePermissoes(antes, depois)).toHaveLength(1);
   });
 
   it('trocar evento ou arquivo de hook é aumento', () => {
     const depois = manifesto((m) => {
-      m.componentes[1].evento = 'envio-de-prompt';
-      m.componentes[1].arquivo = 'hooks/outro.mjs';
+      m.components[1].event = 'prompt-submit';
+      m.components[1].file = 'hooks/outro.mjs';
     });
     const campos = diferencaDePermissoes(manifesto(), depois).map((a) =>
-      a.tipo === 'execucao-alterada' ? a.campo : a.tipo,
+      a.type === 'execucao-alterada' ? a.campo : a.type,
     );
-    expect(campos.sort()).toEqual(['arquivo', 'evento']);
+    expect(campos.sort()).toEqual(['event', 'file']);
   });
 
   it('trocar o tipo de qualquer componente é aumento', () => {
-    const antes = manifesto((m) => m.componentes.push({ id: 'x', tipo: 'instrucao', arquivo: 'x.md' }));
-    const depois = manifesto((m) => m.componentes.push({ id: 'x', tipo: 'agente', arquivo: 'x.md' }));
+    const antes = manifesto((m) => m.components.push({ id: 'x', type: 'instruction', file: 'x.md' }));
+    const depois = manifesto((m) => m.components.push({ id: 'x', type: 'agent', file: 'x.md' }));
     expect(diferencaDePermissoes(antes, depois)).toEqual([
-      { tipo: 'execucao-alterada', componente: 'x', campo: 'tipo', antes: 'instrucao', depois: 'agente' },
+      { type: 'execucao-alterada', componente: 'x', campo: 'type', antes: 'instruction', depois: 'agent' },
     ]);
   });
 
   it('trocar o arquivo de componente que não executa não é aumento de permissão', () => {
-    const antes = manifesto((m) => m.componentes.push({ id: 'x', tipo: 'instrucao', arquivo: 'x.md' }));
-    const depois = manifesto((m) => m.componentes.push({ id: 'x', tipo: 'instrucao', arquivo: 'y.md' }));
+    const antes = manifesto((m) => m.components.push({ id: 'x', type: 'instruction', file: 'x.md' }));
+    const depois = manifesto((m) => m.components.push({ id: 'x', type: 'instruction', file: 'y.md' }));
     expect(diferencaDePermissoes(antes, depois)).toEqual([]);
   });
 });
@@ -125,26 +125,26 @@ describe('diferencaDePermissoes', () => {
 describe('permissoesDoPacote', () => {
   it('une as permissões de todos os componentes, sem repetição', () => {
     const p = permissoesDoPacote(manifesto());
-    expect(p.ler).toEqual(['src/**', 'test/**/*.ts']);
-    expect(p.configurarAmbiente).toEqual([
+    expect(p.read).toEqual(['src/**', 'test/**/*.ts']);
+    expect(p.configureEnvironment).toEqual([
       '.claude/settings.json',
       '.github/hooks/*.json',
       '.mcp.json',
       '.vscode/mcp.json',
     ]);
-    expect(p.segredos).toEqual(['GITHUB_TOKEN']);
-    expect(p.executar).toContain('["npx","-y","@modelcontextprotocol/server-github@2025.4.8"]');
+    expect(p.secrets).toEqual(['GITHUB_TOKEN']);
+    expect(p.execute).toContain('["npx","-y","@modelcontextprotocol/server-github@2025.4.8"]');
   });
 });
 
 describe('marcarLeitura', () => {
   it.each([
-    ['**', ['amplo', 'sensivel']],
-    ['**/*.md', ['amplo']],
-    ['src/**', ['sensivel']],
+    ['**', ['broad', 'sensitive']],
+    ['**/*.md', ['broad']],
+    ['src/**', ['sensitive']],
     ['src/**/*.ts', []],
-    ['config/.env.local', ['sensivel']],
-    ['chaves/*.pem', ['sensivel']],
+    ['config/.env.local', ['sensitive']],
+    ['chaves/*.pem', ['sensitive']],
     ['README.md', []],
   ])('%s → %j', (glob, marcas) => {
     expect(marcarLeitura(glob)).toEqual(marcas);
@@ -153,15 +153,15 @@ describe('marcarLeitura', () => {
 
 describe('marcarEscrita', () => {
   it.each([
-    ['package.json', ['executavel']],
-    ['pacotes/*/package.json', ['executavel']],
-    ['scripts/*.sh', ['executavel']],
-    ['vite.config.ts', ['executavel']],
-    ['pyproject.toml', ['executavel']],
+    ['package.json', ['executable']],
+    ['pacotes/*/package.json', ['executable']],
+    ['scripts/*.sh', ['executable']],
+    ['vite.config.ts', ['executable']],
+    ['pyproject.toml', ['executable']],
     ['docs/*.md', []],
-    ['tests/conftest.py', ['executavel']],
-    ['tools/x.sh', ['executavel']],
-    ['build.cmd', ['executavel']],
+    ['tests/conftest.py', ['executable']],
+    ['tools/x.sh', ['executable']],
+    ['build.cmd', ['executable']],
     ['src/**/*.ts', []],
   ])('%s → %j', (glob, marcas) => {
     expect(marcarEscrita(glob)).toEqual(marcas);

@@ -8,7 +8,7 @@ Você (Eduardo) precisa provar, dentro dos próprios ambientes, o que os testes 
 ## Pré-requisitos
 - Node 22.12 ou mais novo, Git, Claude Code com o executável `claude` no PATH (a Sprint 16 não o achou na máquina de simulação) e VS Code com GitHub Copilot.
 - O repositório `harness-ai` compilado: `npm ci` e `npm run build` (gera `dist/cli/index.js`).
-- Duas pastas deste repositório usadas como pacotes de teste: `pacotes/workflow-feature/` (agentes, skill e regra) e `pacotes/guardas-de-teste/` (um hook que barra `git push --force` e `rm -rf`, e o servidor MCP da base).
+- Duas pastas deste repositório usadas como pacotes de teste: `packages/workflow-feature/` (agentes, skill e regra) e `packages/guardas-de-teste/` (um hook que barra `git push --force` e `rm -rf`, e o servidor MCP da base).
 
 ## Passos
 
@@ -16,16 +16,16 @@ Você (Eduardo) precisa provar, dentro dos próprios ambientes, o que os testes 
 Troque `HARNESS` pelo caminho do `harness-ai` na sua máquina.
 ```bash
 mkdir ez-ai-prova && cd ez-ai-prova && git init
-cp -r HARNESS/pacotes/workflow-feature ./wf
-cp -r HARNESS/pacotes/guardas-de-teste ./g
-node HARNESS/dist/cli/index.js init --ambientes claude-code,copilot
+cp -r HARNESS/packages/workflow-feature ./wf
+cp -r HARNESS/packages/guardas-de-teste ./g
+node HARNESS/dist/cli/index.js init --environments claude-code,copilot
 node HARNESS/dist/cli/index.js add local:wf
 node HARNESS/dist/cli/index.js add local:g
 node HARNESS/dist/cli/index.js plan
 ```
-O `plan` termina com a linha "para aplicar, rode apply com: --aprovar ...". Copie os dois ids.
+O `plan` termina com a linha "para aplicar, rode apply com: --approve ...". Copie os dois ids.
 ```bash
-node HARNESS/dist/cli/index.js apply --aprovar <id-do-hook> --aprovar <id-do-mcp>
+node HARNESS/dist/cli/index.js apply --approve <id-do-hook> --approve <id-do-mcp>
 ```
 
 ### 2. Corrigir o servidor MCP para a prova
@@ -57,7 +57,7 @@ Abra a mesma pasta no VS Code com o Copilot Chat ligado.
 |---|---|---|
 | Chat > seletor de agentes | os quatro agentes `…-arquiteto`, `-cartografo`, `-implementador`, `-revisor` | ☐ |
 | Chat > Configurar > Instructions | `…-workflow-….instructions.md` com `applyTo: "**"` | ☐ |
-| Pergunte no chat "como registro uma etapa do workflow?" | resposta citando `ez-ai workflow etapa` | ☐ |
+| Pergunte no chat "como registro uma etapa do workflow?" | resposta citando `ez-ai workflow step` | ☐ |
 
 Hooks e MCP **não** são gravados no Copilot (o `plan` avisa); portanto o `git push --force` não é barrado ali. Isso é o esperado e está no [ADR-0016](../adr/0016-governanca-por-nivel-de-enforcement.md). Para o spike completo do Copilot siga o [procedimento dele](../arquitetura/spike-enforcement-copilot.md).
 
@@ -69,5 +69,5 @@ Todas as linhas marcadas, ou cada falha anotada com versão do ambiente e texto 
 |---|---|---|
 | `claude` não é reconhecido | Executável fora do PATH | Instale ou adicione ao PATH do terminal |
 | `/mcp` mostra o servidor com erro | `.mcp.json` ainda aponta para `ez-ai@0.0.0` | Faça o passo 2 |
-| `apply` recusa com "aprovação própria pendente" | Faltou `--aprovar <id>` | Copie os ids da última linha do `plan` |
+| `apply` recusa com "aprovação própria pendente" | Faltou `--approve <id>` | Copie os ids da última linha do `plan` |
 | O hook não barra | Claude Code anterior à 2.1.295 | Atualize o Claude Code |

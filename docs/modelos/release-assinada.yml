@@ -1,6 +1,8 @@
 # MODELO (não é workflow ativo; fica em docs/modelos, fora de .github/). ADR-0035, runbook-assinatura.
+# ATENÇÃO (ADR-0042): o commit fixo abaixo é anterior à troca de nomes e só conhece `hash-pacote`; troque-o por um commit com
+# `hash-package` (ou por `npx ez-ai@<VERSAO-EXATA> hash-package pacote` quando o ez-ai estiver no npm).
 # Cópia do workflow que assinou o workflow-feature v0.5.0 (primeira assinatura real, 2026-11-11). Troque o dono/repo do
-# clone do ez-ai e o commit fixo se precisar; quando o ez-ai estiver no npm, use `npx ez-ai@<VERSAO-EXATA> hash-pacote pacote`.
+# clone do ez-ai e o commit fixo se precisar; quando o ez-ai estiver no npm, use `npx ez-ai@<VERSAO-EXATA> hash-package pacote`.
 # Assina o hash do conteudo do pacote com Sigstore (keyless) quando uma tag v* e criada.
 # ADR-0035 e runbook de assinatura do ez-ai. Actions fixadas por SHA de commit.
 name: release-assinada
@@ -33,21 +35,21 @@ jobs:
       - name: Calcular o hash do conteudo do pacote
         run: |
           set -euo pipefail
-          # A arvore do commit da tag, sem .git: e o que quem instala le. hash-pacote exige caminho relativo.
+          # A arvore do commit da tag, sem .git: e o que quem instala le. hash-package exige caminho relativo.
           RAIZ="$PWD"
           mkdir "$RUNNER_TEMP/pacote" && git archive HEAD | tar -x -C "$RUNNER_TEMP/pacote"
           cd "$RUNNER_TEMP"
-          HASH="$(node ez-ai/dist/cli/index.js hash-pacote pacote)"
+          HASH="$(node ez-ai/dist/cli/index.js hash-package pacote)"
           case "$HASH" in sha256:*) ;; *) echo "hash invalido: '$HASH'"; exit 1 ;; esac
           printf '%s' "$HASH" > "$RAIZ/hash.txt"
           cat "$RAIZ/hash.txt"
       - name: Assinar o hash (keyless)
-        run: cosign sign-blob --yes --bundle harness-pacote.sigstore.json hash.txt
+        run: cosign sign-blob --yes --bundle harness-package.sigstore.json hash.txt
       - name: Publicar o bundle no commit da tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add harness-pacote.sigstore.json
+          git add harness-package.sigstore.json
           git commit -m "chore: bundle de assinatura de ${GITHUB_REF_NAME}"
           git tag -f "${GITHUB_REF_NAME}"
           git push --force origin "refs/tags/${GITHUB_REF_NAME}"

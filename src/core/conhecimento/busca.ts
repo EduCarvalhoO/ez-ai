@@ -11,7 +11,7 @@ const PARADAS = new Set([
   'da',
   'dos',
   'das',
-  'em',
+  'at',
   'no',
   'na',
   'nos',
@@ -58,7 +58,7 @@ export function consultaParaIndice(consulta: string): string | undefined {
 }
 
 export interface EntradaDoMapa {
-  readonly arquivo: string;
+  readonly file: string;
   readonly titulos: readonly string[];
 }
 
@@ -66,12 +66,12 @@ export interface EntradaDoMapa {
 export function mapaDosChunks(chunks: readonly Chunk[]): EntradaDoMapa[] {
   const porArquivo = new Map<string, Set<string>>();
   for (const c of chunks) {
-    const titulos = porArquivo.get(c.arquivo) ?? new Set<string>();
+    const titulos = porArquivo.get(c.file) ?? new Set<string>();
     const trilha = c.contexto.split(' > ').slice(1);
     for (const t of trilha) titulos.add(t);
-    porArquivo.set(c.arquivo, titulos);
+    porArquivo.set(c.file, titulos);
   }
-  return [...porArquivo].map(([arquivo, titulos]) => ({ arquivo, titulos: [...titulos] }));
+  return [...porArquivo].map(([arquivo, titulos]) => ({ file: arquivo, titulos: [...titulos] }));
 }
 
 /** C0: pontua pelo caminho (peso 3) e pelos títulos (peso 1). Devolve arquivos, do mais ao menos relevante. */
@@ -79,14 +79,14 @@ export function buscarNoMapa(mapa: readonly EntradaDoMapa[], consulta: string, l
   const termos = termosDaConsulta(consulta);
   const pontuados = mapa
     .map((e) => {
-      const caminho = e.arquivo.toLowerCase();
+      const caminho = e.file.toLowerCase();
       const titulos = e.titulos.join(' ').toLowerCase();
       const pontos = termos.reduce((s, t) => s + (caminho.includes(t) ? 3 : 0) + (titulos.includes(t) ? 1 : 0), 0);
-      return { arquivo: e.arquivo, pontos };
+      return { file: e.file, pontos };
     })
     .filter((p) => p.pontos > 0)
-    .sort((a, b) => b.pontos - a.pontos || a.arquivo.localeCompare(b.arquivo));
-  return pontuados.slice(0, limite).map((p) => p.arquivo);
+    .sort((a, b) => b.pontos - a.pontos || a.file.localeCompare(b.file));
+  return pontuados.slice(0, limite).map((p) => p.file);
 }
 
 /**

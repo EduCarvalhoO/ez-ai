@@ -30,7 +30,7 @@ const CHAVES_PROIBIDAS = new Set([
 
 export type Frontmatter =
   | { readonly ok: true; readonly existe: boolean; readonly chaves: readonly string[] }
-  | { readonly ok: false; readonly motivo: string };
+  | { readonly ok: false; readonly reason: string };
 
 const LINHA_DE_CHAVE = /^(?:"([^"]+)"|'([^']+)'|([A-Za-z0-9_-]+))\s*:(?:\s|$)/u;
 
@@ -48,10 +48,10 @@ export function chavesDoFrontmatter(texto: string): Frontmatter {
     if (linha.trimEnd() === '---' || linha.trimEnd() === '...') return { ok: true, existe: true, chaves };
     if (linha.trim() === '' || /^\s/u.test(linha) || linha.startsWith('#') || /^-(?:\s|$)/u.test(linha)) continue;
     const m = LINHA_DE_CHAVE.exec(linha);
-    if (!m) return { ok: false, motivo: `linha ${i + 1} do frontmatter não reconhecida` };
+    if (!m) return { ok: false, reason: `linha ${i + 1} do frontmatter não reconhecida` };
     chaves.push((m[1] ?? m[2] ?? m[3] ?? '').toLowerCase());
   }
-  return { ok: false, motivo: 'frontmatter sem a linha de fechamento "---"' };
+  return { ok: false, reason: 'frontmatter sem a linha de fechamento "---"' };
 }
 
 /** Chaves do frontmatter que o harness não projeta. */
@@ -65,15 +65,15 @@ export function chavesProibidas(chaves: readonly string[]): string[] {
  * também), então entram 6 hex do SHA-256 de `login/pacote/id`. Nomes simples, como `eduardo-starter-revisor`, não mudam.
  */
 export function nomeProjetado(m: Manifesto, id: string): string {
-  const base = `${m.login}-${m.pacote}-${id}`.toLowerCase().replace(/[^a-z0-9-]/gu, '-');
-  const ambiguo = !/^[a-z0-9]+$/u.test(m.login) || !/^[a-z0-9]+$/u.test(m.pacote) || !/^[a-z0-9-]+$/u.test(id);
+  const base = `${m.login}-${m.package}-${id}`.toLowerCase().replace(/[^a-z0-9-]/gu, '-');
+  const ambiguo = !/^[a-z0-9]+$/u.test(m.login) || !/^[a-z0-9]+$/u.test(m.package) || !/^[a-z0-9-]+$/u.test(id);
   if (!ambiguo) return base;
-  return `${base}-${createHash('sha256').update(`${m.login}/${m.pacote}/${id}`, 'utf8').digest('hex').slice(0, 6)}`;
+  return `${base}-${createHash('sha256').update(`${m.login}/${m.package}/${id}`, 'utf8').digest('hex').slice(0, 6)}`;
 }
 
 /** Onde cada tipo de componente mora em um ambiente. */
 export interface ModeloDeAmbiente {
-  readonly ambiente: Ambiente;
+  readonly environment: Ambiente;
   readonly capacidades: CapacidadesDoAdapter;
   readonly avisosGerais: readonly string[];
   readonly caminhoDaInstrucao: (nome: string) => string;
@@ -87,7 +87,7 @@ export interface ModeloDeAmbiente {
    * Instruções entram como blocos delimitados num arquivo de texto compartilhado (AGENTS.md, ADR-0038) em vez de um
    * arquivo por instrução. Quando presente, `caminhoDaInstrucao` e `ajustarInstrucao` não são usados.
    */
-  readonly blocoDeInstrucoes?: { readonly arquivo: string };
+  readonly blocoDeInstrucoes?: { readonly file: string };
 }
 
 const LIMITE_DO_NOME_DA_SKILL = 64;
@@ -104,7 +104,7 @@ function projetarSkill(
     avisos.push({ componente: c.id, mensagem });
     return undefined;
   };
-  const partes = c.arquivo.split('/');
+  const partes = c.file.split('/');
   if (partes[partes.length - 1] !== 'SKILL.md')
     return aviso(`skill "${c.id}": o arquivo precisa se chamar SKILL.md; não projetada.`);
   if (nome.length > LIMITE_DO_NOME_DA_SKILL) {
@@ -112,9 +112,9 @@ function projetarSkill(
       `skill "${c.id}": nome projetado "${nome}" passa de ${LIMITE_DO_NOME_DA_SKILL} caracteres; não projetada.`,
     );
   }
-  const principal = entrada.arquivos.get(c.arquivo) ?? '';
+  const principal = entrada.arquivos.get(c.file) ?? '';
   const fm = chavesDoFrontmatter(principal);
-  if (!fm.ok) return aviso(`skill "${c.id}": ${fm.motivo}; não projetada.`);
+  if (!fm.ok) return aviso(`skill "${c.id}": ${fm.reason}; não projetada.`);
   const proibidas = chavesProibidas(fm.chaves);
   if (proibidas.length > 0) {
     return aviso(
@@ -124,13 +124,13 @@ function projetarSkill(
   const pasta = partes.slice(0, -1).join('/');
   const prefixo = pasta === '' ? undefined : `${pasta}/`;
   const origens = [...entrada.arquivos.keys()]
-    .filter((k) => (prefixo === undefined ? k === c.arquivo : k.startsWith(prefixo)))
+    .filter((k) => (prefixo === undefined ? k === c.file : k.startsWith(prefixo)))
     .sort();
   for (const k of origens) {
     const relativo = prefixo === undefined ? 'SKILL.md' : k.slice(prefixo.length);
     saida.push({
       caminho: `${modelo.pastaDaSkill(nome)}/${relativo}`,
-      conteudo: entrada.arquivos.get(k) ?? '',
+      content: entrada.arquivos.get(k) ?? '',
       componente: c.id,
     });
   }
@@ -141,43 +141,45 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
   const arquivos: ArquivoProjetado[] = [];
   const avisos: AvisoDeProjecao[] = [];
   const fragmentos: FragmentoDeConfig[] = [];
-  for (const c of entrada.manifesto.componentes) {
+  for (const c of entrada.manifesto.components) {
     const aviso = (mensagem: string): void => {
       avisos.push({ componente: c.id, mensagem });
     };
-    const cap = modelo.capacidades[c.tipo];
+    const cap = modelo.capacidades[c.type];
     if (cap.interno) continue;
     if (!cap.projeta && cap.suporte === 'ausente') {
-      aviso(`${c.tipo} "${c.id}" não se aplica a ${modelo.ambiente}: o ambiente não tem equivalente; não projetado.`);
+      aviso(
+        `${c.type} "${c.id}" não se aplica a ${modelo.environment}: o ambiente não tem equivalente; não projetado.`,
+      );
       continue;
     }
     if (!cap.projeta) {
       aviso(
-        `${c.tipo} "${c.id}" não foi escrito em ${modelo.ambiente}: o ambiente tem suporte ${cap.suporte}, mas este adapter ainda não grava esse tipo (hooks e MCP dependem do spike do ambiente).`,
+        `${c.type} "${c.id}" não foi escrito em ${modelo.environment}: o ambiente tem suporte ${cap.suporte}, mas este adapter ainda não grava esse tipo (hooks e MCP dependem do spike do ambiente).`,
       );
       continue;
     }
     const nome = nomeProjetado(entrada.manifesto, c.id);
-    const texto = entrada.arquivos.get(c.arquivo);
+    const texto = entrada.arquivos.get(c.file);
     if (texto === undefined) {
-      aviso(`${c.tipo} "${c.id}": arquivo "${c.arquivo}" ausente do pacote; não projetado.`);
+      aviso(`${c.type} "${c.id}": arquivo "${c.file}" ausente do pacote; não projetado.`);
       continue;
     }
-    if (c.tipo === 'hook' || c.tipo === 'mcp') {
+    if (c.type === 'hook' || c.type === 'mcp') {
       const cfg = modelo.configuracao;
       if (cfg === undefined) {
-        aviso(`${c.tipo} "${c.id}": o adapter não tem destino para este tipo; não projetado.`);
+        aviso(`${c.type} "${c.id}": o adapter não tem destino para este tipo; não projetado.`);
         continue;
       }
-      const r = c.tipo === 'hook' ? fragmentoDeHook(cfg, entrada, c) : fragmentoDeMcp(cfg, entrada, c, nome);
+      const r = c.type === 'hook' ? fragmentoDeHook(cfg, entrada, c) : fragmentoDeMcp(cfg, entrada, c, nome);
       if ('aviso' in r) {
-        aviso(`${c.tipo} "${c.id}": ${r.aviso}`);
+        aviso(`${c.type} "${c.id}": ${r.aviso}`);
         continue;
       }
       fragmentos.push(r.fragmento);
       avisos.push(avisoDeEnforcement(c, r.fragmento.caminho));
-      if (c.tipo === 'hook' && cfg.avisoDoHook) aviso(`enforcement: hook "${c.id}": ${cfg.avisoDoHook}`);
-    } else if (c.tipo === 'instrucao' && modelo.blocoDeInstrucoes) {
+      if (c.type === 'hook' && cfg.avisoDoHook) aviso(`enforcement: hook "${c.id}": ${cfg.avisoDoHook}`);
+    } else if (c.type === 'instruction' && modelo.blocoDeInstrucoes) {
       const corpo = corpoDoBloco(texto);
       if (!textoSeguroParaBloco(texto)) {
         aviso(`instrução "${c.id}" contém o marcador reservado "<!-- ez-ai:"; não projetada.`);
@@ -188,22 +190,22 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
         continue;
       }
       fragmentos.push({
-        caminho: modelo.blocoDeInstrucoes.arquivo,
+        caminho: modelo.blocoDeInstrucoes.file,
         componente: c.id,
-        tipo: 'bloco',
-        chave: nome,
-        valor: renderizarBloco(nome, entrada.manifesto.nome, c.id, corpo),
+        type: 'bloco',
+        key: nome,
+        valor: renderizarBloco(nome, entrada.manifesto.name, c.id, corpo),
       });
-    } else if (c.tipo === 'instrucao') {
+    } else if (c.type === 'instruction') {
       arquivos.push({
         caminho: modelo.caminhoDaInstrucao(nome),
-        conteudo: modelo.ajustarInstrucao ? modelo.ajustarInstrucao(texto) : texto,
+        content: modelo.ajustarInstrucao ? modelo.ajustarInstrucao(texto) : texto,
         componente: c.id,
       });
-    } else if (c.tipo === 'agente') {
+    } else if (c.type === 'agent') {
       const fm = chavesDoFrontmatter(texto);
       if (!fm.ok) {
-        aviso(`agente "${c.id}": ${fm.motivo}; não projetado.`);
+        aviso(`agente "${c.id}": ${fm.reason}; não projetado.`);
         continue;
       }
       const proibidas = chavesProibidas(fm.chaves);
@@ -214,8 +216,8 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
         continue;
       }
       if (!fm.existe) aviso(`agente "${c.id}" sem frontmatter (name e description); o ambiente pode ignorá-lo.`);
-      arquivos.push({ caminho: modelo.caminhoDoAgente(nome), conteudo: texto, componente: c.id });
-    } else if (c.tipo === 'skill') {
+      arquivos.push({ caminho: modelo.caminhoDoAgente(nome), content: texto, componente: c.id });
+    } else if (c.type === 'skill') {
       projetarSkill(modelo, c, entrada, arquivos, avisos, nome);
     }
   }
@@ -227,7 +229,7 @@ export function projetarComModelo(modelo: ModeloDeAmbiente, entrada: EntradaDePr
 /** Cria o adapter a partir do modelo. */
 export function criarAdapter(modelo: ModeloDeAmbiente): Adapter {
   return {
-    ambiente: modelo.ambiente,
+    environment: modelo.environment,
     capacidades: modelo.capacidades,
     avisosGerais: modelo.avisosGerais,
     projetar: (entrada) => projetarComModelo(modelo, entrada),

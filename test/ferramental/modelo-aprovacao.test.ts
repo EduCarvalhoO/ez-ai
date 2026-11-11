@@ -31,7 +31,7 @@ describe('modelo do job de servidor (docs/modelos/aprovacao.yml)', () => {
 
   it('o harness vem do npm em versão fixa e sem scripts, não do código do PR', () => {
     expect(semComentarios).toMatch(/npm install --ignore-scripts --no-save .*ez-ai@\$HARNESS_VERSAO/);
-    expect(semComentarios).toContain('--exigir-evidencias');
+    expect(semComentarios).toContain('--require-evidence');
   });
 
   it('dados do evento entram por env, nunca interpolados no script', () => {

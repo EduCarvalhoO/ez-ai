@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -51,8 +52,8 @@ describe('texto UTF-8 estrito (A3)', () => {
     writeFileSync(join(pasta, 'p', 'bin.md'), Buffer.from([0x61, 0xff, 0xfe, 0x62]));
     writeFileSync(join(pasta, 'p', 'ok.md'), 'ação');
     const arquivos = await criarArquivos(pasta);
-    await expect(arquivos.ler('p/bin.md')).rejects.toThrow(/UTF-8/);
-    expect(await arquivos.ler('p/ok.md')).toBe('ação');
+    await expect(arquivos.read('p/bin.md')).rejects.toThrow(/UTF-8/);
+    expect(await arquivos.read('p/ok.md')).toBe('ação');
   });
 
   it('o Git recusa blob que não é UTF-8, em vez de trocar bytes por U+FFFD', async () => {
@@ -75,5 +76,52 @@ describe('texto UTF-8 estrito (A3)', () => {
     });
     const lidos = await git.lerArquivos('https://github.com/dono/repo', sha);
     expect(lidos.get('a.md')).toBe('ação');
+  });
+});
+
+describe('troca de pasta, cópia fiel e remoção de pasta (ADR-0042)', () => {
+  it('trocarPasta põe a pasta nova no lugar da antiga sem deixar sobra', async () => {
+    const arquivos = await criarArquivos(pasta);
+    await arquivos.gravar('p/pac/velho.md', 'v');
+    await arquivos.gravar('p/pac/comum.md', 'antes');
+    await arquivos.gravar('p/pac.ez-new-0123456789ab/comum.md', 'depois');
+    await arquivos.gravar('p/pac.ez-new-0123456789ab/novo.md', 'n');
+    await arquivos.trocarPasta('p/pac.ez-new-0123456789ab', 'p/pac');
+    expect(await arquivos.listar('p')).toEqual(['p/pac/comum.md', 'p/pac/novo.md']);
+    expect(readFileSync(join(pasta, 'p', 'pac', 'comum.md'), 'utf8')).toBe('depois');
+    expect(readdirSync(join(pasta, 'p'))).toEqual(['pac']);
+  });
+
+  it('trocarPasta sem destino só renomeia', async () => {
+    const arquivos = await criarArquivos(pasta);
+    await arquivos.gravar('p/pac.ez-new-0123456789ab/a.md', 'a');
+    await arquivos.trocarPasta('p/pac.ez-new-0123456789ab', 'p/pac');
+    expect(await arquivos.listar('p')).toEqual(['p/pac/a.md']);
+  });
+
+  it('listar ignora pasta preparada ou antiga', async () => {
+    const arquivos = await criarArquivos(pasta);
+    await arquivos.gravar('p/a.md', 'a');
+    await arquivos.gravar('p/pac.ez-new-0123456789ab/x.md', 'x');
+    await arquivos.gravar('p/pac.ez-old-0123456789ab/y.md', 'y');
+    expect(await arquivos.listar('p')).toEqual(['p/a.md']);
+  });
+
+  it('removerPasta apaga a pasta inteira e ignora o que não existe', async () => {
+    const arquivos = await criarArquivos(pasta);
+    await arquivos.gravar('p/x/a.md', 'a');
+    await arquivos.removerPasta('p/x');
+    await arquivos.removerPasta('p/nao-existe');
+    expect(await arquivos.listar('p')).toEqual([]);
+  });
+
+  it('copiar guarda os bytes exatos, mesmo os que não são UTF-8, e devolve o hash', async () => {
+    mkdirSync(join(pasta, 'p'));
+    const bytes = Buffer.from([0x61, 0xff, 0xfe, 0x62]);
+    writeFileSync(join(pasta, 'p', 'bin.jsonl'), bytes);
+    const arquivos = await criarArquivos(pasta);
+    const r = await arquivos.copiar('p/bin.jsonl', 'selo/bin.jsonl');
+    expect(r).toEqual({ bytes: 4, sha256: createHash('sha256').update(bytes).digest('hex') });
+    expect(readFileSync(join(pasta, 'selo', 'bin.jsonl')).equals(bytes)).toBe(true);
   });
 });

@@ -3,18 +3,18 @@
 // Gravidade `erro` tranca; `aviso` orienta. Os limites vêm das boas práticas de skills e subagentes (ver o ADR).
 
 export type Gravidade = 'erro' | 'aviso';
-export type TipoDeComponente = 'skill' | 'agente' | 'script';
+export type TipoDeComponente = 'skill' | 'agent' | 'script';
 
 export interface AchadoDeQualidade {
-  readonly arquivo: string;
-  readonly regra: string;
+  readonly file: string;
+  readonly rule: string;
   readonly gravidade: Gravidade;
   readonly mensagem: string;
 }
 
 export interface ResultadoDeQualidade {
   readonly achados: readonly AchadoDeQualidade[];
-  readonly componentes: number;
+  readonly components: number;
   /** Componentes sem nenhum `erro`. */
   readonly aprovados: number;
   /** Componentes sem nenhum achado (erro ou aviso). */
@@ -77,17 +77,17 @@ export function tipoDoArquivo(caminho: string): TipoDeComponente | undefined {
   const nome = partes[partes.length - 1] ?? '';
   const pastas = partes.slice(0, -1);
   if (nome === 'SKILL.md' && pastas.includes('skills')) return 'skill';
-  if (nome.endsWith('.md') && (pastas.includes('agentes') || pastas.includes('agents'))) return 'agente';
+  if (nome.endsWith('.md') && (pastas.includes('agentes') || pastas.includes('agents'))) return 'agent';
   if (/\.(?:mjs|js)$/.test(nome) && pastas.includes('scripts') && !pastas.includes('references')) return 'script';
   return undefined;
 }
 
 type Acumulador = AchadoDeQualidade[];
 const erro = (a: Acumulador, arquivo: string, regra: string, mensagem: string): void => {
-  a.push({ arquivo, regra, gravidade: 'erro', mensagem });
+  a.push({ file: arquivo, rule: regra, gravidade: 'erro', mensagem });
 };
 const aviso = (a: Acumulador, arquivo: string, regra: string, mensagem: string): void => {
-  a.push({ arquivo, regra, gravidade: 'aviso', mensagem });
+  a.push({ file: arquivo, rule: regra, gravidade: 'aviso', mensagem });
 };
 
 function descricaoBoa(a: Acumulador, arquivo: string, regra: string, d: string | undefined, maximo: number): void {
@@ -239,7 +239,7 @@ export function avaliarQualidade(arquivos: ReadonlyMap<string, string>): Resulta
     const tipo = tipoDoArquivo(caminho);
     const antes = achados.length;
     if (tipo === 'skill') avaliarSkill(achados, caminho, texto, arquivos);
-    else if (tipo === 'agente') avaliarAgente(achados, caminho, texto);
+    else if (tipo === 'agent') avaliarAgente(achados, caminho, texto);
     else if (tipo === 'script') avaliarScript(achados, caminho, texto);
     else if (/(?:^|\/)instrucoes\/[^/]+\.md$/.test(caminho) && linhas(texto) > LIMITES_DE_QUALIDADE.linhasDaInstrucao) {
       aviso(
@@ -250,16 +250,16 @@ export function avaliarQualidade(arquivos: ReadonlyMap<string, string>): Resulta
       );
     }
     if (tipo !== undefined) contagem.set(caminho, achados.length - antes);
-    if (tipo === 'skill' || tipo === 'agente') {
+    if (tipo === 'skill' || tipo === 'agent') {
       const fm = dividirFrontmatter(texto);
       metadados += tokens(`${fm.campos.get('name') ?? ''} ${fm.campos.get('description') ?? ''}`);
       corpo += tokens(fm.corpo);
     }
   }
-  const comErro = new Set(achados.filter((x) => x.gravidade === 'erro').map((x) => x.arquivo));
+  const comErro = new Set(achados.filter((x) => x.gravidade === 'erro').map((x) => x.file));
   return {
     achados,
-    componentes: contagem.size,
+    components: contagem.size,
     aprovados: [...contagem.keys()].filter((c) => !comErro.has(c)).length,
     limpos: [...contagem.values()].filter((n) => n === 0).length,
     tokensDeMetadados: metadados,

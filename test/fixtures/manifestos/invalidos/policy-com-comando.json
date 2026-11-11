@@ -1,18 +1,18 @@
 {
-  "versaoManifesto": 0,
-  "nome": "eduardo/convencoes-ts",
-  "versao": "0.1.0",
-  "descricao": "Instruções de convenção para projetos TypeScript",
-  "licenca": "MIT",
-  "repositorio": "https://github.com/eduardo/convencoes-ts",
-  "componentes": [
+  "manifestVersion": 0,
+  "name": "eduardo/convencoes-ts",
+  "version": "0.1.0",
+  "description": "Instruções de convenção para projetos TypeScript",
+  "license": "MIT",
+  "repository": "https://github.com/eduardo/convencoes-ts",
+  "components": [
     {
       "id": "regras",
-      "tipo": "policy",
-      "arquivo": "policy.json",
-      "comando": {
-        "programa": "node",
-        "argumentos": [
+      "type": "policy",
+      "file": "policy.json",
+      "command": {
+        "program": "node",
+        "arguments": [
           "x.js"
         ]
       }

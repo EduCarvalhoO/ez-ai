@@ -11,62 +11,68 @@ import { arquivosEmMemoria, gitEmMemoria, identidadeFixa, relogioFixo } from '..
 const HEAD = 'a'.repeat(40);
 
 const config = (aprovadores: string[], origens: string[] = []) =>
-  JSON.stringify({ versaoConfig: 0, ambientes: ['claude-code'], origensPermitidas: origens, pacotes: {}, aprovadores });
-const LOCK = JSON.stringify({ versaoLockfile: 0, pacotes: {} });
-const POLICY = (regras: unknown[]) => JSON.stringify({ versaoPolicy: 0, regras });
-const REGRA = { id: 'sem-pip', efeito: 'negar', categoria: 'executar', padroes: ['pip'], motivo: 'sem pip' };
+  JSON.stringify({
+    configVersion: 0,
+    environments: ['claude-code'],
+    allowedSources: origens,
+    packages: {},
+    approvers: aprovadores,
+  });
+const LOCK = JSON.stringify({ lockfileVersion: 0, packages: {} });
+const POLICY = (regras: unknown[]) => JSON.stringify({ policyVersion: 0, rules: regras });
+const REGRA = { id: 'sem-pip', effect: 'deny', category: 'execute', patterns: ['pip'], reason: 'sem pip' };
 
 function ctx(inicial: Record<string, string>): Contexto {
   return {
     arquivos: arquivosEmMemoria(inicial),
     git: gitEmMemoria({}),
     relogio: relogioFixo(),
-    identidade: identidadeFixa(),
+    identity: identidadeFixa(),
     harness: '0.0.0',
     tipoDeAtor: 'ci',
   };
 }
 
-const base = (arquivos: Record<string, string>): LeitorDaBase => ({ ler: async (c) => arquivos[c] });
-const provedor = (pr?: DadosDoPr, checks: { nome: string; conclusao: string | null }[] = []): ProvedorDoPr => ({
-  dados: async () => pr,
+const base = (arquivos: Record<string, string>): LeitorDaBase => ({ read: async (c) => arquivos[c] });
+const provedor = (pr?: DadosDoPr, checks: { name: string; conclusao: string | null }[] = []): ProvedorDoPr => ({
+  data: async () => pr,
   checkRuns: async () => checks.map((c) => ({ ...c, sha: HEAD })),
 });
-const PR = (reviews: DadosDoPr['reviews']): DadosDoPr => ({ shaDaHead: HEAD, autor: 'agente', reviews });
-const OPCOES = { exigirEvidencias: false, checksExigidos: [] as string[] };
+const PR = (reviews: DadosDoPr['reviews']): DadosDoPr => ({ shaDaHead: HEAD, autor: 'agent', reviews });
+const OPCOES = { requireEvidence: false, checksExigidos: [] as string[] };
 
-describe('validate --servidor', () => {
+describe('validate --server', () => {
   it('sem mudança em relação à base passa', async () => {
     const arquivos = { '.harness/config.json': config(['dona']), '.harness/lock.json': LOCK };
     const r = await validarNoServidor(ctx(arquivos), { ...OPCOES, base: base(arquivos), pr: provedor(PR([])) });
     expect(r.erros).toEqual([]);
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join('\n')).not.toContain('o CI não recalcula');
+    expect(r.code).toBe(0);
+    expect(r.output.join('\n')).not.toContain('o CI não recalcula');
   });
 
   it('agente apaga a policy do projeto na própria branch: falha sem review do aprovador da base', async () => {
     const head = { '.harness/config.json': config(['dona']), '.harness/lock.json': LOCK };
     const antes = { ...head, '.harness/policy.json': POLICY([REGRA]) };
     const r = await validarNoServidor(ctx(head), { ...OPCOES, base: base(antes), pr: provedor(PR([])) });
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros.join('\n')).toContain('faltam aprovadores');
     const ok = await validarNoServidor(ctx(head), {
       ...OPCOES,
       base: base(antes),
       pr: provedor(PR([{ login: 'dona', estado: 'APPROVED', commit: HEAD }])),
     });
-    expect(ok.codigo).toBe(0);
+    expect(ok.code).toBe(0);
   });
 
   it('o agente não vira aprovador editando `aprovadores` na head: vale a lista da base', async () => {
-    const head = { '.harness/config.json': config(['dona', 'agente']), '.harness/lock.json': LOCK };
+    const head = { '.harness/config.json': config(['dona', 'agent']), '.harness/lock.json': LOCK };
     const antes = { '.harness/config.json': config(['dona']), '.harness/lock.json': LOCK };
     const r = await validarNoServidor(ctx(head), {
       ...OPCOES,
       base: base(antes),
-      pr: provedor(PR([{ login: 'agente', estado: 'APPROVED', commit: HEAD }])),
+      pr: provedor(PR([{ login: 'agent', estado: 'APPROVED', commit: HEAD }])),
     });
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
   });
 
   it('origem permitida acrescentada exige review', async () => {
@@ -83,23 +89,23 @@ describe('validate --servidor', () => {
       base: base({ ...head, '.harness/config.json': '{' }),
       pr: provedor(PR([])),
     });
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros.join('\n')).toContain('base');
   });
 
-  it('--exigir-evidencias confere os checks do CI no SHA da head, não o log local', async () => {
+  it('--require-evidence confere os checks do CI no SHA da head, não o log local', async () => {
     const arquivos = { '.harness/config.json': config(['dona']), '.harness/lock.json': LOCK };
-    const opcoes = { base: base(arquivos), exigirEvidencias: true, checksExigidos: ['qualidade'] };
+    const opcoes = { base: base(arquivos), requireEvidence: true, checksExigidos: ['quality'] };
     const verde = await validarNoServidor(ctx(arquivos), {
       ...opcoes,
-      pr: provedor(PR([]), [{ nome: 'qualidade', conclusao: 'success' }]),
+      pr: provedor(PR([]), [{ name: 'quality', conclusao: 'success' }]),
     });
-    expect(verde.codigo).toBe(0);
+    expect(verde.code).toBe(0);
     const vermelho = await validarNoServidor(ctx(arquivos), {
       ...opcoes,
-      pr: provedor(PR([]), [{ nome: 'qualidade', conclusao: 'failure' }]),
+      pr: provedor(PR([]), [{ name: 'quality', conclusao: 'failure' }]),
     });
-    expect(vermelho.codigo).toBe(1);
+    expect(vermelho.code).toBe(1);
     const semPr = await validarNoServidor(ctx(arquivos), { ...opcoes, pr: provedor(undefined) });
     expect(semPr.erros.join('\n')).toContain('sem PR');
   });

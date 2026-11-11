@@ -2,8 +2,9 @@
 // está entre `<!-- ez-ai:inicio <nome> -->` e `<!-- ez-ai:fim <nome> -->`; o resto do arquivo é do usuário e fica
 // como está. Puro: sem I/O, nada do pacote é executado (ADR-0018). Mesma regra de posse do ADR-0027: o bloco é nosso
 // se for igual ao que o pacote instalado projetava antes; bloco editado à mão nunca é pisado calado.
-import type { FragmentoDeConfig } from './contrato.js';
+
 import type { ResultadoDaMescla } from './configuracao.js';
+import type { FragmentoDeConfig } from './contrato.js';
 
 const PREFIXO_RESERVADO = '<!-- ez-ai:';
 const NOME_DO_BLOCO = '[a-z0-9-]{1,200}';
@@ -45,7 +46,7 @@ export function renderizarBloco(nome: string, pacote: string, componente: string
 }
 
 interface BlocoLido {
-  readonly nome: string;
+  readonly name: string;
   /** Índice das linhas de início e de fim (inclusive). */
   readonly de: number;
   readonly ate: number;
@@ -54,20 +55,20 @@ interface BlocoLido {
 
 function lerBlocos(linhas: readonly string[]): { blocos: Map<string, BlocoLido> } | { erro: string } {
   const blocos = new Map<string, BlocoLido>();
-  let aberto: { nome: string; de: number } | undefined;
+  let aberto: { name: string; de: number } | undefined;
   for (let i = 0; i < linhas.length; i++) {
     const linha = (linhas[i] ?? '').trim();
     if (!linha.startsWith(PREFIXO_RESERVADO)) continue;
     const abre = LINHA_DE_INICIO.exec(linha)?.[1];
     const fecha = LINHA_DE_FIM.exec(linha)?.[1];
     if (abre !== undefined) {
-      if (aberto) return { erro: `o bloco "${aberto.nome}" não foi fechado antes da linha ${i + 1}.` };
+      if (aberto) return { erro: `o bloco "${aberto.name}" não foi fechado antes da linha ${i + 1}.` };
       if (blocos.has(abre)) return { erro: `o bloco "${abre}" aparece mais de uma vez.` };
-      aberto = { nome: abre, de: i };
+      aberto = { name: abre, de: i };
     } else if (fecha !== undefined) {
-      if (!aberto || aberto.nome !== fecha) return { erro: `fim de bloco inesperado na linha ${i + 1}.` };
+      if (!aberto || aberto.name !== fecha) return { erro: `fim de bloco inesperado na linha ${i + 1}.` };
       blocos.set(fecha, {
-        nome: fecha,
+        name: fecha,
         de: aberto.de,
         ate: i,
         texto: linhas
@@ -80,7 +81,7 @@ function lerBlocos(linhas: readonly string[]): { blocos: Map<string, BlocoLido> 
       return { erro: `marcador do ez-ai não reconhecido na linha ${i + 1}.` };
     }
   }
-  if (aberto) return { erro: `o bloco "${aberto.nome}" não foi fechado.` };
+  if (aberto) return { erro: `o bloco "${aberto.name}" não foi fechado.` };
   return { blocos };
 }
 
@@ -106,7 +107,7 @@ const mesmoTexto = (a: string, b: string): boolean =>
 /**
  * Remove os blocos `antigos` (se ainda iguais ao projetado) e coloca os `novos` no texto. Bloco que continua existindo
  * é trocado no mesmo lugar; bloco novo vai para o fim. Falha fechada: marcador torto, bloco editado à mão sem
- * `--forcar`, ou bloco de mesmo nome que não é nosso.
+ * `--force`, ou bloco de mesmo nome que não é nosso.
  */
 export function mesclarBlocos(
   caminho: string,
@@ -117,7 +118,7 @@ export function mesclarBlocos(
 ): ResultadoDaMescla {
   const original = texto ?? '';
   const recusa = (mensagem: string): ResultadoDaMescla => ({
-    conteudo: original,
+    content: original,
     mudou: false,
     editadoAMao: false,
     erros: [`${caminho}: ${mensagem}`],
@@ -129,28 +130,28 @@ export function mesclarBlocos(
   const lido = lerBlocos(linhas);
   if ('erro' in lido) return recusa(`${lido.erro} Corrija o arquivo antes.`);
   const { blocos } = lido;
-  const valorNovo = new Map(novos.map((f) => [f.chave, String(f.valor)]));
+  const valorNovo = new Map(novos.map((f) => [f.key, String(f.valor)]));
   const erros: string[] = [];
   let editadoAMao = false;
   const tratados = new Set<string>();
 
   // De trás para frente, para os índices dos blocos anteriores continuarem valendo.
   for (const bloco of [...blocos.values()].sort((a, b) => b.de - a.de)) {
-    const antigo = antigos.find((f) => f.chave === bloco.nome);
+    const antigo = antigos.find((f) => f.key === bloco.name);
     if (!antigo) continue;
     if (!mesmoTexto(bloco.texto, String(antigo.valor))) {
       if (!forcar) {
         erros.push(
-          `${caminho}: o bloco "${bloco.nome}" foi editado à mão; use --forcar para guardar uma cópia do arquivo e seguir.`,
+          `${caminho}: o bloco "${bloco.name}" foi editado à mão; use --force para guardar uma cópia do arquivo e seguir.`,
         );
         continue;
       }
       editadoAMao = true;
     }
-    const novo = valorNovo.get(bloco.nome);
+    const novo = valorNovo.get(bloco.name);
     if (novo !== undefined) {
       linhas.splice(bloco.de, bloco.ate - bloco.de + 1, ...novo.split('\n'));
-      tratados.add(bloco.nome);
+      tratados.add(bloco.name);
     } else {
       const antes = bloco.de > 0 && (linhas[bloco.de - 1] ?? '').trim() === '' ? 1 : 0;
       linhas.splice(bloco.de - antes, bloco.ate - bloco.de + 1 + antes);
@@ -159,18 +160,18 @@ export function mesclarBlocos(
   for (const [nome, valor] of valorNovo) {
     if (tratados.has(nome)) continue;
     const existente = blocos.get(nome);
-    if (existente && !antigos.some((f) => f.chave === nome)) {
+    if (existente && !antigos.some((f) => f.key === nome)) {
       if (!mesmoTexto(existente.texto, valor)) {
         erros.push(`${caminho}: o bloco "${nome}" já existe e não é deste pacote; renomeie ou apague o bloco.`);
       }
       continue;
     }
-    if (existente) continue; // antigo editado à mão sem --forcar: o erro já foi dito acima
+    if (existente) continue; // antigo editado à mão sem --force: o erro já foi dito acima
     if (linhas.length > 0 && (linhas[linhas.length - 1] ?? '').trim() !== '') linhas.push('');
     linhas.push(...valor.split('\n'));
   }
-  if (erros.length > 0) return { conteudo: original, mudou: false, editadoAMao: false, erros };
+  if (erros.length > 0) return { content: original, mudou: false, editadoAMao: false, erros };
   const conteudo = linhas.length === 0 ? '' : `${linhas.join(eol)}${eol}`;
   const mudou = !mesmoTexto(conteudo.trimEnd(), original.trimEnd());
-  return { conteudo: mudou ? conteudo : original, mudou, editadoAMao, erros: [] };
+  return { content: mudou ? conteudo : original, mudou, editadoAMao, erros: [] };
 }

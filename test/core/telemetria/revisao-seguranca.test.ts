@@ -13,9 +13,9 @@ import { arquivosEmMemoria, gitEmMemoria, identidadeFixa, relogioFixo } from '..
 
 const config = (variavel: string) =>
   JSON.stringify({
-    versaoConfig: 0,
-    ambientes: ['claude-code'],
-    telemetria: { endpoint: 'https://langfuse.exemplo.com/api/public/otel/v1/traces', variavelDoToken: variavel },
+    configVersion: 0,
+    environments: ['claude-code'],
+    telemetry: { endpoint: 'https://langfuse.exemplo.com/api/public/otel/v1/traces', tokenVariable: variavel },
   });
 
 describe('M1: o nome da variável do token fica restrito', () => {
@@ -50,15 +50,15 @@ describe('M2 e M3: padrões de segredo', () => {
 describe('B3: data inválida não derruba o span', () => {
   it('cai para 0 em vez de lançar', () => {
     const e = {
-      versaoEvento: 0,
-      em: '2026-11-04T10:00:00Z',
-      tipo: 'etapa',
-      ator: { tipo: 'agente', id: 'x' },
+      eventVersion: 0,
+      at: '2026-11-04T10:00:00Z',
+      type: 'step',
+      actor: { type: 'agent', id: 'x' },
       harness: '0.0.0',
-      resultado: 'executado',
-      dados: { item: 'a', etapa: 'E1', agente: 'b', ciclo: 1, rodada: 1, inicio: 'x', fim: 'y' },
+      result: 'executed',
+      data: { item: 'a', step: 'E1', agent: 'b', cycle: 1, round: 1, start: 'x', end: 'y' },
       seq: 1,
-      anterior: null,
+      previous: null,
       hash: 'h'.repeat(64),
     } as unknown as EventoDeAuditoria;
     expect(() => eventoParaSpan(e)).not.toThrow();
@@ -71,22 +71,22 @@ describe('B2: marcador além do log', () => {
     const ctx = {
       arquivos: arquivosEmMemoria({
         '.harness/config.json': config('LANGFUSE_AUTH'),
-        '.harness/auditoria/.exportado.json': '{"seq":999999}\n',
+        '.harness/audit/.exportado.json': '{"seq":999999}\n',
       }),
       git: gitEmMemoria({}),
       relogio: relogioFixo(),
-      identidade: identidadeFixa('pessoa@exemplo.com'),
+      identity: identidadeFixa('pessoa@exemplo.com'),
       harness: '0.0.0',
-      tipoDeAtor: 'humano' as const,
+      tipoDeAtor: 'human' as const,
       enviador: { enviar },
     };
     await registrarEvento(ctx, {
-      tipo: 'operacao',
-      resultado: 'executado',
-      dados: { comando: 'list', dryRun: false, pacotes: [] },
+      type: 'operation',
+      result: 'executed',
+      data: { command: 'list', dryRun: false, packages: [] },
     });
     const r = await exportarTelemetria(ctx, { dryRun: false });
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros.join(' ')).toMatch(/marcador/);
     expect(enviar).not.toHaveBeenCalled();
   });

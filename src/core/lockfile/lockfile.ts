@@ -19,12 +19,12 @@ import { LIMITES } from '../manifesto/schema.js';
 import { SCHEMA_DO_LOCKFILE } from './schema.js';
 
 export interface PacoteTravado {
-  readonly nome: string;
+  readonly name: string;
   readonly login: string;
-  readonly pacote: string;
+  readonly package: string;
   /** Versão exata instalada. */
-  readonly versao: string;
-  readonly origem: Origem;
+  readonly version: string;
+  readonly source: Origem;
   /** Só em origem GitHub. */
   readonly tag?: string;
   /** Só em origem GitHub. */
@@ -32,17 +32,17 @@ export interface PacoteTravado {
   /** `sha256:<hex>` de `hashDoConteudo`. Aqui só o formato é conferido; a F2 recalcula. */
   readonly hash: string;
   /** Assinante conferido na instalação (Sigstore, ADR-0035). Ausente = nunca verificado. Mudar de assinante exige remove + add. */
-  readonly assinatura?: IdentidadeAssinante;
+  readonly signature?: IdentidadeAssinante;
   /** Itens de aprovação própria aprovados nominalmente; igual à lista que a policy exige (`pendentesDeAprovacao`). */
-  readonly aprovacoesProprias: readonly EntradaDeAprovacao[];
+  readonly ownApprovals: readonly EntradaDeAprovacao[];
   /** Retrato do que foi aprovado; base de `diferencaDePermissoes` no `update`. */
-  readonly componentes: readonly Componente[];
+  readonly components: readonly Componente[];
 }
 
 export interface Lockfile {
-  readonly versaoLockfile: 0;
+  readonly lockfileVersion: 0;
   /** Em ordem de nome. */
-  readonly pacotes: readonly PacoteTravado[];
+  readonly packages: readonly PacoteTravado[];
 }
 
 type Json = Record<string, unknown>;
@@ -50,34 +50,34 @@ type Json = Record<string, unknown>;
 const validarSchema = criarValidador(SCHEMA_DO_LOCKFILE);
 
 function lockfileDe(dado: Json): Lockfile {
-  const pacotes = dado.pacotes as Json;
+  const pacotes = dado.packages as Json;
   return {
-    versaoLockfile: 0,
-    pacotes: Object.keys(pacotes)
+    lockfileVersion: 0,
+    packages: Object.keys(pacotes)
       .sort()
       .map((nome) => {
         const e = pacotes[nome] as Json;
         return {
-          nome,
+          name: nome,
           ...partesDoNome(nome),
-          versao: String(e.versao),
-          origem: lerOrigem(String(e.origem)).origem,
+          version: String(e.version),
+          source: lerOrigem(String(e.source)).source,
           ...(typeof e.tag === 'string' ? { tag: e.tag } : {}),
           ...(typeof e.commit === 'string' ? { commit: e.commit } : {}),
           hash: String(e.hash),
-          ...(e.assinatura
+          ...(e.signature
             ? {
-                assinatura: {
-                  identidade: String((e.assinatura as Json).identidade),
-                  emissor: String((e.assinatura as Json).emissor),
+                signature: {
+                  identity: String((e.signature as Json).identity),
+                  issuer: String((e.signature as Json).issuer),
                 },
               }
             : {}),
-          aprovacoesProprias: lista<Json>(e.aprovacoesProprias).map((a) => ({
+          ownApprovals: lista<Json>(e.ownApprovals).map((a) => ({
             id: String(a.id),
-            impressao: String(a.impressao),
+            fingerprint: String(a.fingerprint),
           })),
-          componentes: lista<unknown>(e.componentes).map(componenteDe),
+          components: lista<unknown>(e.components).map(componenteDe),
         };
       }),
   };
@@ -85,33 +85,33 @@ function lockfileDe(dado: Json): Lockfile {
 
 function regrasSemanticas(dado: Json, lock: Lockfile): ErroDeContrato[] {
   const erros: ErroDeContrato[] = [];
-  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, regra, mensagem });
-  const entradas = dado.pacotes as Json;
+  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, rule: regra, mensagem });
+  const entradas = dado.packages as Json;
 
-  for (const p of lock.pacotes) {
-    const base = `/pacotes/${p.nome.replace('/', '~1')}`;
-    const { problema } = lerOrigem(String((entradas[p.nome] as Json).origem));
-    if (problema) falha(`${base}/origem`, p.origem.tipo === 'local' ? 'caminho' : 'url-canonica', problema);
-    regrasDoNome(p.nome, p.origem, base, falha);
-    if (p.origem.tipo === 'github') {
+  for (const p of lock.packages) {
+    const base = `/packages/${p.name.replace('/', '~1')}`;
+    const { problema } = lerOrigem(String((entradas[p.name] as Json).source));
+    if (problema) falha(`${base}/source`, p.source.type === 'local' ? 'caminho' : 'url-canonica', problema);
+    regrasDoNome(p.name, p.source, base, falha);
+    if (p.source.type === 'github') {
       if (p.tag === undefined || p.commit === undefined) {
         falha(base, 'origem-git-sem-trava', 'pacote do GitHub precisa de "tag" e "commit" no lockfile');
       }
-      if (p.tag !== undefined && p.tag !== p.versao && p.tag !== `v${p.versao}`) {
-        falha(`${base}/tag`, 'tag-da-versao', `a tag "${p.tag}" não corresponde à versão ${p.versao}`);
+      if (p.tag !== undefined && p.tag !== p.version && p.tag !== `v${p.version}`) {
+        falha(`${base}/tag`, 'tag-da-versao', `a tag "${p.tag}" não corresponde à versão ${p.version}`);
       }
     } else if (p.tag !== undefined || p.commit !== undefined) {
       falha(base, 'local-sem-git', 'pacote local não tem "tag" nem "commit"; só o hash do conteúdo');
     }
     const vistos = new Set<string>();
-    p.aprovacoesProprias.forEach((a, i) => {
-      const caminho = `${base}/aprovacoesProprias/${i}`;
+    p.ownApprovals.forEach((a, i) => {
+      const caminho = `${base}/ownApprovals/${i}`;
       const problemaDoId = problemaNoId(a.id);
       if (problemaDoId) falha(`${caminho}/id`, 'id-de-item', problemaDoId);
       if (vistos.has(a.id)) falha(`${caminho}/id`, 'id-repetido', `o id "${a.id}" aparece mais de uma vez`);
       vistos.add(a.id);
     });
-    regrasDosComponentes(p.componentes, `${base}/componentes`, falha);
+    regrasDosComponentes(p.components, `${base}/components`, falha);
   }
   return erros;
 }

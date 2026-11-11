@@ -29,15 +29,15 @@ describe('chunks', () => {
 
   it('divide seção grande em janelas e nunca devolve chunk vazio', () => {
     const grande = Array.from({ length: 200 }, (_, i) => `linha ${i} ${'x'.repeat(40)}`).join('\n');
-    const chunks = cortarEmChunks('projeto:codigo', 'src/a.ts', grande, 'codigo');
+    const chunks = cortarEmChunks('projeto:codigo', 'src/a.ts', grande, 'code');
     expect(chunks.length).toBeGreaterThan(3);
     expect(chunks[0]?.linhaInicio).toBe(1);
     expect(chunks.at(-1)?.linhaFim).toBe(200);
-    expect(cortarEmChunks('f', 'a.ts', '\n\n', 'codigo')).toEqual([]);
+    expect(cortarEmChunks('f', 'a.ts', '\n\n', 'code')).toEqual([]);
   });
 
   it('corta linha enorme (arquivo minificado)', () => {
-    const [c] = cortarEmChunks('f', 'a.ts', 'y'.repeat(100_000), 'codigo');
+    const [c] = cortarEmChunks('f', 'a.ts', 'y'.repeat(100_000), 'code');
     expect(c?.texto.length).toBe(2000);
   });
 
@@ -55,14 +55,14 @@ describe('busca', () => {
 
   it('C0 pontua caminho acima de título e fusão sobe quem as duas camadas acham', () => {
     const mapa = mapaDosChunks(cortarEmChunks('f', 'docs/adr/auditoria.md', md, 'markdown'));
-    mapa.push({ arquivo: 'docs/outro.md', titulos: ['auditoria'] });
-    expect(buscarNoMapa(mapa, 'auditoria', 5)).toEqual(['docs/adr/auditoria.md', 'docs/outro.md']);
+    mapa.push({ file: 'docs/outro.md', titulos: ['audit'] });
+    expect(buscarNoMapa(mapa, 'audit', 5)).toEqual(['docs/adr/auditoria.md', 'docs/outro.md']);
     expect(mesclarResultados(['a', 'b'], ['b', 'c'], 3)).toEqual(['b', 'a', 'c']);
     expect(mesclarResultados([], ['z'], 5)).toEqual(['z']);
   });
 });
 
-describe('fontes', () => {
+describe('sources', () => {
   it('lê só as pastas curadas, pula sensível e grande, e informa o que pulou', async () => {
     const fs = arquivosEmMemoria({
       'docs/a.md': '# A\ntexto',
@@ -74,7 +74,7 @@ describe('fontes', () => {
       'README.md': '# Readme',
     });
     const base = await reunirChunks(fs);
-    const arquivos = new Set(base.chunks.map((c) => c.arquivo));
+    const arquivos = new Set(base.chunks.map((c) => c.file));
     expect([...arquivos].sort()).toEqual(['README.md', 'docs/a.md', 'src/a.ts']);
     expect(base.pulados.join()).toMatch(/docs\/grande\.md/);
     expect(ehSensivel('a/.npmrc')).toBe(true);
@@ -84,7 +84,7 @@ describe('fontes', () => {
 });
 
 describe('perguntas', () => {
-  const ok = { id: 'q1', pergunta: 'Onde?', tipo: 'onde-fica', esperado: ['docs/a.md'] };
+  const ok = { id: 'q1', question: 'Onde?', type: 'onde-fica', expected: ['docs/a.md'] };
 
   it('aceita uma lista válida', () => {
     expect(validarPerguntas(JSON.stringify([ok])).ok).toBe(true);
@@ -93,9 +93,9 @@ describe('perguntas', () => {
   it.each([
     ['campo desconhecido', [{ ...ok, extra: 1 }]],
     ['id repetido', [ok, ok]],
-    ['tipo ruim', [{ ...ok, tipo: 'x' }]],
-    ['caminho com ..', [{ ...ok, esperado: ['../x'] }]],
-    ['sem esperado', [{ ...ok, esperado: [] }]],
+    ['tipo ruim', [{ ...ok, type: 'x' }]],
+    ['caminho com ..', [{ ...ok, expected: ['../x'] }]],
+    ['sem esperado', [{ ...ok, expected: [] }]],
     ['lista vazia', []],
   ])('recusa %s', (_nome, valor) => {
     expect(validarPerguntas(JSON.stringify(valor)).ok).toBe(false);

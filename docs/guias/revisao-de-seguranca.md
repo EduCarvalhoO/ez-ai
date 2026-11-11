@@ -31,7 +31,7 @@ Em toda mudança sensível ([time de agentes §2](time-de-agentes.md#2-fluxo-com
 - [ ] Workflows de CI com permissões mínimas (`permissions:`), actions fixadas por SHA, sem segredo exposto a PR de fork.
 
 ### Propriedade de pacotes ([ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-github.md))
-- [ ] Nada escreve em pasta de pacote instalado (`.harness/pacotes/**`) fora da atualização vinda da origem.
+- [ ] Nada escreve em pasta de pacote instalado (`.harness/packages/**`) fora da atualização vinda da origem.
 - [ ] Identidade do assinante confere com o dono gravado no lockfile; troca de dono bloqueia, não só avisa.
 - [ ] Aumento de permissão declarada entre versões exige aprovação humana nova.
 

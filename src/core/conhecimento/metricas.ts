@@ -5,7 +5,7 @@
 export interface PerguntaDeReferencia {
   readonly id: string;
   /** Arquivos que contêm a resposta (caminhos relativos, com `/`). */
-  readonly esperado: readonly string[];
+  readonly expected: readonly string[];
 }
 
 export interface ResultadoDaBusca {
@@ -48,10 +48,10 @@ export function calcularMetricasDaBase(
   for (const p of perguntas) {
     const devolvidos = porId.get(p.id) ?? [];
     if (devolvidos.length === 0) semResultado += 1;
-    const esperado = new Set(p.esperado);
+    const esperado = new Set(p.expected);
     const posicao = devolvidos.findIndex((arquivo) => esperado.has(arquivo));
-    r5.push(recall(p.esperado, devolvidos, 5));
-    r10.push(recall(p.esperado, devolvidos, 10));
+    r5.push(recall(p.expected, devolvidos, 5));
+    r10.push(recall(p.expected, devolvidos, 10));
     rr.push(posicao === -1 ? 0 : 1 / (posicao + 1));
     citacao.push(posicao === 0 ? 1 : 0);
   }

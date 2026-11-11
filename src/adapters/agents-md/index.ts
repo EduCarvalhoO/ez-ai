@@ -4,10 +4,10 @@
 import { type Adapter, criarAdapter } from '../../core/index.js';
 
 export const adapterAgentsMd: Adapter = criarAdapter({
-  ambiente: 'agents-md',
+  environment: 'agents-md',
   capacidades: {
-    instrucao: { suporte: 'nativo', projeta: true },
-    agente: { suporte: 'ausente', projeta: false },
+    instruction: { suporte: 'nativo', projeta: true },
+    agent: { suporte: 'ausente', projeta: false },
     skill: { suporte: 'ausente', projeta: false },
     hook: { suporte: 'ausente', projeta: false },
     mcp: { suporte: 'ausente', projeta: false },
@@ -20,5 +20,5 @@ export const adapterAgentsMd: Adapter = criarAdapter({
   caminhoDaInstrucao: () => 'AGENTS.md',
   caminhoDoAgente: () => 'AGENTS.md',
   pastaDaSkill: () => 'AGENTS.md',
-  blocoDeInstrucoes: { arquivo: 'AGENTS.md' },
+  blocoDeInstrucoes: { file: 'AGENTS.md' },
 });

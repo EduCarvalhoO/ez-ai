@@ -66,7 +66,7 @@
 | Nome | Tipo | Arquivos | Regras em |
 |---|---|---|---|
 | `doc-writer` | Agente | `.claude/agents/doc-writer.md`, `.github/agents/doc-writer.agent.md` | [padrão de documentação](padrao-de-documentacao.md) |
-| `documentacao` | Rule | `.claude/rules/documentacao.md`, `.github/instructions/documentacao.instructions.md` | [padrão de documentação](padrao-de-documentacao.md) |
+| `documentation` | Rule | `.claude/rules/documentacao.md`, `.github/instructions/documentacao.instructions.md` | [padrão de documentação](padrao-de-documentacao.md) |
 | `agentes-e-skills` | Rule | `.claude/rules/agentes-e-skills.md`, `.github/instructions/agentes-e-skills.instructions.md` | este guia |
 | `localizar-documento` | Skill | `.claude/skills/localizar-documento/` | [padrão de documentação §5](padrao-de-documentacao.md#5-fluxo-para-criar-ou-alterar-um-documento) |
 | `novo-documento` | Skill | `.claude/skills/novo-documento/` | [padrão de documentação §3 e §5](padrao-de-documentacao.md#3-tipos-de-documento) |
@@ -78,7 +78,7 @@
 | `seguranca` | Agente | `.claude/agents/seguranca.md`, `.github/agents/seguranca.agent.md` | [revisão de segurança](revisao-de-seguranca.md) |
 | `painel` | Agente | `.claude/agents/painel.md`, `.github/agents/painel.agent.md`. `Em aberto`: "banco do artifact só leitura" e "só altera o painel" são limites por instrução, sem hook; no Copilot não há publicação de artifact | [time de agentes §6](time-de-agentes.md#6-definição-de-pronto-e-commit) |
 | `professor` | Agente | `.claude/agents/professor.md`, `.github/agents/professor.agent.md`. `Em aberto`: "não editar arquivos" é garantido só pelo `tools` somente leitura; ser chamado só sob demanda (pedido, dúvida ou decisão importante do Eduardo) é regra do orquestrador, sem hook | [time de agentes §7](time-de-agentes.md#7-decisões-didáticas-agente-professor) |
-| `codigo` | Rule | `.claude/rules/codigo.md`, `.github/instructions/codigo.instructions.md` | [padrão de código e testes](padrao-de-codigo-e-testes.md) |
+| `code` | Rule | `.claude/rules/codigo.md`, `.github/instructions/codigo.instructions.md` | [padrão de código e testes](padrao-de-codigo-e-testes.md) |
 | `ci-e-dependencias` | Rule | `.claude/rules/ci-e-dependencias.md`, `.github/instructions/ci-e-dependencias.instructions.md` | [revisão de segurança](revisao-de-seguranca.md) |
 | `ficha-de-tarefa` | Skill | `.claude/skills/ficha-de-tarefa/` | [time de agentes §4](time-de-agentes.md#4-handoffs) |
 | `escopo-da-mudanca` | Skill | `.claude/skills/escopo-da-mudanca/` | [time de agentes §2](time-de-agentes.md#2-fluxo-com-gates) |
@@ -86,7 +86,7 @@
 | `doc-writer-limites` | Hook | `.claude/hooks/doc-writer-limites.mjs`, registrado em `.claude/settings.json`. Só age quando `agent_type` é `doc-writer`: Bash só para os três scripts das skills, Edit e Write só em `docs/`. `Em aberto`: sem `agent_type` no input o hook libera tudo; no Copilot não há equivalente | [regra 8 da seção 3](#3-regras-comuns) |
 
 ## 8. Qualidade medida (Sprint 19, ADR-0039)
-Rode `npx ez-ai qualidade <pasta ou pacote>` antes do PR (`--estrito` trata aviso como erro). O mesmo checklist roda no CI sobre o pacote oficial e o `.claude/`.
+Rode `npx ez-ai quality <pasta ou pacote>` antes do PR (`--strict` trata aviso como erro). O mesmo checklist roda no CI sobre o pacote oficial e o `.claude/`.
 
 | Componente | O que o checklist cobra |
 |---|---|
@@ -94,4 +94,4 @@ Rode `npx ez-ai qualidade <pasta ou pacote>` antes do PR (`--estrito` trata avis
 | Agente | descrição curta com gatilho; `tools` mínimas (nunca `*`); `model` pelo papel (haiku para busca, sonnet padrão, opus só decisão); `maxTurns`; corpo até 120 linhas; formato da saída dito |
 | Script | `--help` com uso e códigos de saída; `process.exitCode` explícito (0 ok, 1 falha do conteúdo, 2 uso incorreto); saída legível e mensagem que diz como corrigir; sem rede, salvo `// qualidade: rede (motivo)` |
 
-Frontmatter de agente do Claude Code (`tools`, `model`, `maxTurns`) não vale para o Copilot; nos espelhos de `.github/agents/` o corpo continua idêntico (ADR-0008). Para medir o antes e o depois, guarde a saída de `ez-ai qualidade <alvo> --json` no PR.
+Frontmatter de agente do Claude Code (`tools`, `model`, `maxTurns`) não vale para o Copilot; nos espelhos de `.github/agents/` o corpo continua idêntico (ADR-0008). Para medir o antes e o depois, guarde a saída de `ez-ai quality <alvo> --json` no PR.

@@ -27,4 +27,4 @@ Aplicar D1 a D6. A porta `SistemaDeArquivos` ganha `criarExclusivo`, que só a t
 Sem bloqueantes. Corrigidos na sprint: trava com nonce (só solta a própria; só toma a que continua igual à que julgou velha; data no futuro ou trava ilegível por muito tempo também é tomada) e `listar` ignora só o padrão exato de temporário. Ficam em aberto: o reparo ainda não sela um `.jsonl` ilegível (não UTF-8 ou maior que 8 MB), e o evento do reparo não guarda o hash dos arquivos selados.
 
 ## Em aberto
-Troca atômica da pasta do pacote no `apply`. Mesmas travas para `export` (cursor de telemetria) se ele passar a rodar em paralelo.
+(Resolvido no [ADR-0042](0042-interface-em-ingles-antes-da-v1.md): troca da pasta do pacote no `apply`, selo de `.jsonl` ilegível e hash dos selados no evento do reparo.) Mesmas travas para `export` (cursor de telemetria) se ele passar a rodar em paralelo.

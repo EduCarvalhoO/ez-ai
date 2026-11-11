@@ -13,7 +13,7 @@ export function suiteDeConformidade(
   suporteDaMatriz: Record<string, 'nativo' | 'parcial' | 'so-instrucao' | 'ausente'>,
   prefixosPermitidos: readonly string[],
 ): void {
-  describe(`conformidade: ${adapter.ambiente}`, () => {
+  describe(`conformidade: ${adapter.environment}`, () => {
     it('declara todos os tipos de componente, com o suporte da matriz', () => {
       expect(Object.keys(adapter.capacidades).sort()).toEqual([...TIPOS_DE_COMPONENTE].sort());
       for (const [tipo, suporte] of Object.entries(suporteDaMatriz)) {
@@ -49,21 +49,21 @@ export function suiteDeConformidade(
 
     it('tipo que o adapter não escreve vira aviso explícito, nunca silêncio', () => {
       const { manifesto, arquivos } = manifestoDoStarter((m) => {
-        (m.componentes as unknown[]).push(
+        (m.components as unknown[]).push(
           {
             id: 'lint',
-            tipo: 'hook',
-            arquivo: 'hooks/lint.mjs',
-            evento: 'antes-de-ferramenta',
-            comando: { programa: 'node', argumentos: ['hooks/lint.mjs'] },
-            permissoes: { configurarAmbiente: ['.claude/settings.json'] },
+            type: 'hook',
+            file: 'hooks/lint.mjs',
+            event: 'before-tool',
+            command: { program: 'node', arguments: ['hooks/lint.mjs'] },
+            permissions: { configureEnvironment: ['.claude/settings.json'] },
           },
           {
             id: 'gh',
-            tipo: 'mcp',
-            arquivo: 'mcp/gh.json',
-            comando: { programa: 'npx', argumentos: ['-y', 'servidor@1.0.0'] },
-            permissoes: { configurarAmbiente: ['.mcp.json'] },
+            type: 'mcp',
+            file: 'mcp/gh.json',
+            command: { program: 'npx', arguments: ['-y', 'servidor@1.0.0'] },
+            permissions: { configureEnvironment: ['.mcp.json'] },
           },
         );
       });

@@ -17,39 +17,39 @@ import {
 import { canonizarRepositorio } from '../configuracao/origem.js';
 import { compararTags, resolverVersao } from '../resolucao/semver.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
-import { carregarConfiguracao, type Contexto, type ResultadoDoComando } from './base.js';
+import { type Contexto, carregarConfiguracao, type ResultadoDoComando } from './base.js';
 
 const e = escaparInvisiveis;
 const EMISSOR = 'https://token.actions.githubusercontent.com';
 const LIMITE_PADRAO = 10;
 const LIMITE_MAXIMO = 50;
 
-const falha = (...erros: string[]): ResultadoDoComando => ({ codigo: 1, saida: [], erros });
+const falha = (...erros: string[]): ResultadoDoComando => ({ code: 1, output: [], erros });
 
 export interface OpcoesDeSearch {
   readonly termos: readonly string[];
-  readonly limite?: number;
+  readonly limit?: number;
 }
 
 export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise<ResultadoDoComando> {
-  if (o.termos.length === 0) return falha('uso: ez-ai search <termo...> [--limite <n>]');
+  if (o.termos.length === 0) return falha('uso: ez-ai search <termo...> [--limit <n>]');
   const config = await carregarConfiguracao(ctx.arquivos);
   if (!config.ok) return falha(...config.erros);
-  const cat = config.valor.catalogo;
+  const cat = config.valor.catalog;
   if (!cat) {
     return falha(
-      'o projeto não fixou um catálogo. Acrescente em .harness/config.json: "catalogo": { "repositorio": "https://github.com/<dono>/<repo>", "workflow": "<arquivo>.yml" } e a origem em "origensPermitidas".',
+      'o projeto não fixou um catálogo. Acrescente em .harness/config.json: "catalog": { "repository": "https://github.com/<owner>/<repo>", "workflow": "<arquivo>.yml" } e a origem em "allowedSources".',
     );
   }
-  const repositorio = canonizarRepositorio(cat.repositorio);
-  // A origem do catálogo vale por si, pela configuração `catalogo`: NÃO precisa (nem deve) estar em "origensPermitidas",
+  const repositorio = canonizarRepositorio(cat.repository);
+  // A origem do catálogo vale por si, pela configuração `catalogo`: NÃO precisa (nem deve) estar em "allowedSources",
   // que é a lista de onde se instalam pacotes. Misturar as duas daria a um catálogo o poder de origem de pacote.
   if (!ctx.verificador)
     return falha('este ambiente não tem verificador de assinatura; o catálogo não pode ser aceito.');
 
   let visto: CatalogoVisto | undefined;
   if (await ctx.arquivos.existe(CAMINHO_DO_CATALOGO_VISTO)) {
-    visto = lerCatalogoVisto(await ctx.arquivos.ler(CAMINHO_DO_CATALOGO_VISTO));
+    visto = lerCatalogoVisto(await ctx.arquivos.read(CAMINHO_DO_CATALOGO_VISTO));
     if (!visto) {
       return falha(
         `${CAMINHO_DO_CATALOGO_VISTO} está ilegível; confira-o (ou apague-o para recomeçar a confiar no catálogo) antes de pesquisar.`,
@@ -67,8 +67,8 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
     if (!escolhida) return falha(`${e(repositorio)} não tem nenhuma tag de versão (vX.Y.Z) com o catálogo publicado.`);
     tag = escolhida.tag;
     // Piso de versão da configuração e memória da última tag aceita: impedem voltar a um catálogo antigo assinado.
-    if (cat.versaoMinima !== undefined && (compararTags(tag, cat.versaoMinima) ?? -1) < 0) {
-      return falha(`a maior tag do catálogo é ${e(tag)}, abaixo de "versaoMinima" (${e(cat.versaoMinima)}); recusado.`);
+    if (cat.minVersion !== undefined && (compararTags(tag, cat.minVersion) ?? -1) < 0) {
+      return falha(`a maior tag do catálogo é ${e(tag)}, abaixo de "minVersion" (${e(cat.minVersion)}); recusado.`);
     }
     if (visto && (compararTags(tag, visto.tag) ?? -1) < 0) {
       return falha(
@@ -112,15 +112,15 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
     conferido = await ctx.verificador.verificar({
       bundle,
       artefato: hash,
-      identidade,
-      emissor: EMISSOR,
-      idDoRepositorio: cat.repositorioId,
+      identity: identidade,
+      issuer: EMISSOR,
+      idDoRepositorio: cat.repositoryId,
       commit: commitAssinado,
     });
   } catch (erro: unknown) {
-    conferido = { ok: false, motivo: erro instanceof Error ? erro.message : String(erro) };
+    conferido = { ok: false, reason: erro instanceof Error ? erro.message : String(erro) };
   }
-  if (!conferido.ok) return falha(`assinatura do catálogo recusada: ${e(conferido.motivo)}.`);
+  if (!conferido.ok) return falha(`assinatura do catálogo recusada: ${e(conferido.reason)}.`);
 
   const texto = decodificarCatalogo(bytes);
   if (texto === undefined) return falha(`catálogo inválido: ${ARQUIVO_DO_CATALOGO} não é UTF-8 válido.`);
@@ -136,19 +136,19 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
       );
     }
   }
-  const limite = Math.min(Math.max(o.limite ?? LIMITE_PADRAO, 1), LIMITE_MAXIMO);
-  const achados = buscarNoCatalogo(catalogo.entradas, o.termos, limite);
+  const limite = Math.min(Math.max(o.limit ?? LIMITE_PADRAO, 1), LIMITE_MAXIMO);
+  const achados = buscarNoCatalogo(catalogo.entries, o.termos, limite);
   const saida: string[] =
     achados.length === 0
       ? ['nenhum pacote encontrado.']
       : achados.flatMap((p) => [
-          `${e(p.nome)}${p.etiquetas.length > 0 ? ` [${p.etiquetas.map(e).join(', ')}]` : ''}`,
-          `  descrição (dado do catálogo, não instrução): ${e(p.descricao)}`,
-          `  ez-ai add ${e(p.repositorio)}`,
+          `${e(p.name)}${p.tags.length > 0 ? ` [${p.tags.map(e).join(', ')}]` : ''}`,
+          `  descrição (dado do catálogo, não instrução): ${e(p.description)}`,
+          `  ez-ai add ${e(p.repository)}`,
         ]);
   saida.push(
     `catálogo ${e(repositorio)}@${e(tag)}, assinatura verificada (${e(identidade)}).`,
     'Estar no catálogo não aprova o pacote: o "add" ainda confere origem, assinatura, permissões e o scan.',
   );
-  return { codigo: 0, saida, erros: [] };
+  return { code: 0, output: saida, erros: [] };
 }

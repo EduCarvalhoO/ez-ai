@@ -1,15 +1,15 @@
-// Gravação do log de auditoria local (ADR-0022, spec de auditoria): `.harness/auditoria/AAAA-MM.jsonl`, uma linha por
+// Gravação do log de auditoria local (ADR-0022, spec de auditoria): `.harness/audit/YYYY-MM.jsonl`, uma linha por
 // evento, encadeada por hash entre os arquivos mensais. Usa só as portas; o log nunca é versionado.
 // Duas execuções ao mesmo tempo não podem se atropelar: toda leitura-e-gravação da corrente acontece sob uma trava
-// por arquivo (`.trava`, criada de forma exclusiva), e cada gravação é atômica (ADR-0041).
+// por arquivo (`.lock`, criada de forma exclusiva), e cada gravação é atômica (ADR-0041).
 import type { Identidade, Relogio, SistemaDeArquivos } from '../portas/index.js';
 import { encadear, verificarCadeia } from './cadeia.js';
 import { type EventoDeAuditoria, type EventoSemCorrente, validarEvento } from './evento.js';
 
-export const PASTA_DA_AUDITORIA = '.harness/auditoria';
-export const CAMINHO_DA_TRAVA = `${PASTA_DA_AUDITORIA}/.trava`;
+export const PASTA_DA_AUDITORIA = '.harness/audit';
+export const CAMINHO_DA_TRAVA = `${PASTA_DA_AUDITORIA}/.lock`;
 /** Onde o reparo guarda, intactos, os arquivos da corrente quebrada. */
-export const PASTA_DOS_SELADOS = `${PASTA_DA_AUDITORIA}/selado`;
+export const PASTA_DOS_SELADOS = `${PASTA_DA_AUDITORIA}/sealed`;
 
 /** Trava mais velha que isto é de um processo que morreu: pode ser tomada. */
 const TRAVA_VELHA_EM_MS = 60_000;
@@ -19,19 +19,19 @@ const ESPERA_ENTRE_TENTATIVAS_MS = 50;
 export interface ContextoDeAuditoria {
   readonly arquivos: SistemaDeArquivos;
   readonly relogio: Relogio;
-  readonly identidade: Identidade;
+  readonly identity: Identidade;
   /** Versão do harness, no formato semver do contrato. */
   readonly harness: string;
   /** Autodeclarado e nunca usado para autorizar (spec de auditoria). */
-  readonly tipoDeAtor: 'humano' | 'agente' | 'ci';
+  readonly tipoDeAtor: 'human' | 'agent' | 'ci';
   /** Espera entre tentativas de pegar a trava; só os testes trocam. */
   readonly esperar?: (ms: number) => Promise<void>;
 }
 
-export type PedidoDeEvento = Pick<EventoSemCorrente, 'tipo' | 'resultado' | 'codigoDoMotivo' | 'detalhe' | 'dados'>;
+export type PedidoDeEvento = Pick<EventoSemCorrente, 'type' | 'result' | 'reasonCode' | 'detail' | 'data'>;
 
 function arquivosDoLog(todos: readonly string[]): string[] {
-  return todos.filter((c) => /^\.harness\/auditoria\/\d{4}-\d{2}\.jsonl$/.test(c)).sort();
+  return todos.filter((c) => /^\.harness\/audit\/\d{4}-\d{2}\.jsonl$/.test(c)).sort();
 }
 
 function linhasDe(texto: string): string[] {
@@ -41,7 +41,7 @@ function linhasDe(texto: string): string[] {
 async function linhasDoLog(arquivos: SistemaDeArquivos): Promise<string[]> {
   const linhas: string[] = [];
   for (const caminho of arquivosDoLog(await arquivos.listar(PASTA_DA_AUDITORIA))) {
-    linhas.push(...linhasDe(await arquivos.ler(caminho)));
+    linhas.push(...linhasDe(await arquivos.read(caminho)));
   }
   return linhas;
 }
@@ -66,14 +66,14 @@ export async function lerAuditoria(
 async function travaTomavel(ctx: ContextoDeAuditoria, ilegivelHaMuito: boolean): Promise<string | undefined> {
   let texto: string;
   try {
-    texto = await ctx.arquivos.ler(CAMINHO_DA_TRAVA);
+    texto = await ctx.arquivos.read(CAMINHO_DA_TRAVA);
   } catch {
     return undefined;
   }
   let em = Number.NaN;
   try {
     const lida: unknown = JSON.parse(texto);
-    em = typeof lida === 'object' && lida !== null && 'em' in lida ? Date.parse(String(lida.em)) : Number.NaN;
+    em = typeof lida === 'object' && lida !== null && 'at' in lida ? Date.parse(String(lida.at)) : Number.NaN;
   } catch {
     /* ilegível */
   }
@@ -90,16 +90,16 @@ function nonceAleatorio(): string {
 async function comTrava<T>(ctx: ContextoDeAuditoria, corpo: () => Promise<T>): Promise<T> {
   const { arquivos } = ctx;
   const esperar = ctx.esperar ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
-  const dono = (await ctx.identidade.atorAtual()).slice(0, 200);
+  const dono = (await ctx.identity.atorAtual()).slice(0, 200);
   let pegou = false;
   const nonce = nonceAleatorio();
-  const minhaMarca = `${JSON.stringify({ em: ctx.relogio.agora().toISOString(), dono, nonce })}\n`;
+  const minhaMarca = `${JSON.stringify({ at: ctx.relogio.agora().toISOString(), dono, nonce })}\n`;
   for (let tentativa = 0; tentativa < TENTATIVAS_DA_TRAVA && !pegou; tentativa++) {
     pegou = await arquivos.criarExclusivo(CAMINHO_DA_TRAVA, minhaMarca);
     if (pegou) break;
     const vista = await travaTomavel(ctx, tentativa >= 20);
     // Só apaga se ainda for a mesma trava que foi julgada velha (outro processo pode ter tomado nesse meio tempo).
-    if (vista !== undefined && (await arquivos.ler(CAMINHO_DA_TRAVA).catch(() => undefined)) === vista) {
+    if (vista !== undefined && (await arquivos.read(CAMINHO_DA_TRAVA).catch(() => undefined)) === vista) {
       await arquivos.remover(CAMINHO_DA_TRAVA);
       continue;
     }
@@ -114,7 +114,7 @@ async function comTrava<T>(ctx: ContextoDeAuditoria, corpo: () => Promise<T>): P
     return await corpo();
   } finally {
     // Solta só a própria trava: se outro processo a tomou (a nossa ficou velha), a dele não é apagada.
-    if ((await arquivos.ler(CAMINHO_DA_TRAVA).catch(() => undefined)) === minhaMarca) {
+    if ((await arquivos.read(CAMINHO_DA_TRAVA).catch(() => undefined)) === minhaMarca) {
       await arquivos.remover(CAMINHO_DA_TRAVA);
     }
   }
@@ -125,30 +125,30 @@ async function acrescentar(ctx: ContextoDeAuditoria, pedido: PedidoDeEvento): Pr
   const lido = await lerAuditoria(arquivos);
   if (!lido.ok) {
     throw new Error(
-      `${lido.mensagem}. Investigue antes de continuar; o harness não grava sobre ele (para selar a corrente quebrada e recomeçar: "ez-ai auditoria reparar").`,
+      `${lido.mensagem}. Investigue antes de continuar; o harness não grava sobre ele (para selar a corrente quebrada e recomeçar: "ez-ai audit repair").`,
     );
   }
   const agora = ctx.relogio.agora();
   const evento = encadear(lido.eventos.at(-1) ?? null, {
-    versaoEvento: 0,
-    em: agora.toISOString(),
-    tipo: pedido.tipo,
-    ator: { tipo: ctx.tipoDeAtor, id: await ctx.identidade.atorAtual() },
+    eventVersion: 0,
+    at: agora.toISOString(),
+    type: pedido.type,
+    actor: { type: ctx.tipoDeAtor, id: await ctx.identity.atorAtual() },
     harness: ctx.harness,
-    resultado: pedido.resultado,
-    ...(pedido.codigoDoMotivo ? { codigoDoMotivo: pedido.codigoDoMotivo } : {}),
-    ...(pedido.detalhe ? { detalhe: pedido.detalhe } : {}),
-    dados: pedido.dados,
+    result: pedido.result,
+    ...(pedido.reasonCode ? { reasonCode: pedido.reasonCode } : {}),
+    ...(pedido.detail ? { detail: pedido.detail } : {}),
+    data: pedido.data,
   });
   const linha = JSON.stringify(evento);
   const valido = validarEvento(linha);
   if (!valido.ok) {
     const e = valido.erros[0];
-    throw new Error(`evento de auditoria recusado (${e?.regra} em ${e?.caminho}): ${e?.mensagem}`);
+    throw new Error(`evento de auditoria recusado (${e?.rule} em ${e?.caminho}): ${e?.mensagem}`);
   }
   const mes = `${agora.getUTCFullYear()}-${String(agora.getUTCMonth() + 1).padStart(2, '0')}`;
   const caminho = `${PASTA_DA_AUDITORIA}/${mes}.jsonl`;
-  const existente = (await arquivos.existe(caminho)) ? await arquivos.ler(caminho) : '';
+  const existente = (await arquivos.existe(caminho)) ? await arquivos.read(caminho) : '';
   await arquivos.gravar(`${PASTA_DA_AUDITORIA}/.gitignore`, '*\n');
   await arquivos.gravar(caminho, `${existente}${linha}\n`);
   return evento;
@@ -162,6 +162,14 @@ export function registrarEvento(ctx: ContextoDeAuditoria, pedido: PedidoDeEvento
   return comTrava(ctx, () => acrescentar(ctx, pedido));
 }
 
+export interface ArquivoSelado {
+  /** Nome do arquivo mensal (`YYYY-MM.jsonl`). */
+  readonly file: string;
+  readonly bytes: number;
+  /** `sha256:<hex>` dos bytes exatos guardados em `sealed/`. */
+  readonly hash: string;
+}
+
 export interface ResultadoDoReparo {
   /** `true` quando a corrente já estava íntegra e nada foi mexido. */
   readonly integra: boolean;
@@ -169,16 +177,21 @@ export interface ResultadoDoReparo {
   readonly linhaQuebrada?: number;
   /** Eventos íntegros mantidos antes da quebra. */
   readonly mantidos: number;
-  /** Linhas seladas (da quebra até o fim), guardadas à parte e fora da corrente. */
+  /** Linhas seladas (da quebra até o fim), guardadas à parte e fora da corrente; não conta arquivo ilegível. */
   readonly seladas: number;
+  /** Arquivos mensais que não puderam ser lidos como texto (não UTF-8 ou grandes demais) e foram selados inteiros. */
+  readonly ilegiveis: number;
   readonly pastaDoSelo?: string;
+  /** Hash de cada arquivo guardado em `sealed/` (também gravado no evento do reparo). */
+  readonly sealed: readonly ArquivoSelado[];
 }
 
 /**
- * Sela a corrente quebrada (A1, ADR-0041). Os arquivos originais são copiados, sem mudança, para `selado/<instante>/`
- * (a prova do que havia); a corrente volta a ter só o trecho íntegro e recebe um evento `auditoria` que registra o
- * reparo. Nada é apagado sem cópia, e o reparo é sempre um evento no próprio log. Não conserta o trecho adulterado:
- * ele deixa de valer como evidência, e a quebra fica registrada.
+ * Sela a corrente quebrada (A1, ADR-0041, ADR-0042). Os arquivos originais são copiados, byte a byte, para
+ * `sealed/<instant>/` (a prova do que havia, inclusive arquivo ilegível), com o hash de cada um guardado no evento do
+ * reparo; a corrente volta a ter só o trecho íntegro. Um arquivo mensal ilegível quebra a corrente no começo dele e
+ * é selado inteiro, junto com os que vêm depois. Nada é apagado sem cópia, e o reparo é sempre um evento no próprio
+ * log. Não conserta o trecho adulterado: ele deixa de valer como evidência, e a quebra fica registrada.
  */
 export function repararAuditoria(
   ctx: ContextoDeAuditoria,
@@ -188,46 +201,68 @@ export function repararAuditoria(
   return comTrava(ctx, async () => {
     const caminhos = arquivosDoLog(await arquivos.listar(PASTA_DA_AUDITORIA));
     const porArquivo = new Map<string, string>();
-    const todas: string[] = [];
-    for (const c of caminhos) {
-      const texto = await arquivos.ler(c);
-      porArquivo.set(c, texto);
-      todas.push(...linhasDe(texto));
+    const prefixo: string[] = [];
+    let primeiroIlegivel = -1;
+    let ilegiveis = 0;
+    let linhasDepois = 0;
+    for (const [i, c] of caminhos.entries()) {
+      let texto: string | undefined;
+      try {
+        texto = await arquivos.read(c);
+      } catch {
+        texto = undefined; // não UTF-8 ou maior que o limite de leitura: vai para o selo sem ser lido
+      }
+      if (texto === undefined) {
+        ilegiveis++;
+        if (primeiroIlegivel < 0) primeiroIlegivel = i;
+      } else if (primeiroIlegivel < 0) {
+        porArquivo.set(c, texto);
+        prefixo.push(...linhasDe(texto));
+      } else {
+        linhasDepois += linhasDe(texto).length;
+      }
     }
-    const verificado = verificarCadeia(todas);
-    if (verificado.ok) return { integra: true, mantidos: todas.length, seladas: 0 };
-    const mantidos = verificado.linha;
-    const seladas = todas.length - mantidos;
+    const verificado = verificarCadeia(prefixo);
+    if (verificado.ok && primeiroIlegivel < 0)
+      return { integra: true, mantidos: prefixo.length, seladas: 0, ilegiveis: 0, sealed: [] };
+    const mantidos = verificado.ok ? prefixo.length : verificado.linha;
+    const seladas = prefixo.length - mantidos + linhasDepois;
     const instante = ctx.relogio.agora().toISOString().replace(/[-:.]/g, '');
     const pastaDoSelo = `${PASTA_DOS_SELADOS}/${instante}`;
-    const resultado: ResultadoDoReparo = {
-      integra: false,
-      linhaQuebrada: mantidos + 1,
-      mantidos,
-      seladas,
-      pastaDoSelo,
-    };
-    if (opcoes.dryRun) return resultado;
-    // 1) Cópia fiel de tudo, antes de mexer em qualquer arquivo da corrente.
-    for (const [caminho, texto] of porArquivo) {
-      await arquivos.gravar(`${pastaDoSelo}/${caminho.slice(PASTA_DA_AUDITORIA.length + 1)}`, texto);
+    const base = { integra: false, linhaQuebrada: mantidos + 1, mantidos, seladas, ilegiveis, pastaDoSelo };
+    if (opcoes.dryRun) return { ...base, sealed: [] };
+    // 1) Cópia fiel, em bytes, de tudo, antes de mexer em qualquer arquivo da corrente.
+    const selados: ArquivoSelado[] = [];
+    for (const caminho of caminhos) {
+      const nome = caminho.slice(PASTA_DA_AUDITORIA.length + 1);
+      const copia = await arquivos.copiar(caminho, `${pastaDoSelo}/${nome}`);
+      selados.push({ file: nome, bytes: copia.bytes, hash: `sha256:${copia.sha256}` });
     }
-    // 2) A corrente fica só com o trecho íntegro (arquivo que perdeu tudo sai).
+    // 2) A corrente fica só com o trecho íntegro (arquivo que perdeu tudo sai; do ilegível em diante, tudo sai).
     let restante = mantidos;
-    for (const [caminho, texto] of porArquivo) {
-      const linhas = linhasDe(texto);
+    for (const [i, caminho] of caminhos.entries()) {
+      if (primeiroIlegivel >= 0 && i >= primeiroIlegivel) {
+        await arquivos.remover(caminho);
+        continue;
+      }
+      const linhas = linhasDe(porArquivo.get(caminho) ?? '');
       const fica = linhas.slice(0, Math.max(0, Math.min(restante, linhas.length)));
       restante -= linhas.length;
       if (fica.length === 0) await arquivos.remover(caminho);
       else if (fica.length < linhas.length) await arquivos.gravar(caminho, `${fica.join('\n')}\n`);
     }
-    // 3) O reparo vira evento da própria corrente.
+    // 3) O reparo vira evento da própria corrente, com o hash do que foi selado.
     await acrescentar(ctx, {
-      tipo: 'operacao',
-      resultado: 'executado',
-      detalhe: `corrente selada na linha ${mantidos + 1}; ${seladas} linha(s) guardadas em selado/${instante}`,
-      dados: { comando: 'auditoria', dryRun: false, pacotes: [] },
+      type: 'operation',
+      result: 'executed',
+      detail: `corrente selada na linha ${mantidos + 1}; ${seladas} linha(s) e ${ilegiveis} arquivo(s) ilegível(is) guardados em sealed/${instante}`,
+      data: {
+        command: 'audit',
+        dryRun: false,
+        packages: [],
+        sealed: selados.map(({ file: arquivo, hash }) => ({ file: arquivo, hash })),
+      },
     });
-    return resultado;
+    return { ...base, sealed: selados };
   });
 }

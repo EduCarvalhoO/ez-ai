@@ -20,7 +20,7 @@ export type CapacidadesDoAdapter = Readonly<Record<TipoDeComponente, CapacidadeD
 /** Um arquivo que o adapter quer ver no projeto, com caminho relativo à raiz e conteúdo UTF-8. */
 export interface ArquivoProjetado {
   readonly caminho: string;
-  readonly conteudo: string;
+  readonly content: string;
   /** Id do componente de origem (para explicar no `plan`). */
   readonly componente: string;
 }
@@ -37,9 +37,9 @@ export interface AvisoDeProjecao {
 export interface FragmentoDeConfig {
   readonly caminho: string;
   readonly componente: string;
-  readonly tipo: 'hook' | 'mcp' | 'bloco';
+  readonly type: 'hook' | 'mcp' | 'bloco';
   /** Nome do evento do ambiente (hook), do servidor (mcp) ou do bloco de texto (bloco, ADR-0038); no bloco o `valor` é o texto. */
-  readonly chave: string;
+  readonly key: string;
   readonly valor: unknown;
 }
 
@@ -56,7 +56,7 @@ export interface EntradaDeProjecao {
 }
 
 export interface Adapter {
-  readonly ambiente: Ambiente;
+  readonly environment: Ambiente;
   readonly capacidades: CapacidadesDoAdapter;
   /** Limitações do ambiente que valem para o projeto inteiro (mostradas no `apply` e no `doctor`). */
   readonly avisosGerais: readonly string[];

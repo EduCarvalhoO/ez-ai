@@ -25,62 +25,64 @@ export type CodigoDoMotivo = (typeof CODIGOS_DO_MOTIVO)[number];
 export type NivelDeEvidencia = (typeof NIVEIS_DE_EVIDENCIA)[number];
 
 export interface Consumo {
-  readonly fonte: (typeof FONTES_DE_CONSUMO)[number];
-  readonly modelo?: string;
-  readonly agente?: string;
-  readonly tokensEntrada?: number;
-  readonly tokensSaida?: number;
-  readonly tokensCacheLeitura?: number;
-  readonly tokensCacheEscrita?: number;
-  readonly custoMicroUsd?: number;
-  readonly fonteDoCusto?: (typeof FONTES_DO_CUSTO)[number];
+  readonly source: (typeof FONTES_DE_CONSUMO)[number];
+  readonly model?: string;
+  readonly agent?: string;
+  readonly inputTokens?: number;
+  readonly outputTokens?: number;
+  readonly cacheReadTokens?: number;
+  readonly cacheWriteTokens?: number;
+  readonly costMicroUsd?: number;
+  readonly costSource?: (typeof FONTES_DO_CUSTO)[number];
 }
 
 export interface DadosDeVerificacao {
-  readonly nome: string;
-  readonly comando?: { readonly programa: string; readonly argumentos: readonly string[] };
-  readonly codigoDeSaida?: number;
-  readonly hashDaSaida?: string;
-  readonly duracaoMs?: number;
-  readonly nivel: NivelDeEvidencia;
-  readonly execucaoDoCi?: string;
+  readonly name: string;
+  readonly command?: { readonly program: string; readonly arguments: readonly string[] };
+  readonly exitCode?: number;
+  readonly outputHash?: string;
+  readonly durationMs?: number;
+  readonly level: NivelDeEvidencia;
+  readonly ciRun?: string;
 }
 
 export interface DadosDeEtapa {
   readonly item: string;
-  readonly etapa: (typeof ETAPAS)[number];
-  readonly agente: string;
-  readonly ciclo: number;
-  readonly rodada: number;
-  readonly inicio: string;
-  readonly fim: string;
-  readonly consumo?: Consumo;
+  readonly step: (typeof ETAPAS)[number];
+  readonly agent: string;
+  readonly cycle: number;
+  readonly round: number;
+  readonly start: string;
+  readonly end: string;
+  readonly usage?: Consumo;
 }
 
 export interface DadosDeOperacao {
-  readonly comando: (typeof COMANDOS_DA_CLI)[number];
+  readonly command: (typeof COMANDOS_DA_CLI)[number];
   readonly dryRun: boolean;
-  readonly pacotes: readonly { readonly chave: string; readonly versao?: string; readonly commit?: string }[];
+  readonly packages: readonly { readonly key: string; readonly version?: string; readonly commit?: string }[];
+  /** Só no reparo da auditoria: hash de cada arquivo guardado em `sealed/` (ADR-0042). */
+  readonly sealed?: readonly { readonly file: string; readonly hash: string }[];
 }
 
 /** Evento sem os campos da corrente; é o que o chamador monta antes de `encadear`. */
 export interface EventoSemCorrente {
-  readonly versaoEvento: 0;
-  readonly em: string;
-  readonly tipo: TipoDeEvento;
-  readonly ator: { readonly tipo: (typeof TIPOS_DE_ATOR)[number]; readonly id: string };
+  readonly eventVersion: 0;
+  readonly at: string;
+  readonly type: TipoDeEvento;
+  readonly actor: { readonly type: (typeof TIPOS_DE_ATOR)[number]; readonly id: string };
   readonly harness: string;
-  readonly resultado: ResultadoDoEvento;
-  readonly codigoDoMotivo?: CodigoDoMotivo;
-  readonly detalhe?: string;
+  readonly result: ResultadoDoEvento;
+  readonly reasonCode?: CodigoDoMotivo;
+  readonly detail?: string;
   /** Fechado por tipo no schema; `DadosDeVerificacao`, `DadosDeEtapa`, `DadosDeOperacao`... */
-  readonly dados: Readonly<Record<string, unknown>>;
+  readonly data: Readonly<Record<string, unknown>>;
 }
 
 export interface EventoDeAuditoria extends EventoSemCorrente {
   readonly seq: number;
   /** `hash` da linha anterior; `null` só em `seq: 1`. */
-  readonly anterior: string | null;
+  readonly previous: string | null;
   readonly hash: string;
 }
 
@@ -89,19 +91,19 @@ type Json = Record<string, unknown>;
 const validarSchema = criarValidador(SCHEMA_DO_EVENTO);
 
 function regrasDeVerificacao(e: EventoDeAuditoria, d: DadosDeVerificacao, falha: Falha): void {
-  if (e.resultado === 'verificado' && (d.codigoDeSaida !== 0 || d.hashDaSaida === undefined)) {
-    falha('/dados', 'verificado-sem-prova', '"verificado" exige codigoDeSaida 0 e hashDaSaida');
+  if (e.result === 'verified' && (d.exitCode !== 0 || d.outputHash === undefined)) {
+    falha('/data', 'verificado-sem-prova', '"verificado" exige exitCode 0 e outputHash');
   }
-  if (e.resultado === 'falhou' && d.codigoDeSaida === 0) {
-    falha('/dados/codigoDeSaida', 'falhou-com-sucesso', '"falhou" não combina com codigoDeSaida 0');
+  if (e.result === 'failed' && d.exitCode === 0) {
+    falha('/data/exitCode', 'falhou-com-sucesso', '"falhou" não combina com exitCode 0');
   }
-  if (d.nivel === 'validador-externo' && (e.ator.tipo !== 'ci' || d.execucaoDoCi === undefined)) {
-    falha('/dados/nivel', 'validador-sem-ci', '"validador-externo" exige ator do tipo ci e execucaoDoCi');
+  if (d.level === 'external-validator' && (e.actor.type !== 'ci' || d.ciRun === undefined)) {
+    falha('/data/level', 'validador-sem-ci', '"validador-externo" exige ator do tipo ci e ciRun');
   }
-  d.comando?.argumentos.forEach((a, i) => {
+  d.command?.arguments.forEach((a, i) => {
     if (argumentoComSegredo(a)) {
       falha(
-        `/dados/comando/argumentos/${i}`,
+        `/data/command/arguments/${i}`,
         'argumento-com-segredo',
         'atribuição VAR=valor ou flag de token/senha não entra no evento; registre só o programa e os argumentos sem segredo',
       );
@@ -110,46 +112,46 @@ function regrasDeVerificacao(e: EventoDeAuditoria, d: DadosDeVerificacao, falha:
 }
 
 function regrasDeEtapa(d: DadosDeEtapa, falha: Falha): void {
-  if (d.fim < d.inicio) falha('/dados/fim', 'fim-antes-do-inicio', '"fim" é anterior a "inicio"');
-  const c = d.consumo;
+  if (d.end < d.start) falha('/data/end', 'fim-antes-do-inicio', '"fim" é anterior a "inicio"');
+  const c = d.usage;
   if (!c) return;
-  const numeros = [c.tokensEntrada, c.tokensSaida, c.tokensCacheLeitura, c.tokensCacheEscrita, c.custoMicroUsd].filter(
+  const numeros = [c.inputTokens, c.outputTokens, c.cacheReadTokens, c.cacheWriteTokens, c.costMicroUsd].filter(
     (n) => n !== undefined,
   );
-  if (c.fonte === 'indisponivel' && (numeros.length > 0 || c.fonteDoCusto !== undefined)) {
+  if (c.source === 'unavailable' && (numeros.length > 0 || c.costSource !== undefined)) {
     falha(
-      '/dados/consumo',
+      '/data/usage',
       'indisponivel-com-numeros',
       'consumo "indisponivel" não leva números (desconhecido não vira zero)',
     );
   }
-  if ((c.custoMicroUsd === undefined) !== (c.fonteDoCusto === undefined)) {
-    falha('/dados/consumo', 'custo-sem-fonte', '"custoMicroUsd" e "fonteDoCusto" andam juntos');
+  if ((c.costMicroUsd === undefined) !== (c.costSource === undefined)) {
+    falha('/data/usage', 'custo-sem-fonte', '"costMicroUsd" e "costSource" andam juntos');
   }
 }
 
 function regrasSemanticas(e: EventoDeAuditoria): ErroDeContrato[] {
   const erros: ErroDeContrato[] = [];
-  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, regra, mensagem });
-  if ((e.seq === 1) !== (e.anterior === null)) {
-    falha('/anterior', 'inicio-da-corrente', '"anterior" é null só no primeiro evento (seq 1)');
+  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, rule: regra, mensagem });
+  if ((e.seq === 1) !== (e.previous === null)) {
+    falha('/previous', 'inicio-da-corrente', '"anterior" é null só no primeiro evento (seq 1)');
   }
-  if ((e.resultado === 'falhou' || e.resultado === 'ignorado') && e.codigoDoMotivo === undefined) {
-    falha('/codigoDoMotivo', 'motivo-obrigatorio', `"${e.resultado}" exige codigoDoMotivo`);
+  if ((e.result === 'failed' || e.result === 'skipped') && e.reasonCode === undefined) {
+    falha('/reasonCode', 'motivo-obrigatorio', `"${e.result}" exige reasonCode`);
   }
   const ids: unknown[] =
-    e.tipo === 'decisao-de-policy'
-      ? ((e.dados.itens as Json[]) ?? []).map((i) => i.id)
-      : e.tipo === 'aprovacao'
-        ? ((e.dados.entradas as Json[]) ?? []).map((i) => i.id)
+    e.type === 'policy-decision'
+      ? ((e.data.items as Json[]) ?? []).map((i) => i.id)
+      : e.type === 'approval'
+        ? ((e.data.entries as Json[]) ?? []).map((i) => i.id)
         : [];
-  const campo = e.tipo === 'aprovacao' ? 'entradas' : 'itens';
+  const campo = e.type === 'approval' ? 'entries' : 'items';
   ids.forEach((id, i) => {
     const problema = problemaNoId(String(id));
-    if (problema) falha(`/dados/${campo}/${i}/id`, 'id-de-item', problema);
+    if (problema) falha(`/data/${campo}/${i}/id`, 'id-de-item', problema);
   });
-  if (e.tipo === 'verificacao') regrasDeVerificacao(e, e.dados as unknown as DadosDeVerificacao, falha);
-  if (e.tipo === 'etapa') regrasDeEtapa(e.dados as unknown as DadosDeEtapa, falha);
+  if (e.type === 'verification') regrasDeVerificacao(e, e.data as unknown as DadosDeVerificacao, falha);
+  if (e.type === 'step') regrasDeEtapa(e.data as unknown as DadosDeEtapa, falha);
   return erros;
 }
 

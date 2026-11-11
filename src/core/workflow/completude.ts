@@ -5,15 +5,15 @@ export type TipoDeDocumento = 'ficha' | 'spec' | 'adr';
 
 export interface ProblemaDeDocumento {
   readonly severidade: 'erro' | 'aviso';
-  readonly regra: string;
+  readonly rule: string;
   readonly linha: number;
   readonly mensagem: string;
 }
 
 interface Secao {
-  readonly titulo: string;
-  readonly nome: string;
-  readonly nivel: number;
+  readonly title: string;
+  readonly name: string;
+  readonly level: number;
   readonly linha: number;
   readonly corpo: readonly { readonly texto: string; readonly linha: number }[];
 }
@@ -43,9 +43,9 @@ const ITEM = /^\s*(?:[-*+]|\d+[.)])\s+(.*)$/;
 function secoesDe(texto: string): { secoes: Secao[]; semCodigo: { texto: string; linha: number }[] } {
   const linhas = texto.split(/\r?\n/);
   const secoes: {
-    titulo: string;
-    nome: string;
-    nivel: number;
+    title: string;
+    name: string;
+    level: number;
     linha: number;
     corpo: { texto: string; linha: number }[];
   }[] = [];
@@ -61,7 +61,7 @@ function secoesDe(texto: string): { secoes: Secao[]; semCodigo: { texto: string;
     semCodigo.push({ texto: bruta, linha });
     const h = /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(bruta);
     if (h) {
-      secoes.push({ titulo: h[2] ?? '', nome: semAcento(h[2] ?? ''), nivel: (h[1] ?? '#').length, linha, corpo: [] });
+      secoes.push({ title: h[2] ?? '', name: semAcento(h[2] ?? ''), level: (h[1] ?? '#').length, linha, corpo: [] });
     } else secoes.at(-1)?.corpo.push({ texto: bruta, linha });
   });
   return { secoes, semCodigo };
@@ -74,8 +74,8 @@ function corpoCompleto(secoes: readonly Secao[], i: number): { texto: string; li
   const corpo = [...base.corpo];
   for (let j = i + 1; j < secoes.length; j++) {
     const s = secoes[j];
-    if (!s || s.nivel <= base.nivel) break;
-    corpo.push({ texto: s.titulo, linha: s.linha }, ...s.corpo);
+    if (!s || s.level <= base.level) break;
+    corpo.push({ texto: s.title, linha: s.linha }, ...s.corpo);
   }
   return corpo;
 }
@@ -116,7 +116,7 @@ export function tipoPeloCaminho(caminho: string): TipoDeDocumento {
 export function verificarCompletude(texto: string, tipo: TipoDeDocumento): ProblemaDeDocumento[] {
   const problemas: ProblemaDeDocumento[] = [];
   const add = (severidade: 'erro' | 'aviso', regra: string, linha: number, mensagem: string): void => {
-    problemas.push({ severidade, regra, linha, mensagem });
+    problemas.push({ severidade, rule: regra, linha, mensagem });
   };
   const { secoes, semCodigo } = secoesDe(texto);
   if (util([{ texto }]).length === 0) {
@@ -136,12 +136,12 @@ export function verificarCompletude(texto: string, tipo: TipoDeDocumento): Probl
   // Seção de título sem conteúdo (sem contar subseções vazias separadamente).
   secoes.forEach((s, i) => {
     const conteudo = util(corpoCompleto(secoes, i));
-    if (s.nivel > 1 && conteudo.length < 15 && !SEM_PENDENCIA.test(conteudo)) {
-      add('erro', 'secao-vazia', s.linha, `a seção "${s.titulo}" está vazia`);
+    if (s.level > 1 && conteudo.length < 15 && !SEM_PENDENCIA.test(conteudo)) {
+      add('erro', 'secao-vazia', s.linha, `a seção "${s.title}" está vazia`);
     }
   });
 
-  const indice = (aceita: RegExp): number => secoes.findIndex((s) => s.nivel > 1 && aceita.test(s.nome));
+  const indice = (aceita: RegExp): number => secoes.findIndex((s) => s.level > 1 && aceita.test(s.name));
 
   if (tipo === 'ficha') {
     for (const exigida of SECOES_DA_FICHA) {

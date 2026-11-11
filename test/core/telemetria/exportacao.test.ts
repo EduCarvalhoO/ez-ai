@@ -16,11 +16,11 @@ import { arquivosEmMemoria, gitEmMemoria, identidadeFixa, relogioFixo } from '..
 
 const GHP = `ghp_${'a1B2c3D4e5'.repeat(3)}`;
 const CONFIG_LIGADA = JSON.stringify({
-  versaoConfig: 0,
-  ambientes: ['claude-code'],
-  telemetria: { endpoint: 'https://langfuse.exemplo.com/api/public/otel/v1/traces', variavelDoToken: 'LANGFUSE_AUTH' },
+  configVersion: 0,
+  environments: ['claude-code'],
+  telemetry: { endpoint: 'https://langfuse.exemplo.com/api/public/otel/v1/traces', tokenVariable: 'LANGFUSE_AUTH' },
 });
-const CONFIG_DESLIGADA = JSON.stringify({ versaoConfig: 0, ambientes: ['claude-code'] });
+const CONFIG_DESLIGADA = JSON.stringify({ configVersion: 0, environments: ['claude-code'] });
 
 function montar(config: string, enviar = vi.fn(async (_p: PedidoDeTelemetria) => ({ status: 200 }))) {
   const arquivos = arquivosEmMemoria({ '.harness/config.json': config });
@@ -30,9 +30,9 @@ function montar(config: string, enviar = vi.fn(async (_p: PedidoDeTelemetria) =>
       arquivos,
       git: gitEmMemoria({}),
       relogio: relogioFixo(),
-      identidade: identidadeFixa('pessoa.privada@exemplo.com'),
+      identity: identidadeFixa('pessoa.privada@exemplo.com'),
       harness: '0.0.0',
-      tipoDeAtor: 'humano' as const,
+      tipoDeAtor: 'human' as const,
       enviador: { enviar },
     },
   };
@@ -41,9 +41,9 @@ function montar(config: string, enviar = vi.fn(async (_p: PedidoDeTelemetria) =>
 async function registrar(ctx: ReturnType<typeof montar>['ctx'], vezes: number): Promise<void> {
   for (let i = 0; i < vezes; i++) {
     await registrarEvento(ctx, {
-      tipo: 'operacao',
-      resultado: 'executado',
-      dados: { comando: 'list', dryRun: false, pacotes: [] },
+      type: 'operation',
+      result: 'executed',
+      data: { command: 'list', dryRun: false, packages: [] },
     });
   }
 }
@@ -62,21 +62,21 @@ describe('endpoint de telemetria', () => {
   it('a configuração valida o endpoint e nunca aceita o segredo', () => {
     expect(validarConfiguracao(CONFIG_LIGADA).ok).toBe(true);
     const ruim = validarConfiguracao(
-      JSON.stringify({ versaoConfig: 0, ambientes: ['claude-code'], telemetria: { endpoint: 'http://x.com/' } }),
+      JSON.stringify({ configVersion: 0, environments: ['claude-code'], telemetry: { endpoint: 'http://x.com/' } }),
     );
     expect(ruim.ok).toBe(false);
     const comSegredo = validarConfiguracao(
       JSON.stringify({
-        versaoConfig: 0,
-        ambientes: ['claude-code'],
-        telemetria: { endpoint: 'https://x.com/', variavelDoToken: 'Basic abc' },
+        configVersion: 0,
+        environments: ['claude-code'],
+        telemetry: { endpoint: 'https://x.com/', tokenVariable: 'Basic abc' },
       }),
     );
     expect(comSegredo.ok).toBe(false);
     const ligada = validarConfiguracao(CONFIG_LIGADA);
-    expect(ligada.ok && ligada.valor.telemetria?.variavelDoToken).toBe('LANGFUSE_AUTH');
+    expect(ligada.ok && ligada.valor.telemetry?.tokenVariable).toBe('LANGFUSE_AUTH');
     const desligada = validarConfiguracao(CONFIG_DESLIGADA);
-    expect(desligada.ok && desligada.valor.telemetria).toBeUndefined();
+    expect(desligada.ok && desligada.valor.telemetry).toBeUndefined();
   });
 });
 
@@ -92,15 +92,15 @@ describe('redigirSegredos', () => {
 
 describe('spans OTLP', () => {
   const evento = (extra: Partial<EventoDeAuditoria>): EventoDeAuditoria => ({
-    versaoEvento: 0,
-    em: '2026-11-04T10:00:00.000Z',
-    tipo: 'operacao',
-    ator: { tipo: 'humano', id: 'pessoa.privada@exemplo.com' },
+    eventVersion: 0,
+    at: '2026-11-04T10:00:00.000Z',
+    type: 'operation',
+    actor: { type: 'human', id: 'pessoa.privada@exemplo.com' },
     harness: '0.0.0',
-    resultado: 'executado',
-    dados: { comando: 'apply', dryRun: false, pacotes: [{ chave: 'a/b' }] },
+    result: 'executed',
+    data: { command: 'apply', dryRun: false, packages: [{ key: 'a/b' }] },
     seq: 1,
-    anterior: null,
+    previous: null,
     hash: `sha256:${'ab'.repeat(32)}`,
     ...extra,
   });
@@ -116,18 +116,18 @@ describe('spans OTLP', () => {
     const etapa = (seq: number, e: string, hash: string) =>
       eventoParaSpan(
         evento({
-          tipo: 'etapa',
+          type: 'step',
           seq,
           hash: `sha256:${hash.repeat(64)}`,
-          dados: {
+          data: {
             item: 'F5-1',
-            etapa: e,
-            agente: 'implementador',
-            ciclo: 1,
-            rodada: 1,
-            inicio: '2026-11-04T10:00:00.000Z',
-            fim: '2026-11-04T10:00:02.000Z',
-            consumo: { fonte: 'otel', modelo: 'sonnet', tokensEntrada: 120, tokensSaida: 30 },
+            step: e,
+            agent: 'implementador',
+            cycle: 1,
+            round: 1,
+            start: '2026-11-04T10:00:00.000Z',
+            end: '2026-11-04T10:00:02.000Z',
+            usage: { source: 'otel', model: 'sonnet', inputTokens: 120, outputTokens: 30 },
           },
         }),
       );
@@ -148,9 +148,9 @@ describe('spans OTLP', () => {
       montarPayloadOtlp(
         [
           evento({
-            tipo: 'verificacao',
-            dados: { nome: `teste-${GHP}`, nivel: 'confirmado', codigoDeSaida: 1, duracaoMs: 10 },
-            resultado: 'falhou',
+            type: 'verification',
+            data: { name: `teste-${GHP}`, level: 'confirmado', exitCode: 1, durationMs: 10 },
+            result: 'failed',
           }),
         ],
         '0.0.0',
@@ -166,15 +166,15 @@ describe('comando export', () => {
     const { ctx, enviar } = montar(CONFIG_DESLIGADA);
     await registrar(ctx, 2);
     const r = await exportarTelemetria(ctx, { dryRun: false });
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join(' ')).toMatch(/desligada/);
+    expect(r.code).toBe(0);
+    expect(r.output.join(' ')).toMatch(/desligada/);
     expect(enviar).not.toHaveBeenCalled();
   });
 
   it('os outros comandos nunca tocam a rede, nem com telemetria ligada', async () => {
     const { ctx, enviar } = montar(CONFIG_LIGADA);
     await listar(ctx);
-    await validar(ctx, { ci: false, exigirEvidencias: false });
+    await validar(ctx, { ci: false, requireEvidence: false });
     await diagnosticar(ctx);
     expect(enviar).not.toHaveBeenCalled();
   });
@@ -183,16 +183,16 @@ describe('comando export', () => {
     const { ctx, enviar } = montar(CONFIG_LIGADA);
     await registrar(ctx, 3);
     const r = await exportarTelemetria(ctx, { dryRun: false });
-    expect(r.codigo).toBe(0);
+    expect(r.code).toBe(0);
     expect(enviar).toHaveBeenCalledTimes(1);
     const pedido = enviar.mock.calls[0]?.[0];
     expect(pedido?.endpoint).toBe('https://langfuse.exemplo.com/api/public/otel/v1/traces');
-    expect(pedido?.variavelDoToken).toBe('LANGFUSE_AUTH');
+    expect(pedido?.tokenVariable).toBe('LANGFUSE_AUTH');
     expect(pedido?.corpo).not.toContain('pessoa.privada');
-    expect(ctx.arquivos.mapa.get('.harness/auditoria/.exportado.json')).toBe('{"seq":3}\n');
+    expect(ctx.arquivos.mapa.get('.harness/audit/.exportado.json')).toBe('{"seq":3}\n');
 
     const de_novo = await exportarTelemetria(ctx, { dryRun: false });
-    expect(de_novo.saida.join(' ')).toMatch(/nada novo/);
+    expect(de_novo.output.join(' ')).toMatch(/nada novo/);
     expect(enviar).toHaveBeenCalledTimes(1);
 
     await registrar(ctx, 1);
@@ -205,10 +205,10 @@ describe('comando export', () => {
     const { ctx, enviar } = montar(CONFIG_LIGADA);
     await registrar(ctx, 2);
     const r = await exportarTelemetria(ctx, { dryRun: true });
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join(' ')).toMatch(/dry-run/);
+    expect(r.code).toBe(0);
+    expect(r.output.join(' ')).toMatch(/dry-run/);
     expect(enviar).not.toHaveBeenCalled();
-    expect(ctx.arquivos.mapa.has('.harness/auditoria/.exportado.json')).toBe(false);
+    expect(ctx.arquivos.mapa.has('.harness/audit/.exportado.json')).toBe(false);
   });
 
   it('falha do coletor não avança o marcador e não vaza o corpo da resposta', async () => {
@@ -218,9 +218,9 @@ describe('comando export', () => {
     );
     await registrar(ctx, 2);
     const r = await exportarTelemetria(ctx, { dryRun: false });
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros.join(' ')).toMatch(/503/);
-    expect(ctx.arquivos.mapa.has('.harness/auditoria/.exportado.json')).toBe(false);
+    expect(ctx.arquivos.mapa.has('.harness/audit/.exportado.json')).toBe(false);
   });
 
   it('exceção de rede vira erro e também não avança o marcador', async () => {
@@ -232,9 +232,9 @@ describe('comando export', () => {
     );
     await registrar(ctx, 1);
     const r = await exportarTelemetria(ctx, { dryRun: false });
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros.join(' ')).toMatch(/ECONNREFUSED/);
-    expect(ctx.arquivos.mapa.has('.harness/auditoria/.exportado.json')).toBe(false);
+    expect(ctx.arquivos.mapa.has('.harness/audit/.exportado.json')).toBe(false);
   });
 
   it('divide em requisições de até 100 spans', async () => {
@@ -242,16 +242,16 @@ describe('comando export', () => {
     await registrar(ctx, 101);
     await exportarTelemetria(ctx, { dryRun: false });
     expect(enviar).toHaveBeenCalledTimes(2);
-    expect(ctx.arquivos.mapa.get('.harness/auditoria/.exportado.json')).toBe('{"seq":101}\n');
+    expect(ctx.arquivos.mapa.get('.harness/audit/.exportado.json')).toBe('{"seq":101}\n');
   });
 
   it('log adulterado: recusa exportar', async () => {
     const { ctx, enviar } = montar(CONFIG_LIGADA);
     await registrar(ctx, 2);
-    const k = '.harness/auditoria/2026-11.jsonl';
+    const k = '.harness/audit/2026-11.jsonl';
     ctx.arquivos.mapa.set(k, (ctx.arquivos.mapa.get(k) ?? '').replace('"list"', '"apply"'));
     const r = await exportarTelemetria(ctx, { dryRun: false });
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(enviar).not.toHaveBeenCalled();
   });
 });

@@ -13,9 +13,9 @@ const e = escaparInvisiveis;
 
 export interface OpcoesDeImport {
   /** `<login>/<pacote>` do pacote proposto; padrão `local/regras-importadas`. */
-  readonly pacote?: string;
-  /** Pasta (do projeto) onde a proposta é gravada; padrão `pacotes-locais/<pacote>`. */
-  readonly saida?: string;
+  readonly package?: string;
+  /** Pasta (do projeto) onde a proposta é gravada; padrão `local-packages/<pacote>`. */
+  readonly output?: string;
   readonly dryRun: boolean;
 }
 
@@ -29,38 +29,38 @@ const FONTES = [
 const NOME_PADRAO = 'local/regras-importadas';
 
 export async function importar(ctx: Contexto, opcoes: OpcoesDeImport): Promise<ResultadoDoComando> {
-  const nome = opcoes.pacote ?? NOME_PADRAO;
+  const nome = opcoes.package ?? NOME_PADRAO;
   const [login = '', pacote = ''] = nome.split('/');
-  const pasta = opcoes.saida ?? `pacotes-locais/${pacote}`;
+  const pasta = opcoes.output ?? `local-packages/${pacote}`;
   try {
     exigirCaminhoDoProjeto(pasta);
   } catch (erro: unknown) {
-    return { codigo: 1, saida: [], erros: [e(erro instanceof Error ? erro.message : String(erro))] };
+    return { code: 1, output: [], erros: [e(erro instanceof Error ? erro.message : String(erro))] };
   }
   if (/^(?:\.harness|\.git|\.github)(?:\/|$)/iu.test(pasta.replace(/^\.\//u, ''))) {
     return {
-      codigo: 1,
-      saida: [],
+      code: 1,
+      output: [],
       erros: [
-        'a proposta não pode ir para .harness/, .git/ nem .github/; use uma pasta do projeto como pacotes-locais/.',
+        'a proposta não pode ir para .harness/, .git/ nem .github/; use uma pasta do projeto como local-packages/.',
       ],
     };
   }
   const saida: string[] = [];
   const avisos: string[] = [];
   const arquivos = new Map<string, string>();
-  const componentes: { id: string; tipo: 'instrucao'; arquivo: string; descricao: string }[] = [];
+  const componentes: { id: string; type: 'instruction'; file: string; description: string }[] = [];
   for (const f of FONTES) {
     // Uma leitura só, sem checar a existência antes: arquivo ausente simplesmente não é fonte.
-    const original = await ctx.arquivos.ler(f.caminho).catch(() => undefined);
+    const original = await ctx.arquivos.read(f.caminho).catch(() => undefined);
     if (original === undefined) continue;
     const texto = f.id === 'agents-md' ? semBlocosDoEzAi(original) : original;
     if (texto.trim() === '') {
       avisos.push(`aviso  ${f.caminho}: sem conteúdo próprio (vazio ou só blocos do ez-ai); ignorado.`);
       continue;
     }
-    if (Buffer.byteLength(texto, 'utf8') > LIMITES.bytesPorArquivo) {
-      avisos.push(`aviso  ${f.caminho}: passa de ${LIMITES.bytesPorArquivo} bytes; ignorado.`);
+    if (Buffer.byteLength(texto, 'utf8') > LIMITES.bytesPerFile) {
+      avisos.push(`aviso  ${f.caminho}: passa de ${LIMITES.bytesPerFile} bytes; ignorado.`);
       continue;
     }
     if (/^\s*@\S+/mu.test(texto)) {
@@ -70,13 +70,13 @@ export async function importar(ctx: Contexto, opcoes: OpcoesDeImport): Promise<R
     }
     const arquivo = `instrucoes/${f.id}.md`;
     arquivos.set(arquivo, texto);
-    componentes.push({ id: f.id, tipo: 'instrucao', arquivo, descricao: `Importado de ${f.caminho}` });
+    componentes.push({ id: f.id, type: 'instruction', file: arquivo, description: `Importado de ${f.caminho}` });
     saida.push(`  + ${f.caminho} -> ${arquivo} (${Buffer.byteLength(texto, 'utf8')} bytes)`);
   }
   if (componentes.length === 0) {
     return {
-      codigo: 1,
-      saida: [],
+      code: 1,
+      output: [],
       erros: [
         'nenhuma instrução para importar: não achei CLAUDE.md, .cursorrules, .github/copilot-instructions.md nem AGENTS.md com conteúdo.',
       ],
@@ -84,13 +84,13 @@ export async function importar(ctx: Contexto, opcoes: OpcoesDeImport): Promise<R
   }
   const manifesto = `${JSON.stringify(
     {
-      versaoManifesto: 0,
-      nome,
-      versao: '0.1.0',
-      descricao: `Instruções importadas de ${componentes.length} arquivo(s) do projeto; revise antes de usar.`,
-      licenca: 'UNLICENSED',
-      repositorio: `https://github.com/${login}/${pacote}`,
-      componentes,
+      manifestVersion: 0,
+      name: nome,
+      version: '0.1.0',
+      description: `Instruções importadas de ${componentes.length} arquivo(s) do projeto; revise antes de usar.`,
+      license: 'UNLICENSED',
+      repository: `https://github.com/${login}/${pacote}`,
+      components: componentes,
     },
     null,
     2,
@@ -98,23 +98,23 @@ export async function importar(ctx: Contexto, opcoes: OpcoesDeImport): Promise<R
   const valido = validarManifesto(manifesto);
   if (!valido.ok) {
     return {
-      codigo: 1,
-      saida: [],
+      code: 1,
+      output: [],
       erros: [
-        ...formatarErros('harness-pacote.json', valido.erros),
-        'use --pacote <login>/<nome> com letras minúsculas, números e hífen.',
+        ...formatarErros('harness-package.json', valido.erros),
+        'use --package <login>/<nome> com letras minúsculas, números e hífen.',
       ],
     };
   }
-  arquivos.set('harness-pacote.json', manifesto);
+  arquivos.set('harness-package.json', manifesto);
   if ((await ctx.arquivos.listar(pasta)).length > 0) {
     return {
-      codigo: 1,
-      saida: [],
-      erros: [`${e(pasta)} já tem arquivos; o import não sobrescreve. Escolha outra pasta com --saida.`],
+      code: 1,
+      output: [],
+      erros: [`${e(pasta)} já tem arquivos; o import não sobrescreve. Escolha outra pasta com --output.`],
     };
   }
-  const scan = resumirScan(arquivos, 'nunca');
+  const scan = resumirScan(arquivos, 'never');
   const cabecalho = opcoes.dryRun
     ? `dry-run: nada foi gravado. O import proporia o pacote ${e(nome)} em ${e(pasta)}:`
     : `Proposta do pacote ${e(nome)} gravada em ${e(pasta)}:`;
@@ -131,10 +131,10 @@ export async function importar(ctx: Contexto, opcoes: OpcoesDeImport): Promise<R
   resultado.push(
     ...avisos,
     'Próximos passos:',
-    '  1. revise os arquivos e o harness-pacote.json (descrição, licença e repositório)',
+    '  1. revise os arquivos e o harness-package.json (descrição, licença e repositório)',
     `  2. ez-ai add local:${e(pasta)}`,
     '  3. ez-ai plan e ez-ai apply',
     'Os arquivos de origem não foram alterados. Depois do apply as mesmas regras existem em dois lugares (o original e o projetado); apague o original quando confirmar o resultado.',
   );
-  return { codigo: 0, saida: resultado, erros: [] };
+  return { code: 0, output: resultado, erros: [] };
 }

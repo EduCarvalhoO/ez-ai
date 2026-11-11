@@ -15,11 +15,11 @@ const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
 // Caminho calculado: o dist só existe depois do build, e o typecheck roda antes dele.
 const nucleo = await import(pathToFileURL(join(raiz, 'dist', 'core', 'index.js')).href);
 const schemas = {
-  'manifesto-pacote.v0.schema.json': nucleo.SCHEMA_DO_MANIFESTO,
-  'configuracao.v0.schema.json': nucleo.SCHEMA_DA_CONFIGURACAO,
+  'package-manifest.v0.schema.json': nucleo.SCHEMA_DO_MANIFESTO,
+  'config.v0.schema.json': nucleo.SCHEMA_DA_CONFIGURACAO,
   'lockfile.v0.schema.json': nucleo.SCHEMA_DO_LOCKFILE,
   'policy.v0.schema.json': nucleo.SCHEMA_DA_POLICY,
-  'evento-de-auditoria.v0.schema.json': nucleo.SCHEMA_DO_EVENTO,
+  'audit-event.v0.schema.json': nucleo.SCHEMA_DO_EVENTO,
 };
 for (const [arquivo, schema] of Object.entries(schemas)) {
   const destino = join(raiz, 'schemas', arquivo);

@@ -40,7 +40,7 @@ import { modoDoScan, resumirScan } from './scan.js';
 const e = escaparInvisiveis;
 
 function falha(erros: readonly string[]): ResultadoDoComando {
-  return { codigo: 1, saida: [], erros };
+  return { code: 1, output: [], erros };
 }
 
 /** `list`: pacotes da configuração, versão pedida, versão travada e estado. */
@@ -50,17 +50,17 @@ export function listar(ctx: Contexto): Promise<ResultadoDoComando> {
     if (!config.ok) return falha(config.erros);
     const lock = await carregarLockfile(ctx.arquivos);
     if (!lock.ok) return falha(lock.erros);
-    const travados = new Map(lock.valor.pacotes.map((p) => [p.nome, p]));
-    const estados = new Map(diferencaDeConfiguracao(config.valor, lock.valor).map((d) => [d.nome, d.estado]));
+    const travados = new Map(lock.valor.packages.map((p) => [p.name, p]));
+    const estados = new Map(diferencaDeConfiguracao(config.valor, lock.valor).map((d) => [d.name, d.estado]));
     const linhas = [...estados].map(([nome, estado]) => {
-      const c = config.valor.pacotes.find((p) => p.nome === nome);
+      const c = config.valor.packages.find((p) => p.name === nome);
       const t = travados.get(nome);
-      const origem = c?.origem ?? t?.origem;
-      const onde = origem?.tipo === 'local' ? `local:${origem.caminho}` : (origem?.url ?? '');
-      const nivel = origem ? nivelDeConfianca(origem, { assinaturaVerificada: t?.assinatura !== undefined }) : '-';
-      return `${e(nome)}  pedido: ${e(c?.versao ?? '-')}  travado: ${e(t?.versao ?? '-')}  ${estado}  ${e(onde)}  confiança: ${nivel}`;
+      const origem = c?.source ?? t?.source;
+      const onde = origem?.type === 'local' ? `local:${origem.caminho}` : (origem?.url ?? '');
+      const nivel = origem ? nivelDeConfianca(origem, { assinaturaVerificada: t?.signature !== undefined }) : '-';
+      return `${e(nome)}  pedido: ${e(c?.version ?? '-')}  travado: ${e(t?.version ?? '-')}  ${estado}  ${e(onde)}  confiança: ${nivel}`;
     });
-    return { codigo: 0, saida: linhas.length > 0 ? linhas : ['Nenhum pacote configurado.'], erros: [] };
+    return { code: 0, output: linhas.length > 0 ? linhas : ['Nenhum pacote configurado.'], erros: [] };
   });
 }
 
@@ -68,9 +68,9 @@ export interface OpcoesDeValidacao {
   /** Modo CI: recalcula a policy e as aprovações próprias a partir do commit travado e recusa o que estiver pendente. */
   readonly ci?: boolean;
   /** Gate de evidências (ficha 7): falha se o resumo do log local não estiver `confirmado`. */
-  readonly exigirEvidencias?: boolean;
+  readonly requireEvidence?: boolean;
   /** Chamado pelo job de servidor, que compara com a base (ADR-0028): some o aviso de que o CI não compara. */
-  readonly servidor?: boolean;
+  readonly server?: boolean;
 }
 
 /** `validate`: contratos, origens permitidas e integridade de cada pacote travado, lido do commit travado. */
@@ -84,38 +84,38 @@ export function validar(ctx: Contexto, opcoes: OpcoesDeValidacao = {}): Promise<
     if (!config.ok || !lock.ok) return falha(problemas);
     for (const d of diferencaDeConfiguracao(config.valor, lock.valor)) {
       if (d.estado === 'origem-trocada') {
-        problemas.push(`${e(d.nome)}: a origem mudou em relação ao lockfile; troca de dono exige aprovação explícita.`);
+        problemas.push(`${e(d.name)}: a origem mudou em relação ao lockfile; troca de dono exige aprovação explícita.`);
       }
     }
-    const pacotes: { chave: string; versao?: string; commit?: string }[] = [];
+    const pacotes: { key: string; version?: string; commit?: string }[] = [];
     const cacheCi: CacheDaOrganizacao = new Map();
-    for (const t of lock.valor.pacotes) {
-      const origemTexto = t.origem.tipo === 'local' ? `local:${t.origem.caminho}` : t.origem.url;
+    for (const t of lock.valor.packages) {
+      const origemTexto = t.source.type === 'local' ? `local:${t.source.caminho}` : t.source.url;
       if (!origemPermitida(config.valor, origemTexto)) {
-        problemas.push(`${e(t.nome)}: origem "${e(origemTexto)}" fora da lista permitida.`);
+        problemas.push(`${e(t.name)}: origem "${e(origemTexto)}" fora da lista permitida.`);
         continue;
       }
       try {
-        const p = await obterPacote(ctx, t.origem, t.nome, {
+        const p = await obterPacote(ctx, t.source, t.name, {
           ...(t.commit ? { commit: t.commit } : {}),
           ...(t.tag ? { tag: t.tag } : {}),
         });
         const integridade = verificarIntegridade(t, p.arquivos);
-        if (!integridade.ok) problemas.push(e(integridade.motivo));
+        if (!integridade.ok) problemas.push(e(integridade.reason));
         problemas.push(...conferirManifesto(t, p.manifesto).map(e));
-        problemas.push(...(await decidirAssinatura(ctx, config.valor, t.nome, t.origem, t, p)).erros);
-        if (p.manifesto.versao !== t.versao) {
-          problemas.push(`${e(t.nome)}: o manifesto declara ${e(p.manifesto.versao)} e o lockfile ${e(t.versao)}.`);
+        problemas.push(...(await decidirAssinatura(ctx, config.valor, t.name, t.source, t, p)).erros);
+        if (p.manifesto.version !== t.version) {
+          problemas.push(`${e(t.name)}: o manifesto declara ${e(p.manifesto.version)} e o lockfile ${e(t.version)}.`);
         }
         if (opcoes.ci)
           problemas.push(...(await conferirPoliticaDoTravado(ctx, config.valor, lock.valor, t, p, cacheCi)));
-        pacotes.push({ chave: t.nome, versao: t.versao, ...(t.commit ? { commit: t.commit } : {}) });
+        pacotes.push({ key: t.name, version: t.version, ...(t.commit ? { commit: t.commit } : {}) });
       } catch (erro: unknown) {
         problemas.push(e(erro instanceof Error ? erro.message : String(erro)));
       }
     }
     const saida: string[] = [];
-    if (opcoes.exigirEvidencias) {
+    if (opcoes.requireEvidence) {
       const auditoria = await lerAuditoria(ctx.arquivos);
       if (!auditoria.ok) problemas.push(`evidências: ${e(auditoria.mensagem)}`);
       else {
@@ -126,21 +126,21 @@ export function validar(ctx: Contexto, opcoes: OpcoesDeValidacao = {}): Promise<
               ? 'evidências: nenhuma verificação registrada; um gate não pode aprovar sem prova.'
               : 'evidências: não confirmado (há verificação falha, ignorada, só pedida ou sem validador externo conferido).',
           );
-          for (const v of resumo.pendencias) problemas.push(`evidências: ${e(v.nome)} está ${v.estado}`);
-          for (const nome of resumo.porNivel['so-pedido']) problemas.push(`evidências: ${e(nome)} é só pedido`);
+          for (const v of resumo.pendencias) problemas.push(`evidências: ${e(v.name)} está ${v.estado}`);
+          for (const nome of resumo.porNivel['requested-only']) problemas.push(`evidências: ${e(nome)} é só pedido`);
         } else saida.push(`evidências: ${resumo.verificacoes.length} verificação(ões) confirmada(s).`);
       }
     }
-    if (problemas.length > 0) return { codigo: 1, saida, erros: problemas, pacotes };
-    if (opcoes.ci && !opcoes.servidor) {
+    if (problemas.length > 0) return { code: 1, output: saida, erros: problemas, packages: pacotes };
+    if (opcoes.ci && !opcoes.server) {
       saida.push(
-        'aviso: o CI não recalcula afrouxamento de policy entre versões nem compara policy/config com a branch base; isso é do job de servidor (`validate --servidor`, ADR-0028).',
+        'aviso: o CI não recalcula afrouxamento de policy entre versões nem compara policy/config com a branch base; isso é do job de servidor (`validate --server`, ADR-0028).',
       );
     }
     saida.unshift(
-      `OK: configuração, lockfile e ${lock.valor.pacotes.length} pacote(s) verificados${opcoes.ci ? ', policy e aprovações conferidas' : ''}.`,
+      `OK: configuração, lockfile e ${lock.valor.packages.length} pacote(s) verificados${opcoes.ci ? ', policy e aprovações conferidas' : ''}.`,
     );
-    return { codigo: 0, saida, erros: [], pacotes };
+    return { code: 0, output: saida, erros: [], packages: pacotes };
   });
 }
 
@@ -154,123 +154,123 @@ async function conferirPoliticaDoTravado(
   cache: CacheDaOrganizacao,
 ): Promise<string[]> {
   const problemasDaOrganizacao: string[] = [];
-  if (config.policyDaOrganizacao !== undefined && !lock.pacotes.some((x) => x.nome === config.policyDaOrganizacao)) {
+  if (config.organizationPolicy !== undefined && !lock.packages.some((x) => x.name === config.organizationPolicy)) {
     problemasDaOrganizacao.push(
-      `${e(t.nome)}: a policy da organização (${e(config.policyDaOrganizacao)}) não está no lockfile; rode apply antes.`,
+      `${e(t.name)}: a policy da organização (${e(config.organizationPolicy)}) não está no lockfile; rode apply antes.`,
     );
   }
-  const politicas = await carregarPoliticas(ctx, config, lock, t.nome, lido, undefined, cache);
-  if (politicas.erros.length > 0) return politicas.erros.map((m) => `${e(t.nome)}: policy inválida: ${m}`);
-  const decisao = avaliarPacote(lido.manifesto, politicas.fontes, { ambientes: config.ambientes });
+  const politicas = await carregarPoliticas(ctx, config, lock, t.name, lido, undefined, cache);
+  if (politicas.erros.length > 0) return politicas.erros.map((m) => `${e(t.name)}: policy inválida: ${m}`);
+  const decisao = avaliarPacote(lido.manifesto, politicas.sources, { environments: config.environments });
   const problemas = problemasDaOrganizacao.concat(
-    explicarDecisao(decisao).map((m) => `${e(t.nome)}: bloqueado pela policy: ${m}`),
+    explicarDecisao(decisao).map((m) => `${e(t.name)}: bloqueado pela policy: ${m}`),
   );
-  if (decisao.falhaFechada) problemas.push(`${e(t.nome)}: policy falha fechada (regra crítica sem garantia).`);
-  for (const b of resumirScan(lido.arquivos, modoDoScan(config, politicas.fontes)).bloqueios) {
-    problemas.push(`${e(t.nome)}: bloqueado pelo scan: ${b}`);
+  if (decisao.falhaFechada) problemas.push(`${e(t.name)}: policy falha fechada (regra crítica sem garantia).`);
+  for (const b of resumirScan(lido.arquivos, modoDoScan(config, politicas.sources)).bloqueios) {
+    problemas.push(`${e(t.name)}: bloqueado pelo scan: ${b}`);
   }
-  const exigidas = itensDeAprovacaoPropria({ chave: t.nome, componentes: lido.manifesto.componentes, decisao });
+  const exigidas = itensDeAprovacaoPropria({ key: t.name, components: lido.manifesto.components, decisao });
   // Afrouxamento de policy depende da versão anterior, que o CI não tem; esses ids não são recalculáveis aqui.
-  const aprovadas = t.aprovacoesProprias.filter((a) => !a.id.startsWith('policy/'));
+  const aprovadas = t.ownApprovals.filter((a) => !a.id.startsWith('policy/'));
   for (const x of pendentesDeAprovacao(exigidas, aprovadas).pendentes) {
-    problemas.push(`${e(t.nome)}: aprovação própria ausente ou desatualizada para ${e(x.id)}.`);
+    problemas.push(`${e(t.name)}: aprovação própria ausente ou desatualizada para ${e(x.id)}.`);
   }
   return problemas;
 }
 
 /** `plan`: o que um `apply` faria, sem gravar nada. Recalcula tudo a partir da origem. */
-export function planejar(ctx: Contexto, opcoes: { readonly detalhes?: boolean } = {}): Promise<ResultadoDoComando> {
+export function planejar(ctx: Contexto, opcoes: { readonly details?: boolean } = {}): Promise<ResultadoDoComando> {
   return executarComAuditoria(ctx, 'plan', true, async () => {
     const config = await carregarConfiguracao(ctx.arquivos);
     if (!config.ok) return falha(config.erros);
     const lock = await carregarLockfile(ctx.arquivos);
     if (!lock.ok) return falha(lock.erros);
-    const travados = new Map(lock.valor.pacotes.map((p) => [p.nome, p]));
+    const travados = new Map(lock.valor.packages.map((p) => [p.name, p]));
     const saida: string[] = [];
     const erros: string[] = [];
     const reservados = new Map<string, string>();
     const compartilhados = new Map<string, string>();
     const cacheDaOrganizacao: CacheDaOrganizacao = new Map();
-    for (const p of config.valor.pacotes) {
-      const origemTexto = p.origem.tipo === 'local' ? `local:${p.origem.caminho}` : p.origem.url;
+    for (const p of config.valor.packages) {
+      const origemTexto = p.source.type === 'local' ? `local:${p.source.caminho}` : p.source.url;
       if (!origemPermitida(config.valor, origemTexto)) {
-        erros.push(`${e(p.nome)}: origem "${e(origemTexto)}" fora da lista permitida (origensPermitidas).`);
+        erros.push(`${e(p.name)}: origem "${e(origemTexto)}" fora da lista permitida (allowedSources).`);
         continue;
       }
-      const t = travados.get(p.nome);
-      if (t && JSON.stringify(t.origem) !== JSON.stringify(p.origem)) {
-        erros.push(`${e(p.nome)}: troca de origem em relação ao lockfile é troca de dono; exige aprovação explícita.`);
+      const t = travados.get(p.name);
+      if (t && JSON.stringify(t.source) !== JSON.stringify(p.source)) {
+        erros.push(`${e(p.name)}: troca de origem em relação ao lockfile é troca de dono; exige aprovação explícita.`);
         continue;
       }
       try {
-        const lido = await obterPacote(ctx, p.origem, p.nome, { ...(p.versao ? { intervalo: p.versao } : {}) });
+        const lido = await obterPacote(ctx, p.source, p.name, { ...(p.version ? { intervalo: p.version } : {}) });
         const desvios = conferirManifesto(p, lido.manifesto);
         if (desvios.length > 0) {
           erros.push(...desvios.map(e));
           continue;
         }
-        const instalado = await lerPastaLocal(ctx.arquivos, pastaDoPacote(p.nome));
+        const instalado = await lerPastaLocal(ctx.arquivos, pastaDoPacote(p.name));
         const hashInstalado = instalado.size > 0 ? hashDoConteudo(arquivosParaHash(instalado)) : undefined;
         const instaladoEditado = !!t && instalado.size > 0 && !(hashInstalado?.ok && hashInstalado.valor === t.hash);
         const politicas = await carregarPoliticas(
           ctx,
           config.valor,
           lock.valor,
-          p.nome,
+          p.name,
           lido,
           await conteudoAnterior(ctx, p, t, instalado, instaladoEditado),
           cacheDaOrganizacao,
         );
         if (politicas.erros.length > 0) {
-          erros.push(...politicas.erros.map((m) => `${e(p.nome)}: policy inválida: ${m}`));
+          erros.push(...politicas.erros.map((m) => `${e(p.name)}: policy inválida: ${m}`));
           continue;
         }
-        const decisao = avaliarPacote(lido.manifesto, politicas.fontes, { ambientes: config.valor.ambientes });
-        const versao = lido.manifesto.versao;
+        const decisao = avaliarPacote(lido.manifesto, politicas.sources, { environments: config.valor.environments });
+        const versao = lido.manifesto.version;
         let estado: string;
         if (!t) estado = 'instalar';
         else if (t.hash === lido.hash && t.commit === lido.commit) estado = 'inalterado';
         else if (t.commit !== undefined && t.commit === lido.commit) {
           erros.push(
-            `${e(p.nome)}: o conteúdo do commit travado mudou (hash difere do lockfile); recuse e investigue.`,
+            `${e(p.name)}: o conteúdo do commit travado mudou (hash difere do lockfile); recuse e investigue.`,
           );
           continue;
-        } else estado = `atualizar ${e(t.versao)} -> ${e(versao)}`;
+        } else estado = `atualizar ${e(t.version)} -> ${e(versao)}`;
         saida.push(
-          `${estado === 'inalterado' ? '=' : '~'} ${e(p.nome)}@${e(versao)}  ${estado}${lido.commit ? `  commit ${lido.commit.slice(0, 12)}` : ''}`,
+          `${estado === 'inalterado' ? '=' : '~'} ${e(p.name)}@${e(versao)}  ${estado}${lido.commit ? `  commit ${lido.commit.slice(0, 12)}` : ''}`,
         );
         if (estado !== 'inalterado') {
           saida.push(`    hash ${lido.hash}`);
-          saida.push(`    componentes: ${lido.manifesto.componentes.map((c) => `${e(c.id)} (${c.tipo})`).join(', ')}`);
+          saida.push(`    componentes: ${lido.manifesto.components.map((c) => `${e(c.id)} (${c.type})`).join(', ')}`);
           saida.push(
-            `    policy: ${decisao.efeito}${decisao.falhaFechada ? ' (falha fechada: regra crítica sem garantia)' : ''}`,
+            `    policy: ${decisao.effect}${decisao.falhaFechada ? ' (falha fechada: regra crítica sem garantia)' : ''}`,
           );
-          if (decisao.falhaFechada) erros.push(`${e(p.nome)}: policy falha fechada; resolva antes de aplicar.`);
+          if (decisao.falhaFechada) erros.push(`${e(p.name)}: policy falha fechada; resolva antes de aplicar.`);
           for (const motivo of explicarDecisao(decisao)) {
             saida.push(`    bloqueado: ${motivo}`);
-            erros.push(`${e(p.nome)}: bloqueado pela policy: ${motivo}`);
+            erros.push(`${e(p.name)}: bloqueado pela policy: ${motivo}`);
           }
-          for (const motivo of explicarDecisao(decisao, ['exigir-aprovacao'])) saida.push(`    aprovação: ${motivo}`);
-          for (const motivo of explicarDecisao(decisao, ['avisar'])) saida.push(`    aviso: ${motivo}`);
-          const scan = resumirScan(lido.arquivos, modoDoScan(config.valor, politicas.fontes));
+          for (const motivo of explicarDecisao(decisao, ['require-approval'])) saida.push(`    aprovação: ${motivo}`);
+          for (const motivo of explicarDecisao(decisao, ['warn'])) saida.push(`    aviso: ${motivo}`);
+          const scan = resumirScan(lido.arquivos, modoDoScan(config.valor, politicas.sources));
           if (scan.total > 0) {
-            saida.push(`    scan: ${scan.total} achado(s) de conteúdo suspeito (detalhe: ez-ai scan ${e(p.nome)})`);
-            const mostrar = opcoes.detalhes === true ? scan.linhas : scan.linhas.slice(0, 5);
+            saida.push(`    scan: ${scan.total} achado(s) de conteúdo suspeito (detalhe: ez-ai scan ${e(p.name)})`);
+            const mostrar = opcoes.details === true ? scan.linhas : scan.linhas.slice(0, 5);
             saida.push(...mostrar.map((l) => `      ${l}`));
           }
-          for (const b of scan.bloqueios) erros.push(`${e(p.nome)}: bloqueado pelo scan: ${b}`);
+          for (const b of scan.bloqueios) erros.push(`${e(p.name)}: bloqueado pelo scan: ${b}`);
           const exigidas = itensDeAprovacaoPropria({
-            chave: p.nome,
-            componentes: lido.manifesto.componentes,
+            key: p.name,
+            components: lido.manifesto.components,
             decisao,
             afrouxamentos: politicas.afrouxamentos,
           });
-          const faltam = pendentesDeAprovacao(exigidas, t?.aprovacoesProprias ?? []).pendentes;
+          const faltam = pendentesDeAprovacao(exigidas, t?.ownApprovals ?? []).pendentes;
           if (faltam.length > 0) {
-            saida.push(`    para aplicar, rode apply com: ${faltam.map((x) => `--aprovar ${e(x.id)}`).join(' ')}`);
+            saida.push(`    para aplicar, rode apply com: ${faltam.map((x) => `--approve ${e(x.id)}`).join(' ')}`);
           }
           for (const a of politicas.afrouxamentos) {
-            saida.push(`    policy afrouxada (${a.nivel}): ${e(JSON.stringify(a.afrouxamento))}`);
+            saida.push(`    policy afrouxada (${a.level}): ${e(JSON.stringify(a.afrouxamento))}`);
           }
           if (t) {
             for (const a of diferencaDePermissoes(t, lido.manifesto)) {
@@ -280,14 +280,14 @@ export function planejar(ctx: Contexto, opcoes: { readonly detalhes?: boolean } 
         }
         // Diff das instruções e projeção nos ambientes (ADR-0018, ADR-0025): só leitura, nada é gravado.
         if (estado !== 'inalterado')
-          saida.push(...diffDoPacote(instalado, lido.arquivos, lido.manifesto, 30, opcoes.detalhes === true));
-        const antigo = pacoteInstalado(p.nome, instalado);
+          saida.push(...diffDoPacote(instalado, lido.arquivos, lido.manifesto, 30, opcoes.details === true));
+        const antigo = pacoteInstalado(p.name, instalado);
         const projecao = await planejarProjecao(ctx, {
-          nome: p.nome,
-          ambientes: config.valor.ambientes,
+          name: p.name,
+          environments: config.valor.environments,
           ...(antigo ? { antigo } : {}),
           novo: { manifesto: lido.manifesto, arquivos: lido.arquivos },
-          forcar: false,
+          force: false,
           reservados,
           compartilhados,
         });
@@ -299,14 +299,14 @@ export function planejar(ctx: Contexto, opcoes: { readonly detalhes?: boolean } 
       }
     }
     for (const d of diferencaDeConfiguracao(config.valor, lock.valor)) {
-      if (d.estado === 'removido') saida.push(`- ${e(d.nome)}  remover (saiu da configuração)`);
+      if (d.estado === 'removido') saida.push(`- ${e(d.name)}  remover (saiu da configuração)`);
     }
     if (saida.length === 0 && erros.length === 0) saida.push('Nada a fazer.');
-    if (config.valor.pacotes.length > 0) {
-      saida.push(...avisosGeraisDosAmbientes(ctx, config.valor.ambientes).map((m) => `aviso  ${m}`));
+    if (config.valor.packages.length > 0) {
+      saida.push(...avisosGeraisDosAmbientes(ctx, config.valor.environments).map((m) => `aviso  ${m}`));
     }
     saida.push('plan não grava nada. Aprovação própria: só pedida até o job da F4 existir (nível ausente).');
-    return { codigo: erros.length > 0 ? 1 : 0, saida, erros };
+    return { code: erros.length > 0 ? 1 : 0, output: saida, erros };
   });
 }
 
@@ -316,11 +316,11 @@ export function diagnosticar(ctx: Contexto): Promise<ResultadoDoComando> {
     const saida: string[] = [];
     const erros: string[] = [];
     const config = await carregarConfiguracao(ctx.arquivos);
-    if (config.ok) saida.push(`ok     ${CAMINHO_DA_CONFIGURACAO} válido (${config.valor.pacotes.length} pacote(s))`);
+    if (config.ok) saida.push(`ok     ${CAMINHO_DA_CONFIGURACAO} válido (${config.valor.packages.length} pacote(s))`);
     else erros.push(...config.erros.map((m) => `erro   ${m}`));
     const lock = await carregarLockfile(ctx.arquivos);
     if (lock.ok)
-      saida.push(`ok     ${CAMINHO_DO_LOCKFILE} ${lock.valor.pacotes.length === 0 ? 'ausente ou vazio' : 'válido'}`);
+      saida.push(`ok     ${CAMINHO_DO_LOCKFILE} ${lock.valor.packages.length === 0 ? 'ausente ou vazio' : 'válido'}`);
     else erros.push(...lock.erros.map((m) => `erro   ${m}`));
     if (config.ok && lock.ok) {
       const soltos = diferencaDeConfiguracao(config.valor, lock.valor).filter((d) => d.estado !== 'em-dia');
@@ -328,17 +328,17 @@ export function diagnosticar(ctx: Contexto): Promise<ResultadoDoComando> {
         saida.push(`aviso  ${soltos.length} pacote(s) fora do lockfile ou diferentes dele; rode "ez-ai plan".`);
       }
     }
-    if (config.ok && config.valor.pacotes.length > 0 && config.valor.aprovadores.length === 0) {
+    if (config.ok && config.valor.packages.length > 0 && config.valor.approvers.length === 0) {
       saida.push(
         'aviso  aprovação própria não imposta: `aprovadores` vazio; defina-os e ligue o job de servidor (ADR-0028).',
       );
-    } else if (config.ok && config.valor.aprovadores.length === 1) {
+    } else if (config.ok && config.valor.approvers.length === 1) {
       saida.push(
         'aviso  só um aprovador: itens com executável ou arquivo de ambiente não têm segundo aprovador (S-aud1).',
       );
     }
-    if (config.ok && config.valor.pacotes.length > 0) {
-      saida.push(...avisosGeraisDosAmbientes(ctx, config.valor.ambientes).map((m) => `aviso  ${m}`));
+    if (config.ok && config.valor.packages.length > 0) {
+      saida.push(...avisosGeraisDosAmbientes(ctx, config.valor.environments).map((m) => `aviso  ${m}`));
     }
     const auditoria = await lerAuditoria(ctx.arquivos);
     if (auditoria.ok) saida.push(`ok     auditoria: ${auditoria.eventos.length} evento(s), corrente íntegra`);
@@ -349,6 +349,6 @@ export function diagnosticar(ctx: Contexto): Promise<ResultadoDoComando> {
       saida.push(`aviso  falta ${PASTA_DA_AUDITORIA}/.gitignore; ele é criado na primeira operação auditada`);
     }
     saida.push('aviso  a corrente detecta edição no meio do log, não truncar o fim; fecha na F7 (assinatura).');
-    return { codigo: erros.length > 0 ? 1 : 0, saida, erros };
+    return { code: erros.length > 0 ? 1 : 0, output: saida, erros };
   });
 }

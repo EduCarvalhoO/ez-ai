@@ -1,15 +1,15 @@
 // Varredura de conteúdo malicioso em pacotes (ADR-0038). Pura e determinística: recebe os arquivos já lidos, não abre
 // rede, não executa nada do pacote e não grava. É uma rede de apoio para o revisor humano, não uma prova de que o
 // pacote é seguro: texto novo ou ofuscado de outro jeito passa. O que ela acha vira aviso; o bloqueio é opt-in
-// (`scan.bloquearAPartirDe` na configuração ou `--bloquear` no comando).
+// (`scan.blockFrom` na configuração ou `--block` no comando).
 // Todo regex roda sobre texto não confiável, linha a linha e com quantificadores limitados: nada de backtracking
 // perigoso (mesma regra do restante do núcleo).
 import { chavesDoFrontmatter, chavesProibidas } from '../adaptadores/projecao.js';
 
-export const SEVERIDADES = ['baixa', 'media', 'alta'] as const;
+export const SEVERIDADES = ['low', 'medium', 'high'] as const;
 export type Severidade = (typeof SEVERIDADES)[number];
 /** `nunca` = só avisa; as outras trancam a instalação quando há achado igual ou mais grave. */
-export const MODOS_DE_BLOQUEIO = ['nunca', ...SEVERIDADES] as const;
+export const MODOS_DE_BLOQUEIO = ['never', ...SEVERIDADES] as const;
 export type ModoDeBloqueio = (typeof MODOS_DE_BLOQUEIO)[number];
 
 export const REGRAS_DO_SCAN = [
@@ -28,9 +28,9 @@ export const REGRAS_DO_SCAN = [
 export type RegraDoScan = (typeof REGRAS_DO_SCAN)[number];
 
 export interface Achado {
-  readonly regra: RegraDoScan;
+  readonly rule: RegraDoScan;
   readonly severidade: Severidade;
-  readonly arquivo: string;
+  readonly file: string;
   /** 1-based. */
   readonly linha: number;
   readonly mensagem: string;
@@ -38,23 +38,23 @@ export interface Achado {
 
 const MAX_CARACTERES_POR_LINHA = 4000;
 const MAX_ACHADOS = 200;
-const FORCA: Readonly<Record<Severidade, number>> = { baixa: 0, media: 1, alta: 2 };
+const FORCA: Readonly<Record<Severidade, number>> = { low: 0, medium: 1, high: 2 };
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Unicode oculto e caracteres de controle
 
 const intervalo = (c: number, de: number, ate: number): boolean => c >= de && c <= ate;
 
-function categoriaInvisivel(c: number): { severidade: Severidade; nome: string } | undefined {
-  if (intervalo(c, 0xe0000, 0xe007f)) return { severidade: 'alta', nome: 'caractere de tag' };
-  if (intervalo(c, 0xe0100, 0xe01ef)) return { severidade: 'alta', nome: 'seletor de variação (suplemento)' };
+function categoriaInvisivel(c: number): { severidade: Severidade; name: string } | undefined {
+  if (intervalo(c, 0xe0000, 0xe007f)) return { severidade: 'high', name: 'caractere de tag' };
+  if (intervalo(c, 0xe0100, 0xe01ef)) return { severidade: 'high', name: 'seletor de variação (suplemento)' };
   if (intervalo(c, 0x202a, 0x202e) || intervalo(c, 0x2066, 0x2069)) {
-    return { severidade: 'alta', nome: 'controle bidirecional' };
+    return { severidade: 'high', name: 'controle bidirecional' };
   }
   if (c === 0x200b || c === 0x200e || c === 0x200f || intervalo(c, 0x2060, 0x2064) || c === 0x180e) {
-    return { severidade: 'media', nome: 'espaço de largura zero' };
+    return { severidade: 'medium', name: 'espaço de largura zero' };
   }
-  if (c === 0xfeff) return { severidade: 'media', nome: 'marca de ordem de bytes fora do início' };
+  if (c === 0xfeff) return { severidade: 'medium', name: 'marca de ordem de bytes fora do início' };
   if (
     intervalo(c, 0xfe00, 0xfe0f) ||
     c === 0x061c ||
@@ -65,9 +65,9 @@ function categoriaInvisivel(c: number): { severidade: Severidade; nome: string }
     c === 0xffa0 ||
     c === 0x034f
   ) {
-    return { severidade: 'media', nome: 'caractere invisível' };
+    return { severidade: 'medium', name: 'caractere invisível' };
   }
-  if (c === 0xad) return { severidade: 'baixa', nome: 'hífen condicional' };
+  if (c === 0xad) return { severidade: 'low', name: 'hífen condicional' };
   return undefined;
 }
 
@@ -104,24 +104,24 @@ function achadosDeUnicode(arquivo: string, linha: string, numero: number, saida:
     if (c === 0xfeff && inicioDoArquivo) continue;
     const cat = categoriaInvisivel(c);
     if (!cat) continue;
-    const atual = invisiveis.get(cat.nome) ?? { severidade: cat.severidade, codigos: new Set<string>() };
+    const atual = invisiveis.get(cat.name) ?? { severidade: cat.severidade, codigos: new Set<string>() };
     atual.codigos.add(hex(c));
-    invisiveis.set(cat.nome, atual);
+    invisiveis.set(cat.name, atual);
   }
   for (const [nome, { severidade, codigos }] of invisiveis) {
     saida.push({
-      regra: 'unicode-oculto',
+      rule: 'unicode-oculto',
       severidade,
-      arquivo,
+      file: arquivo,
       linha: numero,
       mensagem: `${nome} (${[...codigos].slice(0, 4).join(', ')}) pode esconder texto de quem revisa e ainda ser lido pelo modelo`,
     });
   }
   if (controle) {
     saida.push({
-      regra: 'caractere-de-controle',
-      severidade: 'alta',
-      arquivo,
+      rule: 'caractere-de-controle',
+      severidade: 'high',
+      file: arquivo,
       linha: numero,
       mensagem: `caractere de controle (${[...controle].slice(0, 4).join(', ')}) pode injetar sequência de escape no terminal`,
     });
@@ -132,7 +132,7 @@ function achadosDeUnicode(arquivo: string, linha: string, numero: number, saida:
 // Padrões por linha
 
 interface Padrao {
-  readonly regra: RegraDoScan;
+  readonly rule: RegraDoScan;
   readonly severidade: Severidade;
   readonly regex: RegExp;
   readonly mensagem: string;
@@ -140,139 +140,139 @@ interface Padrao {
 
 const PADROES: readonly Padrao[] = [
   {
-    regra: 'comando-remoto',
-    severidade: 'alta',
+    rule: 'comando-remoto',
+    severidade: 'high',
     regex:
       /\b(?:curl|wget|iwr|irm|invoke-webrequest|invoke-restmethod)\b[^\n|]{0,300}\|\s*(?:sudo(?:\s+-\S{1,20}){0,5}\s+)?(?:env\s+)?(?:\S{1,40}\/)?(?:(?:ba|z|da|k)?sh|python3?|perl|ruby|node)\b/iu,
     mensagem: 'baixa da rede e entrega direto a um shell',
   },
   {
-    regra: 'comando-remoto',
-    severidade: 'alta',
+    rule: 'comando-remoto',
+    severidade: 'high',
     regex: /(?:bash|sh|zsh|source|\.)\s+<\(\s*(?:curl|wget)\b/iu,
     mensagem: 'executa a saída de curl/wget por substituição de processo',
   },
   {
-    regra: 'comando-remoto',
-    severidade: 'alta',
+    rule: 'comando-remoto',
+    severidade: 'high',
     regex: /\|\s*(?:iex|invoke-expression)\b/iu,
     mensagem: 'passa texto para iex/Invoke-Expression, que executa o que veio',
   },
   {
-    regra: 'comando-remoto',
-    severidade: 'alta',
+    rule: 'comando-remoto',
+    severidade: 'high',
     regex: /\b(?:iex|invoke-expression)\b[^\n]{0,100}\b(?:iwr|irm|invoke-webrequest|downloadstring)\b/iu,
     mensagem: 'executa com iex um conteúdo baixado da rede',
   },
   {
-    regra: 'comando-remoto',
-    severidade: 'alta',
+    rule: 'comando-remoto',
+    severidade: 'high',
     regex: /\bbase64\s+(?:-d|--decode)\b[^\n|]{0,100}\|\s*(?:ba)?sh\b/iu,
     mensagem: 'decodifica base64 e executa no shell',
   },
   {
-    regra: 'comando-remoto',
-    severidade: 'alta',
+    rule: 'comando-remoto',
+    severidade: 'high',
     regex: /\s-(?:enc|encodedcommand)\s+[a-z0-9+/=]{20,}/iu,
     mensagem: 'comando PowerShell codificado em base64',
   },
   {
-    regra: 'comando-remoto',
-    severidade: 'alta',
+    rule: 'comando-remoto',
+    severidade: 'high',
     regex: /\b(?:eval|bash\s+-c|sh\s+-c)\b[^\n]{0,20}\$\(\s*(?:curl|wget)\b/iu,
     mensagem: 'executa a saída de curl/wget',
   },
   {
-    regra: 'comando-remoto',
-    severidade: 'alta',
+    rule: 'comando-remoto',
+    severidade: 'high',
     regex: /\bnc\s+-e\b|\/dev\/tcp\//iu,
     mensagem: 'padrão de shell reverso',
   },
   {
-    regra: 'url-exfiltracao',
-    severidade: 'alta',
+    rule: 'url-exfiltracao',
+    severidade: 'high',
     regex: /!\[[^\]\n]{0,200}\]\(\s*https?:\/\/[^)\s]{1,300}\?[^)\s]{1,300}\)/iu,
     mensagem: 'imagem remota com parâmetros na URL: ao ser renderizada, pode vazar dados do contexto',
   },
   {
-    regra: 'url-exfiltracao',
-    severidade: 'alta',
+    rule: 'url-exfiltracao',
+    severidade: 'high',
     regex: /<img\b[^>\n]{0,200}\bsrc\s*=\s*["']?https?:\/\/[^"'>\s]{1,300}\?/iu,
     mensagem: 'tag <img> remota com parâmetros na URL: pode vazar dados do contexto',
   },
   {
-    regra: 'url-exfiltracao',
-    severidade: 'alta',
+    rule: 'url-exfiltracao',
+    severidade: 'high',
     regex: /https?:\/\/[^\s)]{1,200}(?:\$\{|\{\{|%7b%7b)/iu,
     mensagem: 'URL montada com variável ou modelo: pode embutir dados na requisição',
   },
   {
-    regra: 'url-exfiltracao',
-    severidade: 'alta',
+    rule: 'url-exfiltracao',
+    severidade: 'high',
     regex: /\]\(\s*(?:javascript|data|vbscript):/iu,
     mensagem: 'link com esquema javascript:, data: ou vbscript:',
   },
   {
-    regra: 'url-exfiltracao',
-    severidade: 'media',
+    rule: 'url-exfiltracao',
+    severidade: 'medium',
     regex: /https?:\/\/(?:\d{1,3}\.){3}\d{1,3}\b/iu,
     mensagem: 'URL com endereço IP numérico em vez de nome de host',
   },
   {
-    regra: 'url-exfiltracao',
-    severidade: 'baixa',
+    rule: 'url-exfiltracao',
+    severidade: 'low',
     regex: /\bhttp:\/\/(?!localhost\b|127\.0\.0\.1\b|\[::1\])[a-z0-9.-]{1,100}/iu,
     mensagem: 'URL sem TLS (http://)',
   },
   {
-    regra: 'host-de-captura',
-    severidade: 'alta',
+    rule: 'host-de-captura',
+    severidade: 'high',
     regex:
       /\b(?:webhook\.site|requestbin\.[a-z]{2,10}|pipedream\.net|ngrok(?:-free)?\.(?:io|app|dev)|[a-z0-9-]{1,40}\.oast\.[a-z]{2,10}|interact\.sh|burpcollaborator\.net|canarytokens\.[a-z]{2,10})\b|discord(?:app)?\.com\/api\/webhooks|hooks\.slack\.com\/services/iu,
     mensagem: 'host usado para capturar requisições (webhook de teste, túnel ou coletor)',
   },
   {
-    regra: 'injecao-de-instrucao',
-    severidade: 'media',
+    rule: 'injecao-de-instrucao',
+    severidade: 'medium',
     regex:
       /\b(?:ignore|disregard|forget)\b[^\n]{0,30}\b(?:previous|prior|above|earlier|all)\b[^\n]{0,30}\b(?:instructions?|rules?|prompts?)\b/iu,
     mensagem: 'pede ao modelo para ignorar instruções anteriores',
   },
   {
-    regra: 'injecao-de-instrucao',
-    severidade: 'media',
+    rule: 'injecao-de-instrucao',
+    severidade: 'medium',
     regex:
       /\b(?:ignor[ea]|desconsidere|esque[cç]a)\b[^\n]{0,30}\b(?:instru[cç][õo]es|regras|prompts?)\b[^\n]{0,20}\b(?:anteriores|acima|anterior)\b/iu,
     mensagem: 'pede ao modelo para ignorar instruções anteriores',
   },
   {
-    regra: 'injecao-de-instrucao',
-    severidade: 'media',
+    rule: 'injecao-de-instrucao',
+    severidade: 'medium',
     regex: /\b(?:do not|don't|never)\b[^\n]{0,20}\b(?:tell|inform|mention|reveal|show)\b[^\n]{0,30}\buser\b/iu,
     mensagem: 'pede para esconder algo do usuário',
   },
   {
-    regra: 'injecao-de-instrucao',
-    severidade: 'media',
+    rule: 'injecao-de-instrucao',
+    severidade: 'medium',
     regex: /\bn[ãa]o\b[^\n]{0,20}\b(?:conte|diga|avise|informe|mostre)\b[^\n]{0,30}\busu[áa]rio\b/iu,
     mensagem: 'pede para esconder algo do usuário',
   },
   {
-    regra: 'injecao-de-instrucao',
-    severidade: 'media',
+    rule: 'injecao-de-instrucao',
+    severidade: 'medium',
     regex: /\b(?:reveal|print|show|output|revele|mostre|imprima)\b[^\n]{0,30}\b(?:system prompt|prompt do sistema)\b/iu,
     mensagem: 'pede para revelar o prompt do sistema',
   },
   {
-    regra: 'leitura-sensivel',
-    severidade: 'media',
+    rule: 'leitura-sensivel',
+    severidade: 'medium',
     regex:
       /\b(?:cat|read|type|get-content|send|upload|post|curl|copy|copie|leia|envie)\b[^\n]{0,60}(?:~\/\.ssh|\.ssh\/|id_rsa|id_ed25519|\.aws\/credentials|\.npmrc|\.netrc|\.env\b|\/etc\/passwd|\.git-credentials|credentials\.json)/iu,
     mensagem: 'manda ler ou enviar arquivo que costuma guardar segredo',
   },
   {
-    regra: 'blob-ofuscado',
-    severidade: 'media',
+    rule: 'blob-ofuscado',
+    severidade: 'medium',
     regex: /[A-Za-z0-9+/]{200,}={0,2}/u,
     mensagem: 'trecho longo em base64 (200+ caracteres): pode esconder instrução ou carga',
   },
@@ -311,9 +311,9 @@ function achadosDePrerequisitos(arquivo: string, linhas: readonly string[], said
     const comoComando = cerca || linha.includes('`') || /^\s{0,3}[$>]\s/u.test(linha);
     if ((comoComando && COMANDO_DE_INSTALACAO.test(linha)) || ORDEM_DE_RODAR.test(linha)) {
       saida.push({
-        regra: 'prerequisito-executa',
-        severidade: 'media',
-        arquivo,
+        rule: 'prerequisito-executa',
+        severidade: 'medium',
+        file: arquivo,
         linha: i + 1,
         mensagem: 'seção de pré-requisitos manda rodar comando; o agente pode obedecer sem o usuário perceber',
       });
@@ -339,9 +339,9 @@ function achadosDeComentarios(arquivo: string, texto: string, saida: Achado[]): 
       for (let k = contadoAte; k < posicao; k++) if (texto.charCodeAt(k) === 10) linha++;
       contadoAte = posicao;
       saida.push({
-        regra: 'comentario-oculto',
-        severidade: 'media',
-        arquivo,
+        rule: 'comentario-oculto',
+        severidade: 'medium',
+        file: arquivo,
         linha,
         mensagem:
           'comentário HTML com palavra de instrução ou segredo: não aparece na leitura, mas o modelo recebe o texto',
@@ -359,20 +359,20 @@ function achadosDeFrontmatter(arquivo: string, texto: string, saida: Achado[]): 
   const fm = chavesDoFrontmatter(texto);
   if (!fm.ok) {
     saida.push({
-      regra: 'frontmatter-perigoso',
-      severidade: 'media',
-      arquivo,
+      rule: 'frontmatter-perigoso',
+      severidade: 'medium',
+      file: arquivo,
       linha: 1,
-      mensagem: `${fm.motivo}; o ambiente pode ler mais do que o ez-ai entende`,
+      mensagem: `${fm.reason}; o ambiente pode ler mais do que o ez-ai entende`,
     });
     return;
   }
   const proibidas = chavesProibidas(fm.chaves);
   if (proibidas.length > 0) {
     saida.push({
-      regra: 'frontmatter-perigoso',
-      severidade: 'alta',
-      arquivo,
+      rule: 'frontmatter-perigoso',
+      severidade: 'high',
+      file: arquivo,
       linha: 1,
       mensagem: `o frontmatter traz ${proibidas.join(', ')}, que rodam código ou pré-aprovam ferramentas por fora do manifesto`,
     });
@@ -409,7 +409,7 @@ export function escanearTexto(arquivo: string, texto: string): Achado[] {
     for (const trecho of janelas(logica)) {
       for (const p of PADROES) {
         if (p.regex.test(trecho)) {
-          saida.push({ regra: p.regra, severidade: p.severidade, arquivo, linha: i + 1, mensagem: p.mensagem });
+          saida.push({ rule: p.rule, severidade: p.severidade, file: arquivo, linha: i + 1, mensagem: p.mensagem });
         }
       }
     }
@@ -422,9 +422,9 @@ export function escanearTexto(arquivo: string, texto: string): Achado[] {
 
 const ordem = (a: Achado, b: Achado): number =>
   FORCA[b.severidade] - FORCA[a.severidade] ||
-  (a.arquivo < b.arquivo ? -1 : a.arquivo > b.arquivo ? 1 : 0) ||
+  (a.file < b.file ? -1 : a.file > b.file ? 1 : 0) ||
   a.linha - b.linha ||
-  (a.regra < b.regra ? -1 : a.regra > b.regra ? 1 : 0);
+  (a.rule < b.rule ? -1 : a.rule > b.rule ? 1 : 0);
 
 /** Varre todos os arquivos de um pacote. Mais grave primeiro; sem repetir a mesma regra na mesma linha. */
 export function escanearArquivos(arquivos: ReadonlyMap<string, string>): { achados: Achado[]; omitidos: number } {
@@ -432,9 +432,9 @@ export function escanearArquivos(arquivos: ReadonlyMap<string, string>): { achad
   const todos: Achado[] = [];
   for (const [caminho, texto] of [...arquivos].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     // O bundle de assinatura (raiz do pacote) e base64 por natureza e só é lido pelo verificador Sigstore, nunca pelo modelo.
-    if (caminho === 'harness-pacote.sigstore.json') continue;
+    if (caminho === 'harness-package.sigstore.json') continue;
     for (const a of escanearTexto(caminho, texto)) {
-      const chave = `${a.regra}|${a.arquivo}|${a.linha}|${a.mensagem}`;
+      const chave = `${a.rule}|${a.file}|${a.linha}|${a.mensagem}`;
       if (vistos.has(chave)) continue;
       vistos.add(chave);
       todos.push(a);
@@ -446,13 +446,13 @@ export function escanearArquivos(arquivos: ReadonlyMap<string, string>): { achad
 
 /** Os achados que trancam a instalação no modo dado (`nunca` não tranca nada). */
 export function achadosQueBloqueiam(achados: readonly Achado[], modo: ModoDeBloqueio): Achado[] {
-  if (modo === 'nunca') return [];
+  if (modo === 'never') return [];
   return achados.filter((a) => FORCA[a.severidade] >= FORCA[modo]);
 }
 
 /** O modo mais rígido entre dois (o da configuração e o pedido na linha de comando). */
 export function modoMaisRigido(a: ModoDeBloqueio, b: ModoDeBloqueio): ModoDeBloqueio {
-  if (a === 'nunca') return b;
-  if (b === 'nunca') return a;
+  if (a === 'never') return b;
+  if (b === 'never') return a;
   return FORCA[a] <= FORCA[b] ? a : b;
 }

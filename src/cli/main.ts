@@ -72,16 +72,16 @@ export function lerVersao(caminho: string = caminhoDoPacote): string {
 function opcoesDeInstalacao(a: Argumentos): OpcoesDeInstalacao {
   return {
     nomes: a.posicionais,
-    aprovar: a.aprovar,
-    forcar: a.forcar,
-    aceitarPermissoes: a.aceitarPermissoes,
-    detalhes: a.detalhes,
+    approve: a.approve,
+    force: a.force,
+    acceptPermissions: a.acceptPermissions,
+    details: a.details,
     dryRun: a.dryRun,
   };
 }
 
 /** Liga as camadas reais ao núcleo (só src/cli compõe as camadas). */
-export async function criarContexto(projeto: string, ator: 'humano' | 'agente' | 'ci'): Promise<Contexto> {
+export async function criarContexto(projeto: string, ator: 'human' | 'agent' | 'ci'): Promise<Contexto> {
   const raiz = resolve(projeto);
   const indice = await criarIndiceSqlite(raiz);
   return {
@@ -90,7 +90,7 @@ export async function criarContexto(projeto: string, ator: 'humano' | 'agente' |
     verificador: criarVerificadorSigstore(),
     adapters: [adapterClaudeCode, adapterCopilot, adapterAgentsMd],
     relogio: relogioDoSistema,
-    identidade: criarIdentidade(undefined, raiz),
+    identity: criarIdentidade(undefined, raiz),
     harness: lerVersao(),
     tipoDeAtor: ator,
     enviador: criarEnviadorOtlp(),
@@ -99,15 +99,15 @@ export async function criarContexto(projeto: string, ator: 'humano' | 'agente' |
 }
 
 /** Ator autodeclarado pelo ambiente; nunca autoriza nada (spec de auditoria). */
-function atorDoAmbiente(env: NodeJS.ProcessEnv): 'humano' | 'agente' | 'ci' {
-  if (env.CLAUDECODE === '1') return 'agente';
+function atorDoAmbiente(env: NodeJS.ProcessEnv): 'human' | 'agent' | 'ci' {
+  if (env.CLAUDECODE === '1') return 'agent';
   if (env.CI === 'true') return 'ci';
-  return 'humano';
+  return 'human';
 }
 
 export interface Dependencias {
   readonly criarContexto: (projeto: string) => Promise<Contexto>;
-  /** Linhas da entrada padrão, para o servidor MCP (conhecimento servir); injetável para teste. */
+  /** Linhas da entrada padrão, para o servidor MCP (knowledge serve); injetável para teste. */
   readonly linhasDeEntrada?: () => AsyncIterable<string>;
 }
 
@@ -133,11 +133,11 @@ export async function main(
   }
   let resultado: ResultadoDoComando;
   try {
-    const ctx = await deps.criarContexto(lido.projeto);
-    if (lido.comando === 'conhecimento' && lido.posicionais[0] === 'servir' && lido.posicionais.length === 1) {
+    const ctx = await deps.criarContexto(lido.project);
+    if (lido.command === 'knowledge' && lido.posicionais[0] === 'serve' && lido.posicionais.length === 1) {
       const linhas = deps.linhasDeEntrada ?? (() => createInterface({ input: process.stdin, crlfDelay: Infinity }));
       await servirMcp(ctx, linhas(), saidas.stdout);
-      resultado = { codigo: 0, saida: [], erros: [] };
+      resultado = { code: 0, output: [], erros: [] };
     } else {
       resultado = await executar(lido, ctx);
     }
@@ -145,127 +145,127 @@ export async function main(
     saidas.stderr(`ez-ai: ${erro instanceof Error ? erro.message : String(erro)}\n`);
     return 1;
   }
-  for (const l of resultado.saida) saidas.stdout(`${l}\n`);
+  for (const l of resultado.output) saidas.stdout(`${l}\n`);
   for (const l of resultado.erros) saidas.stderr(`${l}\n`);
-  return resultado.codigo;
+  return resultado.code;
 }
 
 const USO_DO_WORKFLOW = [
   'uso: ez-ai workflow status <item>',
   '     ez-ai workflow docs <arquivo>',
-  '     ez-ai workflow retomar',
-  '     ez-ai workflow etapa <item> <E0..E5|G0..G3> <solicitado|executado|verificado|falhou|ignorado> --agente <id> [--consumo <arquivo.json>] [--documento <arquivo>] [--evidencia <arquivo>]',
+  '     ez-ai workflow resume',
+  '     ez-ai workflow step <item> <E0..E5|G0..G3> <solicitado|executado|verificado|falhou|ignorado> --agent <id> [--usage <arquivo.json>] [--document <arquivo>] [--evidence <arquivo>]',
 ];
 
 function executarWorkflow(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
   const [sub, item, etapa, resultado] = a.posicionais;
   if (sub === 'status' && item !== undefined && a.posicionais.length === 2) return statusDoWorkflow(ctx, item);
   if (sub === 'docs' && item !== undefined && a.posicionais.length === 2) return verificarDocumento(ctx, item);
-  if (sub === 'retomar' && a.posicionais.length === 1) return retomarWorkflow(ctx);
-  if (sub === 'etapa' && item !== undefined && etapa !== undefined && resultado !== undefined && a.agente) {
+  if (sub === 'resume' && a.posicionais.length === 1) return retomarWorkflow(ctx);
+  if (sub === 'step' && item !== undefined && etapa !== undefined && resultado !== undefined && a.agent) {
     return registrarEtapa(ctx, {
       item,
-      etapa,
-      resultado,
-      agente: a.agente,
-      ...(a.consumo ? { consumoArquivo: a.consumo } : {}),
-      ...(a.documento ? { documento: a.documento } : {}),
-      ...(a.evidencia ? { evidencia: a.evidencia } : {}),
+      step: etapa,
+      result: resultado,
+      agent: a.agent,
+      ...(a.usage ? { consumoArquivo: a.usage } : {}),
+      ...(a.document ? { document: a.document } : {}),
+      ...(a.evidence ? { evidence: a.evidence } : {}),
     });
   }
-  return Promise.resolve({ codigo: 1, saida: [], erros: USO_DO_WORKFLOW });
+  return Promise.resolve({ code: 1, output: [], erros: USO_DO_WORKFLOW });
 }
 
 const USO_DO_CONHECIMENTO = [
-  'uso: ez-ai conhecimento indexar',
-  '     ez-ai conhecimento buscar <consulta> [--limite <n>]',
-  '     ez-ai conhecimento mapa [pasta]',
-  '     ez-ai conhecimento avaliar [--exportar]',
-  '     ez-ai conhecimento perguntas [--dry-run]',
-  '     ez-ai conhecimento servir',
+  'uso: ez-ai knowledge index',
+  '     ez-ai knowledge search <query> [--limit <n>]',
+  '     ez-ai knowledge map [folder]',
+  '     ez-ai knowledge evaluate [--export]',
+  '     ez-ai knowledge questions [--dry-run]',
+  '     ez-ai knowledge serve',
 ];
 
 function executarConhecimento(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
   const [sub, arg] = a.posicionais;
-  if (sub === 'indexar' && arg === undefined) return indexarBase(ctx);
-  if (sub === 'buscar' && arg !== undefined) return buscarNaBase(ctx, arg, a.limite);
-  if (sub === 'mapa') return mapaDaBase(ctx, arg);
-  if (sub === 'avaliar' && arg === undefined) return avaliarBase(ctx, { exportar: a.exportar });
-  if (sub === 'perguntas' && arg === undefined) return gerarPerguntasModelo(ctx, { dryRun: a.dryRun });
-  return Promise.resolve({ codigo: 1, saida: [], erros: USO_DO_CONHECIMENTO });
+  if (sub === 'index' && arg === undefined) return indexarBase(ctx);
+  if (sub === 'search' && arg !== undefined) return buscarNaBase(ctx, arg, a.limit);
+  if (sub === 'map') return mapaDaBase(ctx, arg);
+  if (sub === 'evaluate' && arg === undefined) return avaliarBase(ctx, { export: a.export });
+  if (sub === 'questions' && arg === undefined) return gerarPerguntasModelo(ctx, { dryRun: a.dryRun });
+  return Promise.resolve({ code: 1, output: [], erros: USO_DO_CONHECIMENTO });
 }
 
 function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
-  switch (a.comando) {
+  switch (a.command) {
     case 'init':
-      return init(ctx, { dryRun: a.dryRun, ...(a.ambientes ? { ambientes: a.ambientes } : {}) });
+      return init(ctx, { dryRun: a.dryRun, ...(a.environments ? { environments: a.environments } : {}) });
     case 'list':
       return listar(ctx);
     case 'validate':
-      if (a.servidor) {
+      if (a.server) {
         return validarNoServidor(ctx, {
           base: criarLeitorDaBase(a.base ?? '', ctx.arquivos.raiz),
           pr: criarProvedorDoPr({
-            repositorio: a.repo ?? '',
+            repository: a.repo ?? '',
             ...(a.pr !== undefined ? { pr: a.pr } : {}),
             ...(a.sha ? { sha: a.sha } : {}),
             token: process.env.GITHUB_TOKEN ?? '',
           }),
-          exigirEvidencias: a.exigirEvidencias,
+          requireEvidence: a.requireEvidence,
           checksExigidos: a.checks,
         });
       }
-      return validar(ctx, { ci: a.ci, exigirEvidencias: a.exigirEvidencias });
+      return validar(ctx, { ci: a.ci, requireEvidence: a.requireEvidence });
     case 'plan':
-      return planejar(ctx, { detalhes: a.detalhes });
+      return planejar(ctx, { details: a.details });
     case 'doctor':
       return diagnosticar(ctx);
     case 'add':
       return adicionar(ctx, {
-        origem: a.posicionais[0] ?? '',
+        source: a.posicionais[0] ?? '',
         dryRun: a.dryRun,
-        ...(a.versao ? { versao: a.versao } : {}),
+        ...(a.version ? { version: a.version } : {}),
       });
     case 'remove':
-      return remover(ctx, { nome: a.posicionais[0] ?? '', forcar: a.forcar, dryRun: a.dryRun });
+      return remover(ctx, { name: a.posicionais[0] ?? '', force: a.force, dryRun: a.dryRun });
     case 'apply':
       return aplicar(ctx, opcoesDeInstalacao(a));
     case 'update':
       return atualizar(ctx, opcoesDeInstalacao(a));
     case 'export':
       return exportarTelemetria(ctx, { dryRun: a.dryRun });
-    case 'custo':
+    case 'cost':
       return relatarCusto(ctx);
     case 'workflow':
       return executarWorkflow(a, ctx);
-    case 'conhecimento':
+    case 'knowledge':
       return executarConhecimento(a, ctx);
     case 'benchmark':
-      return relatarBenchmark(ctx, { exportar: a.exportar });
-    case 'hash-pacote':
+      return relatarBenchmark(ctx, { export: a.export });
+    case 'hash-package':
       return hashDoPacote(ctx, a.posicionais[0] ?? '');
     case 'scan':
       return escanear(ctx, {
         ...(a.posicionais[0] !== undefined ? { alvo: a.posicionais[0] } : {}),
-        ...(a.bloquear ? { bloquear: a.bloquear } : {}),
+        ...(a.block ? { block: a.block } : {}),
       });
     case 'search':
-      return procurarPacotes(ctx, { termos: a.posicionais, ...(a.limite !== undefined ? { limite: a.limite } : {}) });
-    case 'qualidade':
+      return procurarPacotes(ctx, { termos: a.posicionais, ...(a.limit !== undefined ? { limit: a.limit } : {}) });
+    case 'quality':
       return avaliarComponentes(ctx, {
         ...(a.posicionais[0] !== undefined ? { alvo: a.posicionais[0] } : {}),
-        estrito: a.estrito,
+        strict: a.strict,
         json: a.json,
       });
-    case 'auditoria':
-      return a.posicionais[0] === 'reparar' && a.posicionais.length === 1
+    case 'audit':
+      return a.posicionais[0] === 'repair' && a.posicionais.length === 1
         ? repararLog(ctx, { dryRun: a.dryRun })
-        : Promise.resolve({ codigo: 1, saida: [], erros: ['uso: ez-ai auditoria reparar [--dry-run]'] });
+        : Promise.resolve({ code: 1, output: [], erros: ['uso: ez-ai audit repair [--dry-run]'] });
     case 'import':
       return importar(ctx, {
         dryRun: a.dryRun,
-        ...(a.pacote ? { pacote: a.pacote } : {}),
-        ...(a.saida ? { saida: a.saida } : {}),
+        ...(a.package ? { package: a.package } : {}),
+        ...(a.output ? { output: a.output } : {}),
       });
   }
 }

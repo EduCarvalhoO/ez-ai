@@ -55,14 +55,14 @@ export function diffDoPacote(
 ): string[] {
   const saida: string[] = [];
   const vistos = new Set<string>();
-  for (const c of manifesto.componentes) {
-    if (vistos.has(c.arquivo)) continue;
-    vistos.add(c.arquivo);
-    const antes = instalado.get(c.arquivo) ?? '';
-    const depois = novo.get(c.arquivo) ?? '';
+  for (const c of manifesto.components) {
+    if (vistos.has(c.file)) continue;
+    vistos.add(c.file);
+    const antes = instalado.get(c.file) ?? '';
+    const depois = novo.get(c.file) ?? '';
     if (antes === depois) continue;
     const linhas = diffDeLinhas(antes, depois);
-    const cabecalho = `    instruções: ${escaparInvisiveis(c.arquivo)} (${c.tipo} ${escaparInvisiveis(c.id)})`;
+    const cabecalho = `    instruções: ${escaparInvisiveis(c.file)} (${c.type} ${escaparInvisiveis(c.id)})`;
     if (!detalhes) {
       const mais = linhas.filter((l) => l.startsWith('+ ')).length;
       saida.push(`${cabecalho}: +${mais} -${linhas.length - mais} linha(s)`);

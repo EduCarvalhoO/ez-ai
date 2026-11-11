@@ -1,14 +1,14 @@
 {
-  "versaoPolicy": 0,
-  "regras": [
+  "policyVersion": 0,
+  "rules": [
     {
       "id": "r",
-      "efeito": "negar",
-      "categoria": "internet",
-      "padroes": [
+      "effect": "deny",
+      "category": "internet",
+      "patterns": [
         "*"
       ],
-      "motivo": "m"
+      "reason": "m"
     }
   ]
 }

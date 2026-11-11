@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { avaliarQualidade, dividirFrontmatter, tipoDoArquivo } from '../../../src/core/qualidade/checklist.js';
 
 const regras = (arquivos: Record<string, string>): string[] =>
-  avaliarQualidade(new Map(Object.entries(arquivos))).achados.map((a) => `${a.gravidade}:${a.regra}`);
+  avaliarQualidade(new Map(Object.entries(arquivos))).achados.map((a) => `${a.gravidade}:${a.rule}`);
 
 const SKILL_BOA = `---
 name: minha-skill
@@ -29,8 +29,8 @@ Revise o diff. Formato da saída: veredito e achados.
 describe('tipoDoArquivo', () => {
   it('reconhece skill, agente e script pelo caminho', () => {
     expect(tipoDoArquivo('x/skills/a/SKILL.md')).toBe('skill');
-    expect(tipoDoArquivo('x/agentes/a.md')).toBe('agente');
-    expect(tipoDoArquivo('.claude/agents/a.md')).toBe('agente');
+    expect(tipoDoArquivo('x/agentes/a.md')).toBe('agent');
+    expect(tipoDoArquivo('.claude/agents/a.md')).toBe('agent');
     expect(tipoDoArquivo('scripts/a.mjs')).toBe('script');
     expect(tipoDoArquivo('x/instrucoes/a.md')).toBeUndefined();
     expect(tipoDoArquivo('x/skills/a/references/b.md')).toBeUndefined();
@@ -56,7 +56,7 @@ describe('avaliarQualidade: skills', () => {
   it('skill boa não tem achado', () => {
     const r = avaliarQualidade(new Map([['p/skills/minha-skill/SKILL.md', SKILL_BOA]]));
     expect(r.achados).toEqual([]);
-    expect(r.componentes).toBe(1);
+    expect(r.components).toBe(1);
     expect(r.limpos).toBe(1);
   });
 

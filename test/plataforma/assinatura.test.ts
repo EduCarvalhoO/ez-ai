@@ -5,8 +5,8 @@ import { criarVerificadorSigstore } from '../../src/plataforma/index.js';
 import { RAIZ_DE_CONFIANCA_JSON } from '../../src/plataforma/raiz-de-confianca.js';
 
 const PEDIDO = {
-  identidade: 'https://github.com/a/b/.github/workflows/release.yml@refs/tags/v1.0.0',
-  emissor: 'https://token.actions.githubusercontent.com',
+  identity: 'https://github.com/a/b/.github/workflows/release.yml@refs/tags/v1.0.0',
+  issuer: 'https://token.actions.githubusercontent.com',
   artefato: `sha256:${'0'.repeat(64)}`,
 };
 
@@ -66,9 +66,9 @@ describe('verificador Sigstore (plataforma)', () => {
   describe('assinatura real (caminho feliz)', () => {
     const bundle = readFileSync(new URL('./fixtures/bundle-real.sigstore.json', import.meta.url), 'utf8');
     const REAL = {
-      identidade:
+      identity:
         'https://github.com/educarvalhoo/workflow-feature/.github/workflows/release-assinada.yml@refs/tags/v0.5.0',
-      emissor: 'https://token.actions.githubusercontent.com',
+      issuer: 'https://token.actions.githubusercontent.com',
       artefato: 'sha256:aca67b76909d936e5618e2e1a46ed821af382a1af163d3fa0ea217f9df0d6eeb',
       bundle,
       idDoRepositorio: '1451316275',
@@ -81,7 +81,7 @@ describe('verificador Sigstore (plataforma)', () => {
     it('recusa conteudo alterado, outra tag e outro repositorio', async () => {
       const v = criarVerificadorSigstore();
       expect((await v.verificar({ ...REAL, artefato: `sha256:${'1'.repeat(64)}` })).ok).toBe(false);
-      expect((await v.verificar({ ...REAL, identidade: REAL.identidade.replace('v0.5.0', 'v0.5.1') })).ok).toBe(false);
+      expect((await v.verificar({ ...REAL, identity: REAL.identity.replace('v0.5.0', 'v0.5.1') })).ok).toBe(false);
       expect((await v.verificar({ ...REAL, idDoRepositorio: '1' })).ok).toBe(false);
     });
   });

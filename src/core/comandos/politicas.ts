@@ -1,5 +1,5 @@
 // Carrega as policies dos quatro níveis para o `plan`/`apply`/`update` (ADR-0020, ADR-0026): núcleo (no código),
-// organização (pacote apontado em `policyDaOrganizacao`), projeto (`.harness/policy.json`) e o próprio pacote.
+// organização (pacote apontado em `organizationPolicy`), projeto (`.harness/policy.json`) e o próprio pacote.
 // Tudo é só texto: nenhum código de pacote roda (ADR-0018). Qualquer falha ao ler ou validar recusa (falha fechada).
 import type { AfrouxamentoDeNivel } from '../auditoria/aprovacoes.js';
 import type { Configuracao } from '../configuracao/configuracao.js';
@@ -18,7 +18,7 @@ export const CAMINHO_DA_POLICY_DO_PROJETO = '.harness/policy.json';
 const e = escaparInvisiveis;
 
 export interface PoliticasCarregadas {
-  readonly fontes: FontesDePolicy;
+  readonly sources: FontesDePolicy;
   readonly afrouxamentos: readonly AfrouxamentoDeNivel[];
   readonly erros: readonly string[];
 }
@@ -28,21 +28,21 @@ export type CacheDaOrganizacao = Map<string, Promise<PacoteLido>>;
 
 interface PolicyDoPacote {
   readonly id: string;
-  readonly fonte: FonteDePolicy;
+  readonly source: FonteDePolicy;
 }
 
 function policiesDoManifesto(
   nome: string,
   manifesto: Manifesto,
   arquivos: ReadonlyMap<string, string>,
-  nivel: 'organizacao' | 'pacote',
+  nivel: 'organization' | 'package',
   erros: string[],
 ): PolicyDoPacote[] {
   const lista: PolicyDoPacote[] = [];
-  for (const c of manifesto.componentes.filter((x) => x.tipo === 'policy')) {
-    const texto = arquivos.get(c.arquivo);
+  for (const c of manifesto.components.filter((x) => x.type === 'policy')) {
+    const texto = arquivos.get(c.file);
     if (texto === undefined) {
-      erros.push(`${e(nome)}: o componente policy "${e(c.id)}" aponta para "${e(c.arquivo)}", que não está no pacote.`);
+      erros.push(`${e(nome)}: o componente policy "${e(c.id)}" aponta para "${e(c.file)}", que não está no pacote.`);
       continue;
     }
     const r = validarPolicy(texto, nivel);
@@ -50,7 +50,7 @@ function policiesDoManifesto(
       erros.push(...formatarErros(`${nome}:${c.id}`, r.erros).map(e));
       continue;
     }
-    lista.push({ id: c.id, fonte: { fonte: `${nome}:${c.id}`, policy: r.valor } });
+    lista.push({ id: c.id, source: { source: `${nome}:${c.id}`, policy: r.valor } });
   }
   return lista;
 }
@@ -59,14 +59,14 @@ export async function policyDoProjeto(ctx: Contexto, erros: string[]): Promise<F
   // Uma leitura só (sem checar e depois usar o caminho); a porta lança se o arquivo não existe.
   let texto: string;
   try {
-    texto = await ctx.arquivos.ler(CAMINHO_DA_POLICY_DO_PROJETO);
+    texto = await ctx.arquivos.read(CAMINHO_DA_POLICY_DO_PROJETO);
   } catch (erro: unknown) {
     if (!(await ctx.arquivos.existe(CAMINHO_DA_POLICY_DO_PROJETO))) return undefined;
     erros.push(`${CAMINHO_DA_POLICY_DO_PROJETO}: ${e(erro instanceof Error ? erro.message : String(erro))}`);
     return undefined;
   }
-  const r = validarPolicy(texto, 'projeto');
-  if (r.ok) return { fonte: CAMINHO_DA_POLICY_DO_PROJETO, policy: r.valor };
+  const r = validarPolicy(texto, 'project');
+  if (r.ok) return { source: CAMINHO_DA_POLICY_DO_PROJETO, policy: r.valor };
   erros.push(...formatarErros(CAMINHO_DA_POLICY_DO_PROJETO, r.erros).map(e));
   return undefined;
 }
@@ -77,21 +77,21 @@ async function lerOrganizacao(
   lock: Lockfile,
   cache: CacheDaOrganizacao,
 ): Promise<PacoteLido> {
-  const nome = config.policyDaOrganizacao as string;
+  const nome = config.organizationPolicy as string;
   const guardado = cache.get(nome);
   if (guardado) return guardado;
-  const configurado = config.pacotes.find((p) => p.nome === nome);
-  if (!configurado) throw new Error(`${nome}: policyDaOrganizacao não está em "pacotes".`);
-  const t = lock.pacotes.find((p) => p.nome === nome);
+  const configurado = config.packages.find((p) => p.name === nome);
+  if (!configurado) throw new Error(`${nome}: organizationPolicy não está em "pacotes".`);
+  const t = lock.packages.find((p) => p.name === nome);
   const busca = (async () => {
-    const lido = await obterPacote(ctx, configurado.origem, nome, {
+    const lido = await obterPacote(ctx, configurado.source, nome, {
       ...(t?.commit ? { commit: t.commit } : {}),
       ...(t?.tag ? { tag: t.tag } : {}),
-      ...(!t?.commit && configurado.versao ? { intervalo: configurado.versao } : {}),
+      ...(!t?.commit && configurado.version ? { intervalo: configurado.version } : {}),
     });
     if (t) {
       const integridade = verificarIntegridade(t, lido.arquivos);
-      if (!integridade.ok) throw new Error(integridade.motivo);
+      if (!integridade.ok) throw new Error(integridade.reason);
     }
     return lido;
   })();
@@ -100,7 +100,7 @@ async function lerOrganizacao(
 }
 
 /**
- * Policies que valem para `nome`. `instalado` é o conteúdo hoje em `.harness/pacotes/<nome>` (vazio se novo): serve
+ * Policies que valem para `nome`. `instalado` é o conteúdo hoje em `.harness/packages/<nome>` (vazio se novo): serve
  * para achar o que a policy do próprio pacote (ou da organização) deixou de restringir nesta versão.
  */
 export async function carregarPoliticas(
@@ -114,32 +114,30 @@ export async function carregarPoliticas(
 ): Promise<PoliticasCarregadas> {
   const erros: string[] = [];
   const projeto = await policyDoProjeto(ctx, erros);
-  const eOrganizacao = config.policyDaOrganizacao === nome;
-  const nivelDoPacote = eOrganizacao ? 'organizacao' : 'pacote';
+  const eOrganizacao = config.organizationPolicy === nome;
+  const nivelDoPacote = eOrganizacao ? 'organization' : 'package';
 
   if (eOrganizacao) {
     erros.push(
-      ...conferirPacoteDaOrganizacao(lido.manifesto.componentes).map(
-        (x) => `${e(nome)}: ${e(x.mensagem)} [${x.regra}]`,
-      ),
+      ...conferirPacoteDaOrganizacao(lido.manifesto.components).map((x) => `${e(nome)}: ${e(x.mensagem)} [${x.rule}]`),
     );
   }
   let organizacao: FonteDePolicy[] = [];
-  if (config.policyDaOrganizacao !== undefined && !eOrganizacao) {
+  if (config.organizationPolicy !== undefined && !eOrganizacao) {
     try {
       const org = await lerOrganizacao(ctx, config, lock, cache);
       erros.push(
-        ...conferirPacoteDaOrganizacao(org.manifesto.componentes).map(
-          (x) => `${e(config.policyDaOrganizacao ?? '')}: ${e(x.mensagem)} [${x.regra}]`,
+        ...conferirPacoteDaOrganizacao(org.manifesto.components).map(
+          (x) => `${e(config.organizationPolicy ?? '')}: ${e(x.mensagem)} [${x.rule}]`,
         ),
       );
       organizacao = policiesDoManifesto(
-        config.policyDaOrganizacao,
+        config.organizationPolicy,
         org.manifesto,
         org.arquivos,
-        'organizacao',
+        'organization',
         erros,
-      ).map((p) => p.fonte);
+      ).map((p) => p.source);
     } catch (erro: unknown) {
       erros.push(
         `policy da organização não pôde ser lida (falha fechada): ${e(erro instanceof Error ? erro.message : String(erro))}`,
@@ -152,7 +150,7 @@ export async function carregarPoliticas(
   if (anterior === null) {
     erros.push(`${e(nome)}: não consegui obter a versão anterior para comparar a policy (falha fechada).`);
   } else if (anterior !== undefined) {
-    const texto = anterior.get('harness-pacote.json');
+    const texto = anterior.get('harness-package.json');
     const antigoManifesto = texto === undefined ? undefined : validarManifesto(texto);
     if (!antigoManifesto?.ok) {
       erros.push(
@@ -160,21 +158,21 @@ export async function carregarPoliticas(
       );
     } else {
       const antigas = policiesDoManifesto(nome, antigoManifesto.valor, anterior, nivelDoPacote, erros);
-      const vazia: Policy = { versaoPolicy: 0, regras: [] };
+      const vazia: Policy = { policyVersion: 0, rules: [] };
       for (const antiga of antigas) {
-        const nova = novas.find((n) => n.id === antiga.id)?.fonte.policy ?? vazia;
-        for (const afrouxamento of afrouxamentosDePolicy(antiga.fonte.policy, nova)) {
-          afrouxamentos.push({ nivel: nivelDoPacote, chave: nome, afrouxamento });
+        const nova = novas.find((n) => n.id === antiga.id)?.source.policy ?? vazia;
+        for (const afrouxamento of afrouxamentosDePolicy(antiga.source.policy, nova)) {
+          afrouxamentos.push({ level: nivelDoPacote, key: nome, afrouxamento });
         }
       }
     }
   }
   return {
-    fontes: {
-      ...(organizacao.length > 0 ? { organizacao } : {}),
-      ...(projeto ? { projeto } : {}),
+    sources: {
+      ...(organizacao.length > 0 ? { undefined: organizacao } : {}),
+      ...(projeto ? { project: projeto } : {}),
       // A policy da organização, ao instalar o próprio pacote dela, vale como policy dele mesmo.
-      pacote: novas.map((p) => p.fonte),
+      package: novas.map((p) => p.source),
     },
     afrouxamentos,
     erros,
@@ -184,15 +182,14 @@ export async function carregarPoliticas(
 /** Linhas "por que bloqueou" (spec da policy): item, efeito, regra, nível e fonte, mais as regras que também casaram. */
 export function explicarDecisao(
   decisao: import('../policy/avaliar.js').DecisaoDoPacote,
-  efeitos: readonly string[] = ['negar'],
+  efeitos: readonly string[] = ['deny'],
 ): string[] {
-  return decisao.itens
-    .filter((i) => efeitos.includes(i.efeito))
+  return decisao.items
+    .filter((i) => efeitos.includes(i.effect))
     .map((i) => {
       const r = i.decididoPor;
-      const outras =
-        i.tambemCasaram.length > 0 ? ` (também: ${i.tambemCasaram.map((x) => e(x.regra)).join(', ')})` : '';
-      return `${e(i.componente)} ${i.categoria} "${e(i.item)}": ${i.efeito} pela regra "${e(r.regra)}" (${r.nivel}, ${e(r.fonte)}): ${e(r.motivo)}${outras}`;
+      const outras = i.tambemCasaram.length > 0 ? ` (também: ${i.tambemCasaram.map((x) => e(x.rule)).join(', ')})` : '';
+      return `${e(i.componente)} ${i.category} "${e(i.item)}": ${i.effect} pela regra "${e(r.rule)}" (${r.level}, ${e(r.source)}): ${e(r.reason)}${outras}`;
     });
 }
 
@@ -203,17 +200,17 @@ export function explicarDecisao(
  */
 export async function conteudoAnterior(
   ctx: Contexto,
-  p: { readonly nome: string; readonly origem: PacoteTravado['origem'] },
+  p: { readonly name: string; readonly source: PacoteTravado['source'] },
   t: PacoteTravado | undefined,
   instalado: ReadonlyMap<string, string>,
   editado: boolean,
 ): Promise<ReadonlyMap<string, string> | null | undefined> {
   if (!t) return undefined;
   // O retrato do lockfile diz se a versão travada tinha policy: sem ela, não há o que afrouxar.
-  if (!t.componentes.some((c) => c.tipo === 'policy')) return undefined;
-  if (p.origem.tipo === 'github' && t.commit) {
+  if (!t.components.some((c) => c.type === 'policy')) return undefined;
+  if (p.source.type === 'github' && t.commit) {
     try {
-      const lido = await obterPacote(ctx, p.origem, p.nome, { commit: t.commit, ...(t.tag ? { tag: t.tag } : {}) });
+      const lido = await obterPacote(ctx, p.source, p.name, { commit: t.commit, ...(t.tag ? { tag: t.tag } : {}) });
       if (verificarIntegridade(t, lido.arquivos).ok) return lido.arquivos;
     } catch {
       // Sem o commit travado na origem, tenta a cópia instalada se ela ainda bate com o hash travado.

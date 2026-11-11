@@ -1,1 +1,1 @@
-{"versaoPolicy":0,"regras":[{"id":"r","efeito":"negar","efeito":"avisar","categoria":"rede","padroes":["*"],"motivo":"m"}]}
+{"policyVersion":0,"rules":[{"id":"r","effect":"deny","effect":"warn","category":"network","patterns":["*"],"reason":"m"}]}

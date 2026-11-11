@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { textoSeguroParaBloco } from '../../../src/core/adaptadores/blocos.js';
 import { escanearTexto, type RegraDoScan } from '../../../src/core/seguranca/scan.js';
 
-const regras = (texto: string): RegraDoScan[] => escanearTexto('a.md', texto).map((a) => a.regra);
+const regras = (texto: string): RegraDoScan[] => escanearTexto('a.md', texto).map((a) => a.rule);
 
 describe('scan endurecido (revisão de segurança da Sprint 18)', () => {
   it('não perde achado depois da coluna 4.000', () => {

@@ -13,27 +13,27 @@ export type Efeito = (typeof EFEITOS)[number];
 export type CategoriaDePolicy = (typeof CATEGORIAS_DE_POLICY)[number];
 export type Marca = (typeof MARCAS)[number];
 /** De onde a regra vem, do mais forte para o mais fraco (núcleo > organização > projeto > pacote). */
-export type NivelDePolicy = 'nucleo' | 'organizacao' | 'projeto' | 'pacote';
-export const NIVEIS: readonly NivelDePolicy[] = ['nucleo', 'organizacao', 'projeto', 'pacote'];
+export type NivelDePolicy = 'core' | 'organization' | 'project' | 'package';
+export const NIVEIS: readonly NivelDePolicy[] = ['core', 'organization', 'project', 'package'];
 
 export interface Regra {
   readonly id: string;
-  readonly efeito: Efeito;
-  readonly categoria: CategoriaDePolicy;
+  readonly effect: Efeito;
+  readonly category: CategoriaDePolicy;
   /** Exatamente um entre `padroes` e `marca`. */
-  readonly padroes?: readonly string[];
-  readonly marca?: Marca;
+  readonly patterns?: readonly string[];
+  readonly mark?: Marca;
   /** Só tira itens desta regra, e só os que estão inteiros dentro da exceção. */
-  readonly exceto: readonly string[];
+  readonly except: readonly string[];
   /** `login/*` ou `login/pacote`; vazio = todos. Recusado na policy de pacote. */
-  readonly pacotes: readonly string[];
-  readonly critica: boolean;
-  readonly motivo: string;
+  readonly packages: readonly string[];
+  readonly critical: boolean;
+  readonly reason: string;
 }
 
 export interface Policy {
-  readonly versaoPolicy: 0;
-  readonly regras: readonly Regra[];
+  readonly policyVersion: 0;
+  readonly rules: readonly Regra[];
 }
 
 type Json = Record<string, unknown>;
@@ -44,45 +44,45 @@ const HOST = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61
 const SEGREDO = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
 const PROGRAMA = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 const MARCA_DA_CATEGORIA: Readonly<Record<Marca, CategoriaDePolicy>> = {
-  amplo: 'ler',
-  sensivel: 'ler',
-  executavel: 'escrever',
+  broad: 'read',
+  sensitive: 'read',
+  executable: 'write',
 };
 
 function regraDe(valor: unknown): Regra {
   const r = valor as Json;
   return {
     id: String(r.id),
-    efeito: r.efeito as Efeito,
-    categoria: r.categoria as CategoriaDePolicy,
-    ...(r.padroes !== undefined ? { padroes: lista<unknown>(r.padroes).map(String) } : {}),
-    ...(typeof r.marca === 'string' ? { marca: r.marca as Marca } : {}),
-    exceto: lista<unknown>(r.exceto).map(String),
-    pacotes: lista<unknown>(r.pacotes).map(String),
-    critica: r.critica === true,
-    motivo: String(r.motivo),
+    effect: r.effect as Efeito,
+    category: r.category as CategoriaDePolicy,
+    ...(r.patterns !== undefined ? { patterns: lista<unknown>(r.patterns).map(String) } : {}),
+    ...(typeof r.mark === 'string' ? { mark: r.mark as Marca } : {}),
+    except: lista<unknown>(r.except).map(String),
+    packages: lista<unknown>(r.packages).map(String),
+    critical: r.critical === true,
+    reason: String(r.reason),
   };
 }
 
 /** Motivo da recusa de um padrão na forma da categoria; regra que nunca casaria é recusada, não ignorada. */
 export function problemaNoPadrao(categoria: CategoriaDePolicy, padrao: string): string | undefined {
   switch (categoria) {
-    case 'ler':
-    case 'escrever':
-    case 'configurarAmbiente':
+    case 'read':
+    case 'write':
+    case 'configureEnvironment':
       return problemaNoCaminho(padrao, true);
-    case 'rede': {
+    case 'network': {
       const host = padrao.startsWith('*.') ? padrao.slice(2) : padrao;
       if (padrao === '*' || HOST.test(host)) return undefined;
       return 'use um host minúsculo (punycode xn-- explícito), "*.dominio" ou "*"';
     }
-    case 'segredos':
+    case 'secrets':
       return padrao === '*' || SEGREDO.test(padrao) ? undefined : 'use um nome de variável de ambiente ou "*"';
-    case 'executar':
+    case 'execute':
       return padrao === '*' || PROGRAMA.test(padrao) ? undefined : 'use um nome de programa sem caminho ou "*"';
-    case 'conteudo':
+    case 'content':
       return (SEVERIDADES as readonly string[]).includes(padrao) ? undefined : `use ${SEVERIDADES.join(', ')}`;
-    case 'tipo':
+    case 'type':
       return padrao === '*' || (TIPOS_DE_COMPONENTE as readonly string[]).includes(padrao)
         ? undefined
         : `use um tipo de componente (${TIPOS_DE_COMPONENTE.join(', ')}) ou "*"`;
@@ -91,39 +91,35 @@ export function problemaNoPadrao(categoria: CategoriaDePolicy, padrao: string): 
 
 function regrasSemanticas(policy: Policy, nivel: NivelDePolicy): ErroDeContrato[] {
   const erros: ErroDeContrato[] = [];
-  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, regra, mensagem });
+  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, rule: regra, mensagem });
   const ids = new Set<string>();
-  policy.regras.forEach((r, i) => {
-    const base = `/regras/${i}`;
+  policy.rules.forEach((r, i) => {
+    const base = `/rules/${i}`;
     if (ids.has(r.id)) falha(`${base}/id`, 'id-unico', `id "${r.id}" repetido; cada regra precisa de um id próprio`);
     ids.add(r.id);
-    for (const campo of ['padroes', 'exceto'] as const) {
+    for (const campo of ['patterns', 'except'] as const) {
       (r[campo] ?? []).forEach((p, j) => {
-        const problema = problemaNoPadrao(r.categoria, p);
-        if (problema) falha(`${base}/${campo}/${j}`, 'padrao', `"${p}" não serve para "${r.categoria}": ${problema}`);
+        const problema = problemaNoPadrao(r.category, p);
+        if (problema) falha(`${base}/${campo}/${j}`, 'padrao', `"${p}" não serve para "${r.category}": ${problema}`);
       });
     }
-    if (r.marca && MARCA_DA_CATEGORIA[r.marca] !== r.categoria) {
-      falha(
-        `${base}/marca`,
-        'marca-da-categoria',
-        `a marca "${r.marca}" só existe em "${MARCA_DA_CATEGORIA[r.marca]}"`,
-      );
+    if (r.mark && MARCA_DA_CATEGORIA[r.mark] !== r.category) {
+      falha(`${base}/mark`, 'marca-da-categoria', `a marca "${r.mark}" só existe em "${MARCA_DA_CATEGORIA[r.mark]}"`);
     }
-    if (r.categoria === 'conteudo') {
+    if (r.category === 'content') {
       const ruim =
-        r.efeito !== 'negar'
+        r.effect !== 'deny'
           ? 'só aceita efeito "negar" (é um piso que tranca)'
-          : (r.padroes?.length ?? 0) !== 1
+          : (r.patterns?.length ?? 0) !== 1
             ? 'precisa de exatamente um padrão: baixa, media ou alta'
-            : r.exceto.length > 0 || r.pacotes.length > 0 || r.critica
+            : r.except.length > 0 || r.packages.length > 0 || r.critical
               ? 'não aceita "exceto", "pacotes" nem "critica" (o piso vale para todos os pacotes)'
               : undefined;
-      if (ruim) falha(`${base}/categoria`, 'conteudo', `a categoria "conteudo" ${ruim}`);
+      if (ruim) falha(`${base}/category`, 'content', `a categoria "conteudo" ${ruim}`);
     }
-    if (nivel === 'pacote' && r.pacotes.length > 0) {
+    if (nivel === 'package' && r.packages.length > 0) {
       falha(
-        `${base}/pacotes`,
+        `${base}/packages`,
         'pacotes-no-pacote',
         'policy de pacote só restringe os próprios componentes; tire "pacotes"',
       );
@@ -136,13 +132,13 @@ function regrasSemanticas(policy: Policy, nivel: NivelDePolicy): ErroDeContrato[
  * Valida o texto de uma policy (`.harness/policy.json`, componente `policy` de pacote ou a do núcleo). `nivel` só
  * muda uma regra: na policy de pacote, `pacotes` é recusado. Devolve a policy tipada ou todos os erros.
  */
-export function validarPolicy(texto: string, nivel: NivelDePolicy = 'projeto'): Resultado<Policy> {
+export function validarPolicy(texto: string, nivel: NivelDePolicy = 'project'): Resultado<Policy> {
   const lido = lerJsonSeguro(texto, { bytes: LIMITES_DA_POLICY.bytes, profundidade: LIMITES.profundidadeDoJson });
   if (!lido.ok) return lido;
   const erros: ErroDeContrato[] = [...validarSchema(lido.valor)];
   procurarInvisiveis(lido.valor, '', erros);
   if (erros.length > 0) return { ok: false, erros };
-  const policy: Policy = { versaoPolicy: 0, regras: lista<unknown>((lido.valor as Json).regras).map(regraDe) };
+  const policy: Policy = { policyVersion: 0, rules: lista<unknown>((lido.valor as Json).rules).map(regraDe) };
   const semanticos = regrasSemanticas(policy, nivel);
   return semanticos.length > 0 ? { ok: false, erros: semanticos } : { ok: true, valor: policy };
 }
