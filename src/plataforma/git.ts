@@ -21,6 +21,7 @@ const MAXIMO_DE_BYTES_POR_ARQUIVO = 1024 * 1024;
 export type ExecutorDeGit = (argumentos: readonly string[], cwd?: string, binario?: boolean) => Promise<string>;
 
 const executar = promisify(execFile);
+const DECODIFICADOR = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 const TRAVAS = ['-c', 'protocol.allow=never', '-c', 'protocol.https.allow=always', '-c', 'core.hooksPath=/dev/null'];
 
@@ -129,11 +130,17 @@ export function criarGit(executor: ExecutorDeGit = executorDoSistema): Git {
         const arvore = entradasDaArvore(await executor(['ls-tree', '-r', '-z', commit], pasta));
         const arquivos = new Map<string, string>();
         for (const e of arvore) {
-          const conteudo = await executor(['cat-file', 'blob', e.sha], pasta);
-          if (conteudo.length > MAXIMO_DE_BYTES_POR_ARQUIVO) {
+          // Lido em bytes e decodificado de forma estrita (A3): arquivo que não é UTF-8 válido é recusado, em vez de
+          // virar U+FFFD e produzir um hash que não é o dos bytes do repositório.
+          const bytes = Buffer.from(await executor(['cat-file', 'blob', e.sha], pasta, true), 'latin1');
+          if (bytes.length > MAXIMO_DE_BYTES_POR_ARQUIVO) {
             throw new Error(`"${escaparInvisiveis(e.caminho)}" passa de ${MAXIMO_DE_BYTES_POR_ARQUIVO} bytes.`);
           }
-          arquivos.set(e.caminho, conteudo);
+          try {
+            arquivos.set(e.caminho, DECODIFICADOR.decode(bytes));
+          } catch {
+            throw new Error(`"${escaparInvisiveis(e.caminho)}" não é texto UTF-8 válido; o pacote é recusado.`);
+          }
         }
         return arquivos;
       } finally {

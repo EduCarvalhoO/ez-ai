@@ -47,6 +47,7 @@ export { LIMITES_DA_AUDITORIA, SCHEMA_DO_EVENTO } from './auditoria/schema.js';
 export { pareceSegredo, redigirSegredos } from './auditoria/segredos.js';
 export { hashDoPacote } from './comandos/assinatura.js';
 export type { Contexto, ResultadoDoComando } from './comandos/base.js';
+export { repararLog } from './comandos/auditoria.js';
 export { relatarBenchmark } from './comandos/benchmark.js';
 export { avaliarBase, buscarNaBase, gerarPerguntasModelo, indexarBase, mapaDaBase } from './comandos/conhecimento.js';
 export { relatarCusto } from './comandos/custo.js';

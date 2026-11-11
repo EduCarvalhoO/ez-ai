@@ -62,7 +62,7 @@ Uma linha JSONL por evento, até 16 KiB, lida com a mesma leitura segura dos out
 - **Não detecta (T-aud1, com teste que mostra o limite):** truncar o fim, apagar um arquivo mensal inteiro, reescrever a corrente a partir de um ponto. Fecha na F7 (assinatura) ou com âncora fora do alcance do agente (hash da cabeça publicado num artefato do CI). Âncora no mesmo log não prende nada.
 
 ### Onde fica
-Log em `.harness/auditoria/AAAA-MM.jsonl`, **não versionado** (a F2 grava `.harness/auditoria/.gitignore` com `*`). O que vale para o time é o lockfile: cada pacote ganha `aprovacoesProprias`, lista de `{id, impressao}`. Quem aprovou e quando vem do PR; o lockfile continua sem data e sem autor.
+Log em `.harness/auditoria/AAAA-MM.jsonl`, **não versionado** (a F2 grava `.harness/auditoria/.gitignore` com `*`). Gravar no log exige a trava `.harness/auditoria/.trava` (criação exclusiva; espera até ~10 s; trava com mais de 60 s é tomada) e toda gravação é atômica (temporário + `rename`); se a corrente quebrar, `ez-ai auditoria reparar` (só a pessoa, nunca um agente) guarda os originais em `.harness/auditoria/selado/<instante>/` e recomeça do último evento íntegro, registrando o reparo ([ADR-0041](../adr/0041-log-travado-gravacao-atomica-e-reparo.md)). O que vale para o time é o lockfile: cada pacote ganha `aprovacoesProprias`, lista de `{id, impressao}`. Quem aprovou e quando vem do PR; o lockfile continua sem data e sem autor.
 
 ### Aprovação própria e aprovadores
 - **Id** (sempre escapado, nunca com curinga; `/` e `%` viram `%2F` e `%25`):

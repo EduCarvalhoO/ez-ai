@@ -1,5 +1,6 @@
 // Fontes da base de conhecimento (spec base-de-conhecimento.md, ADR-0032 e ADR-0034). Há fontes padrão curadas e o
 // projeto pode acrescentar as suas em .harness/conhecimento.json. Fontes declaradas por pacote ficam para depois.
+import { pareceSegredo } from '../auditoria/segredos.js';
 import { lerJsonSeguro } from '../contratos/json-seguro.js';
 import type { SistemaDeArquivos } from '../portas/index.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
@@ -25,7 +26,17 @@ export const FONTES_PADRAO: readonly Fonte[] = [
 /** Limites iniciais da spec (Hipótese): arquivos maiores são pulados e listados no relatório. */
 export const LIMITES_DA_BASE = { caracteresPorArquivo: 512 * 1024, arquivosPorFonte: 20_000 } as const;
 
-const NOMES_SENSIVEIS = [/^\.env(\..*)?$/i, /\.pem$/i, /\.key$/i, /^id_(rsa|dsa|ecdsa|ed25519)/i, /^\.npmrc$/i];
+const NOMES_SENSIVEIS = [
+  /^\.env(\..*)?$/i,
+  /\.pem$/i,
+  /\.key$/i,
+  /^id_(rsa|dsa|ecdsa|ed25519)/i,
+  /^\.npmrc$/i,
+  /\.(pfx|p12|jks|keystore)$/i,
+  /\.tfvars(\.json)?$/i,
+  /^credentials(\..*)?$/i,
+  /^secrets?(\..*)?$/i,
+];
 
 /** Nunca indexado, mesmo que o filtro da fonte o alcance (I1 da spec). */
 export function ehSensivel(caminho: string): boolean {
@@ -56,6 +67,7 @@ export async function reunirChunks(
   const chunks: Chunk[] = [];
   const pulados: string[] = [];
   const vistos = new Set<string>();
+  let grandes = 0;
   for (const f of fontes) {
     let candidatos: readonly string[] = [];
     if (f.pasta !== undefined) {
@@ -74,12 +86,18 @@ export async function reunirChunks(
       const texto = await arquivos.ler(caminho);
       if (texto.length > LIMITES_DA_BASE.caracteresPorArquivo) {
         pulados.push(`${escaparInvisiveis(caminho)} (maior que ${LIMITES_DA_BASE.caracteresPorArquivo / 1024} KB)`);
+        grandes++;
         continue;
       }
-      chunks.push(...cortarEmChunks(`projeto:${f.id}`, caminho, texto, f.tipo));
+      // Segredo escrito dentro do código (A5): o trecho que parece segredo não entra no índice, e fica listado.
+      for (const c of cortarEmChunks(`projeto:${f.id}`, caminho, texto, f.tipo)) {
+        const tipo = pareceSegredo(c.texto);
+        if (tipo === undefined) chunks.push(c);
+        else pulados.push(`${escaparInvisiveis(caminho)}:${c.linhaInicio}-${c.linhaFim} (trecho com ${tipo})`);
+      }
     }
   }
-  return { chunks, arquivos: vistos.size - pulados.length, pulados };
+  return { chunks, arquivos: vistos.size - grandes, pulados };
 }
 
 export const CAMINHO_DAS_FONTES = '.harness/conhecimento.json';
