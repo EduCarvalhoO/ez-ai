@@ -57,19 +57,19 @@ Workflows em `.github/workflows/`: `ci.yml` e `codeql.yml`, disparados em `pull_
 
 | Job | Onde | O que roda |
 |---|---|---|
-| `qualidade` | Ubuntu, Node `24.x` | `npm ci --ignore-scripts`; só em PR, idade mínima das versões novas do lockfile ([§1](#1-código)); `npm audit` (falha com qualquer vulnerabilidade, inclusive em dependência de desenvolvimento, que roda no CI); `npm audit signatures --min-release-age=0`; `format:check`, `lint`, `typecheck`, `validar-docs` e, só em PR, `commits:check` no intervalo `origin/<base>..HEAD` |
+| `quality` | Ubuntu, Node `24.x` | `npm ci --ignore-scripts`; só em PR, idade mínima das versões novas do lockfile ([§1](#1-código)); `npm audit` (falha com qualquer vulnerabilidade, inclusive em dependência de desenvolvimento, que roda no CI); `npm audit signatures --min-release-age=0`; `format:check`, `lint`, `typecheck`, `validar-docs` e, só em PR, `commits:check` no intervalo `origin/<base>..HEAD` |
 | `workflows` | Ubuntu, sem Node | actionlint e zizmor nos workflows e no `dependabot.yml`; qualquer achado falha |
 | `testes` | Ubuntu, Windows e macOS (macOS religado em 2026-11-11) × Node `22.x`, `24.x` e `26.x`, mais Ubuntu com o piso `22.12.0` (10 execuções) | `npm ci --ignore-scripts` e `npm test` (build + Vitest com cobertura, [§3](#3-testes)) |
 | `analisar` (`codeql.yml`) | Ubuntu | CodeQL `javascript-typescript` com `security-extended`; resultados na aba Security |
-| `origem` (`origem-do-pr.yml`) | Ubuntu, sem checkout, `permissions: {}` | falha se o PR para a `main` não vier da `develop` deste repositório (`head_ref` e repositório de origem) |
-| `promover` e `origem` (`promover-develop.yml`) | Ubuntu | `promover` abre ou reaproveita o PR `develop` → `main` (`chore(release): promove develop para main`) e liga o auto-merge com merge commit; `origem` é trivial e fornece esse check no commit da `develop`, porque PR aberto pelo `GITHUB_TOKEN` não dispara workflows |
+| `source` (`origem-do-pr.yml`) | Ubuntu, sem checkout, `permissions: {}` | falha se o PR para a `main` não vier da `develop` deste repositório (`head_ref` e repositório de origem) |
+| `promover` e `source` (`promover-develop.yml`) | Ubuntu | `promover` abre ou reaproveita o PR `develop` → `main` (`chore(release): promove develop para main`) e liga o auto-merge com merge commit; `source` é trivial e fornece esse check no commit da `develop`, porque PR aberto pelo `GITHUB_TOKEN` não dispara workflows |
 
 - A idade roda antes do `npm audit`, para uma falha de idade não ficar escondida atrás de um advisory.
 - `--min-release-age=0` no `npm audit signatures`: o npm 11 aplica a idade mínima também à consulta de assinaturas e falha com transitiva recente já instalada. Corrigido no npm 12; remover a opção quando o CI usar npm 12. A idade continua conferida pelo script.
 - actionlint: baixado da release por URL fixa, com versão e SHA-256 no `env` do job (`ACTIONLINT_VERSAO`, `ACTIONLINT_SHA256`) e `sha256sum --check`. O Dependabot não o atualiza; à mão, escolher versão publicada há 7 dias ou mais e copiar o SHA-256 de `actionlint_<versão>_linux_amd64.tar.gz` do `actionlint_<versão>_checksums.txt` da release, trocando os dois juntos.
 - zizmor: `pip install --require-hashes` de `.github/zizmor/requirements.txt`, atualizado pelo Dependabot `pip`. Roda online com `GH_TOKEN` só leitura, para conferir pela API se cada SHA pertence ao repositório e à tag da action (`impostor-commit`, `ref-version-mismatch`, `known-vulnerable-actions`); o modo `--offline` desliga essas regras.
 - Dependabot (`.github/dependabot.yml`): semanal, `target-branch: develop`, `cooldown` de 7 dias (a idade do `.npmrc`), para `npm` (mensagens `chore(deps)` e `chore(deps-dev)`), `github-actions` e `pip` (`ci(deps)`); prefixos aceitos pelo `commits:check`. Security updates ignoram o cooldown e o `target-branch` (vão para a branch padrão, a `develop`, e chegam à `main` na próxima promoção) e podem falhar na idade: decidir no PR.
-- Merge na `develop` e na `main` só por PR com os jobs do CI e o CodeQL verdes, exigido pela branch protection das duas (13 checks, `enforce_admins`, conversas resolvidas, sem force push nem deleção); a `main` exige também o `origem` (14 checks). Só a `develop` exige PR atualizado com a base (`strict`); a `main` não, porque só recebe PR da `develop`.
+- Merge na `develop` e na `main` só por PR com os jobs do CI e o CodeQL verdes, exigido pela branch protection das duas (13 checks, `enforce_admins`, conversas resolvidas, sem force push nem deleção); a `main` exige também o `source` (14 checks). Só a `develop` exige PR atualizado com a base (`strict`); a `main` não, porque só recebe PR da `develop`.
 - Merge na `develop`: só o Eduardo, pelo botão; agentes não fazem merge nem ligam auto-merge nela. Release: automática, pelo `promover-develop.yml`; o merge pelo token das Actions não dispara CI nem CodeQL no `push` para a `main` (o código já foi testado na `develop`). Ver [ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md).
 - Repositório público (ver [contexto §14](../contexto.md#14-decisões-registradas)): secret scanning com push protection, alertas e security updates do Dependabot, reporte privado de vulnerabilidade ([SECURITY.md](../../SECURITY.md)) e token padrão das Actions só leitura.
 
@@ -87,7 +87,7 @@ Workflows em `.github/workflows/`: `ci.yml` e `codeql.yml`, disparados em `pull_
 - Atualizar a SHA de uma action: o Dependabot `github-actions` abre o PR depois do cooldown de 7 dias. À mão, conferir com `gh api repos/<owner>/<repo>/git/ref/tags/<tag>` (se `object.type` for `tag`, tag anotada, seguir `object.url` até o commit) e trocar SHA e comentário juntos, só para versão publicada há 7 dias ou mais. O zizmor online confere no job `workflows` se a SHA pertence ao repositório e à versão do comentário.
 
 ## Verificação
-`node .claude/skills/verificar/verificar.mjs` sem `falhou`.
+`node .claude/skills/verificar/verificar.mjs` sem `failed`.
 
 ## Problemas comuns
 | Sintoma | Causa | Solução |
@@ -95,8 +95,8 @@ Workflows em `.github/workflows/`: `ci.yml` e `codeql.yml`, disparados em `pull_
 | Teste passa no Windows e falha no Linux | Separador ou caixa de caminho fixos | Usar `node:path` e testar nos 3 SOs no CI |
 | Teste novo passa antes da implementação | Teste não exercita o comportamento | Reescrever até falhar sem a mudança |
 | Botão de merge bloqueado no PR | Job do CI ou CodeQL vermelho, exigido pela branch protection | Corrigir o job; nunca contornar a proteção |
-| `origem` falha | PR para a `main` vindo de branch que não é a `develop` deste repositório | Trocar a base do PR para a `develop` ([ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md)) |
+| `source` falha | PR para a `main` vindo de branch que não é a `develop` deste repositório | Trocar a base do PR para a `develop` ([ADR-0013](../adr/0013-fluxo-de-branches-develop-para-main.md)) |
 | PR de promoção `develop` → `main` parado | Algum job obrigatório vermelho na execução de `push` da `develop` no mesmo commit | Ver o job vermelho na `develop` e corrigir por PR para a `develop` |
-| `qualidade` falha com "versão(ões) fora da regra de idade mínima" | Versão nova no lockfile publicada há menos de 7 dias (comum com npm 10, que ignora o `.npmrc`) | Escolher versão mais antiga ou esperar; conferir com o script ([§1](#1-código)) |
+| `quality` falha com "versão(ões) fora da regra de idade mínima" | Versão nova no lockfile publicada há menos de 7 dias (comum com npm 10, que ignora o `.npmrc`) | Escolher versão mais antiga ou esperar; conferir com o script ([§1](#1-código)) |
 | `commits:check` falha só no CI | Mensagem fora do padrão em algum commit do PR | Rodar `npm run commits:check` e reescrever a mensagem |
 | Job `testes` vermelho com "Coverage for lines ... does not meet global threshold" | Cobertura de `src/**` abaixo de 80% | Ver [§3](#3-testes) |

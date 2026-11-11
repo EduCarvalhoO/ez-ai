@@ -25,13 +25,13 @@ function lerPasta(pasta: string): Map<string, string> {
 // Metas numéricas do ADR-0039. Subir um teto exige justificar no PR.
 const METAS = {
   pacoteOficial: { limpos: 8, tokensDeMetadadosMax: 700, tokensDeCorpoMax: 3500 },
-  repositorio: { componentes: 14, errosMax: 0, avisosMax: 4 },
+  repository: { components: 14, errosMax: 0, avisosMax: 4 },
   scripts: { errosMax: 0 },
 };
 
 describe('qualidade dos componentes do repositório', () => {
   it('o pacote oficial workflow-feature passa limpo (agentes, skills e referências)', () => {
-    const r = avaliarQualidade(lerPasta('pacotes/workflow-feature'));
+    const r = avaliarQualidade(lerPasta('packages/workflow-feature'));
     expect(r.achados).toEqual([]);
     expect(r.limpos).toBe(METAS.pacoteOficial.limpos);
     expect(r.tokensDeMetadados).toBeLessThanOrEqual(METAS.pacoteOficial.tokensDeMetadadosMax);
@@ -41,13 +41,13 @@ describe('qualidade dos componentes do repositório', () => {
   it('agentes e skills do repositório não têm erro e têm no máximo os avisos conhecidos', () => {
     const r = avaliarQualidade(lerPasta('.claude'));
     expect(r.achados.filter((a) => a.gravidade === 'erro')).toEqual([]);
-    expect(r.componentes).toBeGreaterThanOrEqual(METAS.repositorio.componentes);
-    expect(r.achados.filter((a) => a.gravidade === 'aviso').length).toBeLessThanOrEqual(METAS.repositorio.avisosMax);
+    expect(r.components).toBeGreaterThanOrEqual(METAS.repository.components);
+    expect(r.achados.filter((a) => a.gravidade === 'aviso').length).toBeLessThanOrEqual(METAS.repository.avisosMax);
   });
 
   it('os scripts do repositório têm --help e só usam rede com declaração', () => {
     const r = avaliarQualidade(lerPasta('scripts'));
     expect(r.achados.filter((a) => a.gravidade === 'erro')).toHaveLength(METAS.scripts.errosMax);
-    expect(r.componentes).toBeGreaterThanOrEqual(5);
+    expect(r.components).toBeGreaterThanOrEqual(5);
   });
 });

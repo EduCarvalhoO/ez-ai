@@ -23,7 +23,7 @@ function sha256(dado: Uint8Array | string): string {
  * (inclusive por caixa ou arquivo com o nome de uma pasta) e arquivo de segredo, que seria copiado para o projeto (I1).
  */
 export function hashDoConteudo(arquivos: readonly ArquivoDoPacote[]): Resultado<string> {
-  const erros: { caminho: string; regra: string; mensagem: string }[] = [];
+  const erros: { caminho: string; rule: string; mensagem: string }[] = [];
   const vistos = new Set<string>();
   // Pastas de cada caminho, em minúsculas: arquivo `Agentes` e pasta `agentes/` colidem no Windows e no macOS.
   const pastas = new Set<string>();
@@ -31,8 +31,8 @@ export function hashDoConteudo(arquivos: readonly ArquivoDoPacote[]): Resultado<
     const segmentos = caminho.toLowerCase().split('/');
     for (let n = 1; n < segmentos.length; n++) pastas.add(segmentos.slice(0, n).join('/'));
   }
-  if (!arquivos.some((a) => a.caminho === 'harness-pacote.json')) {
-    erros.push({ caminho: '', regra: 'sem-manifesto', mensagem: 'o pacote precisa ter harness-pacote.json na raiz' });
+  if (!arquivos.some((a) => a.caminho === 'harness-package.json')) {
+    erros.push({ caminho: '', rule: 'sem-manifesto', mensagem: 'o pacote precisa ter harness-package.json na raiz' });
   }
   for (const [i, { caminho }] of arquivos.entries()) {
     const problema =
@@ -41,12 +41,12 @@ export function hashDoConteudo(arquivos: readonly ArquivoDoPacote[]): Resultado<
         : !CARACTERES.test(caminho)
           ? 'use só letras ASCII, dígitos, ".", "_", "-" e "/"'
           : problemaNoCaminho(caminho, false);
-    if (problema) erros.push({ caminho: `/${i}`, regra: 'caminho', mensagem: `"${caminho}": ${problema}` });
+    if (problema) erros.push({ caminho: `/${i}`, rule: 'caminho', mensagem: `"${caminho}": ${problema}` });
     const segredo = !problema && PADROES_DE_SEGREDO.find((padrao) => globsSeCruzam(caminho, padrao));
     if (segredo) {
       erros.push({
         caminho: `/${i}`,
-        regra: 'arquivo-de-segredo',
+        rule: 'arquivo-de-segredo',
         mensagem: `"${caminho}" parece arquivo de segredo (${segredo}); tire-o do pacote, ele seria copiado para o projeto`,
       });
     }
@@ -54,7 +54,7 @@ export function hashDoConteudo(arquivos: readonly ArquivoDoPacote[]): Resultado<
     if (vistos.has(chave) || pastas.has(chave)) {
       erros.push({
         caminho: `/${i}`,
-        regra: 'caminho-repetido',
+        rule: 'caminho-repetido',
         mensagem: `"${caminho}" repete outro arquivo (no Windows e no macOS a caixa não diferencia)`,
       });
     }

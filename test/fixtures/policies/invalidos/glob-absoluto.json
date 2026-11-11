@@ -1,14 +1,14 @@
 {
-  "versaoPolicy": 0,
-  "regras": [
+  "policyVersion": 0,
+  "rules": [
     {
       "id": "r",
-      "efeito": "negar",
-      "categoria": "escrever",
-      "padroes": [
+      "effect": "deny",
+      "category": "write",
+      "patterns": [
         "/etc/**"
       ],
-      "motivo": "m"
+      "reason": "m"
     }
   ]
 }

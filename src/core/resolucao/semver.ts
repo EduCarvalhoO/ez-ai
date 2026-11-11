@@ -69,7 +69,7 @@ export function intervaloDe(intervalo: string): Teste | undefined {
 export function resolverVersao(
   intervalo: string,
   tags: readonly string[],
-): { tag: string; versao: string } | undefined {
+): { tag: string; version: string } | undefined {
   const aceita = intervaloDe(intervalo);
   if (!aceita) return undefined;
   let melhor: { tag: string; v: Versao } | undefined;
@@ -78,7 +78,7 @@ export function resolverVersao(
     if (!v || v.prerelease || !aceita(v)) continue;
     if (!melhor || comparar(v, melhor.v) > 0) melhor = { tag, v };
   }
-  return melhor && { tag: melhor.tag, versao: `${melhor.v.maior}.${melhor.v.menor}.${melhor.v.correcao}` };
+  return melhor && { tag: melhor.tag, version: `${melhor.v.maior}.${melhor.v.menor}.${melhor.v.correcao}` };
 }
 
 /** Compara duas versões (`1.2.3` ou `v1.2.3`): negativo se a < b. `undefined` se algum texto não é versão. */

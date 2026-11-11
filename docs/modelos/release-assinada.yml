@@ -23,13 +23,13 @@ jobs:
         run: |
           # A árvore do commit, sem untracked nem .git: é o que quem instala lê.
           mkdir pacote && git archive HEAD | tar -x -C pacote
-          printf '%s' "$(npx --yes ez-ai@<VERSAO-EXATA> hash-pacote pacote)" > hash.txt
+          printf '%s' "$(npx --yes ez-ai@<VERSAO-EXATA> hash-package pacote)" > hash.txt
           cat hash.txt
       - name: Assinar o hash (keyless)
-        run: cosign sign-blob --yes --bundle harness-pacote.sigstore.json hash.txt
+        run: cosign sign-blob --yes --bundle harness-package.sigstore.json hash.txt
       # O bundle precisa estar no commit da tag: publique-o numa branch de release e aponte a tag para ele.
       # A identidade do manifesto deve citar este arquivo e esta tag:
-      #   https://github.com/<dono>/<repo>/.github/workflows/release-assinada.yml@refs/tags/<tag>
+      #   https://github.com/<owner>/<repo>/.github/workflows/release-assinada.yml@refs/tags/<tag>
 ---
 # Para o repositório do PRÓPRIO ez-ai (SBOM + provenance SLSA). Copiar para .github/workflows/ só com
 # autorização escrita do Eduardo.

@@ -4,12 +4,12 @@
   "title": "Lockfile do ez-ai (v0)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["versaoLockfile", "pacotes"],
+  "required": ["lockfileVersion", "packages"],
   "properties": {
-    "versaoLockfile": {
+    "lockfileVersion": {
       "const": 0
     },
-    "pacotes": {
+    "packages": {
       "type": "object",
       "maxProperties": 100,
       "propertyNames": {
@@ -20,14 +20,14 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["versao", "origem", "hash", "componentes"],
+        "required": ["version", "source", "hash", "components"],
         "properties": {
-          "versao": {
+          "version": {
             "type": "string",
             "maxLength": 64,
             "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
           },
-          "origem": {
+          "source": {
             "anyOf": [
               {
                 "type": "string",
@@ -54,30 +54,30 @@
             "type": "string",
             "pattern": "^sha256:[0-9a-f]{64}$"
           },
-          "assinatura": {
-            "$ref": "#/$defs/assinatura"
+          "signature": {
+            "$ref": "#/$defs/signature"
           },
-          "aprovacoesProprias": {
+          "ownApprovals": {
             "type": "array",
             "maxItems": 1000,
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["id", "impressao"],
+              "required": ["id", "fingerprint"],
               "properties": {
                 "id": {
                   "type": "string",
                   "maxLength": 512,
                   "pattern": "^(?:comp|policy|dono)/[!-~]+$"
                 },
-                "impressao": {
+                "fingerprint": {
                   "type": "string",
                   "pattern": "^sha256:[0-9a-f]{64}$"
                 }
               }
             }
           },
-          "componentes": {
+          "components": {
             "type": "array",
             "minItems": 1,
             "maxItems": 100,
@@ -90,17 +90,17 @@
     }
   },
   "$defs": {
-    "comando": {
+    "command": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["programa"],
+      "required": ["program"],
       "properties": {
-        "programa": {
+        "program": {
           "type": "string",
           "maxLength": 64,
           "pattern": "^[a-z0-9][a-z0-9._-]*$"
         },
-        "argumentos": {
+        "arguments": {
           "type": "array",
           "items": {
             "type": "string",
@@ -111,11 +111,11 @@
         }
       }
     },
-    "permissoes": {
+    "permissions": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "ler": {
+        "read": {
           "type": "array",
           "items": {
             "type": "string",
@@ -126,7 +126,7 @@
           "maxItems": 50,
           "uniqueItems": true
         },
-        "escrever": {
+        "write": {
           "type": "array",
           "items": {
             "type": "string",
@@ -137,15 +137,15 @@
           "maxItems": 50,
           "uniqueItems": true
         },
-        "executar": {
+        "execute": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/comando"
+            "$ref": "#/$defs/command"
           },
           "maxItems": 50,
           "uniqueItems": true
         },
-        "rede": {
+        "network": {
           "type": "array",
           "items": {
             "type": "string",
@@ -155,7 +155,7 @@
           "maxItems": 50,
           "uniqueItems": true
         },
-        "segredos": {
+        "secrets": {
           "type": "array",
           "items": {
             "type": "string",
@@ -164,7 +164,7 @@
           "maxItems": 50,
           "uniqueItems": true
         },
-        "configurarAmbiente": {
+        "configureEnvironment": {
           "type": "array",
           "items": {
             "enum": [
@@ -183,40 +183,34 @@
     "componente": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "tipo", "arquivo"],
+      "required": ["id", "type", "file"],
       "properties": {
         "id": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
         },
-        "tipo": {
-          "enum": ["instrucao", "agente", "skill", "hook", "mcp", "policy"]
+        "type": {
+          "enum": ["instruction", "agent", "skill", "hook", "mcp", "policy"]
         },
-        "arquivo": {
+        "file": {
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
           "pattern": "^[A-Za-z0-9._/-]+$"
         },
-        "descricao": {
+        "description": {
           "type": "string",
           "minLength": 1,
           "maxLength": 500
         },
-        "evento": {
-          "enum": [
-            "antes-de-ferramenta",
-            "depois-de-ferramenta",
-            "envio-de-prompt",
-            "inicio-de-sessao",
-            "fim-de-sessao"
-          ]
+        "event": {
+          "enum": ["before-tool", "after-tool", "prompt-submit", "session-start", "session-end"]
         },
-        "comando": {
-          "$ref": "#/$defs/comando"
+        "command": {
+          "$ref": "#/$defs/command"
         },
-        "permissoes": {
-          "$ref": "#/$defs/permissoes"
+        "permissions": {
+          "$ref": "#/$defs/permissions"
         }
       },
       "allOf": [
@@ -224,22 +218,22 @@
           "anyOf": [
             {
               "properties": {
-                "tipo": {
+                "type": {
                   "const": "hook"
                 }
               },
-              "required": ["evento", "comando"]
+              "required": ["event", "command"]
             },
             {
               "properties": {
-                "tipo": {
+                "type": {
                   "not": {
                     "const": "hook"
                   }
                 }
               },
               "not": {
-                "required": ["evento"]
+                "required": ["event"]
               }
             }
           ]
@@ -248,45 +242,45 @@
           "anyOf": [
             {
               "properties": {
-                "tipo": {
+                "type": {
                   "enum": ["hook", "mcp"]
                 },
-                "permissoes": {
-                  "required": ["configurarAmbiente"],
+                "permissions": {
+                  "required": ["configureEnvironment"],
                   "properties": {
-                    "configurarAmbiente": {
+                    "configureEnvironment": {
                       "minItems": 1
                     }
                   }
                 }
               },
-              "required": ["comando", "permissoes"]
+              "required": ["command", "permissions"]
             },
             {
               "properties": {
-                "tipo": {
-                  "enum": ["instrucao", "agente", "skill", "policy"]
+                "type": {
+                  "enum": ["instruction", "agent", "skill", "policy"]
                 }
               },
               "not": {
-                "required": ["comando"]
+                "required": ["command"]
               }
             }
           ]
         }
       ]
     },
-    "assinatura": {
+    "signature": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["identidade", "emissor"],
+      "required": ["identity", "issuer"],
       "properties": {
-        "identidade": {
+        "identity": {
           "type": "string",
           "maxLength": 512,
           "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}/\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml@refs/(?:tags|heads)/[A-Za-z0-9._/-]+$"
         },
-        "emissor": {
+        "issuer": {
           "const": "https://token.actions.githubusercontent.com"
         }
       }

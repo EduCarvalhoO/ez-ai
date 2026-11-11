@@ -3,10 +3,10 @@
 import { type Adapter, criarAdapter } from '../../core/index.js';
 
 export const adapterClaudeCode: Adapter = criarAdapter({
-  ambiente: 'claude-code',
+  environment: 'claude-code',
   capacidades: {
-    instrucao: { suporte: 'nativo', projeta: true },
-    agente: { suporte: 'nativo', projeta: true },
+    instruction: { suporte: 'nativo', projeta: true },
+    agent: { suporte: 'nativo', projeta: true },
     skill: { suporte: 'nativo', projeta: true },
     hook: { suporte: 'nativo', projeta: true },
     mcp: { suporte: 'nativo', projeta: true },
@@ -24,13 +24,13 @@ export const adapterClaudeCode: Adapter = criarAdapter({
     arquivoDeHooks: '.claude/settings.json',
     arquivoDeMcp: '.mcp.json',
     eventos: {
-      'antes-de-ferramenta': 'PreToolUse',
-      'depois-de-ferramenta': 'PostToolUse',
-      'envio-de-prompt': 'UserPromptSubmit',
-      'inicio-de-sessao': 'SessionStart',
-      'fim-de-sessao': 'SessionEnd',
+      'before-tool': 'PreToolUse',
+      'after-tool': 'PostToolUse',
+      'prompt-submit': 'UserPromptSubmit',
+      'session-start': 'SessionStart',
+      'session-end': 'SessionEnd',
     },
-    raizDosPacotes: `\${CLAUDE_PROJECT_DIR}/.harness/pacotes`,
+    raizDosPacotes: `\${CLAUDE_PROJECT_DIR}/.harness/packages`,
     extrasDoHook: { onFailure: 'block' },
     avisoDoHook:
       'usa onFailure "block" (falha fechada) e args em forma exec, que pedem Claude Code 2.1.295 ou mais novo; em versão anterior o hook pode falhar aberto.',

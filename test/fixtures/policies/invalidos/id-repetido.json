@@ -1,23 +1,23 @@
 {
-  "versaoPolicy": 0,
-  "regras": [
+  "policyVersion": 0,
+  "rules": [
     {
       "id": "r",
-      "efeito": "negar",
-      "categoria": "rede",
-      "padroes": [
+      "effect": "deny",
+      "category": "network",
+      "patterns": [
         "*"
       ],
-      "motivo": "m"
+      "reason": "m"
     },
     {
       "id": "r",
-      "efeito": "negar",
-      "categoria": "segredos",
-      "padroes": [
+      "effect": "deny",
+      "category": "secrets",
+      "patterns": [
         "*"
       ],
-      "motivo": "m"
+      "reason": "m"
     }
   ]
 }

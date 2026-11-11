@@ -1,5 +1,5 @@
 // Fontes da base de conhecimento (spec base-de-conhecimento.md, ADR-0032 e ADR-0034). Há fontes padrão curadas e o
-// projeto pode acrescentar as suas em .harness/conhecimento.json. Fontes declaradas por pacote ficam para depois.
+// projeto pode acrescentar as suas em .harness/knowledge.json. Fontes declaradas por pacote ficam para depois.
 import { pareceSegredo } from '../auditoria/segredos.js';
 import { lerJsonSeguro } from '../contratos/json-seguro.js';
 import type { SistemaDeArquivos } from '../portas/index.js';
@@ -8,19 +8,19 @@ import { type Chunk, cortarEmChunks, type TipoDeFonte } from './chunks.js';
 
 export interface Fonte {
   readonly id: string;
-  readonly tipo: TipoDeFonte;
+  readonly type: TipoDeFonte;
   /** Pasta varrida (sem `/` final); `undefined` com `arquivos` = só esses arquivos da raiz. */
-  readonly pasta?: string;
+  readonly folder?: string;
   readonly arquivos?: readonly string[];
-  readonly extensoes: readonly string[];
-  readonly excluirSufixos?: readonly string[];
+  readonly extensions: readonly string[];
+  readonly excludeSuffixes?: readonly string[];
 }
 
 export const FONTES_PADRAO: readonly Fonte[] = [
-  { id: 'docs', tipo: 'markdown', pasta: 'docs', extensoes: ['.md'] },
-  { id: 'pacotes', tipo: 'markdown', pasta: 'pacotes', extensoes: ['.md'] },
-  { id: 'raiz', tipo: 'markdown', arquivos: ['README.md', 'AGENTS.md'], extensoes: ['.md'] },
-  { id: 'codigo', tipo: 'codigo', pasta: 'src', extensoes: ['.ts'], excluirSufixos: ['.test.ts'] },
+  { id: 'docs', type: 'markdown', folder: 'docs', extensions: ['.md'] },
+  { id: 'packages', type: 'markdown', folder: 'packages', extensions: ['.md'] },
+  { id: 'raiz', type: 'markdown', arquivos: ['README.md', 'AGENTS.md'], extensions: ['.md'] },
+  { id: 'code', type: 'code', folder: 'src', extensions: ['.ts'], excludeSuffixes: ['.test.ts'] },
 ];
 
 /** Limites iniciais da spec (Hipótese): arquivos maiores são pulados e listados no relatório. */
@@ -46,8 +46,8 @@ export function ehSensivel(caminho: string): boolean {
 
 function serve(f: Fonte, caminho: string): boolean {
   return (
-    f.extensoes.some((e) => caminho.toLowerCase().endsWith(e)) &&
-    !(f.excluirSufixos ?? []).some((s) => caminho.endsWith(s)) &&
+    f.extensions.some((e) => caminho.toLowerCase().endsWith(e)) &&
+    !(f.excludeSuffixes ?? []).some((s) => caminho.endsWith(s)) &&
     !ehSensivel(caminho)
   );
 }
@@ -70,8 +70,8 @@ export async function reunirChunks(
   let grandes = 0;
   for (const f of fontes) {
     let candidatos: readonly string[] = [];
-    if (f.pasta !== undefined) {
-      candidatos = await arquivos.listar(f.pasta);
+    if (f.folder !== undefined) {
+      candidatos = await arquivos.listar(f.folder);
     } else {
       const existentes: string[] = [];
       for (const a of f.arquivos ?? []) if (await arquivos.existe(a)) existentes.push(a);
@@ -83,14 +83,14 @@ export async function reunirChunks(
     }
     for (const caminho of escolhidos) {
       vistos.add(caminho);
-      const texto = await arquivos.ler(caminho);
+      const texto = await arquivos.read(caminho);
       if (texto.length > LIMITES_DA_BASE.caracteresPorArquivo) {
         pulados.push(`${escaparInvisiveis(caminho)} (maior que ${LIMITES_DA_BASE.caracteresPorArquivo / 1024} KB)`);
         grandes++;
         continue;
       }
       // Segredo escrito dentro do código (A5): o trecho que parece segredo não entra no índice, e fica listado.
-      for (const c of cortarEmChunks(`projeto:${f.id}`, caminho, texto, f.tipo)) {
+      for (const c of cortarEmChunks(`projeto:${f.id}`, caminho, texto, f.type)) {
         const tipo = pareceSegredo(c.texto);
         if (tipo === undefined) chunks.push(c);
         else pulados.push(`${escaparInvisiveis(caminho)}:${c.linhaInicio}-${c.linhaFim} (trecho com ${tipo})`);
@@ -100,7 +100,7 @@ export async function reunirChunks(
   return { chunks, arquivos: vistos.size - grandes, pulados };
 }
 
-export const CAMINHO_DAS_FONTES = '.harness/conhecimento.json';
+export const CAMINHO_DAS_FONTES = '.harness/knowledge.json';
 const LIMITE_DE_FONTES = 20;
 const PASTA_VALIDA = /^[A-Za-z0-9_-][A-Za-z0-9._-]*(?:\/[A-Za-z0-9_-][A-Za-z0-9._-]*){0,7}$/;
 const PASTAS_PROIBIDAS = new Set(['.harness', '.git', 'node_modules']);
@@ -113,9 +113,9 @@ const ehObjeto = (v: unknown): v is Json => typeof v === 'object' && v !== null 
 function fonteDe(bruta: unknown, i: number): Fonte {
   const onde = `${CAMINHO_DAS_FONTES}: fontes[${i}]`;
   if (!ehObjeto(bruta)) throw new Error(`${onde} precisa ser um objeto.`);
-  const { id, tipo, pasta, extensoes } = bruta;
+  const { id, type: tipo, folder: pasta, extensions: extensoes } = bruta;
   if (typeof id !== 'string' || !ID_VALIDO.test(id)) throw new Error(`${onde}.id inválido (use a-z, 0-9 e hífen).`);
-  if (tipo !== 'markdown' && tipo !== 'codigo') throw new Error(`${onde}.tipo precisa ser "markdown" ou "codigo".`);
+  if (tipo !== 'markdown' && tipo !== 'code') throw new Error(`${onde}.tipo precisa ser "markdown" ou "codigo".`);
   if (typeof pasta !== 'string' || !PASTA_VALIDA.test(pasta) || pasta.split('/').some((s) => s === '..' || s === '.')) {
     throw new Error(`${onde}.pasta precisa ser uma pasta relativa do projeto, sem "..".`);
   }
@@ -129,21 +129,21 @@ function fonteDe(bruta: unknown, i: number): Fonte {
   ) {
     throw new Error(`${onde}.extensoes precisa ser uma lista de 1 a 10 extensões como ".md".`);
   }
-  return { id, tipo, pasta, extensoes: extensoes as string[] };
+  return { id, type: tipo, folder: pasta, extensions: extensoes as string[] };
 }
 
 /** Fontes padrão mais as do projeto (mesmo `id` substitui a padrão). Arquivo inválido é erro, nunca é ignorado. */
 export async function fontesDoProjeto(arquivos: SistemaDeArquivos): Promise<readonly Fonte[]> {
   if (!(await arquivos.existe(CAMINHO_DAS_FONTES))) return FONTES_PADRAO;
-  const lido = lerJsonSeguro(await arquivos.ler(CAMINHO_DAS_FONTES), { bytes: 16 * 1024, profundidade: 8 });
+  const lido = lerJsonSeguro(await arquivos.read(CAMINHO_DAS_FONTES), { bytes: 16 * 1024, profundidade: 8 });
   if (!lido.ok) throw new Error(`${CAMINHO_DAS_FONTES}: ${lido.erros.map((e) => e.mensagem).join('; ')}`);
   const dado = lido.valor;
-  if (!ehObjeto(dado) || dado.versao !== 0 || !Array.isArray(dado.fontes)) {
-    throw new Error(`${CAMINHO_DAS_FONTES}: esperado { "versao": 0, "fontes": [...] }.`);
+  if (!ehObjeto(dado) || dado.version !== 0 || !Array.isArray(dado.sources)) {
+    throw new Error(`${CAMINHO_DAS_FONTES}: esperado { "version": 0, "sources": [...] }.`);
   }
-  if (dado.fontes.length > LIMITE_DE_FONTES)
+  if (dado.sources.length > LIMITE_DE_FONTES)
     throw new Error(`${CAMINHO_DAS_FONTES}: no máximo ${LIMITE_DE_FONTES} fontes.`);
-  const novas = dado.fontes.map(fonteDe);
+  const novas = dado.sources.map(fonteDe);
   const ids = new Set(novas.map((f) => f.id));
   if (ids.size !== novas.length) throw new Error(`${CAMINHO_DAS_FONTES}: ids de fonte repetidos.`);
   return [...FONTES_PADRAO.filter((f) => !ids.has(f.id)), ...novas];
@@ -161,6 +161,6 @@ export function fonteAlcanca(fontes: readonly Fonte[], caminho: string): boolean
   return fontes.some(
     (f) =>
       serve(f, caminho) &&
-      ((f.pasta !== undefined && caminho.startsWith(`${f.pasta}/`)) || (f.arquivos ?? []).includes(caminho)),
+      ((f.folder !== undefined && caminho.startsWith(`${f.folder}/`)) || (f.arquivos ?? []).includes(caminho)),
   );
 }

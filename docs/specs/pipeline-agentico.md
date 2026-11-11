@@ -14,7 +14,7 @@ Requisitos do Eduardo (2026-10-24):
 
 1. **Open source e confiável:** toda ferramenta que o harness instala ou exige para o pipeline (validadores, scripts, observabilidade, dependências) é open source e confiável. Ficam fora desta restrição o ambiente de IA e o provedor de modelo, que são escolha do usuário como a chave ([ADR-0001](../adr/0001-alvos-iniciais-claude-code-e-copilot.md)), e a hospedagem e o CI do próprio repositório no GitHub ([ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md)).
 2. **Sem custo obrigatório:** nenhuma etapa exige serviço pago. Serviços pagos pelo projeto (repositório, CI) seguem o limite de orçamento do [ADR-0012](../adr/0012-licenca-fsl-e-modelo-open-core.md); serviços opcionais do usuário (por exemplo, Langfuse Cloud) ficam a critério dele e nunca são exigidos.
-3. **Chave de IA do usuário:** tokens e chave de API de IA são pagos ou fornecidos pelo próprio usuário; o harness nunca os fornece nem paga. Todo agente e os evals LLM-as-judge (F5) usam a chave e o modelo do usuário, e o `custo` registrado nos eventos é custo do usuário.
+3. **Chave de IA do usuário:** tokens e chave de API de IA são pagos ou fornecidos pelo próprio usuário; o harness nunca os fornece nem paga. Todo agente e os evals LLM-as-judge (F5) usam a chave e o modelo do usuário, e o `cost` registrado nos eventos é custo do usuário.
 
 ## Especificação
 
@@ -35,10 +35,10 @@ O formato dos relatórios está no [guia §5](../guias/time-de-agentes.md#5-form
 |---|---|---|---|
 | G0 Documentação | `validar-docs` sem erro e veredito `APROVADO` do `revisor` em modo documentação | Agente (`revisor`) | Volta a E1 (laço E2) |
 | G1 Plano | Ficha com critérios verificáveis, fora de escopo, testes previstos e riscos; `Em aberto` respondidos pelo usuário | Humano | Pedido de ajuste volta a E1, depois E2 e G1 |
-| G2 Verificação | Skill `verificar` sem `falhou`; cada `ignorado` justificado | `revisor` reexecuta, não confia no relato | Volta a E3; conta como reprovação da E4 |
+| G2 Verificação | Skill `verificar` sem `failed`; cada `skipped` justificado | `revisor` reexecuta, não confia no relato | Volta a E3; conta como reprovação da E4 |
 | G3 Entrega | Usuário aprova a entrega | Humano | Abre rodada N de revisão humana |
 
-Nenhum gate `ignorado` aparece como aprovado ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)).
+Nenhum gate `skipped` aparece como aprovado ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)).
 
 ### Diagrama de estados
 ```mermaid
@@ -79,7 +79,7 @@ Os laços de agentes permitem no máximo 2 revisões: a 1ª reprovação volta p
 |---|---|---|---|
 | Documentação: G0 reprovado | E1 → E2 → G0 | 2 revisões | 2ª reprovação escala ao usuário |
 | G1 com pedido de ajuste | E1 → E2 → G0 → G1 | Sem teto (decisão humana) | A partir do 3º ajuste, o orquestrador propõe replanejar |
-| Código: E4 reprovado, inclusive G2 com `falhou` na reexecução do `revisor` | E3 → G2 → E4 | 2 revisões | 2ª reprovação escala ao usuário; destino recomendado E1 |
+| Código: E4 reprovado, inclusive G2 com `failed` na reexecução do `revisor` | E3 → G2 → E4 | 2 revisões | 2ª reprovação escala ao usuário; destino recomendado E1 |
 | G3 com ajuste dentro do plano | E3 → G2 → E4 → E5 → G3 | Sem teto | A partir da 3ª rodada, o orquestrador propõe replanejar |
 | G3 com mudança de escopo ou de critério | E1 → E2 → G0 → G1 → … → G3 | Sem teto | Idem |
 
@@ -90,9 +90,9 @@ Cada rodada humana zera os contadores de ciclos dos agentes. Quem classifica o p
 ### Proteção contra laço, orçamento e retomada
 Definidos no [ADR-0033](../adr/0033-protecao-contra-laco-orcamento-saidas-por-etapa-e-retomada.md); o estado continua refeito só pelo log.
 - **Disjuntor (padrão ligado):** por janela (desde a última decisão humana) o item aceita no máximo 60 passos, 10 por etapa e 3 repetições seguidas de um padrão de 1 a 3 passos. Estourou: escala ao humano, que decide com E1 ou E3 e reabre a janela.
-- **Orçamento (opcional):** `orcamento.tokensPorItem` e `orcamento.minutosPorItem` (tempo ativo, sem a espera por G1 e G3) escalam da mesma forma.
+- **Orçamento (opcional):** `orcamento.tokensPerItem` e `orcamento.minutesPerItem` (tempo ativo, sem a espera por G1 e G3) escalam da mesma forma.
 - **Saídas por etapa (opcional):** `saidas.<etapa>.documento` e `.evidencia` fazem o comando recusar a etapa sem documento completo (`workflow docs`) ou sem arquivo de evidência.
-- **Retomada:** `workflow retomar` lista itens abertos e parados (`minutosParado`) com o que a próxima etapa exige.
+- **Retomada:** `workflow resume` lista itens abertos e parados (`stalledMinutes`) com o que a próxima etapa exige.
 
 ### Artefatos de handoff
 A ficha ([guia §4](../guias/time-de-agentes.md#4-handoffs)) ganha estas seções:
@@ -111,20 +111,20 @@ Toda etapa, gate, ciclo e rodada gera um evento:
 | Campo | Conteúdo |
 |---|---|
 | `item` | Ficha (`<fase>-<slug>`) |
-| `etapa` | E0–E5 ou G0–G3 |
-| `agente` | Agente ou `humano` |
-| `ciclo` | Número do ciclo no laço (0 se não houver) |
-| `rodada` | Número da rodada humana (0 antes do primeiro G3) |
-| `inicio`, `fim`, `duracao` | Datas e duração |
-| `resultado` | `solicitado`, `executado`, `verificado`, `falhou` ou `ignorado` ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)) |
+| `step` | E0–E5 ou G0–G3 |
+| `agent` | Agente ou `human` |
+| `cycle` | Número do ciclo no laço (0 se não houver) |
+| `round` | Número da rodada humana (0 antes do primeiro G3) |
+| `start`, `end`, `duracao` | Datas e duração |
+| `result` | `requested`, `executed`, `verified`, `failed` ou `skipped` ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)) |
 | `tokens_entrada`, `tokens_saida` | Tokens do agente na etapa |
-| `custo` | Custo estimado, pago pelo usuário ([restrições](#restrições)) |
-| `modelo` | Modelo usado |
+| `cost` | Custo estimado, pago pelo usuário ([restrições](#restrições)) |
+| `model` | Modelo usado |
 
 Gargalos a medir: tempo por etapa; ciclos por laço; rodadas humanas por item; taxa de aprovação na 1ª tentativa por gate; custo por etapa e por agente. Alimentam as [métricas de sucesso](../roadmap.md#métricas-de-sucesso).
 
 - Eventos locais sempre; exportação opt-in na F5 ([ADR-0004](../adr/0004-observabilidade-langfuse-opcional.md)). O caminho de referência, e o único exigido, é o Langfuse self-hosted sem `ee/`, sem hospedagem ou banco pagos obrigatórios; o Langfuse Cloud continua opcional por configuração (ADR-0004), nunca exigido. Licença do Langfuse: núcleo sob MIT (Expat); os diretórios `ee/` têm licença própria ([LICENSE](https://github.com/langfuse/langfuse/blob/main/LICENSE), acessado em 2026-10-24).
-- Captura de tokens por agente: o adapter de cada ambiente (F3) lê o OpenTelemetry que o ambiente já emite pela porta `LeitorDeConsumo`, e o evento `etapa` guarda `consumo` com `fonte` e `fonteDoCusto`; desconhecido é `indisponivel`, nunca zero. Consumo é métrica, não evidência ([spec de auditoria e evidências](auditoria-e-evidencias.md#consumo), [ADR-0022](../adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md)).
+- Captura de tokens por agente: o adapter de cada ambiente (F3) lê o OpenTelemetry que o ambiente já emite pela porta `LeitorDeConsumo`, e o evento `step` guarda `usage` com `source` e `costSource`; desconhecido é `unavailable`, nunca zero. Consumo é métrica, não evidência ([spec de auditoria e evidências](auditoria-e-evidencias.md#consumo), [ADR-0022](../adr/0022-auditoria-e-evidencias-com-log-encadeado-e-aprovacao-no-lockfile.md)).
 - Até a F5, a ficha registra as datas por gate; não há evento automático.
 
 ### Painel
@@ -144,7 +144,7 @@ As visões 1–4 viram dashboards do Langfuse self-hosted na F5, usando só recu
 | Ordem dos gates | Etapas ligáveis e desligáveis; E3/G2 e E4 sempre ligadas |
 | Evidência executada em cada gate | Agente responsável por etapa |
 | Todo laço tem limite e destino ao estourar | Comandos de verificação da stack (build, teste, lint) |
-| Gate `ignorado` nunca aparece como aprovado | Aprovação humana por gate (G1, G3) |
+| Gate `skipped` nunca aparece como aprovado | Aprovação humana por gate (G1, G3) |
 | | Limites de ciclos por laço |
 | | Quando rodar o `seguranca` |
 | | Modelo por etapa e por agente ([economia de tokens](#economia-de-tokens)); chave de IA vinda da configuração do usuário |
@@ -181,7 +181,7 @@ Guardrails do [ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-githu
 
 | Guardrail | Efeito na esteira |
 |---|---|
-| Pasta de pacote é só leitura | Nenhum agente escreve em `.harness/pacotes/**`; mudança em pacote só por atualização vinda da origem; customização vai em `.harness/local/` |
+| Pasta de pacote é só leitura | Nenhum agente escreve em `.harness/packages/**`; mudança em pacote só por atualização vinda da origem; customização vai em `.harness/local/` |
 | Aumento de permissão | Versão nova que declara permissão a mais que a instalada interrompe a esteira até aprovação humana explícita |
 | Pacote de comunidade | Instala com scripts desligados; seu texto é dado não confiável, nunca instrução para o agente |
 | Troca de dono | Versão assinada por identidade diferente da gravada no lockfile, ou repositório transferido ou renomeado, interrompe a esteira e gera evento de auditoria até aprovação humana |

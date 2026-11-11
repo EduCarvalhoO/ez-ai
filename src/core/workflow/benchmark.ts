@@ -1,6 +1,6 @@
 // Benchmark do workflow (F6, ADR-0032). Puro: lê tarefas de referência (golden tasks) e pontua cada execução pelo
 // log de auditoria (conformidade com as etapas esperadas, ciclos e consumo medido). Não executa agente nenhum:
-// quem roda a tarefa em cada ambiente registra as etapas com `workflow etapa` no item `bench-<tarefa>-<ambiente>`.
+// quem roda a tarefa em cada ambiente registra as etapas com `workflow step` no item `bench-<tarefa>-<ambiente>`.
 import type { EventoDeAuditoria } from '../auditoria/evento.js';
 import { ETAPAS } from '../auditoria/schema.js';
 import type { Dataset } from '../conhecimento/perguntas.js';
@@ -9,23 +9,23 @@ import type { ErroDeContrato, Resultado } from '../contratos/resultado.js';
 import { formatarUsd } from '../telemetria/consumo.js';
 import { type ConfiguracaoDoWorkflow, type Etapa, estadoDoItem, WORKFLOW_PADRAO } from './motor.js';
 
-export const CAMINHO_DAS_TAREFAS = 'benchmark/tarefas.json';
+export const CAMINHO_DAS_TAREFAS = 'benchmark/tasks.json';
 export const AMBIENTES_DO_BENCHMARK = ['claude-code', 'copilot'] as const;
 export type AmbienteDoBenchmark = (typeof AMBIENTES_DO_BENCHMARK)[number];
 
 export interface TarefaDeReferencia {
   readonly id: string;
-  readonly titulo: string;
+  readonly title: string;
   /** O que o agente recebe como pedido. */
-  readonly pedido: string;
+  readonly request: string;
   /** Critérios que o humano confere no G3 (ficam no dataset como saída esperada). */
-  readonly criterios: readonly string[];
+  readonly criteria: readonly string[];
   /** Etapas e gates que a execução deve ter cumprido (resultado executado ou verificado). */
-  readonly etapasEsperadas: readonly Etapa[];
+  readonly expectedSteps: readonly Etapa[];
 }
 
 const ehObjeto = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
-const erro = (caminho: string, regra: string, mensagem: string): ErroDeContrato => ({ caminho, regra, mensagem });
+const erro = (caminho: string, regra: string, mensagem: string): ErroDeContrato => ({ caminho, rule: regra, mensagem });
 const listaDeTexto = (v: unknown, max: number): v is string[] =>
   Array.isArray(v) && v.length > 0 && v.length <= max && v.every((s) => typeof s === 'string' && s.trim() !== '');
 
@@ -44,31 +44,31 @@ export function validarTarefas(texto: string): Resultado<readonly TarefaDeRefere
       erros.push(erro(c, 'objeto', 'cada tarefa deve ser um objeto'));
       continue;
     }
-    const { id, titulo, pedido, criterios, etapasEsperadas, ...resto } = t;
+    const { id, title: titulo, request: pedido, criteria: criterios, expectedSteps, ...resto } = t;
     for (const k of Object.keys(resto)) erros.push(erro(`${c}/${k}`, 'campo-desconhecido', 'campo desconhecido'));
     if (typeof id !== 'string' || !/^[a-z0-9][a-z0-9-]{0,39}$/.test(id) || ids.has(id)) {
       erros.push(erro(`${c}/id`, 'id', 'id obrigatório, único, em a-z0-9- (até 40)'));
     } else ids.add(id);
     if (typeof titulo !== 'string' || titulo.trim() === '' || titulo.length > 120) {
-      erros.push(erro(`${c}/titulo`, 'titulo', 'texto de 1 a 120 caracteres'));
+      erros.push(erro(`${c}/title`, 'title', 'texto de 1 a 120 caracteres'));
     }
     if (typeof pedido !== 'string' || pedido.trim() === '' || pedido.length > 2000) {
-      erros.push(erro(`${c}/pedido`, 'pedido', 'texto de 1 a 2000 caracteres'));
+      erros.push(erro(`${c}/request`, 'request', 'texto de 1 a 2000 caracteres'));
     }
-    if (!listaDeTexto(criterios, 20)) erros.push(erro(`${c}/criterios`, 'criterios', 'lista de 1 a 20 textos'));
+    if (!listaDeTexto(criterios, 20)) erros.push(erro(`${c}/criteria`, 'criteria', 'lista de 1 a 20 textos'));
     if (
-      !listaDeTexto(etapasEsperadas, ETAPAS.length) ||
-      !etapasEsperadas.every((e) => (ETAPAS as readonly string[]).includes(e))
+      !listaDeTexto(expectedSteps, ETAPAS.length) ||
+      !expectedSteps.every((e) => (ETAPAS as readonly string[]).includes(e))
     ) {
-      erros.push(erro(`${c}/etapasEsperadas`, 'etapas', `use etapas de ${ETAPAS.join(', ')}`));
+      erros.push(erro(`${c}/expectedSteps`, 'etapas', `use etapas de ${ETAPAS.join(', ')}`));
     }
     if (erros.length === 0) {
       tarefas.push({
         id: id as string,
-        titulo: titulo as string,
-        pedido: pedido as string,
-        criterios: criterios as string[],
-        etapasEsperadas: etapasEsperadas as Etapa[],
+        title: titulo as string,
+        request: pedido as string,
+        criteria: criterios as string[],
+        expectedSteps: expectedSteps as Etapa[],
       });
     }
   }
@@ -79,7 +79,7 @@ export const itemDoBenchmark = (tarefa: string, ambiente: AmbienteDoBenchmark): 
 
 export interface Pontuacao {
   readonly tarefa: string;
-  readonly ambiente: AmbienteDoBenchmark;
+  readonly environment: AmbienteDoBenchmark;
   readonly item: string;
   /** Execução existe no log? Sem evento, as demais colunas não valem. */
   readonly executada: boolean;
@@ -97,14 +97,14 @@ export interface Pontuacao {
   readonly etapasSemMedida: number;
   readonly tokens: number;
   /** `undefined` = nenhuma etapa trouxe custo medido (desconhecido não vira zero). */
-  readonly custoMicroUsd?: number;
+  readonly costMicroUsd?: number;
 }
 
 interface ConsumoLido {
-  readonly fonte?: string;
-  readonly tokensEntrada?: number;
-  readonly tokensSaida?: number;
-  readonly custoMicroUsd?: number;
+  readonly source?: string;
+  readonly inputTokens?: number;
+  readonly outputTokens?: number;
+  readonly costMicroUsd?: number;
 }
 
 export function pontuarExecucao(
@@ -114,31 +114,29 @@ export function pontuarExecucao(
   cfg: ConfiguracaoDoWorkflow = WORKFLOW_PADRAO,
 ): Pontuacao {
   const item = itemDoBenchmark(tarefa.id, ambiente);
-  const daTarefa = eventos.filter((e) => e.tipo === 'etapa' && e.dados.item === item);
+  const daTarefa = eventos.filter((e) => e.type === 'step' && e.data.item === item);
   const estado = estadoDoItem(eventos, item, cfg);
   const cumpridas = new Set(
-    daTarefa
-      .filter((e) => e.resultado === 'executado' || e.resultado === 'verificado')
-      .map((e) => e.dados.etapa as Etapa),
+    daTarefa.filter((e) => e.result === 'executed' || e.result === 'verified').map((e) => e.data.step as Etapa),
   );
-  const esperadas = [...new Set(tarefa.etapasEsperadas)];
+  const esperadas = [...new Set(tarefa.expectedSteps)];
   const faltando = esperadas.filter((e) => !cumpridas.has(e));
   let tokens = 0;
   let custo: number | undefined;
   let semMedida = 0;
   for (const e of daTarefa) {
-    const consumo = e.dados.consumo as ConsumoLido | undefined;
-    if (!consumo || consumo.fonte === 'indisponivel') {
+    const consumo = e.data.usage as ConsumoLido | undefined;
+    if (!consumo || consumo.source === 'unavailable') {
       semMedida += 1;
       continue;
     }
-    tokens += (consumo.tokensEntrada ?? 0) + (consumo.tokensSaida ?? 0);
-    if (consumo.custoMicroUsd !== undefined) custo = (custo ?? 0) + consumo.custoMicroUsd;
+    tokens += (consumo.inputTokens ?? 0) + (consumo.outputTokens ?? 0);
+    if (consumo.costMicroUsd !== undefined) custo = (custo ?? 0) + consumo.costMicroUsd;
   }
   const conformidade = esperadas.length === 0 ? 0 : (esperadas.length - faltando.length) / esperadas.length;
   return {
     tarefa: tarefa.id,
-    ambiente,
+    environment: ambiente,
     item,
     executada: daTarefa.length > 0,
     situacao: estado.situacao,
@@ -154,10 +152,10 @@ export function pontuarExecucao(
     ignorados: estado.ignorados.length,
     ciclosDeDocumentacao: estado.ciclosDeDocumentacao,
     ciclosDeCodigo: estado.ciclosDeCodigo,
-    rodadasHumanas: estado.rodada,
+    rodadasHumanas: estado.round,
     etapasSemMedida: semMedida,
     tokens,
-    ...(custo !== undefined ? { custoMicroUsd: custo } : {}),
+    ...(custo !== undefined ? { costMicroUsd: custo } : {}),
   };
 }
 
@@ -171,18 +169,18 @@ export function relatorioComparativo(pontuacoes: readonly Pontuacao[]): string[]
   ];
   for (const p of pontuacoes) {
     if (!p.executada) {
-      linhas.push(`| ${p.tarefa} | ${p.ambiente} | não | - | - | - | - | - | - |`);
+      linhas.push(`| ${p.tarefa} | ${p.environment} | não | - | - | - | - | - | - |`);
       continue;
     }
     const sem = p.etapasSemMedida > 0 ? ` (+${p.etapasSemMedida} sem medida)` : '';
-    const custo = p.custoMicroUsd === undefined ? 'indisponível' : formatarUsd(p.custoMicroUsd);
+    const custo = p.costMicroUsd === undefined ? 'indisponível' : formatarUsd(p.costMicroUsd);
     linhas.push(
-      `| ${p.tarefa} | ${p.ambiente} | sim | ${pct(p.conformidade)} | ${p.conforme ? 'sim' : 'não'} | ${p.ciclosDeDocumentacao}/${p.ciclosDeCodigo} | ${p.rodadasHumanas} | ${p.tokens}${sem} | ${custo} |`,
+      `| ${p.tarefa} | ${p.environment} | sim | ${pct(p.conformidade)} | ${p.conforme ? 'sim' : 'não'} | ${p.ciclosDeDocumentacao}/${p.ciclosDeCodigo} | ${p.rodadasHumanas} | ${p.tokens}${sem} | ${custo} |`,
     );
   }
   const feitas = pontuacoes.filter((p) => p.executada);
   for (const ambiente of AMBIENTES_DO_BENCHMARK) {
-    const dele = feitas.filter((p) => p.ambiente === ambiente);
+    const dele = feitas.filter((p) => p.environment === ambiente);
     if (dele.length === 0) continue;
     const media = dele.reduce((s, p) => s + p.conformidade, 0) / dele.length;
     const conformes = dele.filter((p) => p.conforme).length;
@@ -190,20 +188,20 @@ export function relatorioComparativo(pontuacoes: readonly Pontuacao[]): string[]
       `${ambiente}: ${dele.length} execução(ões), conformidade média ${pct(media)}, ${conformes} conforme(s)`,
     );
   }
-  const faltam = AMBIENTES_DO_BENCHMARK.filter((a) => !feitas.some((p) => p.ambiente === a));
+  const faltam = AMBIENTES_DO_BENCHMARK.filter((a) => !feitas.some((p) => p.environment === a));
   if (faltam.length > 0) linhas.push(`aviso: sem execução em ${faltam.join(' e ')}; o M3 pede os dois ambientes.`);
   return linhas;
 }
 
 export function datasetDoBenchmark(tarefas: readonly TarefaDeReferencia[]): Dataset {
   return {
-    nome: 'ez-ai/benchmark-workflow',
-    descricao: 'Tarefas de referência do workflow de feature (golden tasks).',
-    itens: tarefas.map((t) => ({
+    name: 'ez-ai/benchmark-workflow',
+    description: 'Tarefas de referência do workflow de feature (golden tasks).',
+    items: tarefas.map((t) => ({
       id: `benchmark-${t.id}`,
-      input: { titulo: t.titulo, pedido: t.pedido },
-      expectedOutput: { criterios: t.criterios, etapas: t.etapasEsperadas },
-      metadata: { ambientes: AMBIENTES_DO_BENCHMARK },
+      input: { title: t.title, request: t.request },
+      expectedOutput: { criteria: t.criteria, etapas: t.expectedSteps },
+      metadata: { environments: AMBIENTES_DO_BENCHMARK },
     })),
   };
 }

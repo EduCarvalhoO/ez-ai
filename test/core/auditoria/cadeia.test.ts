@@ -13,10 +13,10 @@ import {
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'fixtures', 'eventos');
 const {
   seq: _s,
-  anterior: _a,
+  previous: _a,
   hash: _h,
   ...modelo
-} = JSON.parse(readFileSync(join(fixtures, 'validos', 'operacao.jsonl'), 'utf8')) as EventoDeAuditoria;
+} = JSON.parse(readFileSync(join(fixtures, 'validos', 'operation.jsonl'), 'utf8')) as EventoDeAuditoria;
 const semCorrente = modelo as EventoSemCorrente;
 
 function corrente(tamanho: number): EventoDeAuditoria[] {
@@ -31,7 +31,7 @@ const linhas = (eventos: readonly EventoDeAuditoria[]) => eventos.map((e) => JSO
 function reencadear(eventos: readonly EventoDeAuditoria[], de: number): EventoDeAuditoria[] {
   const novos = [...eventos];
   for (let i = de; i < novos.length; i += 1) {
-    const { seq: _x, anterior: _y, hash: _z, ...resto } = novos[i] as EventoDeAuditoria;
+    const { seq: _x, previous: _y, hash: _z, ...resto } = novos[i] as EventoDeAuditoria;
     novos[i] = encadear(novos[i - 1] ?? null, resto as EventoSemCorrente);
   }
   return novos;
@@ -39,8 +39,8 @@ function reencadear(eventos: readonly EventoDeAuditoria[], de: number): EventoDe
 
 describe('hash e encadeamento', () => {
   it('hash fixo da fixture canônica (trava ordem das chaves e formato)', () => {
-    const evento = JSON.parse(readFileSync(join(fixtures, 'validos', 'operacao.jsonl'), 'utf8'));
-    expect(hashDoEvento(evento)).toBe('sha256:b230af957864151ff19835b21685733a03bf22e0ee93b4f14505bc0bc76992d0');
+    const evento = JSON.parse(readFileSync(join(fixtures, 'validos', 'operation.jsonl'), 'utf8'));
+    expect(hashDoEvento(evento)).toBe('sha256:822aa57eb1e00aea47cefd77f4daf611cce57fb4baf3412aa0a54971671fc9a0');
     expect(evento.hash).toBe(hashDoEvento(evento));
   });
 
@@ -53,8 +53,8 @@ describe('hash e encadeamento', () => {
 
   it('o primeiro tem seq 1 e anterior null; os seguintes apontam para o hash anterior', () => {
     const [um, dois] = corrente(2) as [EventoDeAuditoria, EventoDeAuditoria];
-    expect([um.seq, um.anterior]).toEqual([1, null]);
-    expect([dois.seq, dois.anterior]).toEqual([2, um.hash]);
+    expect([um.seq, um.previous]).toEqual([1, null]);
+    expect([dois.seq, dois.previous]).toEqual([2, um.hash]);
   });
 });
 
@@ -70,19 +70,19 @@ describe('verificarCadeia', () => {
     const cabeca = eventos[1] as EventoDeAuditoria;
     expect(verificarCadeia(linhas(eventos.slice(2)), cabeca).ok).toBe(true);
     const sem = verificarCadeia(linhas(eventos.slice(2)));
-    expect(sem.ok ? '' : sem.erros[0]?.regra).toBe('seq');
+    expect(sem.ok ? '' : sem.erros[0]?.rule).toBe('seq');
   });
 
   it('acusa linha editada no meio pelo seq do problema', () => {
     const l = linhas(eventos);
     l[2] = l[2]?.replace('0.3.2', '0.3.9') as string;
-    expect(verificarCadeia(l)).toMatchObject({ ok: false, seq: 3, linha: 2, erros: [{ regra: 'hash' }] });
+    expect(verificarCadeia(l)).toMatchObject({ ok: false, seq: 3, linha: 2, erros: [{ rule: 'hash' }] });
   });
 
   it('acusa linha removida, inserida e trocada de ordem', () => {
     const l = linhas(eventos);
     const removida = verificarCadeia([l[0], l[2], l[3]] as string[]);
-    expect(removida).toMatchObject({ ok: false, seq: 2, linha: 1, erros: [{ regra: 'seq' }] });
+    expect(removida).toMatchObject({ ok: false, seq: 2, linha: 1, erros: [{ rule: 'seq' }] });
     const duplicada = verificarCadeia([l[0], l[1], l[1], l[2]] as string[]);
     expect(duplicada).toMatchObject({ ok: false, seq: 3, linha: 2 });
     const trocada = verificarCadeia([l[0], l[2], l[1], l[3]] as string[]);
@@ -90,15 +90,15 @@ describe('verificarCadeia', () => {
   });
 
   it('acusa anterior que não aponta para a linha anterior (hash refeito, corrente quebrada)', () => {
-    const forjado = { ...eventos[2], anterior: `sha256:${'0'.repeat(64)}` } as EventoDeAuditoria;
+    const forjado = { ...eventos[2], previous: `sha256:${'0'.repeat(64)}` } as EventoDeAuditoria;
     const { hash: _x, ...corpo } = forjado;
     const l = linhas(eventos);
     l[2] = JSON.stringify({ ...corpo, hash: hashDoEvento(corpo as EventoDeAuditoria) });
-    expect(verificarCadeia(l)).toMatchObject({ ok: false, seq: 3, erros: [{ regra: 'anterior' }] });
+    expect(verificarCadeia(l)).toMatchObject({ ok: false, seq: 3, erros: [{ rule: 'previous' }] });
   });
 
   it('acusa primeiro arquivo que não começa em seq 1 e linha inválida', () => {
-    expect(verificarCadeia(linhas(eventos.slice(1)))).toMatchObject({ ok: false, seq: 1, erros: [{ regra: 'seq' }] });
+    expect(verificarCadeia(linhas(eventos.slice(1)))).toMatchObject({ ok: false, seq: 1, erros: [{ rule: 'seq' }] });
     expect(verificarCadeia(['{}'])).toMatchObject({ ok: false, linha: 0 });
   });
 
@@ -106,7 +106,7 @@ describe('verificarCadeia', () => {
     const pulado = reencadear(eventos, 0).map((e, i) => (i === 3 ? { ...e, seq: 9 } : e));
     const { hash: _h2, ...corpo } = pulado[3] as EventoDeAuditoria;
     pulado[3] = { ...corpo, hash: hashDoEvento(corpo as EventoDeAuditoria) };
-    expect(verificarCadeia(linhas(pulado))).toMatchObject({ ok: false, seq: 4, erros: [{ regra: 'seq' }] });
+    expect(verificarCadeia(linhas(pulado))).toMatchObject({ ok: false, seq: 4, erros: [{ rule: 'seq' }] });
   });
 });
 
@@ -130,6 +130,6 @@ describe('limites conhecidos (T-aud1): o que a corrente NÃO detecta', () => {
 describe('JSON canônico', () => {
   it('recusa número que não é inteiro seguro (o contrato não tem ponto flutuante)', () => {
     const [e] = corrente(1) as [EventoDeAuditoria];
-    expect(() => hashDoEvento({ ...e, dados: { x: 1.5 } })).toThrow('inteiros seguros');
+    expect(() => hashDoEvento({ ...e, data: { x: 1.5 } })).toThrow('inteiros seguros');
   });
 });

@@ -14,33 +14,33 @@ Inclui declaração de fontes, regras de indexação, formato do chunk e do resu
 
 ### Fontes declaradas
 
-> **Estado da implementação (Sprint 13, [ADR-0034](../adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)):** por ora só o projeto declara fontes, em `.harness/conhecimento.json` (`{ "versao": 0, "fontes": [{ "id", "tipo", "pasta", "extensoes" }] }`), somadas às padrão. Fontes declaradas no manifesto de pacote seguem como alvo e dependem da assinatura de pacotes. O servidor MCP (`conhecimento servir`) já expõe `buscar`, `abrir` e `mapa`.
-Um pacote ou o projeto declara fontes só como **dados**, nunca como código (ADR-0018). No manifesto (`harness-pacote.json`) e na configuração do projeto, um campo opcional `conhecimento`:
+> **Estado da implementação (Sprint 13, [ADR-0034](../adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)):** por ora só o projeto declara fontes, em `.harness/knowledge.json` (`{ "versao": 0, "fontes": [{ "id", "tipo", "pasta", "extensoes" }] }`), somadas às padrão. Fontes declaradas no manifesto de pacote seguem como alvo e dependem da assinatura de pacotes. O servidor MCP (`knowledge serve`) já expõe `buscar`, `abrir` e `mapa`.
+Um pacote ou o projeto declara fontes só como **dados**, nunca como código (ADR-0018). No manifesto (`harness-package.json`) e na configuração do projeto, um campo opcional `knowledge`:
 
 ```json
-{ "conhecimento": { "fontes": [
-  { "id": "docs", "tipo": "markdown", "caminhos": ["docs/**/*.md"] },
-  { "id": "codigo", "tipo": "codigo", "caminhos": ["src/**/*.ts"], "excluir": ["**/*.test.ts"] }
+{ "knowledge": { "sources": [
+  { "id": "docs", "type": "markdown", "caminhos": ["docs/**/*.md"] },
+  { "id": "codigo", "type": "codigo", "caminhos": ["src/**/*.ts"], "excluir": ["**/*.test.ts"] }
 ] } }
 ```
 
 | Campo | Regra |
 |---|---|
-| `id` | Único dentro do pacote ou projeto; `a-z0-9-`, até 40 caracteres. A fonte final é `<origem>:<id>` (origem = `projeto` ou o nome do pacote), o que mantém fontes de pacotes separadas no índice |
-| `tipo` | `markdown` (corte por título), `codigo` (corte por AST; linguagens suportadas definidas na F6) ou `texto` (corte por parágrafo e tamanho) |
-| `caminhos`, `excluir` | Globs com as mesmas regras de caminho do `ler` do manifesto. O conjunto precisa estar dentro do que a permissão `ler` do componente permite; fonte fora do `ler` declarado é recusada na validação |
+| `id` | Único dentro do pacote ou projeto; `a-z0-9-`, até 40 caracteres. A fonte final é `<origem>:<id>` (origem = `project` ou o nome do pacote), o que mantém fontes de pacotes separadas no índice |
+| `type` | `markdown` (corte por título), `code` (corte por AST; linguagens suportadas definidas na F6) ou `texto` (corte por parágrafo e tamanho) |
+| `caminhos`, `excluir` | Globs com as mesmas regras de caminho do `read` do manifesto. O conjunto precisa estar dentro do que a permissão `read` do componente permite; fonte fora do `read` declarado é recusada na validação |
 
 ### Regras de indexação
-- Não lê `.gitignore` (só pastas curadas, ADR-0041); trecho que `pareceSegredo` reconhece não entra no índice e fica em `pulados`; arquivo que casa com a lista de segredos do `ler` (`sensivel`: `.env`, `*.pem`, `*.key`, `id_rsa`, `.npmrc`, ...) nunca é indexado, mesmo que o glob o alcance (I1).
+- Não lê `.gitignore` (só pastas curadas, ADR-0041); trecho que `pareceSegredo` reconhece não entra no índice e fica em `pulados`; arquivo que casa com a lista de segredos do `read` (`sensitive`: `.env`, `*.pem`, `*.key`, `id_rsa`, `.npmrc`, ...) nunca é indexado, mesmo que o glob o alcance (I1).
 - Binários e arquivos acima do limite (abaixo) são pulados e listados no relatório da indexação, não somem em silêncio.
-- Atualização incremental por hash de conteúdo (mesmo hash do lockfile); `doctor` avisa índice velho. Índice em `.harness/cache/conhecimento/`, fora do Git.
+- Atualização incremental por hash de conteúdo (mesmo hash do lockfile); `doctor` avisa índice velho. Índice em `.harness/cache/knowledge/`, fora do Git.
 - Nenhum código de pacote é executado; só o harness lê e indexa.
 
 ### Chunk
 | Campo | Conteúdo |
 |---|---|
-| `fonte` | `origem:id` da fonte |
-| `arquivo`, `linhaInicio`, `linhaFim` | Posição exata, base 1; é o que vira a citação `arquivo:linha` |
+| `source` | `origem:id` da fonte |
+| `file`, `linhaInicio`, `linhaFim` | Posição exata, base 1; é o que vira a citação `arquivo:linha` |
 | `contexto` | Cabeçalho fixo do chunk: caminho, símbolo (código) ou trilha de títulos (Markdown). Entra no texto indexado, não no resultado puro |
 | `texto` | Trecho literal do arquivo, sem reescrita |
 | `hash` | SHA-256 do texto, para atualização incremental |
@@ -51,11 +51,11 @@ Tamanho-alvo de ~300 a 500 tokens (**Hipótese**, calibrar no spike da F2): cód
 | Ferramenta | Entrada | Saída |
 |---|---|---|
 | `buscar` | `consulta`, `fonte?`, `limite?` (padrão 8, máximo 20) | Lista de resultados (abaixo), mais relevantes primeiro |
-| `abrir` | `arquivo`, `linhaInicio`, `linhaFim` (janela de até 200 linhas) | Texto literal com o mesmo envelope de resultado |
+| `abrir` | `file`, `linhaInicio`, `linhaFim` (janela de até 200 linhas) | Texto literal com o mesmo envelope de resultado |
 | `mapa` | `pasta?` | Resumo C0: arquivos, símbolos e uma linha por pasta |
 
 ### Resultado
-Cada resultado traz `fonte`, `arquivo`, `linhaInicio`, `linhaFim`, `pontuacao`, `texto` e o marcador fixo `confianca: "nao-confiavel"`. O servidor devolve o texto dentro de um envelope que o identifica como dado citado, não instrução (contenção de E3/E4 e do envenenamento do índice, OWASP LLM08). A skill instalada ensina a regra de uso: identificador exato → grep; conceito ou "onde fica X" → `buscar`; sempre citar `arquivo:linha` e separar Fato de Hipótese.
+Cada resultado traz `source`, `file`, `linhaInicio`, `linhaFim`, `pontuacao`, `texto` e o marcador fixo `confianca: "nao-confiavel"`. O servidor devolve o texto dentro de um envelope que o identifica como dado citado, não instrução (contenção de E3/E4 e do envenenamento do índice, OWASP LLM08). A skill instalada ensina a regra de uso: identificador exato → grep; conceito ou "onde fica X" → `buscar`; sempre citar `arquivo:linha` e separar Fato de Hipótese.
 
 ### Limites
 | Limite | Valor inicial (Hipótese, calibrar no spike) |
@@ -68,10 +68,10 @@ Cada resultado traz `fonte`, `arquivo`, `linhaInicio`, `linhaFim`, `pontuacao`, 
 | Janela de `abrir` | 200 linhas |
 
 ### Avaliação
-Arquivo `conhecimento/perguntas.json` no projeto (e opcionalmente no pacote). Cada pergunta: `id`, `pergunta`, `esperado` (lista de `arquivo` e, quando preciso, intervalo de linhas) e `tipo` (`identificador`, `conceito` ou `onde-fica`). Métricas: **recall@5**, **recall@10**, **MRR** e **acerto de citação** (o resultado cita o arquivo certo). Roda como teste no CI; na F5 vai ao Langfuse. Uma camada nova só vira padrão se melhorar essas métricas sobre a anterior. Meta inicial (**Hipótese**): recall@10 ≥ 0,8 na C1 sobre o conjunto do harness.
+Arquivo `knowledge/questions.json` no projeto (e opcionalmente no pacote). Cada pergunta: `id`, `question`, `expected` (lista de `file` e, quando preciso, intervalo de linhas) e `type` (`identificador`, `conceito` ou `onde-fica`). Métricas: **recall@5**, **recall@10**, **MRR** e **acerto de citação** (o resultado cita o arquivo certo). Roda como teste no CI; na F5 vai ao Langfuse. Uma camada nova só vira padrão se melhorar essas métricas sobre a anterior. Meta inicial (**Hipótese**): recall@10 ≥ 0,8 na C1 sobre o conjunto do harness.
 
 ### Perguntas de referência do harness (30)
-Conjunto inicial sobre o próprio repositório; `esperado` aponta o arquivo que contém a resposta.
+Conjunto inicial sobre o próprio repositório; `expected` aponta o arquivo que contém a resposta.
 
 | # | Tipo | Pergunta | Esperado |
 |---|---|---|---|
@@ -109,17 +109,17 @@ Conjunto inicial sobre o próprio repositório; `esperado` aponta o arquivo que 
 ### Segurança
 - Resultado é sempre dado não confiável com fonte (T8, envenenamento do índice).
 - Nada sai da máquina por padrão; embeddings por API (C2) são opt-in e o `plan` lista as pastas que seriam enviadas (I3).
-- Fontes de pacote ficam separadas e limitadas ao `ler` declarado; pacote não pode ampliar o alcance de outro.
+- Fontes de pacote ficam separadas e limitadas ao `read` declarado; pacote não pode ampliar o alcance de outro.
 - Limites acima valem como D1 (negação de serviço por arquivo ou fonte gigante).
 
 ## Validação
-Quando o schema existir (F2): testes de exemplos válidos e inválidos (fonte fora do `ler`, glob com `..`, `id` repetido, `tipo` desconhecido, limite excedido), no padrão do [ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md). A avaliação das 30 perguntas roda no CI a partir da F6; antes disso ela só valida que cada `esperado` aponta para arquivo existente (teste barato na F2).
+Quando o schema existir (F2): testes de exemplos válidos e inválidos (fonte fora do `read`, glob com `..`, `id` repetido, `type` desconhecido, limite excedido), no padrão do [ADR-0019](../adr/0019-validacao-de-contratos-com-cfworker-json-schema.md). A avaliação das 30 perguntas roda no CI a partir da F6; antes disso ela só valida que cada `expected` aponta para arquivo existente (teste barato na F2).
 
 ## Compatibilidade
-O campo `conhecimento` é opcional; manifestos e configurações sem ele continuam válidos. Mudança incompatível no chunk ou no resultado exige nova versão do contrato e reindexação (o hash do índice inclui a versão do contrato).
+O campo `knowledge` é opcional; manifestos e configurações sem ele continuam válidos. Mudança incompatível no chunk ou no resultado exige nova versão do contrato e reindexação (o hash do índice inclui a versão do contrato).
 
 ## Em aberto
 - Valores dos limites e tamanho do chunk: calibrar no spike da F2 (**Hipótese**).
 - Linguagens suportadas pelo corte por AST na C1 (começar por TypeScript).
 - `node:sqlite` (FTS5) estável o bastante nos 3 SOs, ou plano B em JS puro ([ADR-0021](../adr/0021-rag-em-camadas-local-first-e-medido.md)).
-- Se `conhecimento/perguntas.json` vira parte do manifesto de pacote ou fica só no projeto.
+- Se `knowledge/questions.json` vira parte do manifesto de pacote ou fica só no projeto.

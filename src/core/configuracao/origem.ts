@@ -6,12 +6,12 @@ import { CARACTERES_DE_CAMINHO, LIMITES } from '../manifesto/schema.js';
 
 export type Origem =
   | {
-      readonly tipo: 'github';
+      readonly type: 'github';
       /** Forma canônica: repositório em minúsculas, para comparar por igualdade. */
       readonly url: string;
       readonly login: string;
     }
-  | { readonly tipo: 'local'; readonly caminho: string };
+  | { readonly type: 'local'; readonly caminho: string };
 
 /** Origens oficiais, sempre permitidas. Vazia até a F3 decidir onde mora o pacote starter. */
 export const ORIGENS_OFICIAIS: readonly string[] = [];
@@ -24,13 +24,13 @@ export function canonizarRepositorio(url: string): string {
 }
 
 /** Converte o texto de `origem` (já aceito pelo schema) e devolve o motivo da recusa, se houver. */
-export function lerOrigem(texto: string): { origem: Origem; problema?: string } {
+export function lerOrigem(texto: string): { source: Origem; problema?: string } {
   if (texto.startsWith(PREFIXO_LOCAL)) {
     const caminho = texto.slice(PREFIXO_LOCAL.length);
-    return { origem: { tipo: 'local', caminho }, ...comProblema(problemaNaPastaLocal(caminho)) };
+    return { source: { type: 'local', caminho }, ...comProblema(problemaNaPastaLocal(caminho)) };
   }
   const { login, problema } = partesDoRepositorio(texto);
-  return { origem: { tipo: 'github', url: canonizarRepositorio(texto), login }, ...comProblema(problema) };
+  return { source: { type: 'github', url: canonizarRepositorio(texto), login }, ...comProblema(problema) };
 }
 
 function comProblema(problema: string | undefined): { problema?: string } {

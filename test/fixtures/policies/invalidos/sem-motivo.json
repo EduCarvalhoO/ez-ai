@@ -1,11 +1,11 @@
 {
-  "versaoPolicy": 0,
-  "regras": [
+  "policyVersion": 0,
+  "rules": [
     {
       "id": "r",
-      "efeito": "negar",
-      "categoria": "rede",
-      "padroes": [
+      "effect": "deny",
+      "category": "network",
+      "patterns": [
         "*"
       ]
     }

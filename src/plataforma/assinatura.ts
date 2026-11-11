@@ -53,8 +53,8 @@ export function criarVerificadorSigstore(o: OpcoesDoVerificador = {}): Verificad
         // Identidade e emissor exatos (sem regex): o certificado precisa ser do workflow esperado.
         v.verify(entidade, {
           // O @sigstore/verify trata o valor como regex sem âncora: escapa e ancora para valer só a identidade inteira.
-          subjectAlternativeName: `^${escaparRegex(pedido.identidade)}$`,
-          extensions: { issuer: pedido.emissor },
+          subjectAlternativeName: `^${escaparRegex(pedido.identity)}$`,
+          extensions: { issuer: pedido.issuer },
           ...(pedido.idDoRepositorio !== undefined || pedido.commit !== undefined
             ? {
                 oids: [
@@ -66,7 +66,7 @@ export function criarVerificadorSigstore(o: OpcoesDoVerificador = {}): Verificad
         });
         return { ok: true as const };
       } catch (erro: unknown) {
-        return { ok: false as const, motivo: erro instanceof Error ? erro.message.slice(0, 300) : 'bundle recusado' };
+        return { ok: false as const, reason: erro instanceof Error ? erro.message.slice(0, 300) : 'bundle recusado' };
       }
     },
   };

@@ -24,7 +24,7 @@ describe('diffDoPacote', () => {
   it('instalação nova mostra o texto das instruções; limite corta o resto', () => {
     const { manifesto, arquivos } = manifestoDoStarter();
     const linhas = diffDoPacote(new Map(), arquivos, manifesto, 1);
-    expect(linhas.some((l) => l.includes('instrucoes/convencoes.md (instrucao convencoes)'))).toBe(true);
+    expect(linhas.some((l) => l.includes('instrucoes/convencoes.md (instruction convencoes)'))).toBe(true);
     expect(linhas.some((l) => l.includes('mais 4 linha(s) alterada(s)'))).toBe(true);
   });
 

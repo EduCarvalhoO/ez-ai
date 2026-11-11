@@ -10,18 +10,18 @@ import {
 const HEAD = 'a'.repeat(40);
 const pr = (reviews: DadosDoPr['reviews'], extra: Partial<DadosDoPr> = {}): DadosDoPr => ({
   shaDaHead: HEAD,
-  autor: 'agente',
+  autor: 'agent',
   reviews,
   ...extra,
 });
 const ok = (login: string, commit = HEAD) => ({ login, estado: 'APPROVED', commit });
 
 const POLICY_BASE = JSON.stringify({
-  versaoPolicy: 0,
-  regras: [{ id: 'sem-pip', efeito: 'negar', categoria: 'executar', padroes: ['pip'], motivo: 'sem pip' }],
+  policyVersion: 0,
+  rules: [{ id: 'sem-pip', effect: 'deny', category: 'execute', patterns: ['pip'], reason: 'sem pip' }],
 });
-const POLICY_VAZIA = JSON.stringify({ versaoPolicy: 0, regras: [] });
-const NOVA = { id: 'comp/x/executar/pip', impressao: 'sha256:1' };
+const POLICY_VAZIA = JSON.stringify({ policyVersion: 0, rules: [] });
+const NOVA = { id: 'comp/x/execute/pip', fingerprint: 'sha256:1' };
 
 function entrada(extra: Partial<EntradaDoServidor> = {}): EntradaDoServidor {
   return {
@@ -34,7 +34,7 @@ function entrada(extra: Partial<EntradaDoServidor> = {}): EntradaDoServidor {
     motivosDaConfig: [],
     baseExiste: true,
     pr: pr([]),
-    exigirEvidencias: false,
+    requireEvidence: false,
     checksExigidos: [],
     checkRuns: [],
     ...extra,
@@ -48,7 +48,7 @@ describe('aprovadoresValidos', () => {
     expect(aprovadoresValidos(pr([ok('outra')]), ['dona'])).toEqual([]);
   });
   it('recusa autor, quem fez o último push e bots', () => {
-    expect(aprovadoresValidos(pr([ok('agente')]), ['agente'])).toEqual([]);
+    expect(aprovadoresValidos(pr([ok('agent')]), ['agent'])).toEqual([]);
     expect(aprovadoresValidos(pr([ok('dona')], { ultimoPush: 'dona' }), ['dona'])).toEqual([]);
     expect(aprovadoresValidos(pr([{ ...ok('dona'), tipoDeConta: 'Bot' }]), ['dona'])).toEqual([]);
     expect(aprovadoresValidos(pr([ok('dona[bot]')]), ['dona[bot]'])).toEqual([]);
@@ -74,10 +74,10 @@ describe('aprovadoresValidos', () => {
 
 describe('minimoDeAprovadores', () => {
   it('pede dois só para item perigoso e com 2 ou mais aprovadores na base', () => {
-    expect(minimoDeAprovadores(['comp/x/executar/pip'], 2)).toBe(2);
-    expect(minimoDeAprovadores(['comp/x/configurarAmbiente/.mcp.json'], 3)).toBe(2);
-    expect(minimoDeAprovadores(['comp/x/executar/pip'], 1)).toBe(1);
-    expect(minimoDeAprovadores(['comp/x/ler/a.md'], 3)).toBe(1);
+    expect(minimoDeAprovadores(['comp/x/execute/pip'], 2)).toBe(2);
+    expect(minimoDeAprovadores(['comp/x/configureEnvironment/.mcp.json'], 3)).toBe(2);
+    expect(minimoDeAprovadores(['comp/x/execute/pip'], 1)).toBe(1);
+    expect(minimoDeAprovadores(['comp/x/read/a.md'], 3)).toBe(1);
   });
 });
 
@@ -102,7 +102,7 @@ describe('conferirNoServidor', () => {
 
   it('impressão trocada para o mesmo id conta como nova', () => {
     const r = conferirNoServidor(
-      entrada({ aprovacoesHead: [{ ...NOVA, impressao: 'sha256:2' }], aprovacoesBase: [NOVA] }),
+      entrada({ aprovacoesHead: [{ ...NOVA, fingerprint: 'sha256:2' }], aprovacoesBase: [NOVA] }),
     );
     expect(r.problemas.join()).toContain('faltam aprovadores');
   });
@@ -134,13 +134,13 @@ describe('conferirNoServidor', () => {
   });
 
   it('mudar aprovadores exige review da base e não pode vir junto de aprovação nova', () => {
-    const mudou = entrada({ aprovadoresHead: ['dona', 'agente'] });
+    const mudou = entrada({ aprovadoresHead: ['dona', 'agent'] });
     expect(conferirNoServidor(mudou).problemas.join()).toContain('faltam aprovadores');
-    const junto = entrada({ aprovadoresHead: ['dona', 'agente'], aprovacoesHead: [NOVA], pr: pr([ok('dona')]) });
+    const junto = entrada({ aprovadoresHead: ['dona', 'agent'], aprovacoesHead: [NOVA], pr: pr([ok('dona')]) });
     expect(conferirNoServidor(junto).problemas.join()).toContain('PR separado');
   });
 
-  it('mudança de origens permitidas ou policyDaOrganizacao entra como motivo', () => {
+  it('mudança de origens permitidas ou organizationPolicy entra como motivo', () => {
     const r = conferirNoServidor(entrada({ motivosDaConfig: ['origem permitida acrescentada: x'] }));
     expect(r.problemas.join()).toContain('faltam aprovadores');
   });
@@ -175,25 +175,25 @@ describe('conferirNoServidor', () => {
   });
 
   it('evidências: confere os checks do CI e exige a lista', () => {
-    const run = (nome: string, conclusao: string | null) => ({ nome, conclusao, sha: HEAD });
-    const base = { exigirEvidencias: true, checksExigidos: ['qualidade', 'testes'] };
+    const run = (nome: string, conclusao: string | null) => ({ name: nome, conclusao, sha: HEAD });
+    const base = { requireEvidence: true, checksExigidos: ['quality', 'testes'] };
     expect(
-      conferirNoServidor(entrada({ ...base, checkRuns: [run('qualidade', 'success'), run('testes', 'success')] }))
+      conferirNoServidor(entrada({ ...base, checkRuns: [run('quality', 'success'), run('testes', 'success')] }))
         .problemas,
     ).toEqual([]);
-    expect(
-      conferirNoServidor(entrada({ ...base, checkRuns: [run('qualidade', 'success')] })).problemas.join(),
-    ).toContain('não rodou');
+    expect(conferirNoServidor(entrada({ ...base, checkRuns: [run('quality', 'success')] })).problemas.join()).toContain(
+      'não rodou',
+    );
     expect(
       conferirNoServidor(
-        entrada({ ...base, checkRuns: [run('qualidade', 'success'), run('testes', 'failure')] }),
+        entrada({ ...base, checkRuns: [run('quality', 'success'), run('testes', 'failure')] }),
       ).problemas.join(),
     ).toContain('sucesso');
     expect(
       conferirNoServidor(
-        entrada({ ...base, checkRuns: [run('qualidade', 'success'), run('testes', null)] }),
+        entrada({ ...base, checkRuns: [run('quality', 'success'), run('testes', null)] }),
       ).problemas.join(),
     ).toContain('sucesso');
-    expect(conferirNoServidor(entrada({ exigirEvidencias: true })).problemas.join()).toContain('--checks');
+    expect(conferirNoServidor(entrada({ requireEvidence: true })).problemas.join()).toContain('--checks');
   });
 });

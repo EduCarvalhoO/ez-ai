@@ -18,19 +18,19 @@ const SHA2 = '2'.repeat(40);
 
 function manifesto(versao: string, extra: Record<string, unknown> = {}): string {
   return JSON.stringify({
-    versaoManifesto: 0,
-    nome: 'eduardo/revisao-ts',
-    versao,
-    descricao: 'Pacote de teste',
-    licenca: 'MIT',
-    repositorio: REPO,
-    componentes: [{ id: 'conv', tipo: 'instrucao', arquivo: 'instrucoes/c.md' }],
+    manifestVersion: 0,
+    name: 'eduardo/revisao-ts',
+    version: versao,
+    description: 'Pacote de teste',
+    license: 'MIT',
+    repository: REPO,
+    components: [{ id: 'conv', type: 'instruction', file: 'instrucoes/c.md' }],
     ...extra,
   });
 }
 
-function pacote(versao: string, corpo = 'regras'): Record<string, string> {
-  return { 'harness-pacote.json': manifesto(versao), 'instrucoes/c.md': corpo };
+function pacote(versao: string, corpo = 'rules'): Record<string, string> {
+  return { 'harness-package.json': manifesto(versao), 'instrucoes/c.md': corpo };
 }
 
 function hashDe(arquivos: Record<string, string>): string {
@@ -40,27 +40,32 @@ function hashDe(arquivos: Record<string, string>): string {
 }
 
 function configuracao(pacotes: Record<string, unknown>, origens: string[] = [REPO]): string {
-  return JSON.stringify({ versaoConfig: 0, ambientes: ['claude-code'], origensPermitidas: origens, pacotes });
+  return JSON.stringify({
+    configVersion: 0,
+    environments: ['claude-code'],
+    allowedSources: origens,
+    packages: pacotes,
+  });
 }
 
 function lockfile(versao: string, commit: string, hash: string, tag = `v${versao}`): string {
   return JSON.stringify({
-    versaoLockfile: 0,
-    pacotes: {
+    lockfileVersion: 0,
+    packages: {
       'eduardo/revisao-ts': {
-        versao,
-        origem: REPO,
+        version: versao,
+        source: REPO,
         tag,
         commit,
         hash,
-        aprovacoesProprias: [],
-        componentes: [{ id: 'conv', tipo: 'instrucao', arquivo: 'instrucoes/c.md' }],
+        ownApprovals: [],
+        components: [{ id: 'conv', type: 'instruction', file: 'instrucoes/c.md' }],
       },
     },
   });
 }
 
-const PEDIDO = { 'eduardo/revisao-ts': { origem: REPO, versao: '^1.0.0' } };
+const PEDIDO = { 'eduardo/revisao-ts': { source: REPO, version: '^1.0.0' } };
 
 function contexto(inicial: Record<string, string>, repos = {}) {
   const arquivos = arquivosEmMemoria(inicial);
@@ -68,9 +73,9 @@ function contexto(inicial: Record<string, string>, repos = {}) {
     arquivos,
     git: gitEmMemoria(repos),
     relogio: relogioDoFixo(),
-    identidade: identidadeFixa(),
+    identity: identidadeFixa(),
     harness: '0.0.0',
-    tipoDeAtor: 'humano',
+    tipoDeAtor: 'human',
   };
   return ctx;
 }
@@ -87,30 +92,30 @@ describe('init', () => {
   it('cria config válida e .gitignore da auditoria', async () => {
     const ctx = contexto({});
     const r = await init(ctx, { dryRun: false });
-    expect(r.codigo).toBe(0);
+    expect(r.code).toBe(0);
     expect(ctx.arquivos.mapa.has('.harness/config.json')).toBe(true);
-    expect(ctx.arquivos.mapa.get('.harness/auditoria/.gitignore')).toBe('*\n');
+    expect(ctx.arquivos.mapa.get('.harness/audit/.gitignore')).toBe('*\n');
   });
 
   it('--dry-run não grava nada', async () => {
     const ctx = contexto({});
-    const r = await init(ctx, { dryRun: true, ambientes: ['copilot'] });
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join('\n')).toMatch(/dry-run/);
+    const r = await init(ctx, { dryRun: true, environments: ['copilot'] });
+    expect(r.code).toBe(0);
+    expect(r.output.join('\n')).toMatch(/dry-run/);
     expect(ctx.arquivos.mapa.size).toBe(0);
   });
 
   it('não sobrescreve config existente e recusa ambiente desconhecido', async () => {
     const ctx = contexto({ '.harness/config.json': '{}' });
     expect((await init(ctx, { dryRun: false })).erros[0]).toMatch(/já existe/);
-    expect((await init(contexto({}), { dryRun: false, ambientes: ['vim'] })).erros[0]).toMatch(/desconhecido/);
+    expect((await init(contexto({}), { dryRun: false, environments: ['vim'] })).erros[0]).toMatch(/desconhecido/);
   });
 });
 
 describe('list', () => {
   it('sem config diz para rodar init', async () => {
     const r = await listar(contexto({}));
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros[0]).toMatch(/ez-ai init/);
   });
 
@@ -120,14 +125,14 @@ describe('list', () => {
       '.harness/lock.json': lockfile('1.0.0', SHA1, hashDe(pacote('1.0.0'))),
     });
     const r = await listar(ctx);
-    expect(r.saida[0]).toMatch(/eduardo\/revisao-ts.*\^1\.0\.0.*1\.0\.0.*em-dia/);
+    expect(r.output[0]).toMatch(/eduardo\/revisao-ts.*\^1\.0\.0.*1\.0\.0.*em-dia/);
   });
 
   it('lista vazia e registra o evento na auditoria', async () => {
     const ctx = contexto({ '.harness/config.json': configuracao({}) });
-    expect((await listar(ctx)).saida).toEqual(['Nenhum pacote configurado.']);
+    expect((await listar(ctx)).output).toEqual(['Nenhum pacote configurado.']);
     const log = await lerAuditoria(ctx.arquivos);
-    expect(log.ok && log.eventos[0]?.dados).toMatchObject({ comando: 'list', dryRun: false });
+    expect(log.ok && log.eventos[0]?.data).toMatchObject({ command: 'list', dryRun: false });
   });
 });
 
@@ -136,9 +141,9 @@ describe('plan', () => {
     const ctx = contexto({ '.harness/config.json': configuracao(PEDIDO) }, repos);
     const antes = new Set(ctx.arquivos.mapa.keys());
     const r = await planejar(ctx);
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join('\n')).toMatch(/instalar/);
-    expect(r.saida.join('\n')).toMatch(/1\.1\.0/);
+    expect(r.code).toBe(0);
+    expect(r.output.join('\n')).toMatch(/instalar/);
+    expect(r.output.join('\n')).toMatch(/1\.1\.0/);
     expect(new Set(ctx.arquivos.mapa.keys())).toEqual(antes);
   });
 
@@ -146,9 +151,9 @@ describe('plan', () => {
     const novo = pacote('1.1.0');
     const comPermissao = {
       ...novo,
-      'harness-pacote.json': manifesto('1.1.0', {
-        componentes: [
-          { id: 'conv', tipo: 'instrucao', arquivo: 'instrucoes/c.md', permissoes: { rede: ['api.exemplo.com'] } },
+      'harness-package.json': manifesto('1.1.0', {
+        components: [
+          { id: 'conv', type: 'instruction', file: 'instrucoes/c.md', permissions: { network: ['api.exemplo.com'] } },
         ],
       }),
     };
@@ -160,45 +165,45 @@ describe('plan', () => {
       { [REPO]: { tags: { 'v1.1.0': SHA2 }, commits: { [SHA2]: comPermissao } } },
     );
     const r = await planejar(ctx);
-    expect(r.saida.join('\n')).toMatch(/atualizar 1\.0\.0 -> 1\.1\.0/);
-    expect(r.saida.join('\n')).toMatch(/permissão nova/);
+    expect(r.output.join('\n')).toMatch(/atualizar 1\.0\.0 -> 1\.1\.0/);
+    expect(r.output.join('\n')).toMatch(/permissão nova/);
   });
 
   it('marca inalterado quando commit e hash batem', async () => {
     const ctx = contexto(
       {
-        '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { origem: REPO, versao: '=1.0.0' } }),
+        '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { source: REPO, version: '=1.0.0' } }),
         '.harness/lock.json': lockfile('1.0.0', SHA1, hashDe(pacote('1.0.0'))),
       },
       repos,
     );
     const r = await planejar(ctx);
-    expect(r.saida[0]).toMatch(/^= eduardo\/revisao-ts@1\.0\.0\s+inalterado/);
+    expect(r.output[0]).toMatch(/^= eduardo\/revisao-ts@1\.0\.0\s+inalterado/);
   });
 
   it('falha quando o conteúdo do commit travado mudou (hash difere)', async () => {
     const ctx = contexto(
       {
-        '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { origem: REPO, versao: '=1.0.0' } }),
+        '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { source: REPO, version: '=1.0.0' } }),
         '.harness/lock.json': lockfile('1.0.0', SHA1, `sha256:${'0'.repeat(64)}`),
       },
       repos,
     );
     const r = await planejar(ctx);
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros[0]).toMatch(/hash difere/);
   });
 
   it('recusa origem fora da lista permitida sem tocar na rede', async () => {
     const ctx = contexto({ '.harness/config.json': configuracao(PEDIDO, []) });
     const r = await planejar(ctx);
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros[0]).toMatch(/fora da lista permitida/);
   });
 
   it('recusa troca de origem como troca de dono', async () => {
     const ctx = contexto({
-      '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { origem: 'local:pacotes/rev' } }),
+      '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { source: 'local:pacotes/rev' } }),
       '.harness/lock.json': lockfile('1.0.0', SHA1, hashDe(pacote('1.0.0'))),
     });
     const r = await planejar(ctx);
@@ -208,7 +213,7 @@ describe('plan', () => {
   it('acusa manifesto com nome diferente da chave e versão sem tag', async () => {
     const renomeado = {
       ...pacote('1.0.0'),
-      'harness-pacote.json': manifesto('1.0.0').replace('eduardo/revisao-ts', 'eduardo/outro'),
+      'harness-package.json': manifesto('1.0.0').replace('eduardo/revisao-ts', 'eduardo/outro'),
     };
     const ctx = contexto(
       { '.harness/config.json': configuracao(PEDIDO) },
@@ -221,25 +226,25 @@ describe('plan', () => {
 
   it('lê pacote local e escapa invisíveis no que mostra', async () => {
     const local = {
-      'pacotes/rev/harness-pacote.json': manifesto('1.0.0', { descricao: 'x' }).replace(
+      'pacotes/rev/harness-package.json': manifesto('1.0.0', { description: 'x' }).replace(
         REPO,
         'https://github.com/eduardo/revisao-ts',
       ),
-      'pacotes/rev/instrucoes/c.md': 'regras',
+      'pacotes/rev/instrucoes/c.md': 'rules',
     };
     const ctx = contexto({
-      '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { origem: 'local:pacotes/rev' } }, []),
+      '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { source: 'local:pacotes/rev' } }, []),
       ...local,
     });
     const r = await planejar(ctx);
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join('\n')).toMatch(/instalar/);
+    expect(r.code).toBe(0);
+    expect(r.output.join('\n')).toMatch(/instalar/);
   });
 
   it('acusa componente apontando para arquivo ausente', async () => {
     const ctx = contexto(
       { '.harness/config.json': configuracao(PEDIDO) },
-      { [REPO]: { tags: { 'v1.0.0': SHA1 }, commits: { [SHA1]: { 'harness-pacote.json': manifesto('1.0.0') } } } },
+      { [REPO]: { tags: { 'v1.0.0': SHA1 }, commits: { [SHA1]: { 'harness-package.json': manifesto('1.0.0') } } } },
     );
     expect((await planejar(ctx)).erros[0]).toMatch(/não está no pacote/);
   });
@@ -252,7 +257,7 @@ describe('plan', () => {
       },
       repos,
     );
-    expect((await planejar(ctx)).saida.join('\n')).toMatch(/- eduardo\/revisao-ts\s+remover/);
+    expect((await planejar(ctx)).output.join('\n')).toMatch(/- eduardo\/revisao-ts\s+remover/);
   });
 });
 
@@ -266,8 +271,8 @@ describe('validate', () => {
       repos,
     );
     const r = await validar(ctx);
-    expect(r.codigo).toBe(0);
-    expect(r.saida[0]).toMatch(/OK/);
+    expect(r.code).toBe(0);
+    expect(r.output[0]).toMatch(/OK/);
   });
 
   it('falha com hash adulterado, versão divergente e origem fora da lista', async () => {
@@ -301,7 +306,7 @@ describe('validate', () => {
 
   it('falha com troca de origem e com config ou lock inválidos', async () => {
     const troca = contexto({
-      '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { origem: 'local:pacotes/rev' } }),
+      '.harness/config.json': configuracao({ 'eduardo/revisao-ts': { source: 'local:pacotes/rev' } }),
       '.harness/lock.json': lockfile('1.0.0', SHA1, hashDe(pacote('1.0.0'))),
     });
     expect((await validar(troca)).erros.join('\n')).toMatch(/troca de dono/);
@@ -330,8 +335,8 @@ describe('doctor', () => {
   it('relata saúde e o limite da corrente', async () => {
     await listar(ctx);
     const r = await diagnosticar(ctx);
-    expect(r.codigo).toBe(0);
-    const texto = r.saida.join('\n');
+    expect(r.code).toBe(0);
+    const texto = r.output.join('\n');
     expect(texto).toMatch(/ok .*config.json válido/);
     expect(texto).toMatch(/corrente íntegra/);
     expect(texto).toMatch(/não é versionado/);
@@ -341,26 +346,26 @@ describe('doctor', () => {
   it('acusa log adulterado', async () => {
     await listar(ctx);
     await listar(ctx);
-    const c = '.harness/auditoria/2026-11.jsonl';
+    const c = '.harness/audit/2026-11.jsonl';
     ctx.arquivos.mapa.set(c, (ctx.arquivos.mapa.get(c) ?? '').replace('"list"', '"plan"'));
     const r = await diagnosticar(ctx);
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     expect(r.erros.join('\n')).toMatch(/quebrado na linha 1/);
   });
 
   it('avisa pacote fora do lockfile e falta de .gitignore, e acusa config inválida', async () => {
     const solto = contexto({ '.harness/config.json': configuracao(PEDIDO) });
     const r = await diagnosticar(solto);
-    expect(r.saida.join('\n')).toMatch(/aviso .*fora do lockfile/);
+    expect(r.output.join('\n')).toMatch(/aviso .*fora do lockfile/);
     const semConfig = await diagnosticar(contexto({}));
-    expect(semConfig.codigo).toBe(1);
+    expect(semConfig.code).toBe(1);
   });
 
   it('acusa lockfile inválido e avisa falta de .gitignore antes do primeiro evento', async () => {
     const c = contexto({ '.harness/config.json': configuracao({}), '.harness/lock.json': '{' });
     const r = await diagnosticar(c);
-    expect(r.codigo).toBe(1);
+    expect(r.code).toBe(1);
     const limpo = await diagnosticar(contexto({ '.harness/config.json': configuracao({}) }));
-    expect(limpo.saida.join('\n')).toMatch(/falta \.harness\/auditoria\/\.gitignore|não é versionado/);
+    expect(limpo.output.join('\n')).toMatch(/falta \.harness\/audit\/\.gitignore|não é versionado/);
   });
 });

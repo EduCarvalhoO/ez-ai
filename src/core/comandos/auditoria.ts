@@ -1,4 +1,4 @@
-// Comando `auditoria reparar` (ADR-0041): sela a corrente quebrada do log local e recomeça de um ponto íntegro.
+// Comando `audit repair` (ADR-0041): sela a corrente quebrada do log local e recomeça de um ponto íntegro.
 // O log local é evidência de adulteração ingênua, não proteção (T-aud1); este comando existe para o log não ficar
 // travado para sempre depois de uma quebra (queda no meio da gravação, edição à mão), sem apagar a prova.
 import { repararAuditoria } from '../auditoria/registro.js';
@@ -15,20 +15,20 @@ export const RECUSA_DE_AGENTE =
 
 export async function repararLog(ctx: Contexto, opcoes: OpcoesDeReparo): Promise<ResultadoDoComando> {
   // Um agente não deve poder "limpar" o rastro do próprio trabalho: o reparo é da pessoa.
-  if (ctx.tipoDeAtor === 'agente') return { codigo: 1, saida: [], erros: [RECUSA_DE_AGENTE] };
+  if (ctx.tipoDeAtor === 'agent') return { code: 1, output: [], erros: [RECUSA_DE_AGENTE] };
   const r = await repararAuditoria(ctx, { dryRun: opcoes.dryRun });
   if (r.integra) {
     return {
-      codigo: 0,
-      saida: [`A corrente de auditoria está íntegra (${r.mantidos} evento(s)); nada a reparar.`],
+      code: 0,
+      output: [`A corrente de auditoria está íntegra (${r.mantidos} evento(s)); nada a reparar.`],
       erros: [],
     };
   }
   const selo = escaparInvisiveis(r.pastaDoSelo ?? '');
   const resumo = `corrente quebrada na linha ${r.linhaQuebrada}; ${r.mantidos} evento(s) íntegro(s) mantido(s), ${r.seladas} linha(s) seladas em ${selo}/.`;
   return {
-    codigo: 0,
-    saida: opcoes.dryRun
+    code: 0,
+    output: opcoes.dryRun
       ? [`dry-run: nada foi gravado. Hoje: ${resumo}`]
       : [
           `Reparado: ${resumo}`,

@@ -5,20 +5,20 @@ import type { Comando, Componente, Manifesto, Permissoes } from './manifesto.js'
 type Categoria = keyof Permissoes;
 
 /** Manifesto ou retrato do lockfile: o diff só olha os componentes. */
-export type ComComponentes = Pick<Manifesto, 'componentes'>;
-const CATEGORIAS: readonly Categoria[] = ['ler', 'escrever', 'executar', 'rede', 'segredos', 'configurarAmbiente'];
+export type ComComponentes = Pick<Manifesto, 'components'>;
+const CATEGORIAS: readonly Categoria[] = ['read', 'write', 'execute', 'network', 'secrets', 'configureEnvironment'];
 
 /** Algo que a versão nova pode fazer e a anterior não podia. */
 export type Aumento =
-  | { readonly tipo: 'componente-novo'; readonly componente: string }
+  | { readonly type: 'componente-novo'; readonly componente: string }
   | {
-      readonly tipo: 'permissao-nova';
+      readonly type: 'permissao-nova';
       readonly componente: string;
-      readonly categoria: Categoria;
+      readonly category: Categoria;
       readonly item: string;
     }
   | {
-      readonly tipo: 'execucao-alterada';
+      readonly type: 'execucao-alterada';
       readonly componente: string;
       readonly campo: string;
       readonly antes: string;
@@ -26,14 +26,14 @@ export type Aumento =
     };
 
 /** Destaque de um glob de `ler` para o `plan` (I2): `amplo` cobre o projeto todo; `sensivel` alcança arquivo de segredo. */
-export type MarcaDeLeitura = 'amplo' | 'sensivel';
+export type MarcaDeLeitura = 'broad' | 'sensitive';
 
 /** Destaque de um glob de `escrever` para o `plan`: `executavel` alcança arquivo que outra ferramenta executa. */
-export type MarcaDeEscrita = 'executavel';
+export type MarcaDeEscrita = 'executable';
 
 function chave(categoria: Categoria, item: string | Comando): string {
-  if (typeof item === 'string') return categoria === 'rede' ? item.toLowerCase() : item;
-  return JSON.stringify([item.programa, ...item.argumentos]);
+  if (typeof item === 'string') return categoria === 'network' ? item.toLowerCase() : item;
+  return JSON.stringify([item.program, ...item.arguments]);
 }
 
 function itens(p: Permissoes, categoria: Categoria): Set<string> {
@@ -41,26 +41,26 @@ function itens(p: Permissoes, categoria: Categoria): Set<string> {
 }
 
 function textoDoComando(comando: Comando | undefined): string {
-  return comando ? JSON.stringify([comando.programa, ...comando.argumentos]) : '';
+  return comando ? JSON.stringify([comando.program, ...comando.arguments]) : '';
 }
 
 /** Componente que roda código: o que ele roda faz parte da permissão. */
 function executa(c: Componente): boolean {
-  return c.tipo === 'hook' || c.tipo === 'mcp' || c.permissoes.executar.length > 0;
+  return c.type === 'hook' || c.type === 'mcp' || c.permissions.execute.length > 0;
 }
 
 function alteracoesDeExecucao(antes: Componente, depois: Componente): Aumento[] {
-  const campos: [string, string, string][] = [['tipo', antes.tipo, depois.tipo]];
+  const campos: [string, string, string][] = [['type', antes.type, depois.type]];
   if (executa(antes) || executa(depois)) {
     campos.push(
-      ['arquivo', antes.arquivo, depois.arquivo],
-      ['evento', antes.evento ?? '', depois.evento ?? ''],
-      ['comando', textoDoComando(antes.comando), textoDoComando(depois.comando)],
+      ['file', antes.file, depois.file],
+      ['event', antes.event ?? '', depois.event ?? ''],
+      ['command', textoDoComando(antes.command), textoDoComando(depois.command)],
     );
   }
   return campos
     .filter(([, a, d]) => a !== d)
-    .map(([campo, a, d]) => ({ tipo: 'execucao-alterada', componente: depois.id, campo, antes: a, depois: d }));
+    .map(([campo, a, d]) => ({ type: 'execucao-alterada', componente: depois.id, campo, antes: a, depois: d }));
 }
 
 /**
@@ -69,19 +69,20 @@ function alteracoesDeExecucao(antes: Componente, depois: Componente): Aumento[] 
  * Mudança de conteúdo de um arquivo com o mesmo caminho não aparece aqui; o diff do `update` mostra (F2).
  */
 export function diferencaDePermissoes(antes: ComComponentes, depois: ComComponentes): readonly Aumento[] {
-  const anteriores = new Map(antes.componentes.map((c) => [c.id, c]));
+  const anteriores = new Map(antes.components.map((c) => [c.id, c]));
   const aumentos: Aumento[] = [];
-  for (const atual of depois.componentes) {
+  for (const atual of depois.components) {
     const anterior = anteriores.get(atual.id);
     if (!anterior) {
-      aumentos.push({ tipo: 'componente-novo', componente: atual.id });
+      aumentos.push({ type: 'componente-novo', componente: atual.id });
       continue;
     }
     aumentos.push(...alteracoesDeExecucao(anterior, atual));
     for (const categoria of CATEGORIAS) {
-      const velhos = itens(anterior.permissoes, categoria);
-      for (const item of itens(atual.permissoes, categoria)) {
-        if (!velhos.has(item)) aumentos.push({ tipo: 'permissao-nova', componente: atual.id, categoria, item });
+      const velhos = itens(anterior.permissions, categoria);
+      for (const item of itens(atual.permissions, categoria)) {
+        if (!velhos.has(item))
+          aumentos.push({ type: 'permissao-nova', componente: atual.id, category: categoria, item });
       }
     }
   }
@@ -91,12 +92,12 @@ export function diferencaDePermissoes(antes: ComComponentes, depois: ComComponen
 /** União das permissões dos componentes: a permissão do pacote é calculada, nunca declarada. */
 export function permissoesDoPacote(manifesto: Manifesto): Readonly<Record<Categoria, readonly string[]>> {
   const uniao = Object.fromEntries(CATEGORIAS.map((c) => [c, new Set<string>()])) as Record<Categoria, Set<string>>;
-  for (const componente of manifesto.componentes) {
+  for (const componente of manifesto.components) {
     for (const categoria of CATEGORIAS) {
-      for (const item of itens(componente.permissoes, categoria)) uniao[categoria].add(item);
+      for (const item of itens(componente.permissions, categoria)) uniao[categoria].add(item);
     }
     // O que um hook ou MCP roda também aparece no agregado que o `plan` mostra.
-    if (componente.comando) uniao.executar.add(chave('executar', componente.comando));
+    if (componente.command) uniao.execute.add(chave('execute', componente.command));
   }
   return Object.fromEntries(CATEGORIAS.map((c) => [c, [...uniao[c]].sort()])) as Record<Categoria, string[]>;
 }
@@ -104,12 +105,12 @@ export function permissoesDoPacote(manifesto: Manifesto): Readonly<Record<Catego
 /** Marcas de um glob de `ler` para destaque no `plan`. */
 export function marcarLeitura(glob: string): readonly MarcaDeLeitura[] {
   const marcas: MarcaDeLeitura[] = [];
-  if (glob === '**' || glob.startsWith('**/')) marcas.push('amplo');
-  if (PADROES_DE_SEGREDO.some((segredo) => globsSeCruzam(glob, segredo))) marcas.push('sensivel');
+  if (glob === '**' || glob.startsWith('**/')) marcas.push('broad');
+  if (PADROES_DE_SEGREDO.some((segredo) => globsSeCruzam(glob, segredo))) marcas.push('sensitive');
   return marcas;
 }
 
 /** Marcas de um glob de `escrever` para destaque no `plan`. */
 export function marcarEscrita(glob: string): readonly MarcaDeEscrita[] {
-  return DESTINOS_EXECUTAVEIS.some((destino) => globsSeCruzam(glob, destino)) ? ['executavel'] : [];
+  return DESTINOS_EXECUTAVEIS.some((destino) => globsSeCruzam(glob, destino)) ? ['executable'] : [];
 }

@@ -29,8 +29,8 @@ function indiceFalso(): IndiceDeBusca & { reconstruido: number } {
         .sort((a, b) => b.p - a.p)
         .slice(0, limite)
         .map(({ c, p }) => ({
-          fonte: c.fonte,
-          arquivo: c.arquivo,
+          source: c.source,
+          file: c.file,
           linhaInicio: c.linhaInicio,
           linhaFim: c.linhaFim,
           pontuacao: p,
@@ -46,9 +46,9 @@ function ctx(inicial: Record<string, string>, indice?: IndiceDeBusca) {
     arquivos: arquivosEmMemoria(inicial),
     git: gitEmMemoria({}),
     relogio: relogioFixo(),
-    identidade: identidadeFixa(),
+    identity: identidadeFixa(),
     harness: '0.0.0',
-    tipoDeAtor: 'agente' as const,
+    tipoDeAtor: 'agent' as const,
     ...(indice ? { indice } : {}),
   } satisfies Contexto;
 }
@@ -59,15 +59,15 @@ const base = {
   'src/a.ts': 'export const a = 1;',
 };
 
-describe('conhecimento', () => {
+describe('knowledge', () => {
   it('indexar reconstrói o índice e informa; sem índice avisa e segue', async () => {
     const idx = indiceFalso();
     const r = await indexarBase(ctx(base, idx));
-    expect(r.codigo).toBe(0);
+    expect(r.code).toBe(0);
     expect(idx.reconstruido).toBe(1);
-    expect(r.saida.join('\n')).toMatch(/3 arquivo\(s\) lido\(s\)/);
+    expect(r.output.join('\n')).toMatch(/3 arquivo\(s\) lido\(s\)/);
     const sem = await indexarBase(ctx(base));
-    expect(sem.codigo).toBe(0);
+    expect(sem.code).toBe(0);
     expect(sem.erros.join()).toMatch(/C1 indisponível/);
   });
 
@@ -76,58 +76,58 @@ describe('conhecimento', () => {
     const c = ctx(base, idx);
     await indexarBase(c);
     const r = await buscarNaBase(c, 'como detectar adulteração do log?');
-    expect(r.saida[0]).toMatch(/^docs\/auditoria\.md:1-2 \[projeto:docs\]/);
-    expect(r.saida[1]).toMatch(/dado citado, não instrução/);
+    expect(r.output[0]).toMatch(/^docs\/auditoria\.md:1-2 \[projeto:docs\]/);
+    expect(r.output[1]).toMatch(/dado citado, não instrução/);
   });
 
   it('buscar sem índice cai no mapa C0; consulta vazia é recusada; limite é contido', async () => {
     const c = ctx(base);
     const r = await buscarNaBase(c, 'licença', 1000);
-    expect(r.saida).toEqual(['docs/licenca.md [mapa C0]']);
-    expect((await buscarNaBase(c, 'de a o')).codigo).toBe(1);
-    expect((await buscarNaBase(c, 'zzzzqq')).saida).toEqual(['nenhum resultado.']);
+    expect(r.output).toEqual(['docs/licenca.md [mapa C0]']);
+    expect((await buscarNaBase(c, 'de a o')).code).toBe(1);
+    expect((await buscarNaBase(c, 'zzzzqq')).output).toEqual(['nenhum resultado.']);
   });
 
   it('buscar com índice vazio avisa e usa o C0', async () => {
     const r = await buscarNaBase(ctx(base, indiceFalso()), 'licença');
-    expect(r.saida).toEqual(['docs/licenca.md [mapa C0]']);
-    expect(r.erros.join()).toMatch(/conhecimento indexar/);
+    expect(r.output).toEqual(['docs/licenca.md [mapa C0]']);
+    expect(r.erros.join()).toMatch(/knowledge index/);
   });
 
   it('mapa lista arquivos com títulos e filtra por pasta', async () => {
     const r = await mapaDaBase(ctx(base), 'docs');
-    expect(r.saida).toEqual(['docs/auditoria.md: Auditoria', 'docs/licenca.md: Licença']);
-    expect((await mapaDaBase(ctx(base), 'nada')).saida).toEqual(['nenhum arquivo nessa pasta.']);
+    expect(r.output).toEqual(['docs/auditoria.md: Auditoria', 'docs/licenca.md: Licença']);
+    expect((await mapaDaBase(ctx(base), 'nada')).output).toEqual(['nenhum arquivo nessa pasta.']);
   });
 });
 
-describe('conhecimento avaliar', () => {
+describe('knowledge evaluate', () => {
   const perguntas = JSON.stringify([
-    { id: 'q1', pergunta: 'Como o log detecta adulteração?', tipo: 'conceito', esperado: ['docs/auditoria.md'] },
-    { id: 'q2', pergunta: 'Qual é a licença?', tipo: 'conceito', esperado: ['docs/licenca.md'] },
+    { id: 'q1', question: 'Como o log detecta adulteração?', type: 'conceito', expected: ['docs/auditoria.md'] },
+    { id: 'q2', question: 'Qual é a licença?', type: 'conceito', expected: ['docs/licenca.md'] },
   ]);
 
-  it('compara C0 e C0 + C1 e exporta o dataset só com --exportar', async () => {
-    const c = ctx({ ...base, 'conhecimento/perguntas.json': perguntas }, indiceFalso());
-    const r = await avaliarBase(c, { exportar: false });
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join('\n')).toMatch(/C0 \+ C1: recall@5 1\.00/);
-    expect(r.saida.join('\n')).toMatch(/atendido/);
-    expect(c.arquivos.mapa.has('.harness/evals/dataset-conhecimento.json')).toBe(false);
-    await avaliarBase(c, { exportar: true });
-    const ds = JSON.parse(c.arquivos.mapa.get('.harness/evals/dataset-conhecimento.json') ?? '{}');
-    expect(ds.itens).toHaveLength(2);
-    expect(ds.itens[0].expectedOutput.arquivos).toEqual(['docs/auditoria.md']);
+  it('compara C0 e C0 + C1 e exporta o dataset só com --export', async () => {
+    const c = ctx({ ...base, 'knowledge/questions.json': perguntas }, indiceFalso());
+    const r = await avaliarBase(c, { export: false });
+    expect(r.code).toBe(0);
+    expect(r.output.join('\n')).toMatch(/C0 \+ C1: recall@5 1\.00/);
+    expect(r.output.join('\n')).toMatch(/atendido/);
+    expect(c.arquivos.mapa.has('.harness/evals/dataset-knowledge.json')).toBe(false);
+    await avaliarBase(c, { export: true });
+    const ds = JSON.parse(c.arquivos.mapa.get('.harness/evals/dataset-knowledge.json') ?? '{}');
+    expect(ds.items).toHaveLength(2);
+    expect(ds.items[0].expectedOutput.arquivos).toEqual(['docs/auditoria.md']);
   });
 
   it('sem índice avisa; erros de arquivo e de contrato são claros', async () => {
-    const sem = await avaliarBase(ctx({ ...base, 'conhecimento/perguntas.json': perguntas }), { exportar: false });
-    expect(sem.codigo).toBe(0);
+    const sem = await avaliarBase(ctx({ ...base, 'knowledge/questions.json': perguntas }), { export: false });
+    expect(sem.code).toBe(0);
     expect(sem.erros.join()).toMatch(/C1 indisponível/);
-    expect((await avaliarBase(ctx(base), { exportar: false })).codigo).toBe(1);
-    expect((await avaliarBase(ctx({ 'conhecimento/perguntas.json': '[{}]' }), { exportar: false })).codigo).toBe(1);
-    const ausente = JSON.stringify([{ id: 'q', pergunta: 'x?', tipo: 'conceito', esperado: ['docs/nao-existe.md'] }]);
-    const r = await avaliarBase(ctx({ 'conhecimento/perguntas.json': ausente }), { exportar: false });
+    expect((await avaliarBase(ctx(base), { export: false })).code).toBe(1);
+    expect((await avaliarBase(ctx({ 'knowledge/questions.json': '[{}]' }), { export: false })).code).toBe(1);
+    const ausente = JSON.stringify([{ id: 'q', question: 'x?', type: 'conceito', expected: ['docs/nao-existe.md'] }]);
+    const r = await avaliarBase(ctx({ 'knowledge/questions.json': ausente }), { export: false });
     expect(r.erros.join('\n')).toMatch(/docs\/nao-existe\.md/);
   });
 
@@ -135,39 +135,39 @@ describe('conhecimento avaliar', () => {
     const ruim: IndiceDeBusca = {
       async reconstruir() {},
       async buscar() {
-        return [{ fonte: 'f', arquivo: 'src/a.ts', linhaInicio: 1, linhaFim: 1, pontuacao: 1, texto: 'x' }];
+        return [{ source: 'f', file: 'src/a.ts', linhaInicio: 1, linhaFim: 1, pontuacao: 1, texto: 'x' }];
       },
     };
-    const um = JSON.stringify([{ id: 'q1', pergunta: 'licença', tipo: 'conceito', esperado: ['docs/licenca.md'] }]);
-    const r = await avaliarBase(ctx({ ...base, 'conhecimento/perguntas.json': um }, ruim), { exportar: false });
+    const um = JSON.stringify([{ id: 'q1', question: 'licença', type: 'conceito', expected: ['docs/licenca.md'] }]);
+    const r = await avaliarBase(ctx({ ...base, 'knowledge/questions.json': um }, ruim), { export: false });
     // RRF com o C0 certo no topo ainda acerta; o critério compara recall@5 e aqui não piora.
-    expect(r.saida.join('\n')).toMatch(/critério do M3/);
+    expect(r.output.join('\n')).toMatch(/critério do M3/);
   });
 });
 
 describe('benchmark (comando)', () => {
   const tarefas = JSON.stringify([
-    { id: 't1', titulo: 'T', pedido: 'faça', criterios: ['ok'], etapasEsperadas: ['E1', 'G1'] },
+    { id: 't1', title: 'T', request: 'faça', criteria: ['ok'], expectedSteps: ['E1', 'G1'] },
   ]);
 
-  it('relata tarefa sem execução e avisa dos ambientes; --exportar grava dataset e pontuações', async () => {
-    const c = ctx({ 'benchmark/tarefas.json': tarefas });
-    const r = await relatarBenchmark(c, { exportar: true });
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join('\n')).toMatch(/aviso: sem execução em claude-code e copilot/);
+  it('relata tarefa sem execução e avisa dos ambientes; --export grava dataset e pontuações', async () => {
+    const c = ctx({ 'benchmark/tasks.json': tarefas });
+    const r = await relatarBenchmark(c, { export: true });
+    expect(r.code).toBe(0);
+    expect(r.output.join('\n')).toMatch(/aviso: sem execução em claude-code e copilot/);
     expect(c.arquivos.mapa.has('.harness/evals/dataset-benchmark.json')).toBe(true);
     expect(c.arquivos.mapa.has('.harness/evals/pontuacoes-benchmark.json')).toBe(true);
   });
 
   it('pontua a execução registrada pelo comando workflow', async () => {
-    const c = ctx({ 'benchmark/tarefas.json': tarefas });
-    await registrarEtapa(c, { item: 'bench-t1-claude-code', etapa: 'E1', resultado: 'executado', agente: 'arquiteto' });
-    const r = await relatarBenchmark(c, { exportar: false });
-    expect(r.saida.join('\n')).toMatch(/\| t1 \| claude-code \| sim \| 50% \| não \|/);
+    const c = ctx({ 'benchmark/tasks.json': tarefas });
+    await registrarEtapa(c, { item: 'bench-t1-claude-code', step: 'E1', result: 'executed', agent: 'arquiteto' });
+    const r = await relatarBenchmark(c, { export: false });
+    expect(r.output.join('\n')).toMatch(/\| t1 \| claude-code \| sim \| 50% \| não \|/);
   });
 
   it('recusa arquivo ausente ou inválido', async () => {
-    expect((await relatarBenchmark(ctx({}), { exportar: false })).codigo).toBe(1);
-    expect((await relatarBenchmark(ctx({ 'benchmark/tarefas.json': '[{}]' }), { exportar: false })).codigo).toBe(1);
+    expect((await relatarBenchmark(ctx({}), { export: false })).code).toBe(1);
+    expect((await relatarBenchmark(ctx({ 'benchmark/tasks.json': '[{}]' }), { export: false })).code).toBe(1);
   });
 });

@@ -5,9 +5,9 @@
 Três rotinas: publicar um pacote assinado, gerar o SBOM do harness e renovar a raiz de confiança do Sigstore.
 
 ## 1. Publicar um pacote assinado (autor do pacote)
-1. No `harness-pacote.json`, declare o workflow que assina: `"assinatura": { "identidade": "https://github.com/<dono>/<repo>/.github/workflows/<arquivo>.yml@refs/tags/v<versao>", "emissor": "https://token.actions.githubusercontent.com" }`. A identidade precisa ser do **mesmo repositório** do pacote.
-2. No repositório do pacote, use o modelo [`docs/modelos/release-assinada.yml`](../modelos/release-assinada.yml): ele extrai a árvore do commit numa pasta, calcula `ez-ai hash-pacote <pasta>` (texto sem quebra de linha), assina esse texto com `cosign sign-blob --bundle harness-pacote.sigstore.json` (assinatura keyless: sem chave guardada, o certificado nasce do login do workflow) e faz commit do bundle na tag.
-3. O bundle `harness-pacote.sigstore.json` fica na raiz do pacote e **fora** do hash. Quem instala vê `confiança: verificado` no `ez-ai list`.
+1. No `harness-package.json`, declare o workflow que assina: `"assinatura": { "identidade": "https://github.com/<owner>/<repo>/.github/workflows/<arquivo>.yml@refs/tags/v<versao>", "emissor": "https://token.actions.githubusercontent.com" }`. A identidade precisa ser do **mesmo repositório** do pacote.
+2. No repositório do pacote, use o modelo [`docs/modelos/release-assinada.yml`](../modelos/release-assinada.yml): ele extrai a árvore do commit numa pasta, calcula `ez-ai hash-package <pasta>` (texto sem quebra de linha), assina esse texto com `cosign sign-blob --bundle harness-package.sigstore.json` (assinatura keyless: sem chave guardada, o certificado nasce do login do workflow) e faz commit do bundle na tag.
+3. O bundle `harness-package.sigstore.json` fica na raiz do pacote e **fora** do hash. Quem instala vê `confiança: verificado` no `ez-ai list`.
 4. A tag precisa apontar para o commit que já contém o bundle; a identidade do manifesto precisa citar essa tag.
 
 ## 2. SBOM do harness (mantenedor)
@@ -21,4 +21,4 @@ A raiz está em `src/plataforma/raiz-de-confianca.ts` (cópia do `trusted_root.j
 3. PR separado, revisado pelo Eduardo; confira que `certificateAuthorities`, `tlogs` e `timestampAuthorities` têm entradas vigentes (o teste `test/plataforma/assinatura.test.ts` confere o formato).
 
 ## Primeira assinatura real (pendência do Eduardo)
-O modelo de workflow ainda não rodou de verdade. O verificador foi testado com bundles inválidos; falta provar o caminho feliz com um pacote assinado de verdade: publique um pacote de teste pelo passo 1, rode `ez-ai add` e `apply` com `confiancaMinima: "verificado"` e confira que instala. Se falhar, a mensagem de recusa diz o motivo.
+O modelo de workflow ainda não rodou de verdade. O verificador foi testado com bundles inválidos; falta provar o caminho feliz com um pacote assinado de verdade: publique um pacote de teste pelo passo 1, rode `ez-ai add` e `apply` com `minTrust: "verificado"` e confira que instala. Se falhar, a mensagem de recusa diz o motivo.

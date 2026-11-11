@@ -1,0 +1,37 @@
+[
+  {
+    "id": "adicionar-flag-versao-curta",
+    "title": "Adicionar alias curto em uma flag da CLI",
+    "request": "Na CLI do ez-ai, aceite --json como alias de uma saída estruturada do comando custo, com teste e documentação no uso.",
+    "criteria": [
+      "o comando custo --json imprime um objeto JSON por agente",
+      "há teste cobrindo a flag nova e o caso sem a flag",
+      "o texto de uso da CLI menciona a flag",
+      "todos os checks do projeto passam"
+    ],
+    "expectedSteps": ["E1", "E2", "G0", "G1", "E3", "G2", "E4", "E5", "G3"]
+  },
+  {
+    "id": "corrigir-mensagem-de-erro",
+    "title": "Corrigir mensagem de erro confusa",
+    "request": "A mensagem de erro do comando add quando a origem é inválida não diz qual formato é aceito. Corrija a mensagem e cubra com teste.",
+    "criteria": [
+      "a mensagem cita os dois formatos aceitos (https do GitHub e local:)",
+      "há teste da mensagem nova",
+      "nenhum outro comportamento do add muda"
+    ],
+    "expectedSteps": ["E1", "G1", "E3", "G2", "E4", "G3"]
+  },
+  {
+    "id": "nova-regra-de-doctor",
+    "title": "Nova verificação no comando doctor",
+    "request": "Faça o doctor avisar quando .harness/cache/ não está no .gitignore do projeto, com teste e entrada na documentação.",
+    "criteria": [
+      "o doctor emite aviso quando a pasta de cache não está ignorada",
+      "sem o problema, o doctor continua silencioso sobre isso",
+      "há teste dos dois casos",
+      "a documentação do doctor lista a verificação nova"
+    ],
+    "expectedSteps": ["E1", "E2", "G0", "G1", "E3", "G2", "E4", "E5", "G3"]
+  }
+]

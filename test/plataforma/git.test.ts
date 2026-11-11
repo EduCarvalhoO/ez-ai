@@ -65,13 +65,13 @@ describe('criarGit', () => {
       if (args[0] === 'ls-tree') {
         const c = 'c'.repeat(40);
         const d = 'd'.repeat(40);
-        return `100644 blob ${c}\tharness-pacote.json${NUL}100644 blob ${d}\tagentes/a.md${NUL}`;
+        return `100644 blob ${c}\tharness-package.json${NUL}100644 blob ${d}\tagentes/a.md${NUL}`;
       }
       if (args[0] === 'cat-file') return `conteudo-${args[2]?.[0]}`;
       return '';
     });
     const arquivos = await git.lerArquivos(REPO, SHA);
-    expect(arquivos.get('harness-pacote.json')).toBe('conteudo-c');
+    expect(arquivos.get('harness-package.json')).toBe('conteudo-c');
     expect(arquivos.get('agentes/a.md')).toBe('conteudo-d');
   });
 

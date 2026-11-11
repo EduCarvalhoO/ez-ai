@@ -89,7 +89,7 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
 
   return {
     raiz: real,
-    async ler(caminho) {
+    async read(caminho) {
       const destino = await resolver(caminho);
       // Um só handle: o tamanho e o conteúdo vêm do mesmo arquivo aberto (sem janela entre checar e ler), e
       // O_NOFOLLOW recusa symlink no último segmento onde o SO suporta.

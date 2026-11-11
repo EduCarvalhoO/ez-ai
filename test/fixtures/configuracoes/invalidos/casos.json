@@ -1,182 +1,182 @@
 [
   {
-    "arquivo": "origem-nao-permitida.json",
-    "regra": "origem-nao-permitida",
-    "caminho": "/pacotes/eduardo~1revisao-ts/origem"
+    "file": "origem-nao-permitida.json",
+    "rule": "origem-nao-permitida",
+    "caminho": "/packages/eduardo~1revisao-ts/source"
   },
   {
-    "arquivo": "origem-prefixo.json",
-    "regra": "origem-nao-permitida",
-    "caminho": "/pacotes/eduardo~1revisao-ts/origem"
+    "file": "origem-prefixo.json",
+    "rule": "origem-nao-permitida",
+    "caminho": "/packages/eduardo~1revisao-ts/source"
   },
   {
-    "arquivo": "origem-de-outro-dono.json",
-    "regra": "mesmo-dono",
-    "caminho": "/pacotes/eduardo~1revisao-ts/origem"
+    "file": "origem-de-outro-dono.json",
+    "rule": "mesmo-dono",
+    "caminho": "/packages/eduardo~1revisao-ts/source"
   },
   {
-    "arquivo": "origem-com-git.json",
-    "regra": "url-canonica",
-    "caminho": "/origensPermitidas/2"
+    "file": "origem-com-git.json",
+    "rule": "url-canonica",
+    "caminho": "/allowedSources/2"
   },
   {
-    "arquivo": "origem-com-credencial.json",
-    "regra": "pattern",
-    "caminho": "/origensPermitidas/2"
+    "file": "origem-com-credencial.json",
+    "rule": "pattern",
+    "caminho": "/allowedSources/2"
   },
   {
-    "arquivo": "origem-com-barra-final.json",
-    "regra": "pattern",
-    "caminho": "/origensPermitidas/2"
+    "file": "origem-com-barra-final.json",
+    "rule": "pattern",
+    "caminho": "/allowedSources/2"
   },
   {
-    "arquivo": "origem-repetida-por-caixa.json",
-    "regra": "origem-repetida",
-    "caminho": "/origensPermitidas/2"
+    "file": "origem-repetida-por-caixa.json",
+    "rule": "origem-repetida",
+    "caminho": "/allowedSources/2"
   },
   {
-    "arquivo": "nome-maiusculo.json",
-    "regra": "pattern",
-    "caminho": "/pacotes/Eduardo~1x"
+    "file": "nome-maiusculo.json",
+    "rule": "pattern",
+    "caminho": "/packages/Eduardo~1x"
   },
   {
-    "arquivo": "nome-proto.json",
-    "regra": "pattern",
-    "caminho": "/pacotes/__proto__"
+    "file": "nome-proto.json",
+    "rule": "pattern",
+    "caminho": "/packages/__proto__"
   },
   {
-    "arquivo": "nome-reservado-windows.json",
-    "regra": "nome-de-pasta",
-    "caminho": "/pacotes/eduardo~1con"
+    "file": "nome-reservado-windows.json",
+    "rule": "nome-de-pasta",
+    "caminho": "/packages/eduardo~1con"
   },
   {
-    "arquivo": "github-sem-versao.json",
-    "regra": "versao-obrigatoria",
-    "caminho": "/pacotes/eduardo~1revisao-ts/versao"
+    "file": "github-sem-versao.json",
+    "rule": "versao-obrigatoria",
+    "caminho": "/packages/eduardo~1revisao-ts/version"
   },
   {
-    "arquivo": "local-com-versao.json",
-    "regra": "versao-em-local",
-    "caminho": "/pacotes/eduardo~1rascunho/versao"
+    "file": "local-com-versao.json",
+    "rule": "versao-em-local",
+    "caminho": "/packages/eduardo~1rascunho/version"
   },
   {
-    "arquivo": "local-ponto-ponto.json",
-    "regra": "caminho",
-    "caminho": "/pacotes/eduardo~1rascunho/origem"
+    "file": "local-ponto-ponto.json",
+    "rule": "caminho",
+    "caminho": "/packages/eduardo~1rascunho/source"
   },
   {
-    "arquivo": "local-absoluto.json",
-    "regra": "caminho",
-    "caminho": "/pacotes/eduardo~1rascunho/origem"
+    "file": "local-absoluto.json",
+    "rule": "caminho",
+    "caminho": "/packages/eduardo~1rascunho/source"
   },
   {
-    "arquivo": "local-barra-invertida.json",
-    "regra": "pattern",
-    "caminho": "/pacotes/eduardo~1rascunho/origem"
+    "file": "local-barra-invertida.json",
+    "rule": "pattern",
+    "caminho": "/packages/eduardo~1rascunho/source"
   },
   {
-    "arquivo": "local-git-maiusculo.json",
-    "regra": "caminho",
-    "caminho": "/pacotes/eduardo~1rascunho/origem"
+    "file": "local-git-maiusculo.json",
+    "rule": "caminho",
+    "caminho": "/packages/eduardo~1rascunho/source"
   },
   {
-    "arquivo": "local-harness.json",
-    "regra": "caminho",
-    "caminho": "/pacotes/eduardo~1rascunho/origem"
+    "file": "local-harness.json",
+    "rule": "caminho",
+    "caminho": "/packages/eduardo~1rascunho/source"
   },
   {
-    "arquivo": "local-claude.json",
-    "regra": "caminho",
-    "caminho": "/pacotes/eduardo~1rascunho/origem"
+    "file": "local-claude.json",
+    "rule": "caminho",
+    "caminho": "/packages/eduardo~1rascunho/source"
   },
   {
-    "arquivo": "local-raiz.json",
-    "regra": "caminho",
-    "caminho": "/pacotes/eduardo~1rascunho/origem"
+    "file": "local-raiz.json",
+    "rule": "caminho",
+    "caminho": "/packages/eduardo~1rascunho/source"
   },
   {
-    "arquivo": "local-node-modules.json",
-    "regra": "caminho",
-    "caminho": "/pacotes/eduardo~1rascunho/origem"
+    "file": "local-node-modules.json",
+    "rule": "caminho",
+    "caminho": "/packages/eduardo~1rascunho/source"
   },
   {
-    "arquivo": "local-aninhado.json",
-    "regra": "pasta-local-repetida",
-    "caminho": "/pacotes/eduardo~1rascunho2/origem"
+    "file": "local-aninhado.json",
+    "rule": "pasta-local-repetida",
+    "caminho": "/packages/eduardo~1rascunho2/source"
   },
   {
-    "arquivo": "limite-acima.json",
-    "regra": "limite-acima-do-nucleo",
-    "caminho": "/limites/bytesDoPacote"
+    "file": "limite-acima.json",
+    "rule": "limite-acima-do-nucleo",
+    "caminho": "/limits/packageBytes"
   },
   {
-    "arquivo": "limite-zero.json",
-    "regra": "minimum",
-    "caminho": "/limites/componentes"
+    "file": "limite-zero.json",
+    "rule": "minimum",
+    "caminho": "/limits/components"
   },
   {
-    "arquivo": "limite-nao-ajustavel.json",
-    "regra": "additionalProperties",
-    "caminho": "/limites"
+    "file": "limite-nao-ajustavel.json",
+    "rule": "additionalProperties",
+    "caminho": "/limits"
   },
   {
-    "arquivo": "campo-desconhecido.json",
-    "regra": "additionalProperties",
+    "file": "campo-desconhecido.json",
+    "rule": "additionalProperties",
     "caminho": ""
   },
   {
-    "arquivo": "ambiente-desconhecido.json",
-    "regra": "enum",
-    "caminho": "/ambientes/0"
+    "file": "ambiente-desconhecido.json",
+    "rule": "enum",
+    "caminho": "/environments/0"
   },
   {
-    "arquivo": "invisivel-na-versao.json",
-    "regra": "caractere-invisivel",
-    "caminho": "/pacotes/eduardo~1revisao-ts/versao"
+    "file": "invisivel-na-versao.json",
+    "rule": "caractere-invisivel",
+    "caminho": "/packages/eduardo~1revisao-ts/version"
   },
   {
-    "arquivo": "chave-duplicada.json",
-    "regra": "chave-duplicada",
-    "caminho": "/ambientes"
+    "file": "chave-duplicada.json",
+    "rule": "chave-duplicada",
+    "caminho": "/environments"
   },
   {
-    "arquivo": "versao-errada.json",
-    "regra": "const",
-    "caminho": "/versaoConfig"
+    "file": "versao-errada.json",
+    "rule": "const",
+    "caminho": "/configVersion"
   },
   {
-    "arquivo": "muitos-pacotes.json",
-    "regra": "maxProperties",
-    "caminho": "/pacotes"
+    "file": "muitos-pacotes.json",
+    "rule": "maxProperties",
+    "caminho": "/packages"
   },
   {
-    "arquivo": "origem-com-porta.json",
-    "regra": "pattern",
-    "caminho": "/origensPermitidas/1"
+    "file": "origem-com-porta.json",
+    "rule": "pattern",
+    "caminho": "/allowedSources/1"
   },
   {
-    "arquivo": "origem-com-query.json",
-    "regra": "pattern",
-    "caminho": "/origensPermitidas/1"
+    "file": "origem-com-query.json",
+    "rule": "pattern",
+    "caminho": "/allowedSources/1"
   },
   {
-    "arquivo": "policy-da-organizacao-ausente.json",
-    "regra": "policy-da-organizacao-ausente",
-    "caminho": "/policyDaOrganizacao"
+    "file": "policy-da-organizacao-ausente.json",
+    "rule": "policy-da-organizacao-ausente",
+    "caminho": "/organizationPolicy"
   },
   {
-    "arquivo": "policy-da-organizacao-local.json",
-    "regra": "policy-da-organizacao-local",
-    "caminho": "/policyDaOrganizacao"
+    "file": "policy-da-organizacao-local.json",
+    "rule": "policy-da-organizacao-local",
+    "caminho": "/organizationPolicy"
   },
   {
-    "arquivo": "aprovador-com-curinga.json",
-    "regra": "pattern",
-    "caminho": "/aprovadores/0"
+    "file": "aprovador-com-curinga.json",
+    "rule": "pattern",
+    "caminho": "/approvers/0"
   },
   {
-    "arquivo": "aprovador-repetido.json",
-    "regra": "uniqueItems",
-    "caminho": "/aprovadores"
+    "file": "aprovador-repetido.json",
+    "rule": "uniqueItems",
+    "caminho": "/approvers"
   }
 ]

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { ehSensivel, reunirChunks } from '../../../src/core/conhecimento/fontes.js';
 import type { Contexto } from '../../../src/core/index.js';
 import { aplicar, atualizar } from '../../../src/core/index.js';
-import { ehSensivel, reunirChunks } from '../../../src/core/conhecimento/fontes.js';
 import { arquivosEmMemoria, gitEmMemoria, identidadeFixa, relogioFixo } from '../../helpers/memoria.js';
 
 describe('segredo no índice (A5)', () => {
@@ -12,7 +12,7 @@ describe('segredo no índice (A5)', () => {
     });
     const base = await reunirChunks(fs);
     expect(base.chunks.some((c) => c.texto.includes('ghp_'))).toBe(false);
-    expect(base.chunks.map((c) => c.arquivo)).toContain('src/ok.ts');
+    expect(base.chunks.map((c) => c.file)).toContain('src/ok.ts');
     expect(base.pulados.join()).toMatch(/src\/segredo\.ts:1-\d+ \(trecho com token do GitHub\)/);
   });
 
@@ -24,22 +24,22 @@ describe('segredo no índice (A5)', () => {
   });
 });
 
-describe('--aprovar com CLAUDECODE=1 (A4)', () => {
+describe('--approve com CLAUDECODE=1 (A4)', () => {
   const ctx = {
     arquivos: arquivosEmMemoria({}),
     git: gitEmMemoria({}),
     relogio: relogioFixo(),
-    identidade: identidadeFixa(),
+    identity: identidadeFixa(),
     harness: '0.0.0',
-    tipoDeAtor: 'agente',
+    tipoDeAtor: 'agent',
   } as unknown as Contexto;
-  const opcoes = { nomes: [], aprovar: ['comp/x/escrever/y'], forcar: false, aceitarPermissoes: false, dryRun: false };
+  const opcoes = { nomes: [], approve: ['comp/x/write/y'], force: false, acceptPermissions: false, dryRun: false };
 
   it('apply e update recusam quando o ator é um agente', async () => {
     for (const comando of [aplicar, atualizar]) {
       const r = await comando(ctx, opcoes);
-      expect(r.codigo).toBe(1);
-      expect(r.erros.join()).toMatch(/--aprovar.*agente/);
+      expect(r.code).toBe(1);
+      expect(r.erros.join()).toMatch(/--approve.*agente/);
     }
   });
 });

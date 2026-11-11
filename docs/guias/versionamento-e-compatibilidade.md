@@ -18,7 +18,7 @@ A partir da v1.0 não quebramos sem subir o major (primeiro número): comandos d
 Antes da 1.0 (`0.x`), um minor pode quebrar; cada quebra aparece no changelog.
 
 ## Versão dos schemas
-Cada arquivo carrega a própria versão (`versaoManifesto`, `versaoLockfile`, `versaoPolicy`, `versaoConfig`, `versaoEvento`). Campo opcional novo não muda o número. Mudança incompatível sobe o número, e a CLI passa a ler as **duas últimas** versões até o major seguinte.
+Cada arquivo carrega a própria versão (`manifestVersion`, `lockfileVersion`, `policyVersion`, `configVersion`, `eventVersion`). Campo opcional novo não muda o número. Mudança incompatível sobe o número, e a CLI passa a ler as **duas últimas** versões até o major seguinte.
 
 ## Depreciação
 1. Um minor anuncia (aviso na saída da CLI + linha no changelog).

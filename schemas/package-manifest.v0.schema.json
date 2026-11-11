@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/package-manifest.v0.schema.json",
+  "title": "Manifesto de pacote do ez-ai (v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "name", "version", "description", "license", "repository", "components"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^https://"
+    },
+    "manifestVersion": {
+      "const": 0
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 104,
+      "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+    },
+    "version": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "license": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9.+-]+(?: (?:AND|OR|WITH) [A-Za-z0-9.+-]+)*$"
+    },
+    "repository": {
+      "type": "string",
+      "maxLength": 160,
+      "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "issuer"],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "maxLength": 512,
+          "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}/\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml@refs/(?:tags|heads)/[A-Za-z0-9._/-]+$"
+        },
+        "issuer": {
+          "const": "https://token.actions.githubusercontent.com"
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "harness": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^(?:>=|<=|>|<|=|\\^|~)?(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?: (?:>=|<=|>|<|=|\\^|~)?(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*))?$"
+        },
+        "environments": {
+          "type": "array",
+          "items": {
+            "enum": ["claude-code", "copilot", "agents-md"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/componente"
+      }
+    }
+  },
+  "$defs": {
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["program"],
+      "properties": {
+        "program": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "maxItems": 50
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "read": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9._/*?-]+$"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "write": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9._/*?-]+$"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "execute": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/command"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "network": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_][A-Z0-9_]{0,63}$"
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "configureEnvironment": {
+          "type": "array",
+          "items": {
+            "enum": [
+              ".claude/settings.json",
+              ".mcp.json",
+              ".vscode/mcp.json",
+              ".vscode/settings.json",
+              ".github/hooks/*.json"
+            ]
+          },
+          "maxItems": 50,
+          "uniqueItems": true
+        }
+      }
+    },
+    "componente": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "file"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "type": {
+          "enum": ["instruction", "agent", "skill", "hook", "mcp", "policy"]
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9._/-]+$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "event": {
+          "enum": ["before-tool", "after-tool", "prompt-submit", "session-start", "session-end"]
+        },
+        "command": {
+          "$ref": "#/$defs/command"
+        },
+        "permissions": {
+          "$ref": "#/$defs/permissions"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "hook"
+                }
+              },
+              "required": ["event", "command"]
+            },
+            {
+              "properties": {
+                "type": {
+                  "not": {
+                    "const": "hook"
+                  }
+                }
+              },
+              "not": {
+                "required": ["event"]
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "type": {
+                  "enum": ["hook", "mcp"]
+                },
+                "permissions": {
+                  "required": ["configureEnvironment"],
+                  "properties": {
+                    "configureEnvironment": {
+                      "minItems": 1
+                    }
+                  }
+                }
+              },
+              "required": ["command", "permissions"]
+            },
+            {
+              "properties": {
+                "type": {
+                  "enum": ["instruction", "agent", "skill", "policy"]
+                }
+              },
+              "not": {
+                "required": ["command"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

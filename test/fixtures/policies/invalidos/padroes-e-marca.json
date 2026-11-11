@@ -1,15 +1,15 @@
 {
-  "versaoPolicy": 0,
-  "regras": [
+  "policyVersion": 0,
+  "rules": [
     {
       "id": "r",
-      "efeito": "negar",
-      "categoria": "ler",
-      "padroes": [
+      "effect": "deny",
+      "category": "read",
+      "patterns": [
         "src/**"
       ],
-      "motivo": "m",
-      "marca": "sensivel"
+      "reason": "m",
+      "mark": "sensitive"
     }
   ]
 }

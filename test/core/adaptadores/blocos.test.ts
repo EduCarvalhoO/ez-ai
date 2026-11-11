@@ -11,8 +11,8 @@ import type { FragmentoDeConfig } from '../../../src/core/index.js';
 const frag = (chave: string, corpo: string): FragmentoDeConfig => ({
   caminho: 'AGENTS.md',
   componente: 'c',
-  tipo: 'bloco',
-  chave,
+  type: 'bloco',
+  key: chave,
   valor: renderizarBloco(chave, 'eduardo/starter', 'c', corpo),
 });
 
@@ -34,22 +34,22 @@ describe('mesclarBlocos', () => {
     const novo = mesclarBlocos('AGENTS.md', undefined, [], [frag('a', 'regra A')], false);
     expect(novo.erros).toEqual([]);
     expect(novo.mudou).toBe(true);
-    expect(novo.conteudo).toContain('<!-- ez-ai:inicio a -->');
-    expect(novo.conteudo.endsWith('\n')).toBe(true);
+    expect(novo.content).toContain('<!-- ez-ai:inicio a -->');
+    expect(novo.content.endsWith('\n')).toBe(true);
 
     const comUsuario = mesclarBlocos('AGENTS.md', '# Meu projeto\n\nRegra minha.\n', [], [frag('a', 'regra A')], false);
-    expect(comUsuario.conteudo.startsWith('# Meu projeto\n\nRegra minha.\n\n<!-- ez-ai:inicio a -->')).toBe(true);
+    expect(comUsuario.content.startsWith('# Meu projeto\n\nRegra minha.\n\n<!-- ez-ai:inicio a -->')).toBe(true);
   });
 
   it('é idempotente', () => {
     const um = mesclarBlocos('AGENTS.md', '# X\n', [], [frag('a', 'A')], false);
-    const dois = mesclarBlocos('AGENTS.md', um.conteudo, [frag('a', 'A')], [frag('a', 'A')], false);
+    const dois = mesclarBlocos('AGENTS.md', um.content, [frag('a', 'A')], [frag('a', 'A')], false);
     expect(dois.mudou).toBe(false);
-    expect(dois.conteudo).toBe(um.conteudo);
+    expect(dois.content).toBe(um.content);
   });
 
   it('troca o bloco no mesmo lugar numa atualização', () => {
-    const base = mesclarBlocos('AGENTS.md', '# X\n', [], [frag('a', 'A1'), frag('b', 'B1')], false).conteudo;
+    const base = mesclarBlocos('AGENTS.md', '# X\n', [], [frag('a', 'A1'), frag('b', 'B1')], false).content;
     const r = mesclarBlocos(
       'AGENTS.md',
       base,
@@ -58,26 +58,26 @@ describe('mesclarBlocos', () => {
       false,
     );
     expect(r.erros).toEqual([]);
-    expect(r.conteudo).toContain('A2');
-    expect(r.conteudo).not.toContain('A1');
-    expect(r.conteudo.indexOf('inicio a')).toBeLessThan(r.conteudo.indexOf('inicio b'));
+    expect(r.content).toContain('A2');
+    expect(r.content).not.toContain('A1');
+    expect(r.content.indexOf('inicio a')).toBeLessThan(r.content.indexOf('inicio b'));
   });
 
   it('remove só o nosso bloco e deixa o resto', () => {
-    const base = mesclarBlocos('AGENTS.md', '# X\n\nminha regra\n', [], [frag('a', 'A')], false).conteudo;
+    const base = mesclarBlocos('AGENTS.md', '# X\n\nminha regra\n', [], [frag('a', 'A')], false).content;
     const r = mesclarBlocos('AGENTS.md', base, [frag('a', 'A')], [], false);
     expect(r.erros).toEqual([]);
-    expect(r.conteudo).toBe('# X\n\nminha regra\n');
+    expect(r.content).toBe('# X\n\nminha regra\n');
   });
 
   it('preserva CRLF do arquivo', () => {
     const r = mesclarBlocos('AGENTS.md', '# X\r\n', [], [frag('a', 'A')], false);
-    expect(r.conteudo).toContain('\r\n<!-- ez-ai:inicio a -->\r\n');
-    expect(r.conteudo.replace(/\r\n/gu, '')).not.toContain('\n');
+    expect(r.content).toContain('\r\n<!-- ez-ai:inicio a -->\r\n');
+    expect(r.content.replace(/\r\n/gu, '')).not.toContain('\n');
   });
 
-  it('bloco editado à mão trava sem --forcar e é sobrescrito com --forcar', () => {
-    const base = mesclarBlocos('AGENTS.md', undefined, [], [frag('a', 'A')], false).conteudo;
+  it('bloco editado à mão trava sem --force e é sobrescrito com --force', () => {
+    const base = mesclarBlocos('AGENTS.md', undefined, [], [frag('a', 'A')], false).content;
     const editado = base.replace('A\n', 'A editado\n');
     const trava = mesclarBlocos('AGENTS.md', editado, [frag('a', 'A')], [frag('a', 'A2')], false);
     expect(trava.erros.join()).toContain('editado à mão');
@@ -85,11 +85,11 @@ describe('mesclarBlocos', () => {
     const forca = mesclarBlocos('AGENTS.md', editado, [frag('a', 'A')], [frag('a', 'A2')], true);
     expect(forca.erros).toEqual([]);
     expect(forca.editadoAMao).toBe(true);
-    expect(forca.conteudo).toContain('A2');
+    expect(forca.content).toContain('A2');
   });
 
   it('recusa bloco de mesmo nome que não é nosso, mas aceita o idêntico', () => {
-    const existente = mesclarBlocos('AGENTS.md', undefined, [], [frag('a', 'OUTRO')], false).conteudo;
+    const existente = mesclarBlocos('AGENTS.md', undefined, [], [frag('a', 'OUTRO')], false).content;
     expect(mesclarBlocos('AGENTS.md', existente, [], [frag('a', 'A')], false).erros.join()).toContain(
       'não é deste pacote',
     );
@@ -106,14 +106,14 @@ describe('mesclarBlocos', () => {
     ]) {
       const r = mesclarBlocos('AGENTS.md', texto, [], [frag('x', 'X')], false);
       expect(r.erros.length, texto).toBeGreaterThan(0);
-      expect(r.conteudo).toBe(texto);
+      expect(r.content).toBe(texto);
     }
   });
 });
 
 describe('semBlocosDoEzAi', () => {
   it('tira os blocos gerados e mantém o resto; marcador torto devolve o texto inteiro', () => {
-    const base = mesclarBlocos('AGENTS.md', '# X\n\nminha regra\n', [], [frag('a', 'A')], false).conteudo;
+    const base = mesclarBlocos('AGENTS.md', '# X\n\nminha regra\n', [], [frag('a', 'A')], false).content;
     expect(semBlocosDoEzAi(base).trim()).toBe('# X\n\nminha regra');
     expect(semBlocosDoEzAi('<!-- ez-ai:inicio a -->\nsem fim')).toBe('<!-- ez-ai:inicio a -->\nsem fim');
   });

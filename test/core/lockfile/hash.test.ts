@@ -3,7 +3,7 @@ import { type ArquivoDoPacote, hashDoConteudo } from '../../../src/core/index.js
 
 const texto = (s: string) => new TextEncoder().encode(s);
 const arquivos: ArquivoDoPacote[] = [
-  { caminho: 'harness-pacote.json', bytes: texto('{}\n') },
+  { caminho: 'harness-package.json', bytes: texto('{}\n') },
   { caminho: 'agentes/revisor.md', bytes: texto('# Revisor\r\n') },
   { caminho: 'agentes-extra/a_b.md', bytes: texto('') },
 ];
@@ -13,7 +13,7 @@ describe('hashDoConteudo', () => {
     // Recalcular: printf '%s  %s\n' <sha256 de cada arquivo> <caminho>, ordenado por caminho, | sha256sum.
     expect(hashDoConteudo(arquivos)).toEqual({
       ok: true,
-      valor: 'sha256:4fb63d531c22ea3f74b9387b8268624d4dc45c16b0b02b4763836329625148fe',
+      valor: 'sha256:e0c6e1ebeaa6082cbdaf174499aba0b7fbef8666da0cf2c1a37d4a211b2fa135',
     });
   });
 
@@ -45,13 +45,13 @@ describe('hashDoConteudo', () => {
     ['longo demais', [{ caminho: `${'a'.repeat(161)}`, bytes: texto('') }], 'caminho'],
   ] as const)('recusa caminho %s', (_, lista, regra) => {
     const resultado = hashDoConteudo([arquivos[0] as ArquivoDoPacote, ...lista]);
-    expect(resultado.ok ? [] : resultado.erros).toContainEqual(expect.objectContaining({ regra }));
+    expect(resultado.ok ? [] : resultado.erros).toContainEqual(expect.objectContaining({ rule: regra }));
   });
 
-  it('recusa pacote sem harness-pacote.json, inclusive vazio', () => {
+  it('recusa pacote sem harness-package.json, inclusive vazio', () => {
     for (const lista of [[], arquivos.slice(1)]) {
       const resultado = hashDoConteudo(lista);
-      expect(resultado.ok ? '' : resultado.erros[0]?.regra).toBe('sem-manifesto');
+      expect(resultado.ok ? '' : resultado.erros[0]?.rule).toBe('sem-manifesto');
     }
   });
 });

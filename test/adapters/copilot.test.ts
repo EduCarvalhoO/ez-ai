@@ -5,7 +5,7 @@ import { suiteDeConformidade } from './conformidade.js';
 
 suiteDeConformidade(
   adapterCopilot,
-  { instrucao: 'nativo', agente: 'parcial', skill: 'nativo', hook: 'parcial', mcp: 'nativo', policy: 'ausente' },
+  { instruction: 'nativo', agent: 'parcial', skill: 'nativo', hook: 'parcial', mcp: 'nativo', policy: 'ausente' },
   ['.github/'],
 );
 
@@ -21,16 +21,14 @@ describe('adapter Copilot', () => {
       '.github/skills/eduardo-starter-revisao/checklist.md',
     ]);
     const regra = r.arquivos.find((a) => a.componente === 'convencoes');
-    expect(regra?.conteudo).toBe(`---\napplyTo: "**"\n---\n\n${arquivos.get('instrucoes/convencoes.md')}`);
+    expect(regra?.content).toBe(`---\napplyTo: "**"\n---\n\n${arquivos.get('instrucoes/convencoes.md')}`);
   });
 
   it('mantém o frontmatter da instrução que já tem applyTo', () => {
     const { manifesto, arquivos } = manifestoDoStarter();
     arquivos.set('instrucoes/convencoes.md', '---\napplyTo: "src/**"\n---\nregra\n');
     const r = adapterCopilot.projetar({ manifesto, arquivos });
-    expect(r.arquivos.find((a) => a.componente === 'convencoes')?.conteudo).toBe(
-      '---\napplyTo: "src/**"\n---\nregra\n',
-    );
+    expect(r.arquivos.find((a) => a.componente === 'convencoes')?.content).toBe('---\napplyTo: "src/**"\n---\nregra\n');
   });
 
   it('avisa as lacunas de enforcement do harness Local (ADR-0016)', () => {

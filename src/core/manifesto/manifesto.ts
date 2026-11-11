@@ -22,38 +22,38 @@ export type { Comando } from './comandos.js';
 
 /** Permissões declaradas de um componente (D4). Lista ausente = nada. */
 export interface Permissoes {
-  readonly ler: readonly string[];
-  readonly escrever: readonly string[];
-  readonly executar: readonly Comando[];
-  readonly rede: readonly string[];
-  readonly segredos: readonly string[];
-  readonly configurarAmbiente: readonly ArquivoDeAmbiente[];
+  readonly read: readonly string[];
+  readonly write: readonly string[];
+  readonly execute: readonly Comando[];
+  readonly network: readonly string[];
+  readonly secrets: readonly string[];
+  readonly configureEnvironment: readonly ArquivoDeAmbiente[];
 }
 
 export interface Componente {
   readonly id: string;
-  readonly tipo: TipoDeComponente;
-  readonly arquivo: string;
-  readonly descricao?: string;
-  readonly evento?: EventoDeHook;
-  readonly comando?: Comando;
-  readonly permissoes: Permissoes;
+  readonly type: TipoDeComponente;
+  readonly file: string;
+  readonly description?: string;
+  readonly event?: EventoDeHook;
+  readonly command?: Comando;
+  readonly permissions: Permissoes;
 }
 
 export interface Manifesto {
-  readonly versaoManifesto: 0;
+  readonly manifestVersion: 0;
   /** `<login>/<pacote>` (ADR-0017). */
-  readonly nome: string;
+  readonly name: string;
   readonly login: string;
-  readonly pacote: string;
-  readonly versao: string;
-  readonly descricao: string;
-  readonly licenca: string;
-  readonly repositorio: string;
+  readonly package: string;
+  readonly version: string;
+  readonly description: string;
+  readonly license: string;
+  readonly repository: string;
   /** Autodeclarada: não prova nada até a verificação Sigstore da F7. */
-  readonly assinatura?: { readonly identidade: string; readonly emissor: string };
-  readonly compatibilidade?: { readonly harness?: string; readonly ambientes?: readonly Ambiente[] };
-  readonly componentes: readonly Componente[];
+  readonly signature?: { readonly identity: string; readonly issuer: string };
+  readonly compatibility?: { readonly harness?: string; readonly environments?: readonly Ambiente[] };
+  readonly components: readonly Componente[];
 }
 
 const validarSchema = criarValidador(SCHEMA_DO_MANIFESTO);
@@ -98,7 +98,7 @@ export function procurarInvisiveis(valor: unknown, caminho: string, erros: ErroD
     if (INVISIVEL.test(valor)) {
       erros.push({
         caminho,
-        regra: 'caractere-invisivel',
+        rule: 'caractere-invisivel',
         mensagem: 'texto com caractere de controle ou invisível (bidi, largura zero, ANSI); remova-o',
       });
     }
@@ -117,19 +117,19 @@ export function lista<T>(valor: unknown): T[] {
 }
 
 function comandoDe(valor: unknown): Comando {
-  const { programa, argumentos } = valor as Json;
-  return { programa: String(programa), argumentos: lista<string>(argumentos).map(String) };
+  const { program: programa, arguments: argumentos } = valor as Json;
+  return { program: String(programa), arguments: lista<string>(argumentos).map(String) };
 }
 
 function permissoesDe(valor: unknown): Permissoes {
   const p = (valor ?? {}) as Json;
   return {
-    ler: lista<string>(p.ler),
-    escrever: lista<string>(p.escrever),
-    executar: lista<unknown>(p.executar).map(comandoDe),
-    rede: lista<string>(p.rede),
-    segredos: lista<string>(p.segredos),
-    configurarAmbiente: lista<ArquivoDeAmbiente>(p.configurarAmbiente),
+    read: lista<string>(p.read),
+    write: lista<string>(p.write),
+    execute: lista<unknown>(p.execute).map(comandoDe),
+    network: lista<string>(p.network),
+    secrets: lista<string>(p.secrets),
+    configureEnvironment: lista<ArquivoDeAmbiente>(p.configureEnvironment),
   };
 }
 
@@ -137,41 +137,39 @@ export function componenteDe(valor: unknown): Componente {
   const c = valor as Json;
   return {
     id: String(c.id),
-    tipo: c.tipo as TipoDeComponente,
-    arquivo: String(c.arquivo),
-    ...(typeof c.descricao === 'string' ? { descricao: c.descricao } : {}),
-    ...(typeof c.evento === 'string' ? { evento: c.evento as EventoDeHook } : {}),
-    ...(c.comando !== undefined ? { comando: comandoDe(c.comando) } : {}),
-    permissoes: permissoesDe(c.permissoes),
+    type: c.type as TipoDeComponente,
+    file: String(c.file),
+    ...(typeof c.description === 'string' ? { description: c.description } : {}),
+    ...(typeof c.event === 'string' ? { event: c.event as EventoDeHook } : {}),
+    ...(c.command !== undefined ? { command: comandoDe(c.command) } : {}),
+    permissions: permissoesDe(c.permissions),
   };
 }
 
 function manifestoDe(dado: Json): Manifesto {
-  const nome = String(dado.nome);
+  const nome = String(dado.name);
   const [login = '', pacote = ''] = nome.split('/');
-  const assinatura = dado.assinatura as Json | undefined;
-  const compat = dado.compatibilidade as Json | undefined;
+  const assinatura = dado.signature as Json | undefined;
+  const compat = dado.compatibility as Json | undefined;
   return {
-    versaoManifesto: 0,
-    nome,
+    manifestVersion: 0,
+    name: nome,
     login,
-    pacote,
-    versao: String(dado.versao),
-    descricao: String(dado.descricao),
-    licenca: String(dado.licenca),
-    repositorio: String(dado.repositorio),
-    ...(assinatura
-      ? { assinatura: { identidade: String(assinatura.identidade), emissor: String(assinatura.emissor) } }
-      : {}),
+    package: pacote,
+    version: String(dado.version),
+    description: String(dado.description),
+    license: String(dado.license),
+    repository: String(dado.repository),
+    ...(assinatura ? { signature: { identity: String(assinatura.identity), issuer: String(assinatura.issuer) } } : {}),
     ...(compat
       ? {
-          compatibilidade: {
+          compatibility: {
             ...(typeof compat.harness === 'string' ? { harness: compat.harness } : {}),
-            ...(compat.ambientes !== undefined ? { ambientes: lista<Ambiente>(compat.ambientes) } : {}),
+            ...(compat.environments !== undefined ? { environments: lista<Ambiente>(compat.environments) } : {}),
           },
         }
       : {}),
-    componentes: lista<unknown>(dado.componentes).map(componenteDe),
+    components: lista<unknown>(dado.components).map(componenteDe),
   };
 }
 
@@ -198,26 +196,23 @@ export function partesDoRepositorio(url: string): { login: string; repo: string;
 
 function regrasSemanticas(m: Manifesto): ErroDeContrato[] {
   const erros: ErroDeContrato[] = [];
-  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, regra, mensagem });
+  const falha: Falha = (caminho, regra, mensagem) => erros.push({ caminho, rule: regra, mensagem });
 
-  const noNome = problemaNoNomeDoPacote(m.pacote);
-  if (noNome) falha('/nome', 'nome-de-pasta', noNome);
-  const { login: donoRepo, repo, problema } = partesDoRepositorio(m.repositorio);
+  const noNome = problemaNoNomeDoPacote(m.package);
+  if (noNome) falha('/name', 'nome-de-pasta', noNome);
+  const { login: donoRepo, repo, problema } = partesDoRepositorio(m.repository);
   if (donoRepo !== m.login) {
-    falha('/repositorio', 'mesmo-dono', `o repositório precisa ser da conta "${m.login}", dona do pacote (ADR-0017)`);
+    falha('/repository', 'mesmo-dono', `o repositório precisa ser da conta "${m.login}", dona do pacote (ADR-0017)`);
   }
-  if (problema) falha('/repositorio', 'url-canonica', problema);
-  if (
-    m.assinatura &&
-    !m.assinatura.identidade.startsWith(`https://github.com/${donoRepo}/${repo}/.github/workflows/`)
-  ) {
+  if (problema) falha('/repository', 'url-canonica', problema);
+  if (m.signature && !m.signature.identity.startsWith(`https://github.com/${donoRepo}/${repo}/.github/workflows/`)) {
     falha(
-      '/assinatura/identidade',
+      '/signature/identity',
       'mesmo-repositorio',
       'a identidade de assinatura precisa ser um workflow do próprio repositório do pacote',
     );
   }
-  regrasDosComponentes(m.componentes, '/componentes', falha);
+  regrasDosComponentes(m.components, '/components', falha);
   return erros;
 }
 
@@ -230,57 +225,57 @@ export function regrasDosComponentes(componentes: readonly Componente[], raiz: s
       falha(`${base}/id`, 'id-unico', `id "${c.id}" repetido; cada componente precisa de um id próprio`);
     ids.add(c.id);
 
-    const noArquivo = problemaNoCaminho(c.arquivo, false);
-    if (noArquivo) falha(`${base}/arquivo`, 'caminho', noArquivo);
+    const noArquivo = problemaNoCaminho(c.file, false);
+    if (noArquivo) falha(`${base}/file`, 'caminho', noArquivo);
 
-    if (c.comando) {
-      const noComando = problemaNoComando(c.comando);
-      if (noComando) falha(`${base}/comando`, 'comando', noComando);
+    if (c.command) {
+      const noComando = problemaNoComando(c.command);
+      if (noComando) falha(`${base}/command`, 'command', noComando);
     }
-    const p = c.permissoes;
-    if (c.tipo === 'policy' && Object.values(p).some((itens) => itens.length > 0)) {
+    const p = c.permissions;
+    if (c.type === 'policy' && Object.values(p).some((itens) => itens.length > 0)) {
       falha(
-        `${base}/permissoes`,
+        `${base}/permissions`,
         'policy-sem-permissoes',
         'componente policy só restringe: não declara permissões (docs/specs/policy.md)',
       );
     }
     for (const [campo, globs] of [
-      ['ler', p.ler],
-      ['escrever', p.escrever],
+      ['read', p.read],
+      ['write', p.write],
     ] as const) {
       globs.forEach((g, j) => {
         const problema = problemaNoCaminho(g, true);
-        if (problema) falha(`${base}/permissoes/${campo}/${j}`, 'caminho', problema);
+        if (problema) falha(`${base}/permissions/${campo}/${j}`, 'caminho', problema);
       });
     }
-    p.escrever.forEach((g, j) => {
+    p.write.forEach((g, j) => {
       const alvo = DESTINOS_PROTEGIDOS.find((protegido) => globsSeCruzam(g, protegido));
       if (alvo) {
         falha(
-          `${base}/permissoes/escrever/${j}`,
+          `${base}/permissions/write/${j}`,
           'destino-protegido',
-          `"${g}" alcança "${alvo}" (arquivo de enforcement, Git ou pacote); arquivos de ambiente só por configurarAmbiente`,
+          `"${g}" alcança "${alvo}" (arquivo de enforcement, Git ou pacote); arquivos de ambiente só por configureEnvironment`,
         );
       }
     });
-    p.executar.forEach((cmd, j) => {
+    p.execute.forEach((cmd, j) => {
       const problema = problemaNoComando(cmd);
-      if (problema) falha(`${base}/permissoes/executar/${j}`, 'comando', problema);
+      if (problema) falha(`${base}/permissions/execute/${j}`, 'command', problema);
     });
-    p.rede.forEach((host, j) => {
+    p.network.forEach((host, j) => {
       if (HOSTS_INTERNOS.test(host) || host === 'metadata.google.internal') {
         falha(
-          `${base}/permissoes/rede/${j}`,
+          `${base}/permissions/network/${j}`,
           'host-interno',
           `"${host}" é endereço local ou interno; declare só hosts públicos`,
         );
       }
     });
-    p.segredos.forEach((nome, j) => {
+    p.secrets.forEach((nome, j) => {
       if (SEGREDOS_PROIBIDOS.has(nome) || PREFIXOS_DE_SEGREDO_PROIBIDOS.some((prefixo) => nome.startsWith(prefixo))) {
         falha(
-          `${base}/permissoes/segredos/${j}`,
+          `${base}/permissions/secrets/${j}`,
           'variavel-de-execucao',
           `"${nome}" muda como os programas rodam e não pode ser pedida`,
         );
@@ -289,9 +284,9 @@ export function regrasDosComponentes(componentes: readonly Componente[], raiz: s
   });
 }
 
-/** Valida o texto de um `harness-pacote.json`. Devolve o manifesto tipado ou todos os erros encontrados. */
+/** Valida o texto de um `harness-package.json`. Devolve o manifesto tipado ou todos os erros encontrados. */
 export function validarManifesto(texto: string): Resultado<Manifesto> {
-  const lido = lerJsonSeguro(texto, { bytes: LIMITES.bytesDoManifesto, profundidade: LIMITES.profundidadeDoJson });
+  const lido = lerJsonSeguro(texto, { bytes: LIMITES.manifestBytes, profundidade: LIMITES.profundidadeDoJson });
   if (!lido.ok) return lido;
   const erros: ErroDeContrato[] = [...validarSchema(lido.valor)];
   procurarInvisiveis(lido.valor, '', erros);

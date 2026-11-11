@@ -10,7 +10,7 @@ Para saber o que o ez-ai garante, o que não garante e como reduzir risco ao ins
 - **Permissões explícitas:** o pacote declara o que precisa; você vê e aprova no `plan`/`apply`. Mudança de permissões pede nova aprovação.
 - **Sem scripts de terceiros por padrão** e sem executar programas que o pacote não declarou.
 - **Dono não troca em silêncio:** mudança de identidade do dono do pacote é bloqueada até você aprovar.
-- **Assinatura:** pacotes `verificado`/`oficial` têm assinatura Sigstore conferida offline.
+- **Assinatura:** pacotes `verified`/`official` têm assinatura Sigstore conferida offline.
 - **Auditoria local** encadeada; segredos são recusados no registro.
 
 ## O que ele não garante
@@ -19,9 +19,9 @@ Para saber o que o ez-ai garante, o que não garante e como reduzir risco ao ins
 - Não há sandbox (isolamento de execução) para scripts de pacotes nesta versão.
 
 ## Boas práticas
-1. Use `confiancaMinima: "verificado"` em projetos sérios.
-2. Leia a lista de permissões antes de `--aceitar-permissoes`.
-3. Mantenha `aprovadores` com mais de uma pessoa e o ruleset de `docs/modelos/ruleset.json`.
+1. Use `minTrust: "verificado"` em projetos sérios.
+2. Leia a lista de permissões antes de `--accept-permissions`.
+3. Mantenha `approvers` com mais de uma pessoa e o ruleset de `docs/modelos/ruleset.json`.
 4. Rode `ez-ai validate --ci` no CI.
 5. Relate vulnerabilidades pelo canal privado do [SECURITY.md](../../SECURITY.md); não abra issue pública.
 
@@ -31,9 +31,9 @@ O manifesto e a policy dizem o que um pacote *declara*; o `scan` olha o que os a
 
 - `ez-ai scan` varre todos os pacotes instalados; `ez-ai scan <login/pacote>` ou `ez-ai scan <pasta>` varre um só.
 - `plan`, `apply` e `update` mostram um resumo dos achados. Por padrão só avisam.
-- Para bloquear: `"scan": { "bloquearAPartirDe": "alta" }` em `.harness/config.json` (vale também no `validate --ci`) ou `ez-ai scan --bloquear alta` no CI. Níveis: `baixa`, `media`, `alta`.
+- Para bloquear: `"scan": { "blockFrom": "alta" }` em `.harness/config.json` (vale também no `validate --ci`) ou `ez-ai scan --block alta` no CI. Níveis: `low`, `medium`, `high`.
 - **Não é prova de segurança.** Ajuda a revisão humana; texto malicioso novo ou ofuscado de outro jeito passa. Proteja `.harness/config.json` com CODEOWNERS para ninguém afrouxar o bloqueio sem revisão.
 
 ## Trazer regras que você já tem (`ez-ai import`) e AGENTS.md
 
-`ez-ai import` lê `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md` e `AGENTS.md` e grava uma proposta de pacote local em `pacotes-locais/<nome>` (nunca sobrescreve e não mexe nos originais). Revise, rode `ez-ai add local:pacotes-locais/<nome>` e `ez-ai plan`. Para projetar as instruções num `AGENTS.md`, acrescente `agents-md` em `ambientes` da configuração: cada instrução vira um bloco `<!-- ez-ai:inicio ... -->` e o resto do arquivo continua seu.
+`ez-ai import` lê `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md` e `AGENTS.md` e grava uma proposta de pacote local em `local-packages/<nome>` (nunca sobrescreve e não mexe nos originais). Revise, rode `ez-ai add local:local-packages/<nome>` e `ez-ai plan`. Para projetar as instruções num `AGENTS.md`, acrescente `agents-md` em `environments` da configuração: cada instrução vira um bloco `<!-- ez-ai:inicio ... -->` e o resto do arquivo continua seu.

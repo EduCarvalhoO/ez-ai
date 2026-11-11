@@ -52,8 +52,8 @@ describe('texto UTF-8 estrito (A3)', () => {
     writeFileSync(join(pasta, 'p', 'bin.md'), Buffer.from([0x61, 0xff, 0xfe, 0x62]));
     writeFileSync(join(pasta, 'p', 'ok.md'), 'ação');
     const arquivos = await criarArquivos(pasta);
-    await expect(arquivos.ler('p/bin.md')).rejects.toThrow(/UTF-8/);
-    expect(await arquivos.ler('p/ok.md')).toBe('ação');
+    await expect(arquivos.read('p/bin.md')).rejects.toThrow(/UTF-8/);
+    expect(await arquivos.read('p/ok.md')).toBe('ação');
   });
 
   it('o Git recusa blob que não é UTF-8, em vez de trocar bytes por U+FFFD', async () => {

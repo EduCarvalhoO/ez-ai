@@ -1,85 +1,85 @@
 {
   "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/policy.v0.schema.json",
-  "versaoPolicy": 0,
-  "regras": [
+  "policyVersion": 0,
+  "rules": [
     {
       "id": "sem-rede-externa",
-      "efeito": "negar",
-      "categoria": "rede",
-      "padroes": [
+      "effect": "deny",
+      "category": "network",
+      "patterns": [
         "*"
       ],
-      "exceto": [
+      "except": [
         "api.github.com",
         "*.npmjs.org"
       ],
-      "critica": true,
-      "motivo": "Agentes não falam com a internet, salvo GitHub e npm"
+      "critical": true,
+      "reason": "Agentes não falam com a internet, salvo GitHub e npm"
     },
     {
       "id": "scripts-npm",
-      "efeito": "negar",
-      "categoria": "escrever",
-      "marca": "executavel",
-      "pacotes": [
+      "effect": "deny",
+      "category": "write",
+      "mark": "executable",
+      "packages": [
         "terceiro/*"
       ],
-      "motivo": "Pacote de fora da empresa não mexe em package.json"
+      "reason": "Pacote de fora da empresa não mexe em package.json"
     },
     {
       "id": "hooks-com-cuidado",
-      "efeito": "exigir-aprovacao",
-      "categoria": "tipo",
-      "padroes": [
+      "effect": "require-approval",
+      "category": "type",
+      "patterns": [
         "hook",
         "mcp"
       ],
-      "motivo": "Hook e MCP rodam código"
+      "reason": "Hook e MCP rodam código"
     },
     {
       "id": "sem-pip",
-      "efeito": "negar",
-      "categoria": "executar",
-      "padroes": [
+      "effect": "deny",
+      "category": "execute",
+      "patterns": [
         "pip",
         "curl.exe"
       ],
-      "motivo": "Dependência Python só pelo time de plataforma"
+      "reason": "Dependência Python só pelo time de plataforma"
     },
     {
       "id": "segredos-de-nuvem",
-      "efeito": "negar",
-      "categoria": "segredos",
-      "padroes": [
+      "effect": "deny",
+      "category": "secrets",
+      "patterns": [
         "AWS_SECRET_ACCESS_KEY",
         "gcp_key"
       ],
-      "motivo": "Credenciais de nuvem ficam fora dos agentes"
+      "reason": "Credenciais de nuvem ficam fora dos agentes"
     },
     {
       "id": "pasta-financeira",
-      "efeito": "negar",
-      "categoria": "ler",
-      "padroes": [
+      "effect": "deny",
+      "category": "read",
+      "patterns": [
         "financeiro/**"
       ],
-      "motivo": "Dados financeiros"
+      "reason": "Dados financeiros"
     },
     {
       "id": "hooks-do-copilot",
-      "efeito": "avisar",
-      "categoria": "configurarAmbiente",
-      "padroes": [
+      "effect": "warn",
+      "category": "configureEnvironment",
+      "patterns": [
         ".github/hooks/*.json"
       ],
-      "motivo": "Hooks do Copilot ainda em prévia"
+      "reason": "Hooks do Copilot ainda em prévia"
     },
     {
       "id": "leitura-ampla",
-      "efeito": "avisar",
-      "categoria": "ler",
-      "marca": "amplo",
-      "motivo": "Lê tudo"
+      "effect": "warn",
+      "category": "read",
+      "mark": "broad",
+      "reason": "Lê tudo"
     }
   ]
 }

@@ -1,25 +1,25 @@
 {
-  "versaoLockfile": 0,
-  "pacotes": {
+  "lockfileVersion": 0,
+  "packages": {
     "eduardo/revisao-ts": {
-      "versao": "1.2.0",
-      "origem": "https://github.com/eduardo/revisao-ts",
+      "version": "1.2.0",
+      "source": "https://github.com/eduardo/revisao-ts",
       "tag": "v1.2.0",
       "commit": "3f2a000000000000000000000000000000000000",
       "hash": "sha256:9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b",
-      "componentes": [
+      "components": [
         {
           "id": "revisor",
-          "tipo": "agente",
-          "arquivo": "agentes/revisor.md",
-          "permissoes": {
-            "ler": [
+          "type": "agent",
+          "file": "agentes/revisor.md",
+          "permissions": {
+            "read": [
               "src/**"
             ],
-            "executar": [
+            "execute": [
               {
-                "programa": "npm",
-                "argumentos": [
+                "program": "npm",
+                "arguments": [
                   "test"
                 ]
               }
@@ -28,48 +28,48 @@
         },
         {
           "id": "github",
-          "tipo": "mcp",
-          "arquivo": "mcp/github.json",
-          "comando": {
-            "programa": "npx",
-            "argumentos": [
+          "type": "mcp",
+          "file": "mcp/github.json",
+          "command": {
+            "program": "npx",
+            "arguments": [
               "-y",
               "@modelcontextprotocol/server-github@2025.4.8"
             ]
           },
-          "permissoes": {
-            "rede": [
+          "permissions": {
+            "network": [
               "api.github.com"
             ],
-            "segredos": [
+            "secrets": [
               "GITHUB_TOKEN"
             ],
-            "configurarAmbiente": [
+            "configureEnvironment": [
               ".mcp.json"
             ]
           }
         }
       ],
-      "aprovacoesProprias": [
+      "ownApprovals": [
         {
-          "id": "comp/github/executar/npx",
-          "impressao": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          "id": "comp/github/execute/npx",
+          "fingerprint": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
         },
         {
-          "id": "comp/github/executar/npx",
-          "impressao": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          "id": "comp/github/execute/npx",
+          "fingerprint": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
         }
       ]
     },
     "eduardo/rascunho": {
-      "versao": "0.1.0-beta.1",
-      "origem": "local:pacotes-locais/rascunho",
+      "version": "0.1.0-beta.1",
+      "source": "local:local-packages/rascunho",
       "hash": "sha256:9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b",
-      "componentes": [
+      "components": [
         {
           "id": "nota",
-          "tipo": "instrucao",
-          "arquivo": "nota.md"
+          "type": "instruction",
+          "file": "nota.md"
         }
       ]
     }

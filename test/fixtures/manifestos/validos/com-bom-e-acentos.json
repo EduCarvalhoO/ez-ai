@@ -1,15 +1,15 @@
 ﻿{
-  "versaoManifesto": 0,
-  "nome": "eduardo/convencoes-ts",
-  "versao": "0.1.0",
-  "descricao": "Convenções de código, revisão e documentação — com acentuação",
-  "licenca": "MIT",
-  "repositorio": "https://github.com/eduardo/convencoes-ts",
-  "componentes": [
+  "manifestVersion": 0,
+  "name": "eduardo/convencoes-ts",
+  "version": "0.1.0",
+  "description": "Convenções de código, revisão e documentação — com acentuação",
+  "license": "MIT",
+  "repository": "https://github.com/eduardo/convencoes-ts",
+  "components": [
     {
       "id": "convencoes",
-      "tipo": "instrucao",
-      "arquivo": "instrucoes/convencoes.md"
+      "type": "instruction",
+      "file": "instrucoes/convencoes.md"
     }
   ]
 }

@@ -25,10 +25,10 @@ export function manifestoDoStarter(extra: (m: Record<string, unknown>) => void =
   arquivos: Map<string, string>;
 } {
   const arquivos = new Map(Object.entries(arquivosDoStarter()));
-  const bruto = JSON.parse(arquivos.get('harness-pacote.json') ?? '{}') as Record<string, unknown>;
+  const bruto = JSON.parse(arquivos.get('harness-package.json') ?? '{}') as Record<string, unknown>;
   extra(bruto);
-  arquivos.set('harness-pacote.json', JSON.stringify(bruto));
-  const r = validarManifesto(arquivos.get('harness-pacote.json') ?? '');
+  arquivos.set('harness-package.json', JSON.stringify(bruto));
+  const r = validarManifesto(arquivos.get('harness-package.json') ?? '');
   if (!r.ok) throw new Error(JSON.stringify(r.erros));
   return { manifesto: r.valor, arquivos };
 }

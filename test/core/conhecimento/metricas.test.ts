@@ -3,9 +3,9 @@ import { calcularMetricasDaBase } from '../../../src/core/index.js';
 
 describe('métricas da base de conhecimento', () => {
   const perguntas = [
-    { id: 'p1', esperado: ['docs/a.md'] },
-    { id: 'p2', esperado: ['docs/b.md', 'docs/c.md'] },
-    { id: 'p3', esperado: ['docs/d.md'] },
+    { id: 'p1', expected: ['docs/a.md'] },
+    { id: 'p2', expected: ['docs/b.md', 'docs/c.md'] },
+    { id: 'p3', expected: ['docs/d.md'] },
   ];
 
   it('calcula recall@5, recall@10, MRR e acerto de citação', () => {
@@ -23,7 +23,7 @@ describe('métricas da base de conhecimento', () => {
   });
 
   it('repetição do mesmo arquivo não ocupa posição e pergunta sem resultado conta como zero', () => {
-    const m = calcularMetricasDaBase([{ id: 'p', esperado: ['b'] }], [{ id: 'p', arquivos: ['a', 'a', 'a', 'b'] }]);
+    const m = calcularMetricasDaBase([{ id: 'p', expected: ['b'] }], [{ id: 'p', arquivos: ['a', 'a', 'a', 'b'] }]);
     expect(m.mrr).toBeCloseTo(0.5);
     expect(calcularMetricasDaBase(perguntas, []).recallEm10).toBe(0);
     expect(calcularMetricasDaBase([], []).mrr).toBe(0);

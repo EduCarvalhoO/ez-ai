@@ -30,7 +30,7 @@ export interface DadosDoPr {
 }
 
 export interface CheckRun {
-  readonly nome: string;
+  readonly name: string;
   readonly conclusao: string | null;
   readonly sha: string;
 }
@@ -44,7 +44,7 @@ export interface EntradaDoServidor {
   /** Texto de `.harness/policy.json`; `undefined` = ausente. */
   readonly policyHead: string | undefined;
   readonly policyBase: string | undefined;
-  /** Mudanças de campos de enforcement da config (origens permitidas, policyDaOrganizacao). */
+  /** Mudanças de campos de enforcement da config (origens permitidas, organizationPolicy). */
   readonly motivosDaConfig: readonly string[];
   /** Texto de arquivos de enforcement do repositório (workflow do job, CODEOWNERS) na head e na base. */
   readonly arquivosDeEnforcementHead?: Readonly<Record<string, string | undefined>>;
@@ -52,7 +52,7 @@ export interface EntradaDoServidor {
   /** Há config na base? Sem ela (primeiro commit) não há com o que comparar. */
   readonly baseExiste: boolean;
   readonly pr: DadosDoPr | undefined;
-  readonly exigirEvidencias: boolean;
+  readonly requireEvidence: boolean;
   readonly checksExigidos: readonly string[];
   readonly checkRuns: readonly CheckRun[];
 }
@@ -64,7 +64,7 @@ export interface ResultadoDoServidor {
 }
 
 const SHA = /^[0-9a-f]{40}$/;
-const CATEGORIAS_PERIGOSAS = new Set(['executar', 'configurarAmbiente']);
+const CATEGORIAS_PERIGOSAS = new Set(['execute', 'configureEnvironment']);
 
 const igual = (a: readonly string[], b: readonly string[]): boolean => {
   const x = new Set(a);
@@ -72,7 +72,7 @@ const igual = (a: readonly string[], b: readonly string[]): boolean => {
   return x.size === y.size && [...x].every((v) => y.has(v));
 };
 
-/** Itens `comp/<componente>/<categoria>/<valor>` com executável ou arquivo de ambiente pedem dois aprovadores (S-aud1). */
+/** Itens `comp/<component>/<category>/<value>` com executável ou arquivo de ambiente pedem dois aprovadores (S-aud1). */
 export function itemPerigoso(id: string): boolean {
   const partes = id.split('/');
   return partes[0] === 'comp' && CATEGORIAS_PERIGOSAS.has(partes[2] ?? '');
@@ -136,20 +136,20 @@ function avaliarPolicyDoProjeto(
   let antes: Policy | undefined;
   let depois: Policy | undefined;
   if (base !== undefined) {
-    const r = validarPolicy(base, 'projeto');
+    const r = validarPolicy(base, 'project');
     if (r.ok) antes = r.valor;
     else erros.push('.harness/policy.json da base é inválida; o job falha fechado.');
   }
   if (head !== undefined) {
-    const r = validarPolicy(head, 'projeto');
+    const r = validarPolicy(head, 'project');
     if (r.ok) depois = r.valor;
     else erros.push('.harness/policy.json da head é inválida.');
   }
   if (erros.length > 0) return { motivos: [], erros };
   if (antes === undefined) return { motivos: [], erros: [] };
-  const alvo: Policy = depois ?? { versaoPolicy: 0, regras: [] };
+  const alvo: Policy = depois ?? { policyVersion: 0, rules: [] };
   const lista = afrouxamentosDePolicy(antes, alvo).map(
-    (a) => `policy do projeto afrouxada: regra ${a.regra} (${a.tipo})`,
+    (a) => `policy do projeto afrouxada: regra ${a.rule} (${a.type})`,
   );
   if (depois === undefined) lista.unshift('.harness/policy.json foi apagada em relação à base');
   return { motivos: lista, erros: [] };
@@ -162,8 +162,8 @@ export function conferirNoServidor(entrada: EntradaDoServidor): ResultadoDoServi
   const informacoes: string[] = [];
   const motivos: string[] = [];
 
-  const baseSet = new Set(entrada.aprovacoesBase.map((a) => `${a.id} ${a.impressao}`));
-  const novos = entrada.aprovacoesHead.filter((a) => !baseSet.has(`${a.id} ${a.impressao}`));
+  const baseSet = new Set(entrada.aprovacoesBase.map((a) => `${a.id} ${a.fingerprint}`));
+  const novos = entrada.aprovacoesHead.filter((a) => !baseSet.has(`${a.id} ${a.fingerprint}`));
   for (const a of novos) motivos.push(`aprovação própria nova: ${a.id}`);
 
   if (!igual(entrada.aprovadoresHead, entrada.aprovadoresBase)) {
@@ -219,13 +219,13 @@ export function conferirNoServidor(entrada: EntradaDoServidor): ResultadoDoServi
     }
   }
 
-  if (entrada.exigirEvidencias) {
+  if (entrada.requireEvidence) {
     const antes = problemas.length;
     if (entrada.checksExigidos.length === 0) {
       problemas.push('evidências: informe --checks com os jobs do CI que precisam estar verdes.');
     }
     for (const nome of entrada.checksExigidos) {
-      const achados = entrada.checkRuns.filter((c) => c.nome === nome);
+      const achados = entrada.checkRuns.filter((c) => c.name === nome);
       if (achados.length === 0) problemas.push(`evidências: o check "${e(nome)}" não rodou neste commit.`);
       else if (achados.some((c) => c.conclusao !== 'success')) {
         problemas.push(`evidências: o check "${e(nome)}" não terminou com sucesso no commit.`);

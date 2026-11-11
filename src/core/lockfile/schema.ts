@@ -14,8 +14,8 @@ export const ID_DE_ITEM = { type: 'string', maxLength: 512, pattern: '^(?:comp|p
 export const ENTRADA_DE_APROVACAO = {
   type: 'object',
   additionalProperties: false,
-  required: ['id', 'impressao'],
-  properties: { id: ID_DE_ITEM, impressao: { type: 'string', pattern: PADRAO_HASH } },
+  required: ['id', 'fingerprint'],
+  properties: { id: ID_DE_ITEM, fingerprint: { type: 'string', pattern: PADRAO_HASH } },
 } as const;
 
 export const SCHEMA_DO_LOCKFILE = {
@@ -24,41 +24,41 @@ export const SCHEMA_DO_LOCKFILE = {
   title: 'Lockfile do ez-ai (v0)',
   type: 'object',
   additionalProperties: false,
-  required: ['versaoLockfile', 'pacotes'],
+  required: ['lockfileVersion', 'packages'],
   properties: {
-    versaoLockfile: { const: 0 },
-    pacotes: {
+    lockfileVersion: { const: 0 },
+    packages: {
       type: 'object',
       maxProperties: LIMITES.pacotesNoProjeto,
       propertyNames: NOME_DE_PACOTE,
       additionalProperties: {
         type: 'object',
         additionalProperties: false,
-        required: ['versao', 'origem', 'hash', 'componentes'],
+        required: ['version', 'source', 'hash', 'components'],
         properties: {
-          versao: { type: 'string', maxLength: 64, pattern: `^${SEMVER}${PRERELEASE}$` },
-          origem: { anyOf: [ORIGEM_GITHUB, ORIGEM_LOCAL] },
+          version: { type: 'string', maxLength: 64, pattern: `^${SEMVER}${PRERELEASE}$` },
+          source: { anyOf: [ORIGEM_GITHUB, ORIGEM_LOCAL] },
           tag: { type: 'string', maxLength: 65, pattern: `^v?${SEMVER}${PRERELEASE}$` },
           // SHA-1 (40) ou SHA-256 (64) do Git, em minúsculas.
           commit: { type: 'string', pattern: '^(?:[0-9a-f]{40}|[0-9a-f]{64})$' },
           hash: { type: 'string', pattern: PADRAO_HASH },
           // Assinante Sigstore conferido na instalação (ADR-0035).
-          assinatura: { $ref: '#/$defs/assinatura' },
+          signature: { $ref: '#/$defs/signature' },
           // Aprovação própria (docs/specs/auditoria-e-evidencias.md): precisa ser igual à lista que a policy exige.
-          aprovacoesProprias: {
+          ownApprovals: {
             type: 'array',
-            maxItems: LIMITES.componentes * 10,
+            maxItems: LIMITES.components * 10,
             items: ENTRADA_DE_APROVACAO,
           },
-          componentes: {
+          components: {
             type: 'array',
             minItems: 1,
-            maxItems: LIMITES.componentes,
+            maxItems: LIMITES.components,
             items: { $ref: '#/$defs/componente' },
           },
         },
       },
     },
   },
-  $defs: { ...DEFS_DO_COMPONENTE, assinatura: ASSINATURA_DO_PACOTE },
+  $defs: { ...DEFS_DO_COMPONENTE, signature: ASSINATURA_DO_PACOTE },
 } as const;

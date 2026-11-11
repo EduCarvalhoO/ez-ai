@@ -1,14 +1,14 @@
 {
-  "versaoPolicy": 0,
-  "regras": [
+  "policyVersion": 0,
+  "rules": [
     {
       "id": "r",
-      "efeito": "permitir",
-      "categoria": "rede",
-      "padroes": [
+      "effect": "permitir",
+      "category": "network",
+      "patterns": [
         "*"
       ],
-      "motivo": "m"
+      "reason": "m"
     }
   ]
 }

@@ -1,29 +1,29 @@
 {
-  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/configuracao.v0.schema.json",
-  "versaoConfig": 0,
-  "ambientes": [
+  "$schema": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/config.v0.schema.json",
+  "configVersion": 0,
+  "environments": [
     "claude-code",
     "copilot"
   ],
-  "origensPermitidas": [
+  "allowedSources": [
     "https://github.com/eduardo/revisao-ts",
     "https://github.com/ana/Seguranca"
   ],
-  "pacotes": {
+  "packages": {
     "eduardo/revisao-ts": {
-      "origem": "https://github.com/eduardo/revisao-ts",
-      "versao": "^1.2.0"
+      "source": "https://github.com/eduardo/revisao-ts",
+      "version": "^1.2.0"
     },
     "ana/seguranca": {
-      "origem": "https://github.com/ana/seguranca",
-      "versao": ">=0.3.0 <1.0.0"
+      "source": "https://github.com/ana/seguranca",
+      "version": ">=0.3.0 <1.0.0"
     },
     "eduardo/rascunho": {
-      "origem": "local:.Harness/pacotes/ana/seguranca"
+      "source": "local:.Harness/pacotes/ana/seguranca"
     }
   },
-  "limites": {
-    "bytesDoPacote": 1048576,
-    "componentes": 20
+  "limits": {
+    "packageBytes": 1048576,
+    "components": 20
   }
 }

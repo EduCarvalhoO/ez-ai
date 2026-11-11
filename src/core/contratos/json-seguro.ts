@@ -29,7 +29,7 @@ export function bytesUtf8(texto: string): number {
 }
 
 interface Nivel {
-  readonly tipo: 'objeto' | 'array';
+  readonly type: 'objeto' | 'array';
   readonly chaves: Set<string>;
   esperandoChave: boolean;
   /** Última chave lida (objeto) ou índice atual (array), para montar o caminho do erro. */
@@ -42,7 +42,7 @@ function caminhoDe(pilha: readonly Nivel[]): string {
 }
 
 function erro(caminho: string, regra: string, mensagem: string): Resultado<never> {
-  return { ok: false, erros: [{ caminho, regra, mensagem }] };
+  return { ok: false, erros: [{ caminho, rule: regra, mensagem }] };
 }
 
 /** Varre o texto procurando chave duplicada e aninhamento acima do limite. Não valida a gramática. */
@@ -54,7 +54,7 @@ function varrer(texto: string, profundidade: number): ErroDeContrato | undefined
     if (c === '{' || c === '[') {
       const objeto = c === '{';
       pilha.push({
-        tipo: objeto ? 'objeto' : 'array',
+        type: objeto ? 'objeto' : 'array',
         chaves: new Set(),
         esperandoChave: objeto,
         posicao: objeto ? '' : '0',
@@ -62,15 +62,15 @@ function varrer(texto: string, profundidade: number): ErroDeContrato | undefined
       if (pilha.length > profundidade) {
         return {
           caminho: caminhoDe(pilha.slice(0, -1)),
-          regra: 'profundidade',
+          rule: 'profundidade',
           mensagem: `aninhamento passa de ${profundidade} níveis; simplifique a estrutura`,
         };
       }
     } else if (c === '}' || c === ']') {
       pilha.pop();
     } else if (c === ',') {
-      if (topo?.tipo === 'objeto') topo.esperandoChave = true;
-      else if (topo?.tipo === 'array') topo.posicao = String(Number(topo.posicao) + 1);
+      if (topo?.type === 'objeto') topo.esperandoChave = true;
+      else if (topo?.type === 'array') topo.posicao = String(Number(topo.posicao) + 1);
     } else if (c === ':') {
       if (topo) topo.esperandoChave = false;
     } else if (c === '"') {
@@ -78,7 +78,7 @@ function varrer(texto: string, profundidade: number): ErroDeContrato | undefined
       for (i++; i < texto.length && texto[i] !== '"'; i++) {
         if (texto[i] === '\\') i++;
       }
-      if (topo?.tipo === 'objeto' && topo.esperandoChave) {
+      if (topo?.type === 'objeto' && topo.esperandoChave) {
         let chave: unknown;
         try {
           chave = JSON.parse(texto.slice(inicio, i + 1));
@@ -90,7 +90,7 @@ function varrer(texto: string, profundidade: number): ErroDeContrato | undefined
         if (topo.chaves.has(nome)) {
           return {
             caminho: caminhoDe(pilha),
-            regra: 'chave-duplicada',
+            rule: 'chave-duplicada',
             mensagem: `a chave "${nome}" aparece mais de uma vez no mesmo objeto; deixe só uma`,
           };
         }

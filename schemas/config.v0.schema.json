@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/config.v0.schema.json",
+  "title": "Configuração do projeto do ez-ai (v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["configVersion", "environments"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^https://"
+    },
+    "configVersion": {
+      "const": 0
+    },
+    "environments": {
+      "type": "array",
+      "items": {
+        "enum": ["claude-code", "copilot", "agents-md"]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "allowedSources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 160,
+        "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+      },
+      "maxItems": 100,
+      "uniqueItems": true
+    },
+    "packages": {
+      "type": "object",
+      "maxProperties": 100,
+      "propertyNames": {
+        "type": "string",
+        "maxLength": 104,
+        "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source"],
+        "properties": {
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160,
+                "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+              },
+              {
+                "type": "string",
+                "maxLength": 166,
+                "pattern": "^local:[A-Za-z0-9._/-]+$"
+              }
+            ]
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^(?:>=|<=|>|<|=|\\^|~)?(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?: (?:>=|<=|>|<|=|\\^|~)?(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*))?$"
+          }
+        }
+      }
+    },
+    "organizationPolicy": {
+      "type": "string",
+      "maxLength": 104,
+      "pattern": "^[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$"
+    },
+    "minTrust": {
+      "enum": ["community", "verified", "official"]
+    },
+    "approvers": {
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 141,
+        "pattern": "^(?:[a-z0-9](?:-?[a-z0-9]){0,38}|@[a-z0-9](?:-?[a-z0-9]){0,38}/[a-z0-9][a-z0-9._-]{0,99})$"
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["endpoint"],
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^https?://[^\\s/?#@]+(?:/[^\\s?#]*)?$"
+        },
+        "tokenVariable": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^(?:LANGFUSE|HARNESS_TELEMETRIA)_[A-Z0-9_]{1,50}$"
+        }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blockFrom": {
+          "enum": ["never", "low", "medium", "high"]
+        }
+      }
+    },
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "repositoryId", "workflow"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[a-z0-9](?:-?[a-z0-9]){0,38}/[A-Za-z0-9._-]{1,100}$"
+        },
+        "repositoryId": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "workflow": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{1,100}\\.ya?ml$"
+        },
+        "minVersion": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manifestBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "components": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "packageFiles": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "packageBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytesPerFile": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

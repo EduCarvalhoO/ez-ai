@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { criarVerificadorSigstore } from '../../src/plataforma/index.js';
 import { oidDoCommit, oidDoRepositorio } from '../../src/plataforma/assinatura.js';
+import { criarVerificadorSigstore } from '../../src/plataforma/index.js';
 import { RAIZ_DE_CONFIANCA_JSON } from '../../src/plataforma/raiz-de-confianca.js';
 
 const PEDIDO = {
-  identidade: 'https://github.com/a/b/.github/workflows/release.yml@refs/tags/v1.0.0',
-  emissor: 'https://token.actions.githubusercontent.com',
+  identity: 'https://github.com/a/b/.github/workflows/release.yml@refs/tags/v1.0.0',
+  issuer: 'https://token.actions.githubusercontent.com',
   artefato: `sha256:${'0'.repeat(64)}`,
 };
 

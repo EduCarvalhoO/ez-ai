@@ -20,9 +20,9 @@ export const CAMINHO_DO_LOCKFILE = '.harness/lock.json';
 /** Tudo o que um comando precisa do mundo, por portas. */
 export interface Contexto extends ContextoDeAuditoria {
   readonly git: Git;
-  /** Verificador Sigstore (ADR-0035). Sem ele, nenhum pacote chega a `verificado` e `confiancaMinima` acima de comunidade recusa. */
+  /** Verificador Sigstore (ADR-0035). Sem ele, nenhum pacote chega a `verificado` e `minTrust` acima de comunidade recusa. */
   readonly verificador?: VerificadorDeAssinatura;
-  /** Adapters de ambiente (ADR-0025), compostos pela CLI. Sem eles, `apply` só instala em `.harness/pacotes/`. */
+  /** Adapters de ambiente (ADR-0025), compostos pela CLI. Sem eles, `apply` só instala em `.harness/packages/`. */
   readonly adapters?: readonly Adapter[];
   /** Porta de rede da telemetria (ADR-0029); só o comando `export` a usa. Sem ela, nada sai da máquina. */
   readonly enviador?: EnviadorDeTelemetria;
@@ -30,7 +30,7 @@ export interface Contexto extends ContextoDeAuditoria {
   readonly indice?: IndiceDeBusca;
 }
 
-export const PASTA_DOS_PACOTES = '.harness/pacotes';
+export const PASTA_DOS_PACOTES = '.harness/packages';
 export const PASTA_LOCAL = '.harness/local';
 
 export const pastaDoPacote = (nome: string): string => `${PASTA_DOS_PACOTES}/${nome}`;
@@ -38,13 +38,13 @@ export const pastaLocalDoPacote = (nome: string): string => `${PASTA_LOCAL}/${no
 
 /** Resultado de um comando: linhas para o stdout, avisos e erros para o stderr, e o código de saída. */
 export interface ResultadoDoComando {
-  readonly codigo: 0 | 1;
-  readonly saida: readonly string[];
+  readonly code: 0 | 1;
+  readonly output: readonly string[];
   readonly erros: readonly string[];
 }
 
 export function formatarErros(arquivo: string, erros: readonly ErroDeContrato[]): string[] {
-  return erros.map((e) => `${arquivo}${e.caminho}: ${escaparInvisiveis(e.mensagem)} [${e.regra}]`);
+  return erros.map((e) => `${arquivo}${e.caminho}: ${escaparInvisiveis(e.mensagem)} [${e.rule}]`);
 }
 
 export type Carregado<T> = { readonly ok: true; readonly valor: T } | { readonly ok: false; readonly erros: string[] };
@@ -53,14 +53,14 @@ export async function carregarConfiguracao(arquivos: SistemaDeArquivos): Promise
   if (!(await arquivos.existe(CAMINHO_DA_CONFIGURACAO))) {
     return { ok: false, erros: [`${CAMINHO_DA_CONFIGURACAO} não existe; rode "ez-ai init" no projeto.`] };
   }
-  const r = validarConfiguracao(await arquivos.ler(CAMINHO_DA_CONFIGURACAO));
+  const r = validarConfiguracao(await arquivos.read(CAMINHO_DA_CONFIGURACAO));
   return r.ok ? r : { ok: false, erros: formatarErros(CAMINHO_DA_CONFIGURACAO, r.erros) };
 }
 
 /** Lockfile ausente vale como vazio (nada instalado ainda). */
 export async function carregarLockfile(arquivos: SistemaDeArquivos): Promise<Carregado<Lockfile>> {
-  if (!(await arquivos.existe(CAMINHO_DO_LOCKFILE))) return { ok: true, valor: { versaoLockfile: 0, pacotes: [] } };
-  const r = validarLockfile(await arquivos.ler(CAMINHO_DO_LOCKFILE));
+  if (!(await arquivos.existe(CAMINHO_DO_LOCKFILE))) return { ok: true, valor: { lockfileVersion: 0, packages: [] } };
+  const r = validarLockfile(await arquivos.read(CAMINHO_DO_LOCKFILE));
   return r.ok ? r : { ok: false, erros: formatarErros(CAMINHO_DO_LOCKFILE, r.erros) };
 }
 
@@ -76,7 +76,7 @@ export interface PacoteLido {
 export async function lerPastaLocal(arquivos: SistemaDeArquivos, pasta: string): Promise<Map<string, string>> {
   const mapa = new Map<string, string>();
   for (const caminho of await arquivos.listar(pasta)) {
-    mapa.set(caminho.slice(pasta.length + 1), await arquivos.ler(caminho));
+    mapa.set(caminho.slice(pasta.length + 1), await arquivos.read(caminho));
   }
   return mapa;
 }
@@ -86,14 +86,14 @@ export function examinarPacote(
   nome: string,
   arquivos: ReadonlyMap<string, string>,
 ): { manifesto: Manifesto; hash: string } {
-  const texto = arquivos.get('harness-pacote.json');
-  if (texto === undefined) throw new Error(`${nome}: falta harness-pacote.json na raiz do pacote.`);
+  const texto = arquivos.get('harness-package.json');
+  if (texto === undefined) throw new Error(`${nome}: falta harness-package.json na raiz do pacote.`);
   const m = validarManifesto(texto);
   if (!m.ok)
-    throw new Error(`${nome}: manifesto inválido: ${formatarErros('harness-pacote.json', m.erros).join('; ')}`);
-  for (const c of m.valor.componentes) {
-    if (!arquivos.has(c.arquivo))
-      throw new Error(`${nome}: o componente "${c.id}" aponta para "${c.arquivo}", que não está no pacote.`);
+    throw new Error(`${nome}: manifesto inválido: ${formatarErros('harness-package.json', m.erros).join('; ')}`);
+  for (const c of m.valor.components) {
+    if (!arquivos.has(c.file))
+      throw new Error(`${nome}: o componente "${c.id}" aponta para "${c.file}", que não está no pacote.`);
   }
   const h = hashDoConteudo(arquivosParaHash(arquivos));
   if (!h.ok) throw new Error(`${nome}: ${h.erros.map((e) => escaparInvisiveis(e.mensagem)).join('; ')}`);
@@ -103,11 +103,11 @@ export function examinarPacote(
 /** Lê um pacote da configuração (resolvendo a versão) ou do lockfile (commit exato), com manifesto e hash. */
 export async function obterPacote(
   ctx: Contexto,
-  origem: { readonly tipo: 'github'; readonly url: string } | { readonly tipo: 'local'; readonly caminho: string },
+  origem: { readonly type: 'github'; readonly url: string } | { readonly type: 'local'; readonly caminho: string },
   nome: string,
   alvo: { readonly intervalo?: string; readonly commit?: string; readonly tag?: string },
 ): Promise<PacoteLido> {
-  if (origem.tipo === 'local') {
+  if (origem.type === 'local') {
     const arquivos = await lerPastaLocal(ctx.arquivos, origem.caminho);
     return { arquivos, ...examinarPacote(nome, arquivos) };
   }
@@ -134,17 +134,17 @@ export async function executarComAuditoria(
   comando: (typeof COMANDOS_DA_CLI)[number],
   dryRun: boolean,
   corpo: () => Promise<
-    ResultadoDoComando & { readonly pacotes?: readonly { chave: string; versao?: string; commit?: string }[] }
+    ResultadoDoComando & { readonly packages?: readonly { key: string; version?: string; commit?: string }[] }
   >,
 ): Promise<ResultadoDoComando> {
   const r = await corpo();
   if (dryRun || !(await ctx.arquivos.existe(CAMINHO_DA_CONFIGURACAO))) return r;
   try {
     await registrarEvento(ctx, {
-      tipo: 'operacao',
-      resultado: r.codigo === 0 ? 'executado' : 'falhou',
-      ...(r.codigo === 0 ? {} : { codigoDoMotivo: 'validacao-recusou' as const }),
-      dados: { comando, dryRun, pacotes: r.pacotes ?? [] },
+      type: 'operation',
+      result: r.code === 0 ? 'executed' : 'failed',
+      ...(r.code === 0 ? {} : { reasonCode: 'validation-rejected' as const }),
+      data: { command: comando, dryRun, packages: r.packages ?? [] },
     });
   } catch (erro: unknown) {
     const msg = erro instanceof Error ? erro.message : String(erro);

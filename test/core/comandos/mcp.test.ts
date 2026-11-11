@@ -7,9 +7,9 @@ function ctx(inicial: Record<string, string>): Contexto {
     arquivos: arquivosEmMemoria(inicial),
     git: gitEmMemoria({}),
     relogio: relogioFixo(),
-    identidade: identidadeFixa(),
+    identity: identidadeFixa(),
     harness: '0.0.0',
-    tipoDeAtor: 'humano',
+    tipoDeAtor: 'human',
   };
 }
 
@@ -37,19 +37,19 @@ describe('servidor MCP da base de conhecimento', () => {
     const lista = (await responderMcp(c, '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')) as {
       result: { tools: { name: string }[] };
     };
-    expect(lista.result.tools.map((t) => t.name)).toEqual(['buscar', 'abrir', 'mapa']);
+    expect(lista.result.tools.map((t) => t.name)).toEqual(['search', 'open', 'map']);
     expect(await responderMcp(c, '{"jsonrpc":"2.0","id":3,"method":"ping"}')).toMatchObject({ id: 3, result: {} });
     expect(await responderMcp(c, '{"jsonrpc":"2.0","method":"notifications/initialized"}')).toBeUndefined();
   });
 
   it('busca, abre um trecho e mostra o mapa', async () => {
     const c = ctx(ARQUIVOS);
-    const busca = await chamar(c, 'buscar', { consulta: 'guia' });
+    const busca = await chamar(c, 'search', { query: 'guia' });
     expect(busca.result?.content[0]?.text).toContain('docs/guia.md');
-    const aberto = await chamar(c, 'abrir', { arquivo: 'docs/guia.md', inicio: 3, fim: 4 });
+    const aberto = await chamar(c, 'open', { file: 'docs/guia.md', start: 3, end: 4 });
     expect(aberto.result?.content[0]?.text).toContain('3: O disjuntor');
     expect(aberto.result?.content[0]?.text).not.toContain('# Guia');
-    const mapa = await chamar(c, 'mapa', { pasta: 'docs' });
+    const mapa = await chamar(c, 'map', { folder: 'docs' });
     expect(mapa.result?.content[0]?.text).toContain('docs/guia.md');
   });
 
@@ -63,7 +63,7 @@ describe('servidor MCP da base de conhecimento', () => {
       'docs\\guia.md',
       'docs/../docs/guia.md',
     ]) {
-      const r = await chamar(c, 'abrir', { arquivo });
+      const r = await chamar(c, 'open', { file: arquivo });
       expect(r.result?.isError, arquivo).toBe(true);
     }
   });
@@ -73,7 +73,7 @@ describe('servidor MCP da base de conhecimento', () => {
     expect(await responderMcp(c, 'não é json')).toMatchObject({ error: { code: -32700 } });
     expect(await responderMcp(c, '{"jsonrpc":"2.0","id":1,"method":"x"}')).toMatchObject({ error: { code: -32601 } });
     expect((await chamar(c, 'apagar', {})).error?.code).toBe(-32602);
-    expect((await chamar(c, 'buscar', {})).result?.isError).toBe(true);
+    expect((await chamar(c, 'search', {})).result?.isError).toBe(true);
   });
 
   it('o laço responde uma linha por requisição até a entrada acabar', async () => {
@@ -91,32 +91,32 @@ describe('servidor MCP da base de conhecimento', () => {
 });
 
 describe('fontes do projeto no servidor', () => {
-  it('abre arquivo de fonte declarada em .harness/conhecimento.json', async () => {
+  it('abre arquivo de fonte declarada em .harness/knowledge.json', async () => {
     const c = ctx({
       ...ARQUIVOS,
       'notas/a.md': '# Nota\nconteúdo extra\n',
-      '.harness/conhecimento.json': JSON.stringify({
-        versao: 0,
-        fontes: [{ id: 'notas', tipo: 'markdown', pasta: 'notas', extensoes: ['.md'] }],
+      '.harness/knowledge.json': JSON.stringify({
+        version: 0,
+        sources: [{ id: 'notas', type: 'markdown', folder: 'notas', extensions: ['.md'] }],
       }),
     });
-    const r = await chamar(c, 'abrir', { arquivo: 'notas/a.md' });
+    const r = await chamar(c, 'open', { file: 'notas/a.md' });
     expect(r.result?.content[0]?.text).toContain('conteúdo extra');
-    const busca = await chamar(c, 'buscar', { consulta: 'nota' });
+    const busca = await chamar(c, 'search', { query: 'nota' });
     expect(busca.result?.content[0]?.text).toContain('notas/a.md');
   });
 
   it.each([
-    [{ id: 'x', tipo: 'markdown', pasta: '../fora', extensoes: ['.md'] }],
-    [{ id: 'x', tipo: 'markdown', pasta: '.harness/cache', extensoes: ['.md'] }],
-    [{ id: 'x', tipo: 'markdown', pasta: '/abs', extensoes: ['.md'] }],
-    [{ id: 'X', tipo: 'markdown', pasta: 'docs', extensoes: ['.md'] }],
-    [{ id: 'x', tipo: 'sql', pasta: 'docs', extensoes: ['.md'] }],
-    [{ id: 'x', tipo: 'markdown', pasta: 'docs', extensoes: ['md'] }],
+    [{ id: 'x', type: 'markdown', folder: '../fora', extensions: ['.md'] }],
+    [{ id: 'x', type: 'markdown', folder: '.harness/cache', extensions: ['.md'] }],
+    [{ id: 'x', type: 'markdown', folder: '/abs', extensions: ['.md'] }],
+    [{ id: 'X', type: 'markdown', folder: 'docs', extensions: ['.md'] }],
+    [{ id: 'x', type: 'sql', folder: 'docs', extensions: ['.md'] }],
+    [{ id: 'x', type: 'markdown', folder: 'docs', extensions: ['md'] }],
   ])('recusa fonte inválida %j', async (fonte) => {
-    const c = ctx({ ...ARQUIVOS, '.harness/conhecimento.json': JSON.stringify({ versao: 0, fontes: [fonte] }) });
-    const r = await chamar(c, 'mapa', {});
+    const c = ctx({ ...ARQUIVOS, '.harness/knowledge.json': JSON.stringify({ version: 0, sources: [fonte] }) });
+    const r = await chamar(c, 'map', {});
     expect(r.result?.isError).toBe(true);
-    expect(r.result?.content[0]?.text).toContain('conhecimento.json');
+    expect(r.result?.content[0]?.text).toContain('knowledge.json');
   });
 });

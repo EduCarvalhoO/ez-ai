@@ -5,15 +5,15 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { validarManifesto } from '../../../src/core/index.js';
 
-const pasta = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'pacotes', 'workflow-feature');
+const pasta = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'packages', 'workflow-feature');
 
 describe('pacote oficial workflow-feature', () => {
   it('tem manifesto válido e todos os arquivos dos componentes', () => {
-    const m = validarManifesto(readFileSync(join(pasta, 'harness-pacote.json'), 'utf8'));
+    const m = validarManifesto(readFileSync(join(pasta, 'harness-package.json'), 'utf8'));
     expect(m.ok, JSON.stringify(m.ok ? [] : m.erros)).toBe(true);
     if (!m.ok) return;
-    for (const c of m.valor.componentes) {
-      expect(readFileSync(join(pasta, c.arquivo), 'utf8').length, c.arquivo).toBeGreaterThan(50);
+    for (const c of m.valor.components) {
+      expect(readFileSync(join(pasta, c.file), 'utf8').length, c.file).toBeGreaterThan(50);
     }
   });
 });
@@ -22,11 +22,10 @@ describe('pacote de prova manual guardas-de-teste', () => {
   const guardas = join(pasta, '..', 'guardas-de-teste');
 
   it('tem manifesto válido e arquivos dos componentes', () => {
-    const m = validarManifesto(readFileSync(join(guardas, 'harness-pacote.json'), 'utf8'));
+    const m = validarManifesto(readFileSync(join(guardas, 'harness-package.json'), 'utf8'));
     expect(m.ok, JSON.stringify(m.ok ? [] : m.erros)).toBe(true);
     if (!m.ok) return;
-    for (const c of m.valor.componentes)
-      expect(readFileSync(join(guardas, c.arquivo), 'utf8').length).toBeGreaterThan(5);
+    for (const c of m.valor.components) expect(readFileSync(join(guardas, c.file), 'utf8').length).toBeGreaterThan(5);
   });
 
   it('o hook barra git push --force e deixa ls passar', () => {

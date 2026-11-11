@@ -27,7 +27,7 @@ Permitir que o usuário exporte o relatório em CSV sem abrir o painel.
 `;
 
 const regras = (texto: string, tipo: 'ficha' | 'spec' | 'adr' = 'ficha') =>
-  verificarCompletude(texto, tipo).map((p) => `${p.severidade}:${p.regra}`);
+  verificarCompletude(texto, tipo).map((p) => `${p.severidade}:${p.rule}`);
 
 describe('verificador de completude', () => {
   it('aceita uma ficha completa', () => {
@@ -108,64 +108,64 @@ function ctx(inicial: Record<string, string> = {}) {
     arquivos: arquivosEmMemoria(inicial),
     git: gitEmMemoria({}),
     relogio: relogioFixo('2026-11-04T12:00:00.000Z'),
-    identidade: identidadeFixa('pessoa@exemplo.com'),
+    identity: identidadeFixa('pessoa@exemplo.com'),
     harness: '0.0.0',
-    tipoDeAtor: 'agente' as const,
+    tipoDeAtor: 'agent' as const,
   };
 }
 
 describe('workflow docs, regras de saída e retomar', () => {
   it('`docs` devolve código 0 para ficha completa e 1 com erros', async () => {
     const c = ctx({ 'ficha.md': FICHA_BOA, 'ruim.md': '# Ficha\n\n## Objetivo\nTODO\n' });
-    expect((await verificarDocumento(c, 'ficha.md')).codigo).toBe(0);
+    expect((await verificarDocumento(c, 'ficha.md')).code).toBe(0);
     const ruim = await verificarDocumento(c, 'ruim.md');
-    expect(ruim.codigo).toBe(1);
+    expect(ruim.code).toBe(1);
     expect(ruim.erros.join('\n')).toMatch(/secao-ausente/);
-    expect((await verificarDocumento(c, 'nao-existe.md')).codigo).toBe(1);
+    expect((await verificarDocumento(c, 'nao-existe.md')).code).toBe(1);
   });
 
-  it('regra de saída: G1 só passa com --documento completo', async () => {
-    const cfg = JSON.stringify({ etapasDesligadas: ['E0', 'E2', 'E5'], saidas: { G1: { documento: true } } });
+  it('regra de saída: G1 só passa com --document completo', async () => {
+    const cfg = JSON.stringify({ disabledSteps: ['E0', 'E2', 'E5'], outputs: { G1: { document: true } } });
     const c = ctx({ '.harness/workflow.json': cfg, 'ficha.md': FICHA_BOA, 'ruim.md': '# F\n\n## Objetivo\nTODO\n' });
     const passo = (etapa: string, resultado: string, extra: Record<string, string> = {}) =>
-      registrarEtapa(c, { item: 'feat', etapa, resultado, agente: 'arquiteto', ...extra });
-    expect((await passo('E1', 'executado')).codigo).toBe(0);
-    const sem = await passo('G1', 'verificado');
-    expect(sem.codigo).toBe(1);
-    expect(sem.erros.join('\n')).toMatch(/G1 exige --documento/);
-    const incompleta = await passo('G1', 'verificado', { documento: 'ruim.md' });
-    expect(incompleta.codigo).toBe(1);
+      registrarEtapa(c, { item: 'feat', step: etapa, result: resultado, agent: 'arquiteto', ...extra });
+    expect((await passo('E1', 'executed')).code).toBe(0);
+    const sem = await passo('G1', 'verified');
+    expect(sem.code).toBe(1);
+    expect(sem.erros.join('\n')).toMatch(/G1 exige --document/);
+    const incompleta = await passo('G1', 'verified', { document: 'ruim.md' });
+    expect(incompleta.code).toBe(1);
     expect(incompleta.erros.join('\n')).toMatch(/documentação incompleta/);
-    expect((await passo('G1', 'verificado', { documento: 'ficha.md' })).codigo).toBe(0);
+    expect((await passo('G1', 'verified', { document: 'ficha.md' })).code).toBe(0);
   });
 
   it('regra de saída: evidência obrigatória e não vazia; falha na etapa não exige saída', async () => {
-    const cfg = JSON.stringify({ etapasDesligadas: ['E0', 'E2', 'E5'], saidas: { G2: { evidencia: true } } });
+    const cfg = JSON.stringify({ disabledSteps: ['E0', 'E2', 'E5'], outputs: { G2: { evidence: true } } });
     const c = ctx({ '.harness/workflow.json': cfg, 'vazio.txt': '   ', 'testes.txt': '12 testes passaram' });
     const passo = (etapa: string, resultado: string, extra: Record<string, string> = {}) =>
-      registrarEtapa(c, { item: 'feat', etapa, resultado, agente: 'implementador', ...extra });
-    await passo('E1', 'executado');
-    await passo('G1', 'verificado');
-    await passo('E3', 'executado');
-    expect((await passo('G2', 'verificado')).erros.join('\n')).toMatch(/exige --evidencia/);
-    expect((await passo('G2', 'verificado', { evidencia: 'vazio.txt' })).erros.join('\n')).toMatch(/está vazio/);
-    expect((await passo('G2', 'verificado', { evidencia: '../fora.txt' })).codigo).toBe(1);
-    expect((await passo('G2', 'verificado', { evidencia: 'testes.txt' })).codigo).toBe(0);
+      registrarEtapa(c, { item: 'feat', step: etapa, result: resultado, agent: 'implementador', ...extra });
+    await passo('E1', 'executed');
+    await passo('G1', 'verified');
+    await passo('E3', 'executed');
+    expect((await passo('G2', 'verified')).erros.join('\n')).toMatch(/exige --evidence/);
+    expect((await passo('G2', 'verified', { evidence: 'vazio.txt' })).erros.join('\n')).toMatch(/está vazio/);
+    expect((await passo('G2', 'verified', { evidence: '../fora.txt' })).code).toBe(1);
+    expect((await passo('G2', 'verified', { evidence: 'testes.txt' })).code).toBe(0);
   });
 
   it('`retomar` lista itens abertos, parados e o que a próxima etapa exige', async () => {
-    const cfg = JSON.stringify({ saidas: { E2: { documento: true } }, minutosParado: 60 });
+    const cfg = JSON.stringify({ outputs: { E2: { document: true } }, stalledMinutes: 60 });
     const c = ctx({ '.harness/workflow.json': cfg });
-    await registrarEtapa(c, { item: 'velho', etapa: 'E1', resultado: 'executado', agente: 'arquiteto' });
+    await registrarEtapa(c, { item: 'velho', step: 'E1', result: 'executed', agent: 'arquiteto' });
     const r = await retomarWorkflow(c);
-    expect(r.codigo).toBe(0);
-    expect(r.saida.join('\n')).toMatch(/velho: em andamento/);
-    expect(r.saida.join('\n')).toMatch(/E2 exige --documento/);
+    expect(r.code).toBe(0);
+    expect(r.output.join('\n')).toMatch(/velho: em andamento/);
+    expect(r.output.join('\n')).toMatch(/E2 exige --document/);
     const tarde = await retomarWorkflow({ ...c, relogio: relogioFixo('2026-11-04T15:00:00.000Z') });
-    expect(tarde.saida.join('\n')).toMatch(/velho: parado \(sem evento há 180 min\)/);
+    expect(tarde.output.join('\n')).toMatch(/velho: parado \(sem evento há 180 min\)/);
   });
 
   it('`retomar` sem itens diz que não há nada aberto', async () => {
-    expect((await retomarWorkflow(ctx())).saida).toEqual(['nenhum item aberto']);
+    expect((await retomarWorkflow(ctx())).output).toEqual(['nenhum item aberto']);
   });
 });

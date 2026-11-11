@@ -1,0 +1,25 @@
+{
+  "manifestVersion": 0,
+  "name": "educarvalhoo/guardas-de-teste",
+  "version": "0.1.0",
+  "description": "Pacote só para a prova manual: um hook que barra git push --force e rm -rf, e o servidor MCP da base de conhecimento",
+  "license": "FSL-1.1-ALv2",
+  "repository": "https://github.com/educarvalhoo/guardas-de-teste",
+  "components": [
+    {
+      "id": "barrar",
+      "type": "hook",
+      "file": "hooks/barrar.mjs",
+      "event": "before-tool",
+      "command": { "program": "node", "arguments": ["hooks/barrar.mjs"] },
+      "permissions": { "configureEnvironment": [".claude/settings.json"] }
+    },
+    {
+      "id": "base",
+      "type": "mcp",
+      "file": "mcp/base.json",
+      "command": { "program": "npx", "arguments": ["ez-ai@0.0.0", "conhecimento", "servir"] },
+      "permissions": { "configureEnvironment": [".mcp.json"] }
+    }
+  ]
+}

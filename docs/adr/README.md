@@ -47,6 +47,7 @@
 | [0039](0039-qualidade-de-componentes-evals-e-catalogo-assinado.md) | Qualidade de agentes, skills e scripts (`qualidade`), evals determinísticos, catálogo assinado (`search`) e perguntas-modelo | Aceito |
 | [0040](0040-catalogo-endurecido-piso-do-scan-e-origens-oficiais.md) | Catálogo endurecido (tag vista, ID do repositório, bytes brutos), piso do scan na policy e origens oficiais | Aceito |
 | [0041](0041-log-travado-gravacao-atomica-e-reparo.md) | Log de auditoria travado, gravação atômica e comando de reparo (`ez-ai auditoria reparar`) | Aceito |
+| [0042](0042-interface-em-ingles-antes-da-v1.md) | Interface (CLI, schemas, enums e arquivos) em inglês antes da v1.0; troca da pasta no `apply` e reparo completo | Aceito |
 
 ## Decisões em aberto
 

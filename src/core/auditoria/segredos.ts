@@ -61,7 +61,7 @@ export function procurarSegredos(valor: unknown, caminho: string, erros: ErroDeC
     if (tipo) {
       erros.push({
         caminho,
-        regra: 'parece-segredo',
+        rule: 'parece-segredo',
         mensagem: `texto parece conter ${tipo}; o evento não é gravado (redija antes de registrar)`,
       });
     }

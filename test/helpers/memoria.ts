@@ -9,7 +9,7 @@ export function arquivosEmMemoria(inicial: Record<string, string> = {}): Sistema
   return {
     raiz: '/memoria',
     mapa,
-    async ler(caminho) {
+    async read(caminho) {
       const v = mapa.get(caminho);
       if (v === undefined) throw new Error(`sem ${caminho}`);
       return v;

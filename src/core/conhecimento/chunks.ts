@@ -1,12 +1,12 @@
 // Chunks da base de conhecimento (spec base-de-conhecimento.md, ADR-0032). Puro: recebe o texto de um arquivo e
 // devolve pedaços com posição exata (arquivo:linha). Markdown é cortado por título; código e texto, por janela de linhas.
 
-export type TipoDeFonte = 'markdown' | 'codigo' | 'texto';
+export type TipoDeFonte = 'markdown' | 'code' | 'texto';
 
 export interface Chunk {
   /** `origem:id` da fonte (aqui sempre `projeto:<id>`). */
-  readonly fonte: string;
-  readonly arquivo: string;
+  readonly source: string;
+  readonly file: string;
   /** Base 1, inclusive. É o que vira a citação `arquivo:linha`. */
   readonly linhaInicio: number;
   readonly linhaFim: number;
@@ -22,8 +22,8 @@ export const CARACTERES_POR_CHUNK = 1800;
 const CARACTERES_POR_LINHA = 2000;
 
 interface Janela {
-  readonly inicio: number;
-  readonly fim: number;
+  readonly start: number;
+  readonly end: number;
 }
 
 /** Agrupa linhas [inicio, fim) em janelas de até CARACTERES_POR_CHUNK, sem partir uma linha. */
@@ -34,13 +34,13 @@ function janelas(linhas: readonly string[], inicio: number, fim: number): Janela
   for (let i = inicio; i < fim; i++) {
     const t = (linhas[i]?.length ?? 0) + 1;
     if (tamanho + t > CARACTERES_POR_CHUNK && i > ini) {
-      saida.push({ inicio: ini, fim: i });
+      saida.push({ start: ini, end: i });
       ini = i;
       tamanho = 0;
     }
     tamanho += t;
   }
-  if (ini < fim) saida.push({ inicio: ini, fim });
+  if (ini < fim) saida.push({ start: ini, end: fim });
   return saida;
 }
 
@@ -52,11 +52,11 @@ function montar(
   j: Janela,
 ): Chunk | undefined {
   const texto = linhas
-    .slice(j.inicio, j.fim)
+    .slice(j.start, j.end)
     .map((l) => l.slice(0, CARACTERES_POR_LINHA))
     .join('\n');
   if (texto.trim() === '') return undefined;
-  return { fonte, arquivo, linhaInicio: j.inicio + 1, linhaFim: j.fim, contexto, texto };
+  return { source: fonte, file: arquivo, linhaInicio: j.start + 1, linhaFim: j.end, contexto, texto };
 }
 
 const TITULO = /^(#{1,6})\s+(.+?)\s*#*\s*$/;

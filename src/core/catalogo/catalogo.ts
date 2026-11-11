@@ -24,13 +24,13 @@ export function decodificarCatalogo(bytes: Uint8Array): string | undefined {
   }
 }
 
-/** Última tag do catálogo já aceita neste projeto (`.harness/catalogo-visto.json`), contra regressão e tag movida. */
+/** Última tag do catálogo já aceita neste projeto (`.harness/catalog-seen.json`), contra regressão e tag movida. */
 export interface CatalogoVisto {
   readonly tag: string;
   readonly commit: string;
 }
 
-export const CAMINHO_DO_CATALOGO_VISTO = '.harness/catalogo-visto.json';
+export const CAMINHO_DO_CATALOGO_VISTO = '.harness/catalog-seen.json';
 
 export function lerCatalogoVisto(texto: string): CatalogoVisto | undefined {
   const lido = lerJsonSeguro(texto, { bytes: 1024, profundidade: 2 });
@@ -46,23 +46,23 @@ export const textoDoCatalogoVisto = (v: CatalogoVisto): string => `${JSON.string
 export const LIMITES_DO_CATALOGO = {
   bytes: 256 * 1024,
   profundidade: 6,
-  pacotes: 2000,
-  descricao: 300,
-  etiquetas: 8,
+  packages: 2000,
+  description: 300,
+  tags: 8,
   etiqueta: 32,
 } as const;
 
 export interface EntradaDoCatalogo {
   /** `<login>/<pacote>`, o mesmo nome que o pacote usa na configuração (ADR-0017). */
-  readonly nome: string;
-  readonly descricao: string;
+  readonly name: string;
+  readonly description: string;
   /** `https://github.com/<login>/<repo>`; o login é o mesmo do nome (mesmo dono). */
-  readonly repositorio: string;
-  readonly etiquetas: readonly string[];
+  readonly repository: string;
+  readonly tags: readonly string[];
 }
 
 export type ResultadoDoCatalogo =
-  | { readonly ok: true; readonly entradas: readonly EntradaDoCatalogo[] }
+  | { readonly ok: true; readonly entries: readonly EntradaDoCatalogo[] }
   | { readonly ok: false; readonly erro: string };
 
 const NOME = /^([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9._-]{1,100})$/;
@@ -77,7 +77,7 @@ const ehObjeto = (v: unknown): v is Json => typeof v === 'object' && v !== null 
 function entradaDe(bruta: unknown, i: number): EntradaDoCatalogo | string {
   const onde = `pacotes[${i}]`;
   if (!ehObjeto(bruta)) return `${onde} precisa ser um objeto`;
-  const { nome, descricao, repositorio, etiquetas } = bruta;
+  const { name: nome, description: descricao, repository: repositorio, tags: etiquetas } = bruta;
   const n = typeof nome === 'string' ? NOME.exec(nome) : null;
   if (!n) return `${onde}.nome precisa ser <login>/<pacote>`;
   if (typeof repositorio !== 'string') return `${onde}.repositorio precisa ser texto`;
@@ -86,19 +86,19 @@ function entradaDe(bruta: unknown, i: number): EntradaDoCatalogo | string {
   if ((r[1] ?? '').toLowerCase() !== (n[1] ?? '').toLowerCase()) {
     return `${onde}: o repositório não é do mesmo dono do nome (ADR-0017)`;
   }
-  if (typeof descricao !== 'string' || descricao.length === 0 || descricao.length > LIMITES_DO_CATALOGO.descricao) {
-    return `${onde}.descricao precisa ter de 1 a ${LIMITES_DO_CATALOGO.descricao} caracteres`;
+  if (typeof descricao !== 'string' || descricao.length === 0 || descricao.length > LIMITES_DO_CATALOGO.description) {
+    return `${onde}.descricao precisa ter de 1 a ${LIMITES_DO_CATALOGO.description} caracteres`;
   }
   if (INVISIVEL.test(descricao)) return `${onde}.descricao tem caractere de controle ou invisível`;
   const lista = etiquetas === undefined ? [] : etiquetas;
   if (
     !Array.isArray(lista) ||
-    lista.length > LIMITES_DO_CATALOGO.etiquetas ||
+    lista.length > LIMITES_DO_CATALOGO.tags ||
     !lista.every((e) => typeof e === 'string' && e.length <= LIMITES_DO_CATALOGO.etiqueta && ETIQUETA.test(e))
   ) {
-    return `${onde}.etiquetas precisa ser uma lista de até ${LIMITES_DO_CATALOGO.etiquetas} etiquetas em minúsculas`;
+    return `${onde}.etiquetas precisa ser uma lista de até ${LIMITES_DO_CATALOGO.tags} etiquetas em minúsculas`;
   }
-  return { nome: nome as string, descricao, repositorio, etiquetas: lista as string[] };
+  return { name: nome as string, description: descricao, repository: repositorio, tags: lista as string[] };
 }
 
 /** Valida o texto do catálogo. Falha fechada: qualquer entrada inválida recusa o catálogo inteiro. */
@@ -109,23 +109,23 @@ export function lerCatalogo(texto: string): ResultadoDoCatalogo {
   });
   if (!lido.ok) return { ok: false, erro: lido.erros.map((e) => e.mensagem).join('; ') };
   const dado = lido.valor;
-  if (!ehObjeto(dado) || dado.versaoCatalogo !== 0 || !Array.isArray(dado.pacotes)) {
-    return { ok: false, erro: 'esperado { "versaoCatalogo": 0, "pacotes": [...] }' };
+  if (!ehObjeto(dado) || dado.catalogVersion !== 0 || !Array.isArray(dado.packages)) {
+    return { ok: false, erro: 'esperado { "catalogVersion": 0, "packages": [...] }' };
   }
-  if (dado.pacotes.length > LIMITES_DO_CATALOGO.pacotes) {
-    return { ok: false, erro: `no máximo ${LIMITES_DO_CATALOGO.pacotes} pacotes` };
+  if (dado.packages.length > LIMITES_DO_CATALOGO.packages) {
+    return { ok: false, erro: `no máximo ${LIMITES_DO_CATALOGO.packages} pacotes` };
   }
   const entradas: EntradaDoCatalogo[] = [];
   const vistos = new Set<string>();
-  for (const [i, bruta] of dado.pacotes.entries()) {
+  for (const [i, bruta] of dado.packages.entries()) {
     const e = entradaDe(bruta, i);
     if (typeof e === 'string') return { ok: false, erro: e };
-    const chave = e.nome.toLowerCase();
+    const chave = e.name.toLowerCase();
     if (vistos.has(chave)) return { ok: false, erro: `pacotes[${i}]: nome repetido` };
     vistos.add(chave);
     entradas.push(e);
   }
-  return { ok: true, entradas };
+  return { ok: true, entries: entradas };
 }
 
 const normalizar = (t: string): string => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
@@ -140,9 +140,9 @@ export function buscarNoCatalogo(
   if (alvo.length === 0) return [];
   const pontuadas: { e: EntradaDoCatalogo; pontos: number }[] = [];
   for (const e of entradas) {
-    const nome = normalizar(e.nome);
-    const etiquetas = e.etiquetas.map(normalizar);
-    const descricao = normalizar(e.descricao);
+    const nome = normalizar(e.name);
+    const etiquetas = e.tags.map(normalizar);
+    const descricao = normalizar(e.description);
     let pontos = 0;
     let todos = true;
     for (const t of alvo) {
@@ -157,7 +157,7 @@ export function buscarNoCatalogo(
     if (todos) pontuadas.push({ e, pontos });
   }
   return pontuadas
-    .sort((a, b) => b.pontos - a.pontos || (a.e.nome < b.e.nome ? -1 : a.e.nome > b.e.nome ? 1 : 0))
+    .sort((a, b) => b.pontos - a.pontos || (a.e.name < b.e.name ? -1 : a.e.name > b.e.name ? 1 : 0))
     .slice(0, limite)
     .map((p) => p.e);
 }

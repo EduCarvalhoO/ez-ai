@@ -10,8 +10,8 @@ const fixtures = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'fixt
 const ler = (pasta: string, arquivo: string) => readFileSync(join(fixtures, pasta, arquivo), 'utf8');
 
 interface Caso {
-  readonly arquivo: string;
-  readonly regra: string;
+  readonly file: string;
+  readonly rule: string;
   readonly caminho: string;
 }
 const casos: Caso[] = JSON.parse(ler('invalidos', 'casos.json'));
@@ -26,23 +26,23 @@ describe('manifestos válidos', () => {
   const arquivos = readdirSync(join(fixtures, 'validos'));
 
   it.each(arquivos)('%s é aceito', (arquivo) => {
-    expect(valido(arquivo).versaoManifesto).toBe(0);
+    expect(valido(arquivo).manifestVersion).toBe(0);
   });
 
   it('separa login e pacote do nome', () => {
     const m = valido('completo.json');
-    expect([m.login, m.pacote]).toEqual(['eduardo', 'revisao-ts']);
+    expect([m.login, m.package]).toEqual(['eduardo', 'revisao-ts']);
   });
 
   it('preenche permissões ausentes com listas vazias', () => {
-    const [componente] = valido('minimo.json').componentes;
-    expect(componente?.permissoes).toEqual({
-      ler: [],
-      escrever: [],
-      executar: [],
-      rede: [],
-      segredos: [],
-      configurarAmbiente: [],
+    const [componente] = valido('minimo.json').components;
+    expect(componente?.permissions).toEqual({
+      read: [],
+      write: [],
+      execute: [],
+      network: [],
+      secrets: [],
+      configureEnvironment: [],
     });
   });
 
@@ -50,17 +50,17 @@ describe('manifestos válidos', () => {
     const m = valido('completo.json');
     expect(Object.keys(m).sort()).toEqual(
       [
-        'assinatura',
-        'compatibilidade',
-        'componentes',
-        'descricao',
-        'licenca',
+        'signature',
+        'compatibility',
+        'components',
+        'description',
+        'license',
         'login',
-        'nome',
-        'pacote',
-        'repositorio',
-        'versao',
-        'versaoManifesto',
+        'name',
+        'package',
+        'repository',
+        'version',
+        'manifestVersion',
       ].sort(),
     );
     expect(Object.getPrototypeOf(m)).toBe(Object.prototype);
@@ -70,14 +70,14 @@ describe('manifestos válidos', () => {
 describe('manifestos inválidos', () => {
   it('todo arquivo de fixture tem um caso esperado', () => {
     const arquivos = readdirSync(join(fixtures, 'invalidos')).filter((a) => a !== 'casos.json');
-    expect(arquivos.sort()).toEqual(casos.map((c) => c.arquivo).sort());
+    expect(arquivos.sort()).toEqual(casos.map((c) => c.file).sort());
   });
 
-  it.each(casos)('$arquivo é recusado por $regra em "$caminho"', ({ arquivo, regra, caminho }) => {
+  it.each(casos)('$arquivo é recusado por $regra em "$caminho"', ({ file: arquivo, rule: regra, caminho }) => {
     const resultado = validarManifesto(ler('invalidos', arquivo));
     expect(resultado.ok).toBe(false);
     if (resultado.ok) return;
-    expect(resultado.erros).toContainEqual(expect.objectContaining({ regra, caminho }));
+    expect(resultado.erros).toContainEqual(expect.objectContaining({ rule: regra, caminho }));
     for (const erro of resultado.erros) expect(erro.mensagem.length).toBeGreaterThan(10);
   });
 });
@@ -94,7 +94,7 @@ describe('leitura segura de JSON', () => {
     const resultado = lerJsonSeguro('{"a": 1, "\\u0061": 2}', { bytes: 100, profundidade: 4 });
     expect(resultado).toEqual({
       ok: false,
-      erros: [expect.objectContaining({ regra: 'chave-duplicada', caminho: '/a' })],
+      erros: [expect.objectContaining({ rule: 'chave-duplicada', caminho: '/a' })],
     });
   });
 
@@ -131,13 +131,13 @@ describe('validador de schema', () => {
 describe('desempenho com entrada adversarial (ReDoS)', () => {
   const base = JSON.parse(ler('validos', 'completo.json'));
   const adversariais: [string, (m: typeof base) => void][] = [
-    ['host', (m) => (m.componentes[2].permissoes.rede = [`${'a-'.repeat(120)}!`])],
-    ['nome', (m) => (m.nome = `${'a-'.repeat(50)}/${'a.'.repeat(30)}!`)],
-    ['versao', (m) => (m.versao = `1.2.3-${'a.'.repeat(30)}!`)],
-    ['licenca', (m) => (m.licenca = `${'MIT OR '.repeat(17)}!`)],
+    ['host', (m) => (m.components[2].permissions.network = [`${'a-'.repeat(120)}!`])],
+    ['name', (m) => (m.name = `${'a-'.repeat(50)}/${'a.'.repeat(30)}!`)],
+    ['version', (m) => (m.version = `1.2.3-${'a.'.repeat(30)}!`)],
+    ['license', (m) => (m.license = `${'MIT OR '.repeat(17)}!`)],
     [
-      'identidade',
-      (m) => (m.assinatura.identidade = `https://github.com/eduardo/revisao-ts/.github/workflows/${'a.'.repeat(200)}`),
+      'identity',
+      (m) => (m.signature.identity = `https://github.com/eduardo/revisao-ts/.github/workflows/${'a.'.repeat(200)}`),
     ],
   ];
 
@@ -145,9 +145,9 @@ describe('desempenho com entrada adversarial (ReDoS)', () => {
     const m = structuredClone(base);
     const aninhado = ['exec', ...Array.from({ length: 24 }, () => ['pnpm', 'exec']).flat(), 'sh'];
     const npx = Array.from({ length: 16 }, () => ['npx', '-p', 'x@1.0.0']).flat();
-    m.componentes[0].permissoes.executar = [
-      { programa: 'pnpm', argumentos: aninhado },
-      { programa: 'npx', argumentos: npx.slice(1, 50) },
+    m.components[0].permissions.execute = [
+      { program: 'pnpm', arguments: aninhado },
+      { program: 'npx', arguments: npx.slice(1, 50) },
     ];
     const inicio = performance.now();
     expect(validarManifesto(JSON.stringify(m)).ok).toBe(false);
