@@ -59,15 +59,31 @@ export async function lerAuditoria(
   };
 }
 
-async function travaVelha(ctx: ContextoDeAuditoria): Promise<boolean> {
+/**
+ * Devolve o conteúdo da trava se ela pode ser tomada: data legível e antiga, ou data no futuro (relógio errado ou
+ * forjada). Conteúdo ilegível só vale depois de `ilegivelHaMuito` (queda entre criar e escrever a trava).
+ */
+async function travaTomavel(ctx: ContextoDeAuditoria, ilegivelHaMuito: boolean): Promise<string | undefined> {
+  let texto: string;
   try {
-    const lida: unknown = JSON.parse(await ctx.arquivos.ler(CAMINHO_DA_TRAVA));
-    const em = typeof lida === 'object' && lida !== null && 'em' in lida ? Date.parse(String(lida.em)) : Number.NaN;
-    // Conteúdo ilegível não é prova de morte: só conta como velha a trava com data legível e antiga.
-    return Number.isFinite(em) && ctx.relogio.agora().getTime() - em > TRAVA_VELHA_EM_MS;
+    texto = await ctx.arquivos.ler(CAMINHO_DA_TRAVA);
   } catch {
-    return false;
+    return undefined;
   }
+  let em = Number.NaN;
+  try {
+    const lida: unknown = JSON.parse(texto);
+    em = typeof lida === 'object' && lida !== null && 'em' in lida ? Date.parse(String(lida.em)) : Number.NaN;
+  } catch {
+    /* ilegível */
+  }
+  if (!Number.isFinite(em)) return ilegivelHaMuito ? texto : undefined;
+  const idade = ctx.relogio.agora().getTime() - em;
+  return idade > TRAVA_VELHA_EM_MS || idade < -TRAVA_VELHA_EM_MS ? texto : undefined;
+}
+
+function nonceAleatorio(): string {
+  return Array.from({ length: 4 }, () => Math.floor(Math.random() * 0x100000000).toString(16)).join('');
 }
 
 /** Roda `corpo` com a trava do log; solta a trava mesmo se `corpo` falhar. */
@@ -76,12 +92,14 @@ async function comTrava<T>(ctx: ContextoDeAuditoria, corpo: () => Promise<T>): P
   const esperar = ctx.esperar ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const dono = (await ctx.identidade.atorAtual()).slice(0, 200);
   let pegou = false;
+  const nonce = nonceAleatorio();
+  const minhaMarca = `${JSON.stringify({ em: ctx.relogio.agora().toISOString(), dono, nonce })}\n`;
   for (let tentativa = 0; tentativa < TENTATIVAS_DA_TRAVA && !pegou; tentativa++) {
-    const marca = JSON.stringify({ em: ctx.relogio.agora().toISOString(), dono });
-    pegou = await arquivos.criarExclusivo(CAMINHO_DA_TRAVA, `${marca}\n`);
+    pegou = await arquivos.criarExclusivo(CAMINHO_DA_TRAVA, minhaMarca);
     if (pegou) break;
-    if (await travaVelha(ctx)) {
-      // Dono morreu sem soltar: toma a trava. Se dois tomam ao mesmo tempo, o `criarExclusivo` seguinte desempata.
+    const vista = await travaTomavel(ctx, tentativa >= 20);
+    // Só apaga se ainda for a mesma trava que foi julgada velha (outro processo pode ter tomado nesse meio tempo).
+    if (vista !== undefined && (await arquivos.ler(CAMINHO_DA_TRAVA).catch(() => undefined)) === vista) {
       await arquivos.remover(CAMINHO_DA_TRAVA);
       continue;
     }
@@ -95,7 +113,10 @@ async function comTrava<T>(ctx: ContextoDeAuditoria, corpo: () => Promise<T>): P
   try {
     return await corpo();
   } finally {
-    await arquivos.remover(CAMINHO_DA_TRAVA);
+    // Solta só a própria trava: se outro processo a tomou (a nossa ficou velha), a dele não é apagada.
+    if ((await arquivos.ler(CAMINHO_DA_TRAVA).catch(() => undefined)) === minhaMarca) {
+      await arquivos.remover(CAMINHO_DA_TRAVA);
+    }
   }
 }
 

@@ -14,6 +14,7 @@ const BYTES_MAXIMOS = 8 * 1024 * 1024;
 const DECODIFICADOR = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 /** Marca dos temporários da gravação atômica; `listar` os ignora. */
 const SUFIXO_TEMPORARIO = '.ez-tmp-';
+const TEMPORARIO = /\.ez-tmp-[0-9a-f]{12}$/;
 
 /** `rename` por cima do destino. No Windows pode falhar por instantes se um antivírus segura o arquivo: tenta de novo. */
 async function renomearSobrepondo(de: string, para: string): Promise<void> {
@@ -74,7 +75,7 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
     });
     for (const e of entradas) {
       const rel = prefixo === '' ? e.name : `${prefixo}/${e.name}`;
-      if (e.isFile() && e.name.includes(SUFIXO_TEMPORARIO)) continue; // sobra de gravação interrompida (A2)
+      if (e.isFile() && TEMPORARIO.test(e.name)) continue; // sobra de gravação interrompida (A2)
       if (e.isSymbolicLink()) throw new Error(`"${escaparInvisiveis(rel)}" é link simbólico; o harness recusa.`);
       if (e.isDirectory()) await listarEm(join(pasta, e.name), rel, saida);
       else if (e.isFile()) saida.push(rel);

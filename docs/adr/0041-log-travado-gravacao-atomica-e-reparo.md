@@ -23,5 +23,8 @@ Aplicar D1 a D6. A porta `SistemaDeArquivos` ganha `criarExclusivo`, que só a t
 - Custos: cada gravação faz mais uma chamada ao disco (`fsync` e `rename`); o registro espera se outra execução segura a trava; `.harness/auditoria/selado/` cresce se houver reparos (fica fora do Git junto com o resto do log).
 - Riscos aceitos: **o `apply` ainda grava pacote por pacote.** Cada arquivo é atômico e o lockfile é gravado por último, mas uma queda no meio de um `apply` deixa arquivos novos com o lockfile antigo; a próxima execução enxerga isso como "editado à mão" e pede `--forcar` (que guarda cópia). A troca por pasta temporária inteira fica para uma sprint própria (exige porta de renomear pasta, com semântica diferente no Windows). A trava por tempo pode ser tomada de um processo lento mas vivo (60 s é folga larga para um registro de milissegundos). O log local continua evidência de adulteração ingênua, não proteção: o reparo é da pessoa, mas um agente com acesso ao disco ainda pode editar arquivos (T-aud1; a âncora no CI fica para a versão paga, D4 da análise).
 
+## Revisão de segurança
+Sem bloqueantes. Corrigidos na sprint: trava com nonce (só solta a própria; só toma a que continua igual à que julgou velha; data no futuro ou trava ilegível por muito tempo também é tomada) e `listar` ignora só o padrão exato de temporário. Ficam em aberto: o reparo ainda não sela um `.jsonl` ilegível (não UTF-8 ou maior que 8 MB), e o evento do reparo não guarda o hash dos arquivos selados.
+
 ## Em aberto
 Troca atômica da pasta do pacote no `apply`. Mesmas travas para `export` (cursor de telemetria) se ele passar a rodar em paralelo.
