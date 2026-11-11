@@ -1,6 +1,6 @@
 # ADR-0042: Interface em inglês antes da v1.0 e pendências da Sprint 21
 
-> Status: Aceito · Data: 2026-11-11 · Relacionados: [ADR-0041](0041-log-travado-gravacao-atomica-e-reparo.md), [ADR-0037](0037-nome-do-produto-ez-ai.md), [ADR-0013](0013-fluxo-de-pr-e-versionamento.md)
+> Status: Aceito · Data: 2026-11-11 · Relacionados: [ADR-0041](0041-log-travado-gravacao-atomica-e-reparo.md), [ADR-0037](0037-nome-do-produto-ez-ai.md), [ADR-0013](0013-fluxo-de-branches-develop-para-main.md)
 
 ## Contexto
 A análise de 2026-11-10 (D5) pediu que tudo o que é contrato público (opções e subcomandos da CLI, campos dos schemas, valores de enumeração, nomes de arquivos de configuração) fique em inglês **antes da v1.0**, porque depois disso renomear quebra quem já instalou. Mensagens ao usuário e documentação continuam em português. A Sprint 21 deixou dois itens baixos da revisão de segurança: o `apply` ainda gravava pacote por pacote, e o reparo do log não selava um `.jsonl` ilegível nem guardava o hash dos arquivos selados.
