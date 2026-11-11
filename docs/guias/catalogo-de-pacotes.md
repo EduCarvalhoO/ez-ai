@@ -38,7 +38,9 @@ O `search` lê a maior tag `vX.Y.Z` do repositório (só `catalogo.json` e o bun
    ```
    O `repository` precisa ser do mesmo dono do `name`. Etiquetas em minúsculas, até 8. Até 2.000 pacotes e 256 KB.
 2. Crie `.github/workflows/assinar-catalogo.yml`, disparado por tag `v*`, com `id-token: write`. Ele grava o texto `sha256:<hex>` do `catalogo.json` (e só dele, exatamente os bytes do arquivo no Git) com `printf '%s' "sha256:$(sha256sum catalogo.json | cut -d' ' -f1)" > hash.txt` e o assina com `cosign sign-blob --yes --bundle harness-package.sigstore.json hash.txt`. O modelo de assinatura de pacote, que serve de base, está em [release-assinada.yml](../modelos/release-assinada.yml); aqui o hash é do catálogo, não de `ez-ai hash-package`.
-3. Marque a tag (`v1.0.0`). O arquivo `harness-package.sigstore.json` precisa estar no commit da tag, ao lado do `catalogo.json`.
+3. Marque a tag (`v1.0.0`). O workflow assina, grava `harness-package.sigstore.json` num commit filho e move a tag para ele, então o bundle fica no commit da tag, ao lado do `catalogo.json`. O `search` confere o commit **pai** do commit da tag (o que o certificado cita) e exige que o commit da tag tenha exatamente um pai.
+
+Catálogo oficial já publicado: `https://github.com/educarvalhoo/ez-ai-catalogo` (workflow `assinar-catalogo.yml`, tag `v1.0.0`, `repositoryId` `1453406314`). **Atenção:** essa publicação usa os nomes antigos (`harness-pacote.sigstore.json`, campos em português); ela só volta a funcionar depois de republicar com os nomes do ADR-0042 (v1.0.1).
 
 ## Proteja o repositório do catálogo
 Quem pode criar tag no repositório do catálogo assina qualquer conteúdo, porque o GitHub roda o workflow do commit da tag. Ative um ruleset que proteja as tags `v*` (só mantenedores criam e ninguém apaga ou move) e rode o workflow num `environment` com revisores. Use letras minúsculas no nome do repositório do catálogo: a identidade é comparada com a caixa canônica (minúscula).

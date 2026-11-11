@@ -24,4 +24,6 @@ Aplicar D1 a D6. A renomeação foi feita por uma ferramenta que percorre a árv
 - Riscos aceitos: o texto das mensagens exibe valores em inglês (por exemplo, `confiança: verified`); os ADRs anteriores continuam com os nomes antigos, por serem histórico.
 
 ## Em aberto
+**Republicar as duas publicações assinadas (Eduardo).** O pacote `workflow-feature` v0.5.0 e o catálogo `ez-ai-catalogo` v1.0.0 (PR #111) usam os nomes antigos (`harness-pacote.json`, `harness-pacote.sigstore.json`, campos em português) e o texto dos agentes cita `knowledge buscar`. A CLI nova não os lê. É preciso gerar o pacote v0.5.1 e o catálogo v1.0.1 com os nomes novos, ajustar o commit fixo do ez-ai no workflow (`hash-package`) e assinar de novo ([runbook](../guias/runbook-assinatura.md)).
+
 Traduzir os identificadores internos aos poucos, se a comunidade pedir.

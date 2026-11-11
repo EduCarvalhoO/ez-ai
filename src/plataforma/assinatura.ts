@@ -1,10 +1,8 @@
 // Verificador Sigstore (ADR-0035). Só confere um bundle contra a raiz de confiança fixada no código: sem rede,
 // sem TUF, sem assinar. O artefato assinado é o hash do conteúdo do pacote (texto `sha256:<hex>`).
-import type { toTrustMaterial, Verifier } from '@sigstore/verify';
+import type { Verifier } from '@sigstore/verify';
 import type { PedidoDeVerificacao, VerificadorDeAssinatura } from '../core/index.js';
 import { RAIZ_DE_CONFIANCA_JSON } from './raiz-de-confianca.js';
-
-type Raiz = Parameters<typeof toTrustMaterial>[0];
 
 export interface OpcoesDoVerificador {
   /** Só para teste: troca a raiz de confiança fixada. */
@@ -12,6 +10,22 @@ export interface OpcoesDoVerificador {
 }
 
 const escaparRegex = (texto: string): string => texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Regex da identidade do certificado. O dono e o repositorio do GitHub nao diferenciam maiusculas de minusculas (o
+ * certificado traz a grafia real, ex. "EduCarvalhoO", e a configuracao pode estar em minuscula); ja o arquivo do
+ * workflow e a tag diferenciam. Por isso so a parte ate "/.github/workflows/" ignora a caixa, e o resto e exato.
+ */
+export const regexDaIdentidade = (identidade: string): string => {
+  const marca = '/.github/workflows/';
+  const i = identidade.indexOf(marca);
+  const sensivel = i < 0 ? identidade : identidade.slice(i);
+  const insensivel = i < 0 ? '' : identidade.slice(0, i);
+  const semCaixa = [...insensivel]
+    .map((c) => (c.toLowerCase() !== c.toUpperCase() ? `[${c.toLowerCase()}${c.toUpperCase()}]` : escaparRegex(c)))
+    .join('');
+  return `^${semCaixa}${escaparRegex(sensivel)}$`;
+};
 
 // Extensão Fulcio "Source Repository Identifier": o valor é um UTF8String DER (tag 0x0c, tamanho, dígitos ASCII).
 const OID_ID_DO_REPOSITORIO = [1, 3, 6, 1, 4, 1, 57264, 1, 15];
@@ -41,7 +55,11 @@ export function criarVerificadorSigstore(o: OpcoesDoVerificador = {}): Verificad
   const obter = async () => {
     const { bundleFromJSON } = await import('@sigstore/bundle');
     const verify = await import('@sigstore/verify');
-    verificador ??= new verify.Verifier(verify.toTrustMaterial(JSON.parse(o.raiz ?? RAIZ_DE_CONFIANCA_JSON) as Raiz));
+    // O JSON da raiz traz bytes em base64; o verificador espera a mensagem protobuf com Buffers e datas.
+    const { TrustedRoot } = await import('@sigstore/protobuf-specs');
+    verificador ??= new verify.Verifier(
+      verify.toTrustMaterial(TrustedRoot.fromJSON(JSON.parse(o.raiz ?? RAIZ_DE_CONFIANCA_JSON))),
+    );
     return { bundleFromJSON, toSignedEntity: verify.toSignedEntity, verificador };
   };
   return {
@@ -53,7 +71,7 @@ export function criarVerificadorSigstore(o: OpcoesDoVerificador = {}): Verificad
         // Identidade e emissor exatos (sem regex): o certificado precisa ser do workflow esperado.
         v.verify(entidade, {
           // O @sigstore/verify trata o valor como regex sem âncora: escapa e ancora para valer só a identidade inteira.
-          subjectAlternativeName: `^${escaparRegex(pedido.identity)}$`,
+          subjectAlternativeName: regexDaIdentidade(pedido.identity),
           extensions: { issuer: pedido.issuer },
           ...(pedido.idDoRepositorio !== undefined || pedido.commit !== undefined
             ? {

@@ -120,6 +120,23 @@ export function criarGit(executor: ExecutorDeGit = executorDoSistema): Git {
       if (!sha || !COMMIT.test(sha)) throw new Error(`a tag "${tag}" não existe em ${repositorio}.`);
       return sha;
     },
+    async paiDoCommit(repositorio, commit) {
+      exigirRepositorio(repositorio);
+      if (!COMMIT.test(commit)) throw new Error('commit inválido: use o SHA completo de 40 caracteres.');
+      const pasta = await mkdtemp(join(tmpdir(), 'ez-ai-git-'));
+      try {
+        await executor(['init', '--quiet'], pasta);
+        await executor(['fetch', '--quiet', '--depth', '2', '--no-tags', '--', repositorio, commit], pasta);
+        const pais = (await executor(['rev-list', '--parents', '-n', '1', commit], pasta)).trim().split(/\s+/).slice(1);
+        const [pai] = pais;
+        if (pais.length !== 1 || pai === undefined || !COMMIT.test(pai)) {
+          throw new Error('o commit da tag deve ter exatamente um pai (o commit que foi assinado).');
+        }
+        return pai;
+      } finally {
+        await rm(pasta, { recursive: true, force: true });
+      }
+    },
     async lerArquivos(repositorio, commit) {
       exigirRepositorio(repositorio);
       if (!COMMIT.test(commit)) throw new Error('commit inválido: use o SHA completo de 40 caracteres.');

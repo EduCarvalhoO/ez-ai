@@ -163,4 +163,12 @@ describe('scan: conjunto de arquivos e bloqueio', () => {
     expect(modoMaisRigido('high', 'low')).toBe('low');
     expect(modoMaisRigido('never', 'never')).toBe('never');
   });
+
+  it('ignora o bundle de assinatura da raiz do pacote, mas não um arquivo com o mesmo nome em subpasta', () => {
+    const blob = 'A'.repeat(300);
+    expect(escanearArquivos(new Map([['harness-package.sigstore.json', blob]])).achados).toEqual([]);
+    expect(
+      escanearArquivos(new Map([['skills/x/harness-package.sigstore.json', blob]])).achados.length,
+    ).toBeGreaterThan(0);
+  });
 });

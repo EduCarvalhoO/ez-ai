@@ -431,6 +431,8 @@ export function escanearArquivos(arquivos: ReadonlyMap<string, string>): { achad
   const vistos = new Set<string>();
   const todos: Achado[] = [];
   for (const [caminho, texto] of [...arquivos].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+    // O bundle de assinatura (raiz do pacote) e base64 por natureza e só é lido pelo verificador Sigstore, nunca pelo modelo.
+    if (caminho === 'harness-package.sigstore.json') continue;
     for (const a of escanearTexto(caminho, texto)) {
       const chave = `${a.rule}|${a.file}|${a.linha}|${a.mensagem}`;
       if (vistos.has(chave)) continue;

@@ -27,6 +27,6 @@ Limites:
 - Banco do artifact só para leitura: nunca escreva, apague ou atualize as coleções `notes` e `removed`.
 - Sem ferramenta de publicação no ambiente (ex.: Copilot), atualize só a cópia de trabalho e avise que a publicação ficou pendente.
 
-Resposta final ao orquestrador (2 linhas):
+Formato da saída (resposta final) ao orquestrador (2 linhas):
 - O que mudou no painel (fases e entregas) e o link do artifact.
 - Notas `instrucao` encontradas, ou "nenhuma", e o que ficou pendente.

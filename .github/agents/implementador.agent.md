@@ -32,7 +32,7 @@ Limites:
 - Não faça commit, push, `git reset --hard` nem apague arquivos fora de `.tmp/`; o orquestrador commita depois do G3.
 - Você não se aprova: a revisão é do `revisor`.
 
-Resposta final:
+Formato da saída (resposta final):
 - Arquivos alterados, um por linha, com uma frase sobre a mudança.
 - Cada critério de aceite com o teste que o comprova.
 - Bloco de evidências da skill `verificar` e desvios do plano.
