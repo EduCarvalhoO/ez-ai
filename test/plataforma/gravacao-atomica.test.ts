@@ -30,8 +30,9 @@ describe('gravação atômica (A2)', () => {
   it('listar ignora sobra de gravação interrompida', async () => {
     const arquivos = await criarArquivos(pasta);
     await arquivos.gravar('p/a.md', 'a');
-    writeFileSync(join(pasta, 'p', 'a.md.ez-tmp-abc123'), 'meio');
-    expect(await arquivos.listar('p')).toEqual(['p/a.md']);
+    writeFileSync(join(pasta, 'p', 'a.md.ez-tmp-abc123abc123'), 'meio');
+    writeFileSync(join(pasta, 'p', 'b.ez-tmp-nota.md'), 'legítimo');
+    expect(await arquivos.listar('p')).toEqual(['p/a.md', 'p/b.ez-tmp-nota.md']);
   });
 
   it('criarExclusivo: só o primeiro vence', async () => {
