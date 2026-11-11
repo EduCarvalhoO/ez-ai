@@ -31,7 +31,7 @@ Um pacote ou o projeto declara fontes só como **dados**, nunca como código (AD
 | `caminhos`, `excluir` | Globs com as mesmas regras de caminho do `ler` do manifesto. O conjunto precisa estar dentro do que a permissão `ler` do componente permite; fonte fora do `ler` declarado é recusada na validação |
 
 ### Regras de indexação
-- Respeitar `.gitignore`; arquivo que casa com a lista de segredos do `ler` (`sensivel`: `.env`, `*.pem`, `*.key`, `id_rsa`, `.npmrc`, ...) nunca é indexado, mesmo que o glob o alcance (I1).
+- Não lê `.gitignore` (só pastas curadas, ADR-0041); trecho que `pareceSegredo` reconhece não entra no índice e fica em `pulados`; arquivo que casa com a lista de segredos do `ler` (`sensivel`: `.env`, `*.pem`, `*.key`, `id_rsa`, `.npmrc`, ...) nunca é indexado, mesmo que o glob o alcance (I1).
 - Binários e arquivos acima do limite (abaixo) são pulados e listados no relatório da indexação, não somem em silêncio.
 - Atualização incremental por hash de conteúdo (mesmo hash do lockfile); `doctor` avisa índice velho. Índice em `.harness/cache/conhecimento/`, fora do Git.
 - Nenhum código de pacote é executado; só o harness lê e indexa.
