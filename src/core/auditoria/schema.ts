@@ -55,6 +55,7 @@ export const COMANDOS_DA_CLI = [
   'apply',
   'validate',
   'doctor',
+  'auditoria',
 ] as const;
 /** Nível de enforcement da evidência (ADR-0016): o log local nunca passa de `so-pedido` sozinho. */
 export const NIVEIS_DE_EVIDENCIA = ['ambiente', 'validador-externo', 'so-pedido'] as const;

@@ -194,7 +194,7 @@
       "required": ["comando", "dryRun", "pacotes"],
       "properties": {
         "comando": {
-          "enum": ["init", "add", "remove", "update", "list", "plan", "apply", "validate", "doctor"]
+          "enum": ["init", "add", "remove", "update", "list", "plan", "apply", "validate", "doctor", "auditoria"]
         },
         "dryRun": {
           "type": "boolean"

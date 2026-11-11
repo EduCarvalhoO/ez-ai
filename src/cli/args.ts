@@ -21,6 +21,7 @@ export const COMANDOS = [
   'import',
   'qualidade',
   'search',
+  'auditoria',
 ] as const;
 export type Comando = (typeof COMANDOS)[number];
 
@@ -48,6 +49,7 @@ export const USO = [
   '                                        confere agentes, skills e scripts contra o checklist de qualidade (descrição com gatilho, tamanho, tools, model, Gotchas, --help nos scripts); erro tranca, --estrito tranca também por aviso (offline)',
   '  search <termo...> [--limite <n>]',
   '                                        pesquisa no catálogo assinado de pacotes fixado em "catalogo" na configuração; só lista (o add continua conferindo tudo); sem rede além do Git do catálogo',
+  '  auditoria reparar                     sela a corrente quebrada do log de auditoria (guarda os originais em .harness/auditoria/selado/) e recomeça do último evento íntegro; só a pessoa, nunca um agente; --dry-run só mostra',
   '  benchmark [--exportar]                pontua as tarefas de referência pelo log de auditoria (--exportar grava o dataset)',
   '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
   '  validate --ci          recalcula policy e aprovações a partir do commit travado',
@@ -113,6 +115,7 @@ const POSICIONAIS: Record<Comando, number | undefined> = {
   import: 0,
   qualidade: 1,
   search: undefined,
+  auditoria: 1,
 };
 
 export function lerArgumentos(args: readonly string[]): Argumentos | string {

@@ -14,6 +14,7 @@ import { diffDoPacote } from '../plano/diff.js';
 import { avaliarPacote } from '../policy/avaliar.js';
 import { resolverVersao } from '../resolucao/semver.js';
 import { escaparInvisiveis } from '../seguranca/caminhos.js';
+import { RECUSA_DE_AGENTE } from './auditoria.js';
 import { modoDoScan, resumirScan } from './scan.js';
 import { decidirAssinatura } from './assinatura.js';
 import {
@@ -557,6 +558,8 @@ async function preparar(
 
 function instalar(ctx: Contexto, comando: 'apply' | 'update', opcoes: OpcoesDeInstalacao): Promise<ResultadoDoComando> {
   return executarComAuditoria(ctx, comando, opcoes.dryRun, async () => {
+    // Promessa do modelo de ameaças (A4): aprovação própria é da pessoa, então o ambiente de agente a recusa.
+    if (ctx.tipoDeAtor === 'agente' && opcoes.aprovar.length > 0) return falha([`--aprovar: ${RECUSA_DE_AGENTE}`]);
     const config = await carregarConfiguracao(ctx.arquivos);
     if (!config.ok) return falha(config.erros);
     const lock = await carregarLockfile(ctx.arquivos);

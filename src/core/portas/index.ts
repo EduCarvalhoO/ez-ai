@@ -11,8 +11,16 @@ export interface SistemaDeArquivos {
   readonly raiz: string;
   /** Lê um arquivo de texto UTF-8. */
   ler(caminho: string): Promise<string>;
-  /** Grava um arquivo de texto UTF-8, criando as pastas que faltarem. */
+  /**
+   * Grava um arquivo de texto UTF-8, criando as pastas que faltarem. A gravação é atômica: quem lê vê o conteúdo
+   * antigo inteiro ou o novo inteiro, nunca um arquivo pela metade (ADR-0041).
+   */
   gravar(caminho: string, conteudo: string): Promise<void>;
+  /**
+   * Cria o arquivo só se ele ainda não existe; devolve `false` (sem alterar nada) se já existia. É a base da trava
+   * do log de auditoria: dois processos nunca criam o mesmo arquivo ao mesmo tempo (ADR-0041).
+   */
+  criarExclusivo(caminho: string, conteudo: string): Promise<boolean>;
   /** Lista os arquivos sob uma pasta, com caminhos relativos à raiz. */
   listar(pasta: string): Promise<readonly string[]>;
   /** Diz se o caminho existe. */
