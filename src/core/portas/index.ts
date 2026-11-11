@@ -35,6 +35,11 @@ export interface Git {
   listarTags(repositorio: string): Promise<readonly string[]>;
   /** Resolve uma tag ou ref de um repositório para o SHA do commit. */
   resolverTag(repositorio: string, tag: string): Promise<string>;
+  /**
+   * Pai único de um commit (lança se não tiver exatamente um). O workflow que assina o catálogo roda no commit da tag e
+   * depois grava o bundle num commit filho, para onde a tag se move: o commit assinado é o pai do commit da tag.
+   */
+  paiDoCommit(repositorio: string, commit: string): Promise<string>;
   /** Lê os arquivos de um commit, indexados por caminho relativo. */
   lerArquivos(repositorio: string, commit: string): Promise<ReadonlyMap<string, string>>;
   /**

@@ -59,6 +59,7 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
 
   let tag: string;
   let commit: string;
+  let commitAssinado: string;
   let lidos: ReadonlyMap<string, Uint8Array>;
   try {
     // Sempre a maior tag: o catálogo mais novo. Nunca uma tag escolhida por quem publica.
@@ -78,6 +79,8 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
     if (visto && (compararTags(tag, visto.tag) ?? -1) === 0 && visto.commit !== commit) {
       return falha(`a tag ${e(tag)} do catálogo mudou de commit desde a última vez; recusado.`);
     }
+    // O bundle só pode ser gravado depois da assinatura: o certificado cita o commit anterior, pai do commit da tag.
+    commitAssinado = await ctx.git.paiDoCommit(repositorio, commit);
     // Só `catalogo.json` e o bundle, em bytes brutos: nada mais da árvore do repositório entra na máquina.
     lidos = await ctx.git.lerArquivosDe(
       repositorio,
@@ -112,7 +115,7 @@ export async function procurarPacotes(ctx: Contexto, o: OpcoesDeSearch): Promise
       identidade,
       emissor: EMISSOR,
       idDoRepositorio: cat.repositorioId,
-      commit,
+      commit: commitAssinado,
     });
   } catch (erro: unknown) {
     conferido = { ok: false, motivo: erro instanceof Error ? erro.message : String(erro) };

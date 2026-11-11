@@ -1,6 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { oidDoCommit, oidDoRepositorio, regexDaIdentidade } from '../../src/plataforma/assinatura.js';
 import { criarVerificadorSigstore } from '../../src/plataforma/index.js';
-import { oidDoCommit, oidDoRepositorio } from '../../src/plataforma/assinatura.js';
 import { RAIZ_DE_CONFIANCA_JSON } from '../../src/plataforma/raiz-de-confianca.js';
 
 const PEDIDO = {
@@ -48,5 +49,40 @@ describe('verificador Sigstore (plataforma)', () => {
   it('um pedido com ID de repositório inválido é recusado sem lançar', async () => {
     const r = await criarVerificadorSigstore().verificar({ ...PEDIDO, bundle: '{}', idDoRepositorio: 'x' });
     expect(r.ok).toBe(false);
+  });
+
+  it('a identidade ignora a caixa do dono e do repositorio, mas nao a do workflow nem a da tag', () => {
+    const re = new RegExp(
+      regexDaIdentidade('https://github.com/educarvalhoo/pacote/.github/workflows/a.yml@refs/tags/v1.0.0'),
+    );
+    expect(re.test('https://github.com/EduCarvalhoO/Pacote/.github/workflows/a.yml@refs/tags/v1.0.0')).toBe(true);
+    expect(re.test('https://github.com/educarvalhoo/pacote/.github/workflows/A.yml@refs/tags/v1.0.0')).toBe(false);
+    expect(re.test('https://github.com/educarvalhoo/pacote/.github/workflows/a.yml@refs/tags/V1.0.0')).toBe(false);
+    expect(re.test('https://github.com/educarvalhoo/pacotex/.github/workflows/a.yml@refs/tags/v1.0.0')).toBe(false);
+    expect(re.test('x https://github.com/educarvalhoo/pacote/.github/workflows/a.yml@refs/tags/v1.0.0')).toBe(false);
+  });
+
+  // Bundle gerado de verdade pelo GitHub Actions (primeira assinatura real, v0.5.0 do workflow-feature).
+  describe('assinatura real (caminho feliz)', () => {
+    const bundle = readFileSync(new URL('./fixtures/bundle-real.sigstore.json', import.meta.url), 'utf8');
+    const REAL = {
+      identidade:
+        'https://github.com/educarvalhoo/workflow-feature/.github/workflows/release-assinada.yml@refs/tags/v0.5.0',
+      emissor: 'https://token.actions.githubusercontent.com',
+      artefato: 'sha256:aca67b76909d936e5618e2e1a46ed821af382a1af163d3fa0ea217f9df0d6eeb',
+      bundle,
+      idDoRepositorio: '1451316275',
+    };
+
+    it('aceita o bundle real, mesmo com a identidade em outra caixa no dono e no repositorio', async () => {
+      expect(await criarVerificadorSigstore().verificar(REAL)).toEqual({ ok: true });
+    });
+
+    it('recusa conteudo alterado, outra tag e outro repositorio', async () => {
+      const v = criarVerificadorSigstore();
+      expect((await v.verificar({ ...REAL, artefato: `sha256:${'1'.repeat(64)}` })).ok).toBe(false);
+      expect((await v.verificar({ ...REAL, identidade: REAL.identidade.replace('v0.5.0', 'v0.5.1') })).ok).toBe(false);
+      expect((await v.verificar({ ...REAL, idDoRepositorio: '1' })).ok).toBe(false);
+    });
   });
 });
