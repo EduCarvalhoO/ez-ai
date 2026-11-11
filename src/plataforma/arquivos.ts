@@ -1,8 +1,8 @@
 // Porta de arquivos com Node (ADR-0015): única via de escrita do harness. Presa a uma raiz real; recusa caminho fora
 // do escopo, symlink e junction em qualquer segmento (T1, T2). Reconfere o caminho real depois de gravar.
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { constants } from 'node:fs';
-import { lstat, mkdir, open, readdir, realpath, rename, unlink } from 'node:fs/promises';
+import { lstat, mkdir, open, readdir, realpath, rename, rm, unlink } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import type { SistemaDeArquivos } from '../core/portas/index.js';
 import { escaparInvisiveis, exigirCaminhoDoProjeto } from '../core/seguranca/caminhos.js';
@@ -15,6 +15,9 @@ const DECODIFICADOR = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
 /** Marca dos temporários da gravação atômica; `listar` os ignora. */
 const SUFIXO_TEMPORARIO = '.ez-tmp-';
 const TEMPORARIO = /\.ez-tmp-[0-9a-f]{12}$/;
+/** Pasta preparada (`.ez-new-`) ou pasta antiga já trocada (`.ez-old-`) de uma troca de pasta; `listar` as ignora. */
+const TEMPORARIO_DE_PASTA = /\.ez-(?:new|old)-[0-9a-f]{12}$/;
+const BLOCO_DA_COPIA = 1024 * 1024;
 
 /** `rename` por cima do destino. No Windows pode falhar por instantes se um antivírus segura o arquivo: tenta de novo. */
 async function renomearSobrepondo(de: string, para: string): Promise<void> {
@@ -76,6 +79,7 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
     for (const e of entradas) {
       const rel = prefixo === '' ? e.name : `${prefixo}/${e.name}`;
       if (e.isFile() && TEMPORARIO.test(e.name)) continue; // sobra de gravação interrompida (A2)
+      if (e.isDirectory() && TEMPORARIO_DE_PASTA.test(e.name)) continue; // sobra de troca de pasta (ADR-0042)
       if (e.isSymbolicLink()) throw new Error(`"${escaparInvisiveis(rel)}" é link simbólico; o harness recusa.`);
       if (e.isDirectory()) await listarEm(join(pasta, e.name), rel, saida);
       else if (e.isFile()) saida.push(rel);
@@ -158,6 +162,81 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
         await arquivo.close();
       }
       return true;
+    },
+    async copiar(de, para) {
+      const origem = await resolver(de);
+      const destino = await resolver(para);
+      await mkdir(dirname(destino), { recursive: true });
+      await resolver(para);
+      const temporario = `${destino}${SUFIXO_TEMPORARIO}${randomBytes(6).toString('hex')}`;
+      const hash = createHash('sha256');
+      let bytes = 0;
+      const entrada = await open(origem, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+      try {
+        if (!(await entrada.stat()).isFile()) throw new Error(`"${escaparInvisiveis(de)}" não é arquivo comum.`);
+        const saida = await open(
+          temporario,
+          constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0),
+          0o644,
+        );
+        try {
+          try {
+            const bloco = Buffer.alloc(BLOCO_DA_COPIA);
+            for (;;) {
+              const { bytesRead } = await entrada.read(bloco, 0, BLOCO_DA_COPIA, null);
+              if (bytesRead === 0) break;
+              const parte = bloco.subarray(0, bytesRead);
+              hash.update(parte);
+              bytes += bytesRead;
+              await saida.write(parte);
+            }
+            await saida.sync();
+          } finally {
+            await saida.close();
+          }
+          await renomearSobrepondo(temporario, destino);
+        } catch (erro: unknown) {
+          await unlink(temporario).catch(() => undefined);
+          throw erro;
+        }
+      } finally {
+        await entrada.close();
+      }
+      return { bytes, sha256: hash.digest('hex') };
+    },
+    async trocarPasta(preparada, destino) {
+      const nova = await resolver(preparada);
+      const alvo = await resolver(destino);
+      if (!(await lstat(nova)).isDirectory()) throw new Error(`"${escaparInvisiveis(preparada)}" não é uma pasta.`);
+      const existe = await lstat(alvo).then(
+        (info) => {
+          if (!info.isDirectory()) throw new Error(`"${escaparInvisiveis(destino)}" não é uma pasta comum.`);
+          return true;
+        },
+        (erro: unknown) => {
+          if (ehErroDe(erro, 'ENOENT') || ehErroDe(erro, 'ENOTDIR')) return false;
+          throw erro;
+        },
+      );
+      await mkdir(dirname(alvo), { recursive: true });
+      if (!existe) {
+        await renomearSobrepondo(nova, alvo);
+        return;
+      }
+      // Windows não troca uma pasta cheia por cima de outra: a antiga sai do caminho, a nova entra, a antiga é apagada.
+      const antiga = `${alvo}.ez-old-${randomBytes(6).toString('hex')}`;
+      await renomearSobrepondo(alvo, antiga);
+      try {
+        await renomearSobrepondo(nova, alvo);
+      } catch (erro: unknown) {
+        await renomearSobrepondo(antiga, alvo); // devolve o que havia
+        throw erro;
+      }
+      await rm(antiga, { recursive: true, force: true }).catch(() => undefined);
+    },
+    async removerPasta(caminho) {
+      const destino = await resolver(caminho);
+      await rm(destino, { recursive: true, force: true });
     },
     async listar(pasta) {
       const raizDaBusca = pasta === '' || pasta === '.';

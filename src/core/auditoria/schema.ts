@@ -80,6 +80,19 @@ const DADOS: Record<(typeof TIPOS_DE_EVENTO)[number], object> = {
     properties: {
       comando: { enum: COMANDOS_DA_CLI },
       dryRun: { type: 'boolean' },
+      selados: {
+        type: 'array',
+        maxItems: LIMITES_DA_AUDITORIA.itensPorLista,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['arquivo', 'hash'],
+          properties: {
+            arquivo: { type: 'string', pattern: '^\\d{4}-\\d{2}\\.jsonl$' },
+            hash: HASH,
+          },
+        },
+      },
       pacotes: {
         type: 'array',
         maxItems: LIMITES_DA_AUDITORIA.itensPorLista,

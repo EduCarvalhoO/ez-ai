@@ -303,6 +303,11 @@ interface Remocao {
   readonly projecao: PlanoDeProjecao;
 }
 
+/** 12 hexadecimais para o nome de uma pasta preparada (precisa casar com o padrão que `listar` ignora). */
+function sufixoAleatorio(): string {
+  return Array.from({ length: 12 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
+
 function igual(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
@@ -591,12 +596,22 @@ function instalar(ctx: Contexto, comando: 'apply' | 'update', opcoes: OpcoesDeIn
     const conferido = validarLockfile(texto);
     if (!conferido.ok) return falha(formatarErros(CAMINHO_DO_LOCKFILE, conferido.erros));
 
-    for (const a of acoes.filter((x) => x.mudou)) {
-      const pasta = pastaDoPacote(a.travado.nome);
-      await guardarCopias(ctx, a.travado.nome, a.copiar);
-      await apagarInstalado(ctx, a.travado.nome, new Set(a.arquivos.keys()));
-      for (const [caminho, conteudo] of a.arquivos) await ctx.arquivos.gravar(`${pasta}/${caminho}`, conteudo);
+    // Troca por pasta inteira (ADR-0042): cada pacote novo é escrito numa pasta ao lado, e só depois de tudo
+    // preparado as pastas entram no lugar. Uma falha ao escrever deixa o instalado como estava.
+    const preparadas: { pasta: string; preparada: string }[] = [];
+    try {
+      for (const a of acoes.filter((x) => x.mudou)) {
+        const pasta = pastaDoPacote(a.travado.nome);
+        await guardarCopias(ctx, a.travado.nome, a.copiar);
+        const preparada = `${pasta}.ez-new-${sufixoAleatorio()}`;
+        preparadas.push({ pasta, preparada });
+        for (const [caminho, conteudo] of a.arquivos) await ctx.arquivos.gravar(`${preparada}/${caminho}`, conteudo);
+      }
+    } catch (erro: unknown) {
+      for (const { preparada } of preparadas) await ctx.arquivos.removerPasta(preparada).catch(() => undefined);
+      throw erro;
     }
+    for (const { pasta, preparada } of preparadas) await ctx.arquivos.trocarPasta(preparada, pasta);
     for (const a of acoes) await aplicarProjecao(ctx, a.travado.nome, a.projecao);
     for (const r of remocoes) {
       await guardarCopias(ctx, r.travado.nome, r.copiar);

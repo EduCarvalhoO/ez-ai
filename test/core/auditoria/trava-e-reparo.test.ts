@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { lerAuditoria, registrarEvento } from '../../../src/core/index.js';
 import { CAMINHO_DA_TRAVA, repararAuditoria } from '../../../src/core/auditoria/registro.js';
@@ -129,5 +130,42 @@ describe('reparo da corrente (A1)', () => {
     expect(r.codigo).toBe(1);
     expect(r.erros.join(' ')).toMatch(/agente/);
     expect(arquivos.mapa).toEqual(antes);
+  });
+
+  it('guarda o hash de cada arquivo selado no evento do reparo (ADR-0042)', async () => {
+    const { arquivos, original } = await logComTresEventosEUmAdulterado();
+    const r = await repararAuditoria(contexto('2026-11-05T10:00:00.000Z', arquivos), { dryRun: false });
+    const esperado = `sha256:${createHash('sha256').update(original).digest('hex')}`;
+    expect(r.selados).toEqual([{ arquivo: '2026-11.jsonl', bytes: Buffer.byteLength(original), hash: esperado }]);
+    const lido = await lerAuditoria(arquivos);
+    expect(lido.ok && lido.eventos[1]?.dados).toMatchObject({
+      selados: [{ arquivo: '2026-11.jsonl', hash: esperado }],
+    });
+  });
+
+  it('sela um .jsonl ilegível (não UTF-8 ou grande demais) em vez de travar para sempre (ADR-0042)', async () => {
+    const arquivos = arquivosEmMemoria();
+    await registrarEvento(contexto('2026-10-02T10:00:00.000Z', arquivos), operacao);
+    await registrarEvento(contexto('2026-11-02T10:00:00.000Z', arquivos), operacao);
+    const ilegivel = '.harness/auditoria/2026-11.jsonl';
+    const original = arquivos.mapa.get(ilegivel) ?? '';
+    const lendo = {
+      ...arquivos,
+      ler: async (c: string) => {
+        if (c === ilegivel) throw new Error('não é texto UTF-8 válido');
+        return arquivos.ler(c);
+      },
+    };
+    const c = { ...contexto('2026-11-05T10:00:00.000Z', arquivos), arquivos: lendo };
+    const dry = await repararAuditoria(c, { dryRun: true });
+    expect(dry).toMatchObject({ integra: false, mantidos: 1, ilegiveis: 1 });
+    expect(arquivos.mapa.has(ilegivel)).toBe(true);
+    const r = await repararAuditoria(c, { dryRun: false });
+    expect(r).toMatchObject({ integra: false, mantidos: 1, seladas: 0, ilegiveis: 1 });
+    expect(arquivos.mapa.get('.harness/auditoria/selado/20261105T100000000Z/2026-11.jsonl')).toBe(original);
+    expect(r.selados.map((s) => s.arquivo)).toEqual(['2026-10.jsonl', '2026-11.jsonl']);
+    expect(arquivos.mapa.get(ilegivel)?.split('\n').filter(Boolean)).toHaveLength(1); // só o evento do reparo
+    const lido = await lerAuditoria(arquivos);
+    expect(lido.ok && lido.eventos.map((e) => e.seq)).toEqual([1, 2]);
   });
 });

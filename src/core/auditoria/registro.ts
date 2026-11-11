@@ -162,6 +162,14 @@ export function registrarEvento(ctx: ContextoDeAuditoria, pedido: PedidoDeEvento
   return comTrava(ctx, () => acrescentar(ctx, pedido));
 }
 
+export interface ArquivoSelado {
+  /** Nome do arquivo mensal (`AAAA-MM.jsonl`). */
+  readonly arquivo: string;
+  readonly bytes: number;
+  /** `sha256:<hex>` dos bytes exatos guardados em `selado/`. */
+  readonly hash: string;
+}
+
 export interface ResultadoDoReparo {
   /** `true` quando a corrente já estava íntegra e nada foi mexido. */
   readonly integra: boolean;
@@ -169,16 +177,21 @@ export interface ResultadoDoReparo {
   readonly linhaQuebrada?: number;
   /** Eventos íntegros mantidos antes da quebra. */
   readonly mantidos: number;
-  /** Linhas seladas (da quebra até o fim), guardadas à parte e fora da corrente. */
+  /** Linhas seladas (da quebra até o fim), guardadas à parte e fora da corrente; não conta arquivo ilegível. */
   readonly seladas: number;
+  /** Arquivos mensais que não puderam ser lidos como texto (não UTF-8 ou grandes demais) e foram selados inteiros. */
+  readonly ilegiveis: number;
   readonly pastaDoSelo?: string;
+  /** Hash de cada arquivo guardado em `selado/` (também gravado no evento do reparo). */
+  readonly selados: readonly ArquivoSelado[];
 }
 
 /**
- * Sela a corrente quebrada (A1, ADR-0041). Os arquivos originais são copiados, sem mudança, para `selado/<instante>/`
- * (a prova do que havia); a corrente volta a ter só o trecho íntegro e recebe um evento `auditoria` que registra o
- * reparo. Nada é apagado sem cópia, e o reparo é sempre um evento no próprio log. Não conserta o trecho adulterado:
- * ele deixa de valer como evidência, e a quebra fica registrada.
+ * Sela a corrente quebrada (A1, ADR-0041, ADR-0042). Os arquivos originais são copiados, byte a byte, para
+ * `selado/<instante>/` (a prova do que havia, inclusive arquivo ilegível), com o hash de cada um guardado no evento do
+ * reparo; a corrente volta a ter só o trecho íntegro. Um arquivo mensal ilegível quebra a corrente no começo dele e
+ * é selado inteiro, junto com os que vêm depois. Nada é apagado sem cópia, e o reparo é sempre um evento no próprio
+ * log. Não conserta o trecho adulterado: ele deixa de valer como evidência, e a quebra fica registrada.
  */
 export function repararAuditoria(
   ctx: ContextoDeAuditoria,
@@ -188,46 +201,68 @@ export function repararAuditoria(
   return comTrava(ctx, async () => {
     const caminhos = arquivosDoLog(await arquivos.listar(PASTA_DA_AUDITORIA));
     const porArquivo = new Map<string, string>();
-    const todas: string[] = [];
-    for (const c of caminhos) {
-      const texto = await arquivos.ler(c);
-      porArquivo.set(c, texto);
-      todas.push(...linhasDe(texto));
+    const prefixo: string[] = [];
+    let primeiroIlegivel = -1;
+    let ilegiveis = 0;
+    let linhasDepois = 0;
+    for (const [i, c] of caminhos.entries()) {
+      let texto: string | undefined;
+      try {
+        texto = await arquivos.ler(c);
+      } catch {
+        texto = undefined; // não UTF-8 ou maior que o limite de leitura: vai para o selo sem ser lido
+      }
+      if (texto === undefined) {
+        ilegiveis++;
+        if (primeiroIlegivel < 0) primeiroIlegivel = i;
+      } else if (primeiroIlegivel < 0) {
+        porArquivo.set(c, texto);
+        prefixo.push(...linhasDe(texto));
+      } else {
+        linhasDepois += linhasDe(texto).length;
+      }
     }
-    const verificado = verificarCadeia(todas);
-    if (verificado.ok) return { integra: true, mantidos: todas.length, seladas: 0 };
-    const mantidos = verificado.linha;
-    const seladas = todas.length - mantidos;
+    const verificado = verificarCadeia(prefixo);
+    if (verificado.ok && primeiroIlegivel < 0)
+      return { integra: true, mantidos: prefixo.length, seladas: 0, ilegiveis: 0, selados: [] };
+    const mantidos = verificado.ok ? prefixo.length : verificado.linha;
+    const seladas = prefixo.length - mantidos + linhasDepois;
     const instante = ctx.relogio.agora().toISOString().replace(/[-:.]/g, '');
     const pastaDoSelo = `${PASTA_DOS_SELADOS}/${instante}`;
-    const resultado: ResultadoDoReparo = {
-      integra: false,
-      linhaQuebrada: mantidos + 1,
-      mantidos,
-      seladas,
-      pastaDoSelo,
-    };
-    if (opcoes.dryRun) return resultado;
-    // 1) Cópia fiel de tudo, antes de mexer em qualquer arquivo da corrente.
-    for (const [caminho, texto] of porArquivo) {
-      await arquivos.gravar(`${pastaDoSelo}/${caminho.slice(PASTA_DA_AUDITORIA.length + 1)}`, texto);
+    const base = { integra: false, linhaQuebrada: mantidos + 1, mantidos, seladas, ilegiveis, pastaDoSelo };
+    if (opcoes.dryRun) return { ...base, selados: [] };
+    // 1) Cópia fiel, em bytes, de tudo, antes de mexer em qualquer arquivo da corrente.
+    const selados: ArquivoSelado[] = [];
+    for (const caminho of caminhos) {
+      const nome = caminho.slice(PASTA_DA_AUDITORIA.length + 1);
+      const copia = await arquivos.copiar(caminho, `${pastaDoSelo}/${nome}`);
+      selados.push({ arquivo: nome, bytes: copia.bytes, hash: `sha256:${copia.sha256}` });
     }
-    // 2) A corrente fica só com o trecho íntegro (arquivo que perdeu tudo sai).
+    // 2) A corrente fica só com o trecho íntegro (arquivo que perdeu tudo sai; do ilegível em diante, tudo sai).
     let restante = mantidos;
-    for (const [caminho, texto] of porArquivo) {
-      const linhas = linhasDe(texto);
+    for (const [i, caminho] of caminhos.entries()) {
+      if (primeiroIlegivel >= 0 && i >= primeiroIlegivel) {
+        await arquivos.remover(caminho);
+        continue;
+      }
+      const linhas = linhasDe(porArquivo.get(caminho) ?? '');
       const fica = linhas.slice(0, Math.max(0, Math.min(restante, linhas.length)));
       restante -= linhas.length;
       if (fica.length === 0) await arquivos.remover(caminho);
       else if (fica.length < linhas.length) await arquivos.gravar(caminho, `${fica.join('\n')}\n`);
     }
-    // 3) O reparo vira evento da própria corrente.
+    // 3) O reparo vira evento da própria corrente, com o hash do que foi selado.
     await acrescentar(ctx, {
       tipo: 'operacao',
       resultado: 'executado',
-      detalhe: `corrente selada na linha ${mantidos + 1}; ${seladas} linha(s) guardadas em selado/${instante}`,
-      dados: { comando: 'auditoria', dryRun: false, pacotes: [] },
+      detalhe: `corrente selada na linha ${mantidos + 1}; ${seladas} linha(s) e ${ilegiveis} arquivo(s) ilegível(is) guardados em selado/${instante}`,
+      dados: {
+        comando: 'auditoria',
+        dryRun: false,
+        pacotes: [],
+        selados: selados.map(({ arquivo, hash }) => ({ arquivo, hash })),
+      },
     });
-    return resultado;
+    return { ...base, selados };
   });
 }

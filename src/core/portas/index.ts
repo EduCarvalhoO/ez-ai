@@ -21,6 +21,20 @@ export interface SistemaDeArquivos {
    * do log de auditoria: dois processos nunca criam o mesmo arquivo ao mesmo tempo (ADR-0041).
    */
   criarExclusivo(caminho: string, conteudo: string): Promise<boolean>;
+  /**
+   * Copia um arquivo fielmente, byte a byte, sem decodificar e sem o limite de leitura de texto; devolve o tamanho e
+   * o sha256 (hex) do que foi copiado. Serve ao reparo da auditoria, que precisa selar até um arquivo ilegível
+   * (ADR-0042). Sobrescreve o destino de forma atômica.
+   */
+  copiar(de: string, para: string): Promise<{ readonly bytes: number; readonly sha256: string }>;
+  /**
+   * Troca a pasta `destino` pela pasta `preparada` (escrita antes, ao lado) de uma vez só: quem olha vê a pasta
+   * antiga inteira ou a nova inteira. Se `destino` não existe, só renomeia. Em falha, `destino` volta ao que era
+   * (ADR-0042).
+   */
+  trocarPasta(preparada: string, destino: string): Promise<void>;
+  /** Apaga uma pasta e tudo que há nela (nunca segue link). Caminho inexistente não é erro. */
+  removerPasta(caminho: string): Promise<void>;
   /** Lista os arquivos sob uma pasta, com caminhos relativos à raiz. */
   listar(pasta: string): Promise<readonly string[]>;
   /** Diz se o caminho existe. */

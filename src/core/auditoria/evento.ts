@@ -61,6 +61,8 @@ export interface DadosDeOperacao {
   readonly comando: (typeof COMANDOS_DA_CLI)[number];
   readonly dryRun: boolean;
   readonly pacotes: readonly { readonly chave: string; readonly versao?: string; readonly commit?: string }[];
+  /** Só no reparo da auditoria: hash de cada arquivo guardado em `selado/` (ADR-0042). */
+  readonly selados?: readonly { readonly arquivo: string; readonly hash: string }[];
 }
 
 /** Evento sem os campos da corrente; é o que o chamador monta antes de `encadear`. */

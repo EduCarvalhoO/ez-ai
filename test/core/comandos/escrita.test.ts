@@ -315,3 +315,45 @@ describe('achados da revisão de segurança', () => {
     expect(await ctx.arquivos.existe(`${INSTALADO}/instrucoes/c.md`)).toBe(true);
   });
 });
+
+describe('troca por pasta inteira (ADR-0042)', () => {
+  it('falha ao escrever a pasta nova deixa o instalado e o lockfile como estavam', async () => {
+    const antigos = {
+      [REPO]: {
+        tags: { 'v1.0.0': SHA1 },
+        commits: { [SHA1]: pacote('1.0.0'), [SHA2]: pacote('1.1.0', 'regras novas') },
+      },
+    };
+    const ctx = await projeto(antigos);
+    await instalado(ctx);
+    antigos[REPO].tags = { 'v1.0.0': SHA1, 'v1.1.0': SHA2 } as never;
+    const antes = new Map(ctx.arquivos.mapa);
+    const original = ctx.arquivos.gravar.bind(ctx.arquivos);
+    ctx.arquivos.gravar = async (caminho: string, conteudo: string) => {
+      if (caminho.includes('.ez-new-') && caminho.endsWith('instrucoes/c.md')) throw new Error('disco cheio');
+      return original(caminho, conteudo);
+    };
+    await expect(atualizar(ctx, SEM_OPCOES)).rejects.toThrow(/disco cheio/);
+    ctx.arquivos.gravar = original;
+    const semAuditoria = (m: ReadonlyMap<string, string>) =>
+      [...m].filter(([c]) => !c.startsWith('.harness/auditoria/'));
+    expect(semAuditoria(ctx.arquivos.mapa)).toEqual(semAuditoria(antes));
+    expect([...ctx.arquivos.mapa.keys()].some((c) => c.includes('.ez-new-'))).toBe(false);
+  });
+
+  it('sucesso não deixa pasta preparada para trás', async () => {
+    const antigos = {
+      [REPO]: {
+        tags: { 'v1.0.0': SHA1 },
+        commits: { [SHA1]: pacote('1.0.0'), [SHA2]: pacote('1.1.0', 'regras novas') },
+      },
+    };
+    const ctx = await projeto(antigos);
+    await instalado(ctx);
+    antigos[REPO].tags = { 'v1.0.0': SHA1, 'v1.1.0': SHA2 } as never;
+    const r = await atualizar(ctx, SEM_OPCOES);
+    expect(r.codigo).toBe(0);
+    expect([...ctx.arquivos.mapa.keys()].some((c) => c.includes('.ez-new-'))).toBe(false);
+    expect(await ctx.arquivos.ler(`${INSTALADO}/instrucoes/c.md`)).toBe('regras novas');
+  });
+});

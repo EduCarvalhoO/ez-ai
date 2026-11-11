@@ -199,6 +199,25 @@
         "dryRun": {
           "type": "boolean"
         },
+        "selados": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["arquivo", "hash"],
+            "properties": {
+              "arquivo": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}\\.jsonl$"
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
         "pacotes": {
           "type": "array",
           "maxItems": 200,
