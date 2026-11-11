@@ -33,7 +33,7 @@ Limites:
 - Nunca registre como decidido o que o usuário não aprovou; perguntas vão para `Em aberto`.
 - Critério que não dá para verificar não entra na ficha.
 
-Resposta final:
+Formato da saída (resposta final):
 - Caminho da ficha e os critérios de aceite, um por linha.
 - Perguntas `Em aberto` que o usuário precisa responder no G1.
 - Mudança sensível: sim ou não, e o próximo agente sugerido.

@@ -100,6 +100,7 @@ function projetoComCatalogo(opcoes: {
   verificador?: VerificadorDeAssinatura | null;
   tags?: Record<string, string>;
   projeto?: Record<string, string>;
+  pais?: Record<string, string>;
 }) {
   const arquivosDoCatalogo = opcoes.arquivosDoCatalogo ?? {
     'catalogo.json': CATALOGO,
@@ -119,7 +120,11 @@ function projetoComCatalogo(opcoes: {
     { '.harness/config.json': opcoes.config ?? CONFIG(), ...opcoes.projeto },
     {
       git: gitEmMemoria({
-        [REPO]: { tags: opcoes.tags ?? { 'v1.0.0': 'a', 'v1.2.0': 'b' }, commits: { a: {}, b: arquivosDoCatalogo } },
+        [REPO]: {
+          tags: opcoes.tags ?? { 'v1.0.0': 'a', 'v1.2.0': 'b' },
+          commits: { a: {}, b: arquivosDoCatalogo },
+          ...(opcoes.pais ? { pais: opcoes.pais } : {}),
+        },
       }),
       ...(verificador ? { verificador } : {}),
     },
@@ -145,6 +150,15 @@ describe('search (catálogo assinado)', () => {
       idDoRepositorio: '123456',
       commit: 'b',
     });
+  });
+
+  it('o commit conferido na assinatura ? o pai do commit da tag (o bundle vem num commit filho)', async () => {
+    const { ctx, pedidos } = projetoComCatalogo({ pais: { b: 'assinado' } });
+    const r = await procurarPacotes(ctx, { termos: ['revisao'] });
+    expect(r.codigo).toBe(0);
+    expect(pedidos[0]?.commit).toBe('assinado');
+    // A mem?ria da ?ltima tag vista guarda o commit da tag, n?o o assinado.
+    expect(JSON.parse(await ctx.arquivos.ler('.harness/catalogo-visto.json'))).toEqual({ tag: 'v1.2.0', commit: 'b' });
   });
 
   it('sem resultado diz que nada foi encontrado', async () => {

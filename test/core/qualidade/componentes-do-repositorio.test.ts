@@ -25,7 +25,7 @@ function lerPasta(pasta: string): Map<string, string> {
 // Metas numéricas do ADR-0039. Subir um teto exige justificar no PR.
 const METAS = {
   pacoteOficial: { limpos: 8, tokensDeMetadadosMax: 700, tokensDeCorpoMax: 3500 },
-  repositorio: { componentes: 14, errosMax: 0, avisosMax: 4 },
+  repositorio: { componentes: 14, errosMax: 0, avisosMax: 0 },
   scripts: { errosMax: 0 },
 };
 

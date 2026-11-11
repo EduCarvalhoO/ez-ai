@@ -5,6 +5,10 @@
   "descricao": "Workflow de feature com gates: ficha, revisão da documentação, execução, revisão de código e entrega",
   "licenca": "FSL-1.1-ALv2",
   "repositorio": "https://github.com/educarvalhoo/workflow-feature",
+  "assinatura": {
+    "identidade": "https://github.com/educarvalhoo/workflow-feature/.github/workflows/release-assinada.yml@refs/tags/v0.5.0",
+    "emissor": "https://token.actions.githubusercontent.com"
+  },
   "componentes": [
     { "id": "workflow", "tipo": "instrucao", "arquivo": "instrucoes/workflow.md" },
     { "id": "registrar-etapa", "tipo": "skill", "arquivo": "skills/registrar-etapa/SKILL.md" },

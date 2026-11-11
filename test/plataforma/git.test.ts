@@ -23,6 +23,24 @@ describe('criarGit', () => {
     expect(await git.resolverTag(REPO, 'v1.0.0')).toBe(SHA);
   });
 
+  it('devolve o pai ?nico do commit e recusa commit sem pai ou com dois', async () => {
+    const pai = 'c'.repeat(40);
+    const chamadas: (readonly string[])[] = [];
+    const git = criarGit(async (args) => {
+      chamadas.push(args);
+      return args[0] === 'rev-list' ? `${SHA} ${pai}\n` : '';
+    });
+    expect(await git.paiDoCommit(REPO, SHA)).toBe(pai);
+    expect(chamadas.some((a) => a[0] === 'fetch' && a.includes('--depth') && a.includes('2'))).toBe(true);
+    await expect(criarGit(async (a) => (a[0] === 'rev-list' ? `${SHA}\n` : '')).paiDoCommit(REPO, SHA)).rejects.toThrow(
+      /exatamente um pai/,
+    );
+    await expect(
+      criarGit(async (a) => (a[0] === 'rev-list' ? `${SHA} ${pai} ${pai}\n` : '')).paiDoCommit(REPO, SHA),
+    ).rejects.toThrow(/exatamente um pai/);
+    await expect(git.paiDoCommit(REPO, 'xyz')).rejects.toThrow(/commit inv/);
+  });
+
   it('resolve tag leve', async () => {
     const git = criarGit(async () => `${SHA}\trefs/tags/v1.0.0\n`);
     expect(await git.resolverTag(REPO, 'v1.0.0')).toBe(SHA);

@@ -20,7 +20,7 @@ Economia de tokens:
 
 Nunca registre como `Aceito` ou `Decidido` algo que o usuário não aprovou; use `Proposto` ou `Em aberto`.
 
-Resposta final ao solicitante:
+Formato da saída (resposta final) ao solicitante:
 - Um arquivo criado ou alterado por linha, com uma frase sobre a mudança.
 - Itens marcados como `Proposto` ou `Em aberto` nesta tarefa.
 - Resultado do `validar-docs` (OK, ou o que ficou pendente e por quê).
