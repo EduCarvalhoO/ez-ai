@@ -59,7 +59,7 @@ Workflows em `.github/workflows/`: `ci.yml` e `codeql.yml`, disparados em `pull_
 |---|---|---|
 | `qualidade` | Ubuntu, Node `24.x` | `npm ci --ignore-scripts`; só em PR, idade mínima das versões novas do lockfile ([§1](#1-código)); `npm audit` (falha com qualquer vulnerabilidade, inclusive em dependência de desenvolvimento, que roda no CI); `npm audit signatures --min-release-age=0`; `format:check`, `lint`, `typecheck`, `validar-docs` e, só em PR, `commits:check` no intervalo `origin/<base>..HEAD` |
 | `workflows` | Ubuntu, sem Node | actionlint e zizmor nos workflows e no `dependabot.yml`; qualquer achado falha |
-| `testes` | Ubuntu e Windows (macOS suspenso temporariamente desde 2026-11-02, ver comentário no ci.yml) × Node `22.x`, `24.x` e `26.x`, mais Ubuntu com o piso `22.12.0` (7 execuções) | `npm ci --ignore-scripts` e `npm test` (build + Vitest com cobertura, [§3](#3-testes)) |
+| `testes` | Ubuntu, Windows e macOS (macOS religado em 2026-11-11) × Node `22.x`, `24.x` e `26.x`, mais Ubuntu com o piso `22.12.0` (10 execuções) | `npm ci --ignore-scripts` e `npm test` (build + Vitest com cobertura, [§3](#3-testes)) |
 | `analisar` (`codeql.yml`) | Ubuntu | CodeQL `javascript-typescript` com `security-extended`; resultados na aba Security |
 | `origem` (`origem-do-pr.yml`) | Ubuntu, sem checkout, `permissions: {}` | falha se o PR para a `main` não vier da `develop` deste repositório (`head_ref` e repositório de origem) |
 | `promover` e `origem` (`promover-develop.yml`) | Ubuntu | `promover` abre ou reaproveita o PR `develop` → `main` (`chore(release): promove develop para main`) e liga o auto-merge com merge commit; `origem` é trivial e fornece esse check no commit da `develop`, porque PR aberto pelo `GITHUB_TOKEN` não dispara workflows |

@@ -242,12 +242,10 @@ describe('workflow de CI (.github/workflows/ci.yml)', () => {
     expect(workflows).toMatch(/GH_TOKEN: \$\{\{ github\.token \}\}$/m);
   });
 
-  it('testa em Ubuntu e Windows (macOS suspenso por ora) com npm ci --ignore-scripts e npm test', () => {
+  it('testa em Ubuntu, Windows e macOS com npm ci --ignore-scripts e npm test', () => {
     const testes = semComentarios(job(lerLinhas(), 'testes'));
     expect(testes).toMatch(/fail-fast: false$/m);
-    expect(testes).toMatch(/os: \[ubuntu-latest, windows-latest\]$/m);
-    // A suspensão precisa ficar explicada no próprio arquivo, para não virar esquecimento.
-    expect(lerLinhas().join('\n')).toMatch(/macOS SUSPENSO TEMPORARIAMENTE/);
+    expect(testes).toMatch(/os: \[ubuntu-latest, windows-latest, macos-latest\]$/m);
     expect(testes).toMatch(/runs-on: \$\{\{ matrix\.os \}\}$/m);
     expect(testes).toMatch(/node-version: \$\{\{ matrix\.node \}\}$/m);
     expect(testes).toMatch(/run: npm ci --ignore-scripts$/m);
