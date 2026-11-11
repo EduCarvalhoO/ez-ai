@@ -61,5 +61,5 @@ jobs:
             # --sha: a head do evento; se o PR andou depois do checkout, o job falha e roda de novo.
             args=(--base "origin/$BASE_REF" --pr "$PR_NUMBER" --sha "$HEAD_SHA")
           fi
-          node "$RUNNER_TEMP/h/node_modules/ez-ai/dist/cli/index.js" validate --servidor \
-            --repo "$GITHUB_REPOSITORY" "${args[@]}" --exigir-evidencias --checks "$CHECKS"
+          node "$RUNNER_TEMP/h/node_modules/ez-ai/dist/cli/index.js" validate --server \
+            --repo "$GITHUB_REPOSITORY" "${args[@]}" --require-evidence --checks "$CHECKS"

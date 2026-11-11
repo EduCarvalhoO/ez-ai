@@ -79,7 +79,7 @@ Sem achado bloqueante e com todos os critérios atendidos por evidência, o vere
 ## 6. Definição de pronto e commit
 - Critérios de aceite atendidos com evidência; G0–G3 registrados na ficha.
 - Commit em Conventional Commits com o bloco de evidências da skill `verificar` no corpo (ver [padrão de código e testes](padrao-de-codigo-e-testes.md#4-commits)).
-- Nada `ignorado` ou `falhou` aparece como aprovado ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)).
+- Nada `skipped` ou `failed` aparece como aprovado ([contexto §7.9](../contexto.md#79-evidências-em-vez-de-alegações)).
 - Encerramento: logo após o merge, junto do registro de encerramento ([spec do pipeline](../specs/pipeline-agentico.md#economia-de-tokens)), chamar o agente `painel` ([inventário](padrao-de-agentes-e-skills.md#7-inventário)).
 
 ## 7. Decisões didáticas (agente `professor`)
@@ -110,4 +110,4 @@ Para cada item concluído existe: ficha com gates registrados, relatório `APROV
 |---|---|---|
 | Revisor e implementador em ciclo | Critério de aceite vago ou plano errado | Após a 2ª reprovação, voltar ao `arquiteto` |
 | Agente afirma comportamento de ferramenta sem fonte | Pulou o `pesquisador` | Marcar `Hipótese` e pesquisar |
-| `verificar` mostra tudo `ignorado` | Projeto ainda sem `package.json` (antes da F0) | Esperado; registrar como `ignorado`, nunca como aprovado |
+| `verificar` mostra tudo `skipped` | Projeto ainda sem `package.json` (antes da F0) | Esperado; registrar como `skipped`, nunca como aprovado |

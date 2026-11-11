@@ -5,12 +5,12 @@
 import type { DadosDeVerificacao, EventoDeAuditoria, NivelDeEvidencia, ResultadoDoEvento } from './evento.js';
 
 export interface VerificacaoResumida {
-  readonly nome: string;
+  readonly name: string;
   /** Resultado do último evento da verificação. */
   readonly estado: ResultadoDoEvento;
-  readonly nivel: NivelDeEvidencia;
-  readonly codigoDoMotivo?: string;
-  readonly codigoDeSaida?: number;
+  readonly level: NivelDeEvidencia;
+  readonly reasonCode?: string;
+  readonly exitCode?: number;
   readonly seq: number;
 }
 
@@ -30,7 +30,7 @@ export interface ResumoDeEvidencias {
 }
 
 export interface OpcoesDoResumo {
-  /** Ids de execução do CI (`execucaoDoCi`) que a F4 conferiu no provedor. Sem eles, tudo é `so-pedido`. */
+  /** Ids de execução do CI (`ciRun`) que a F4 conferiu no provedor. Sem eles, tudo é `so-pedido`. */
   readonly execucoesConferidas?: ReadonlySet<string>;
 }
 
@@ -41,41 +41,41 @@ export function resumirEvidencias(
 ): ResumoDeEvidencias {
   const finais = new Map<string, EventoDeAuditoria>();
   for (const e of eventos) {
-    if (e.tipo !== 'verificacao') continue;
-    const nome = (e.dados as unknown as DadosDeVerificacao).nome;
+    if (e.type !== 'verification') continue;
+    const nome = (e.data as unknown as DadosDeVerificacao).name;
     const atual = finais.get(nome);
     if (!atual || e.seq > atual.seq) finais.set(nome, e);
   }
   const verificacoes = [...finais.values()]
     .map((e): VerificacaoResumida => {
-      const d = e.dados as unknown as DadosDeVerificacao;
+      const d = e.data as unknown as DadosDeVerificacao;
       const conferido =
-        d.nivel === 'validador-externo' &&
-        e.ator.tipo === 'ci' &&
-        d.execucaoDoCi !== undefined &&
-        opcoes.execucoesConferidas?.has(d.execucaoDoCi) === true;
+        d.level === 'external-validator' &&
+        e.actor.type === 'ci' &&
+        d.ciRun !== undefined &&
+        opcoes.execucoesConferidas?.has(d.ciRun) === true;
       return {
-        nome: d.nome,
-        estado: e.resultado,
-        nivel: conferido ? 'validador-externo' : 'so-pedido',
-        ...(e.codigoDoMotivo ? { codigoDoMotivo: e.codigoDoMotivo } : {}),
-        ...(d.codigoDeSaida !== undefined ? { codigoDeSaida: d.codigoDeSaida } : {}),
+        name: d.name,
+        estado: e.result,
+        level: conferido ? 'external-validator' : 'requested-only',
+        ...(e.reasonCode ? { reasonCode: e.reasonCode } : {}),
+        ...(d.exitCode !== undefined ? { exitCode: d.exitCode } : {}),
         seq: e.seq,
       };
     })
-    .sort((a, b) => (a.nome < b.nome ? -1 : 1));
-  const verificadas = verificacoes.filter((v) => v.estado === 'verificado');
-  const nomesDo = (nivel: NivelDeEvidencia) => verificadas.filter((v) => v.nivel === nivel).map((v) => v.nome);
+    .sort((a, b) => (a.name < b.name ? -1 : 1));
+  const verificadas = verificacoes.filter((v) => v.estado === 'verified');
+  const nomesDo = (nivel: NivelDeEvidencia) => verificadas.filter((v) => v.level === nivel).map((v) => v.name);
   const aprovado = verificacoes.length > 0 && verificadas.length === verificacoes.length;
   return {
     aprovado,
-    confirmado: aprovado && verificadas.every((v) => v.nivel !== 'so-pedido'),
+    confirmado: aprovado && verificadas.every((v) => v.level !== 'requested-only'),
     verificacoes,
     porNivel: {
-      ambiente: nomesDo('ambiente'),
-      'validador-externo': nomesDo('validador-externo'),
-      'so-pedido': nomesDo('so-pedido'),
+      environment: nomesDo('environment'),
+      'external-validator': nomesDo('external-validator'),
+      'requested-only': nomesDo('requested-only'),
     },
-    pendencias: verificacoes.filter((v) => v.estado !== 'verificado'),
+    pendencias: verificacoes.filter((v) => v.estado !== 'verified'),
   };
 }

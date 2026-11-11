@@ -1,0 +1,21 @@
+{
+  "manifestVersion": 0,
+  "name": "eduardo/starter",
+  "version": "1.0.0",
+  "description": "Pacote starter de exemplo: instrução, agente e skill",
+  "license": "MIT",
+  "repository": "https://github.com/eduardo/starter",
+  "components": [
+    { "id": "convencoes", "type": "instruction", "file": "instrucoes/convencoes.md" },
+    {
+      "id": "revisor",
+      "type": "agent",
+      "file": "agentes/revisor.md"
+    },
+    {
+      "id": "revisao",
+      "type": "skill",
+      "file": "skills/revisao/SKILL.md"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { Git, Identidade, Relogio, SistemaDeArquivos } from '../../src/core/index.js';
 
 /** Sistema de arquivos em memória para testar o núcleo sem disco. */
@@ -8,7 +9,7 @@ export function arquivosEmMemoria(inicial: Record<string, string> = {}): Sistema
   return {
     raiz: '/memoria',
     mapa,
-    async ler(caminho) {
+    async read(caminho) {
       const v = mapa.get(caminho);
       if (v === undefined) throw new Error(`sem ${caminho}`);
       return v;
@@ -20,6 +21,23 @@ export function arquivosEmMemoria(inicial: Record<string, string> = {}): Sistema
       if (mapa.has(caminho)) return false;
       mapa.set(caminho, conteudo);
       return true;
+    },
+    async copiar(de, para) {
+      const v = mapa.get(de);
+      if (v === undefined) throw new Error(`sem ${de}`);
+      mapa.set(para, v);
+      return { bytes: Buffer.byteLength(v, 'utf8'), sha256: createHash('sha256').update(v).digest('hex') };
+    },
+    async trocarPasta(preparada, destino) {
+      const mover = [...mapa.keys()].filter((c) => c.startsWith(`${preparada}/`));
+      for (const c of [...mapa.keys()].filter((k) => k.startsWith(`${destino}/`))) mapa.delete(c);
+      for (const c of mover) {
+        mapa.set(`${destino}${c.slice(preparada.length)}`, mapa.get(c) as string);
+        mapa.delete(c);
+      }
+    },
+    async removerPasta(caminho) {
+      for (const c of [...mapa.keys()].filter((k) => k.startsWith(`${caminho}/`))) mapa.delete(c);
     },
     async listar(pasta) {
       const prefixo = pasta === '' ? '' : `${pasta}/`;

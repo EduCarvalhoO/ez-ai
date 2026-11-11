@@ -4,41 +4,41 @@
   "title": "Policy do ez-ai (v0)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["versaoPolicy", "regras"],
+  "required": ["policyVersion", "rules"],
   "properties": {
     "$schema": {
       "type": "string",
       "maxLength": 512,
       "pattern": "^https://"
     },
-    "versaoPolicy": {
+    "policyVersion": {
       "const": 0
     },
-    "regras": {
+    "rules": {
       "type": "array",
       "maxItems": 200,
       "items": {
-        "$ref": "#/$defs/regra"
+        "$ref": "#/$defs/rule"
       }
     }
   },
   "$defs": {
-    "regra": {
+    "rule": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "efeito", "categoria", "motivo"],
+      "required": ["id", "effect", "category", "reason"],
       "properties": {
         "id": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
         },
-        "efeito": {
-          "enum": ["avisar", "exigir-aprovacao", "negar"]
+        "effect": {
+          "enum": ["warn", "require-approval", "deny"]
         },
-        "categoria": {
-          "enum": ["ler", "escrever", "executar", "rede", "segredos", "configurarAmbiente", "tipo", "conteudo"]
+        "category": {
+          "enum": ["read", "write", "execute", "network", "secrets", "configureEnvironment", "type", "content"]
         },
-        "padroes": {
+        "patterns": {
           "type": "array",
           "items": {
             "type": "string",
@@ -50,10 +50,10 @@
           "maxItems": 50,
           "uniqueItems": true
         },
-        "marca": {
-          "enum": ["amplo", "sensivel", "executavel"]
+        "mark": {
+          "enum": ["broad", "sensitive", "executable"]
         },
-        "exceto": {
+        "except": {
           "type": "array",
           "items": {
             "type": "string",
@@ -65,7 +65,7 @@
           "maxItems": 50,
           "uniqueItems": true
         },
-        "pacotes": {
+        "packages": {
           "type": "array",
           "items": {
             "type": "string",
@@ -76,10 +76,10 @@
           "maxItems": 50,
           "uniqueItems": true
         },
-        "critica": {
+        "critical": {
           "type": "boolean"
         },
-        "motivo": {
+        "reason": {
           "type": "string",
           "minLength": 1,
           "maxLength": 200
@@ -89,20 +89,20 @@
         {
           "oneOf": [
             {
-              "required": ["padroes"],
+              "required": ["patterns"],
               "not": {
-                "required": ["marca"]
+                "required": ["mark"]
               }
             },
             {
-              "required": ["marca"],
+              "required": ["mark"],
               "not": {
                 "anyOf": [
                   {
-                    "required": ["padroes"]
+                    "required": ["patterns"]
                   },
                   {
-                    "required": ["exceto"]
+                    "required": ["except"]
                   }
                 ]
               }
@@ -113,14 +113,14 @@
           "anyOf": [
             {
               "properties": {
-                "efeito": {
-                  "const": "negar"
+                "effect": {
+                  "const": "deny"
                 }
               }
             },
             {
               "not": {
-                "required": ["critica"]
+                "required": ["critical"]
               }
             }
           ]

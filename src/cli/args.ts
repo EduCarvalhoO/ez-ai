@@ -12,86 +12,86 @@ export const COMANDOS = [
   'update',
   'apply',
   'export',
-  'custo',
+  'cost',
   'workflow',
-  'conhecimento',
+  'knowledge',
   'benchmark',
-  'hash-pacote',
+  'hash-package',
   'scan',
   'import',
-  'qualidade',
+  'quality',
   'search',
-  'auditoria',
+  'audit',
 ] as const;
 export type Comando = (typeof COMANDOS)[number];
 
 export const USO = [
   'Uso: ez-ai --version (ou -v) para ver a versão instalada.',
-  '     ez-ai <comando> [--projeto <pasta>] [--dry-run]',
-  'Comandos: init [--ambientes claude-code,copilot], list, validate, plan, doctor,',
-  '  add <origem> [--versao <intervalo>]   registra um pacote (https://github.com/<dono>/<repo> ou local:<pasta>)',
+  '     ez-ai <comando> [--project <pasta>] [--dry-run]',
+  'Comandos: init [--environments claude-code,copilot], list, validate, plan, doctor,',
+  '  add <origem> [--range <intervalo>]   registra um pacote (https://github.com/<owner>/<repo> ou local:<pasta>)',
   '  remove <login/pacote>                 tira o pacote e apaga os arquivos instalados',
   '  apply [pacote...]                     instala o que a configuração pede (reproduz o lockfile)',
   '  update [pacote...]                    resolve de novo dentro do intervalo pedido',
   '  export                                envia ao coletor OTLP (Langfuse) os eventos de auditoria novos; só com telemetria na configuração; --dry-run mostra sem enviar',
-  '  custo                                 mostra tokens e custo por agente, lidos da auditoria local (sem rede)',
-  '  workflow status <item> | etapa <item> <etapa> <resultado> --agente <id> [--consumo <json>] [--documento <arq>] [--evidencia <arq>]',
-  '  workflow docs <arquivo> | workflow retomar',
+  '  cost                                  mostra tokens e custo por agente, lidos da auditoria local (sem rede)',
+  '  workflow status <item> | step <item> <step> <result> --agent <id> [--usage <json>] [--document <arq>] [--evidence <arq>]',
+  '  workflow docs <arquivo> | workflow resume',
   '                                        registra etapas e gates, confere a completude de um documento e lista itens abertos ou parados',
-  '  conhecimento indexar | buscar <consulta> [--limite <n>] | mapa [pasta] | avaliar [--exportar] | perguntas [--dry-run] | servir',
-  '                                        servir = servidor MCP (stdio) com buscar/abrir/mapa; fontes extras em .harness/conhecimento.json; mapa C0, índice C1 (node:sqlite) e métricas',
-  '  hash-pacote <pasta>                   imprime o hash do conteúdo de uma pasta de pacote (o texto que o workflow de release assina com Sigstore)',
-  '  scan [<login/pacote>|<pasta>] [--bloquear baixa|media|alta]',
-  '                                        varre o conteúdo dos pacotes atrás de Unicode oculto, comando remoto, URL de exfiltração, frontmatter perigoso e injeção de instrução; só avisa, salvo com --bloquear ou "scan.bloquearAPartirDe" na configuração (offline)',
-  '  import [--pacote <login/nome>] [--saida <pasta>]',
+  '  knowledge index | search <query> [--limit <n>] | map [folder] | evaluate [--export] | questions [--dry-run] | serve',
+  '                                        serve = servidor MCP (stdio) com search/open/map; fontes extras em .harness/knowledge.json; mapa C0, índice C1 (node:sqlite) e métricas',
+  '  hash-package <pasta>                   imprime o hash do conteúdo de uma pasta de pacote (o texto que o workflow de release assina com Sigstore)',
+  '  scan [<login/pacote>|<pasta>] [--block low|medium|high]',
+  '                                        varre o conteúdo dos pacotes atrás de Unicode oculto, comando remoto, URL de exfiltração, frontmatter perigoso e injeção de instrução; só avisa, salvo com --block ou "scan.blockFrom" na configuração (offline)',
+  '  import [--package <login/nome>] [--output <pasta>]',
   '                                        lê CLAUDE.md, .cursorrules, .github/copilot-instructions.md e AGENTS.md e grava uma proposta de pacote local (nunca sobrescreve; --dry-run só mostra)',
-  '  qualidade [<login/pacote>|<pasta>] [--estrito] [--json]',
-  '                                        confere agentes, skills e scripts contra o checklist de qualidade (descrição com gatilho, tamanho, tools, model, Gotchas, --help nos scripts); erro tranca, --estrito tranca também por aviso (offline)',
-  '  search <termo...> [--limite <n>]',
-  '                                        pesquisa no catálogo assinado de pacotes fixado em "catalogo" na configuração; só lista (o add continua conferindo tudo); sem rede além do Git do catálogo',
-  '  auditoria reparar                     sela a corrente quebrada do log de auditoria (guarda os originais em .harness/auditoria/selado/) e recomeça do último evento íntegro; só a pessoa, nunca um agente; --dry-run só mostra',
-  '  benchmark [--exportar]                pontua as tarefas de referência pelo log de auditoria (--exportar grava o dataset)',
-  '  --projeto <pasta>      raiz do projeto (padrão: pasta atual)',
+  '  quality [<login/pacote>|<pasta>] [--strict] [--json]',
+  '                                        confere agentes, skills e scripts contra o checklist de qualidade (descrição com gatilho, tamanho, tools, model, Gotchas, --help nos scripts); erro tranca, --strict tranca também por aviso (offline)',
+  '  search <termo...> [--limit <n>]',
+  '                                        pesquisa no catálogo assinado de pacotes fixado em "catalog" na configuração; só lista (o add continua conferindo tudo); sem rede além do Git do catálogo',
+  '  audit repair                     sela a corrente quebrada do log de auditoria (guarda os originais em .harness/audit/sealed/) e recomeça do último evento íntegro; só a pessoa, nunca um agente; --dry-run só mostra',
+  '  benchmark [--export]                pontua as tarefas de referência pelo log de auditoria (--export grava o dataset)',
+  '  --project <pasta>      raiz do projeto (padrão: pasta atual)',
   '  validate --ci          recalcula policy e aprovações a partir do commit travado',
-  '  validate --servidor    (job de CI) compara com a base: --base <ref> [--pr <n>] [--sha <sha>] [--repo <dono/repo>] [--checks a,b] [--exigir-evidencias]; token em GITHUB_TOKEN',
+  '  validate --server    (job de CI) compara com a base: --base <ref> [--pr <n>] [--sha <sha>] [--repo <owner/repo>] [--checks a,b] [--require-evidence]; token em GITHUB_TOKEN',
   '  --dry-run              mostra o que seria feito sem gravar',
-  '  --aprovar <id>         (apply/update) aprova um item de aprovação própria pelo id; repita a flag por item',
-  '  --detalhes             (plan/apply/update) mostra o texto completo do diff das instruções; o padrão é um resumo por componente',
-  '  --forcar               (apply/update/remove) sobrescreve ou apaga arquivo instalado editado à mão, guardando cópia em .harness/local/',
-  '  --aceitar-permissoes   (apply/update) aceita permissões novas da versão resolvida',
+  '  --approve <id>         (apply/update) aprova um item de aprovação própria pelo id; repita a flag por item',
+  '  --details             (plan/apply/update) mostra o texto completo do diff das instruções; o padrão é um resumo por componente',
+  '  --force               (apply/update/remove) sobrescreve ou apaga arquivo instalado editado à mão, guardando cópia em .harness/local/',
+  '  --accept-permissions   (apply/update) aceita permissões novas da versão resolvida',
   '',
 ].join('\n');
 
 export interface Argumentos {
-  readonly comando: Comando;
-  readonly projeto: string;
+  readonly command: Comando;
+  readonly project: string;
   readonly dryRun: boolean;
-  readonly ambientes?: readonly string[];
+  readonly environments?: readonly string[];
   readonly posicionais: readonly string[];
-  readonly versao?: string;
-  readonly aprovar: readonly string[];
-  readonly forcar: boolean;
-  readonly aceitarPermissoes: boolean;
+  readonly version?: string;
+  readonly approve: readonly string[];
+  readonly force: boolean;
+  readonly acceptPermissions: boolean;
   readonly ci: boolean;
-  readonly exigirEvidencias: boolean;
-  readonly servidor: boolean;
+  readonly requireEvidence: boolean;
+  readonly server: boolean;
   readonly base?: string;
   readonly pr?: number;
   readonly sha?: string;
   readonly repo?: string;
   readonly checks: readonly string[];
-  readonly agente?: string;
-  readonly consumo?: string;
-  readonly documento?: string;
-  readonly evidencia?: string;
-  readonly exportar: boolean;
-  readonly limite?: number;
-  readonly detalhes: boolean;
-  readonly estrito: boolean;
+  readonly agent?: string;
+  readonly usage?: string;
+  readonly document?: string;
+  readonly evidence?: string;
+  readonly export: boolean;
+  readonly limit?: number;
+  readonly details: boolean;
+  readonly strict: boolean;
   readonly json: boolean;
-  readonly bloquear?: ModoDeBloqueio;
-  readonly pacote?: string;
-  readonly saida?: string;
+  readonly block?: ModoDeBloqueio;
+  readonly package?: string;
+  readonly output?: string;
 }
 
 /** Quantos argumentos soltos (sem `--`) cada comando aceita; `undefined` = qualquer quantidade. */
@@ -106,16 +106,16 @@ const POSICIONAIS: Record<Comando, number | undefined> = {
   update: undefined,
   apply: undefined,
   export: 0,
-  custo: 0,
+  cost: 0,
   workflow: 4,
-  conhecimento: 2,
+  knowledge: 2,
   benchmark: 0,
-  'hash-pacote': 1,
+  'hash-package': 1,
   scan: 1,
   import: 0,
-  qualidade: 1,
+  quality: 1,
   search: undefined,
-  auditoria: 1,
+  audit: 1,
 };
 
 export function lerArgumentos(args: readonly string[]): Argumentos | string {
@@ -128,9 +128,9 @@ export function lerArgumentos(args: readonly string[]): Argumentos | string {
   let projeto = '.';
   let dryRun = false;
   let forcar = false;
-  let aceitarPermissoes = false;
+  let acceptPermissions = false;
   let ci = false;
-  let exigirEvidencias = false;
+  let requireEvidence = false;
   let servidor = false;
   let base: string | undefined;
   let pr: number | undefined;
@@ -158,37 +158,37 @@ export function lerArgumentos(args: readonly string[]): Argumentos | string {
     const proximo = resto[i + 1];
     const valor = proximo === undefined || proximo.startsWith('--') ? undefined : proximo;
     if (a === '--dry-run') dryRun = true;
-    else if (a === '--projeto' && valor !== undefined) projeto = resto[++i] ?? '.';
-    else if (a === '--ambientes' && valor !== undefined && cmd === 'init') ambientes = (resto[++i] ?? '').split(',');
-    else if (a === '--versao' && valor !== undefined && cmd === 'add') versao = resto[++i];
-    else if (a === '--aprovar' && valor !== undefined && instala) aprovar.push(resto[++i] ?? '');
-    else if (a === '--detalhes' && (cmd === 'plan' || instala)) detalhes = true;
-    else if (a === '--forcar' && (instala || cmd === 'remove')) forcar = true;
+    else if (a === '--project' && valor !== undefined) projeto = resto[++i] ?? '.';
+    else if (a === '--environments' && valor !== undefined && cmd === 'init') ambientes = (resto[++i] ?? '').split(',');
+    else if (a === '--range' && valor !== undefined && cmd === 'add') versao = resto[++i];
+    else if (a === '--approve' && valor !== undefined && instala) aprovar.push(resto[++i] ?? '');
+    else if (a === '--details' && (cmd === 'plan' || instala)) detalhes = true;
+    else if (a === '--force' && (instala || cmd === 'remove')) forcar = true;
     else if (a === '--ci' && cmd === 'validate') ci = true;
-    else if (a === '--exigir-evidencias' && cmd === 'validate') exigirEvidencias = true;
-    else if (a === '--servidor' && cmd === 'validate') servidor = true;
+    else if (a === '--require-evidence' && cmd === 'validate') requireEvidence = true;
+    else if (a === '--server' && cmd === 'validate') servidor = true;
     else if (a === '--base' && valor !== undefined && cmd === 'validate') base = resto[++i];
     else if (a === '--pr' && valor !== undefined && cmd === 'validate') pr = Number(resto[++i]);
     else if (a === '--sha' && valor !== undefined && cmd === 'validate') sha = resto[++i];
     else if (a === '--repo' && valor !== undefined && cmd === 'validate') repo = resto[++i];
     else if (a === '--checks' && valor !== undefined && cmd === 'validate')
       checks = (resto[++i] ?? '').split(',').filter(Boolean);
-    else if (a === '--agente' && valor !== undefined && cmd === 'workflow') agente = resto[++i];
-    else if (a === '--consumo' && valor !== undefined && cmd === 'workflow') consumo = resto[++i];
-    else if (a === '--documento' && valor !== undefined && cmd === 'workflow') documento = resto[++i];
-    else if (a === '--evidencia' && valor !== undefined && cmd === 'workflow') evidencia = resto[++i];
-    else if (a === '--exportar' && (cmd === 'conhecimento' || cmd === 'benchmark')) exportar = true;
-    else if (a === '--limite' && valor !== undefined && (cmd === 'conhecimento' || cmd === 'search'))
+    else if (a === '--agent' && valor !== undefined && cmd === 'workflow') agente = resto[++i];
+    else if (a === '--usage' && valor !== undefined && cmd === 'workflow') consumo = resto[++i];
+    else if (a === '--document' && valor !== undefined && cmd === 'workflow') documento = resto[++i];
+    else if (a === '--evidence' && valor !== undefined && cmd === 'workflow') evidencia = resto[++i];
+    else if (a === '--export' && (cmd === 'knowledge' || cmd === 'benchmark')) exportar = true;
+    else if (a === '--limit' && valor !== undefined && (cmd === 'knowledge' || cmd === 'search'))
       limite = Number(resto[++i]);
-    else if (a === '--bloquear' && valor !== undefined && cmd === 'scan') {
+    else if (a === '--block' && valor !== undefined && cmd === 'scan') {
       const modo = resto[++i] ?? '';
-      if (!(SEVERIDADES as readonly string[]).includes(modo)) return '--bloquear aceita baixa, media ou alta';
+      if (!(SEVERIDADES as readonly string[]).includes(modo)) return '--block aceita baixa, media ou alta';
       bloquear = modo as ModoDeBloqueio;
-    } else if (a === '--pacote' && valor !== undefined && cmd === 'import') pacote = resto[++i];
-    else if (a === '--saida' && valor !== undefined && cmd === 'import') saida = resto[++i];
-    else if (a === '--estrito' && cmd === 'qualidade') estrito = true;
-    else if (a === '--json' && cmd === 'qualidade') json = true;
-    else if (a === '--aceitar-permissoes' && instala) aceitarPermissoes = true;
+    } else if (a === '--package' && valor !== undefined && cmd === 'import') pacote = resto[++i];
+    else if (a === '--output' && valor !== undefined && cmd === 'import') saida = resto[++i];
+    else if (a === '--strict' && cmd === 'quality') estrito = true;
+    else if (a === '--json' && cmd === 'quality') json = true;
+    else if (a === '--accept-permissions' && instala) acceptPermissions = true;
     else if (!a.startsWith('--')) posicionais.push(a);
     else return `argumento(s) não reconhecido(s): ${resto.slice(i).join(' ')}`;
   }
@@ -199,54 +199,54 @@ export function lerArgumentos(args: readonly string[]): Argumentos | string {
   if ((cmd === 'add' || cmd === 'remove') && posicionais.length !== 1) {
     return cmd === 'add' ? '"add" precisa de uma origem' : '"remove" precisa do nome do pacote (login/pacote)';
   }
-  if (servidor && (!base || !repo)) return '--servidor precisa de --base <ref> e --repo <dono/repo>';
+  if (servidor && (!base || !repo)) return '--server precisa de --base <ref> e --repo <owner/repo>';
   if (pr !== undefined && !Number.isInteger(pr)) return '--pr precisa de um número';
   if (limite !== undefined && (!Number.isInteger(limite) || limite < 1))
-    return '--limite precisa de um inteiro positivo';
+    return '--limit precisa de um inteiro positivo';
   const gravaArquivos =
     cmd !== 'list' &&
     cmd !== 'validate' &&
     cmd !== 'doctor' &&
-    cmd !== 'custo' &&
+    cmd !== 'cost' &&
     cmd !== 'workflow' &&
-    cmd !== 'conhecimento' &&
+    cmd !== 'knowledge' &&
     cmd !== 'benchmark' &&
-    cmd !== 'hash-pacote' &&
+    cmd !== 'hash-package' &&
     cmd !== 'scan' &&
-    cmd !== 'qualidade' &&
+    cmd !== 'quality' &&
     cmd !== 'search';
   // export --dry-run não grava nada: mostra o que enviaria.
-  const geraPerguntas = cmd === 'conhecimento' && posicionais[0] === 'perguntas';
+  const geraPerguntas = cmd === 'knowledge' && posicionais[0] === 'questions';
   if (dryRun && !gravaArquivos && !geraPerguntas) return `--dry-run não se aplica a "${cmd}" (ele não altera arquivos)`;
   return {
-    comando: cmd,
-    projeto,
+    command: cmd,
+    project: projeto,
     dryRun,
     posicionais,
-    aprovar,
-    forcar,
-    aceitarPermissoes,
+    approve: aprovar,
+    force: forcar,
+    acceptPermissions,
     ci,
-    exigirEvidencias,
-    servidor,
+    requireEvidence,
+    server: servidor,
     checks,
-    exportar,
-    detalhes,
-    estrito,
+    export: exportar,
+    details: detalhes,
+    strict: estrito,
     json,
-    ...(limite !== undefined ? { limite } : {}),
-    ...(bloquear ? { bloquear } : {}),
-    ...(pacote ? { pacote } : {}),
-    ...(saida ? { saida } : {}),
+    ...(limite !== undefined ? { limit: limite } : {}),
+    ...(bloquear ? { block: bloquear } : {}),
+    ...(pacote ? { package: pacote } : {}),
+    ...(saida ? { output: saida } : {}),
     ...(base ? { base } : {}),
     ...(pr !== undefined ? { pr } : {}),
     ...(sha ? { sha } : {}),
     ...(repo ? { repo } : {}),
-    ...(ambientes ? { ambientes } : {}),
-    ...(versao ? { versao } : {}),
-    ...(agente ? { agente } : {}),
-    ...(consumo ? { consumo } : {}),
-    ...(documento ? { documento } : {}),
-    ...(evidencia ? { evidencia } : {}),
+    ...(ambientes ? { environments: ambientes } : {}),
+    ...(versao ? { version: versao } : {}),
+    ...(agente ? { agent: agente } : {}),
+    ...(consumo ? { usage: consumo } : {}),
+    ...(documento ? { document: documento } : {}),
+    ...(evidencia ? { evidence: evidencia } : {}),
   };
 }

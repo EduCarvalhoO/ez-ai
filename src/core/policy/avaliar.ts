@@ -9,25 +9,25 @@ import { EFEITOS } from './schema.js';
 
 /** Uma policy e de onde ela veio (`.harness/policy.json`, `acme/politicas:regras`...), para a explicação. */
 export interface FonteDePolicy {
-  readonly fonte: string;
+  readonly source: string;
   readonly policy: Policy;
 }
 
 /** Níveis abaixo do núcleo; a policy do núcleo entra sempre. A de pacote é a do próprio pacote avaliado. */
 export interface FontesDePolicy {
-  readonly organizacao?: readonly FonteDePolicy[];
-  readonly projeto?: FonteDePolicy;
-  readonly pacote?: readonly FonteDePolicy[];
+  readonly organization?: readonly FonteDePolicy[];
+  readonly project?: FonteDePolicy;
+  readonly package?: readonly FonteDePolicy[];
 }
 
 export type SistemaOperacional = 'windows' | 'macos' | 'linux';
 
 /** Célula da matriz de capacidades (ADR-0016), com as condições para a regra contar como imposta. */
 export interface CelulaDeCapacidade {
-  readonly ambiente: Ambiente;
+  readonly environment: Ambiente;
   readonly so: SistemaOperacional;
-  readonly categoria: CategoriaDePolicy;
-  readonly nivel: 'nativo' | 'parcial' | 'so-instrucao' | 'ausente';
+  readonly category: CategoriaDePolicy;
+  readonly level: 'nativo' | 'parcial' | 'so-instrucao' | 'ausente';
   /** Prévia, "depende de MDM", "não é fronteira sem sandbox"...: com ressalva, conta como parcial. */
   readonly ressalva?: string;
   /** `AAAA-MM-DD`; vencida, conta como parcial. */
@@ -57,30 +57,30 @@ export interface Garantia {
 }
 
 export interface RegraAplicada {
-  readonly nivel: NivelDePolicy;
-  readonly fonte: string;
-  readonly regra: string;
-  readonly efeito: Efeito;
-  readonly motivo: string;
-  readonly critica: boolean;
+  readonly level: NivelDePolicy;
+  readonly source: string;
+  readonly rule: string;
+  readonly effect: Efeito;
+  readonly reason: string;
+  readonly critical: boolean;
   readonly garantia: Garantia;
 }
 
 export interface ItemDecidido {
   readonly componente: string;
-  readonly categoria: CategoriaDePolicy;
+  readonly category: CategoriaDePolicy;
   readonly item: string;
-  readonly efeito: Efeito;
+  readonly effect: Efeito;
   readonly decididoPor: RegraAplicada;
   readonly tambemCasaram: readonly RegraAplicada[];
 }
 
 export interface DecisaoDoPacote {
-  readonly pacote: string;
+  readonly package: string;
   /** O mais restritivo entre os itens; `livre` = nenhuma regra pegou (o `plan` ainda pede a aprovação normal). */
-  readonly efeito: Efeito | 'livre';
+  readonly effect: Efeito | 'free';
   /** Só os itens que alguma regra pegou. */
-  readonly itens: readonly ItemDecidido[];
+  readonly items: readonly ItemDecidido[];
   /** Regras críticas que valem para o pacote e ficam só em aviso em algum ambiente. */
   readonly regrasNaoImpostas: readonly RegraAplicada[];
   /** Verdadeiro se há regra crítica não imposta: o `plan` falha fechado (D8). */
@@ -89,7 +89,7 @@ export interface DecisaoDoPacote {
 
 export interface OpcoesDeAvaliacao {
   /** Ambientes da configuração do projeto. */
-  readonly ambientes?: readonly Ambiente[];
+  readonly environments?: readonly Ambiente[];
   /** Sem tabela, toda garantia em execução é `so-aviso` (situação até a F3). */
   readonly capacidades?: Capacidades;
 }
@@ -99,15 +99,15 @@ const FORCA: Readonly<Record<Efeito, number>> = Object.fromEntries(EFEITOS.map((
   number
 >;
 const ORDEM_DO_NIVEL: Readonly<Record<NivelDePolicy, number>> = {
-  nucleo: 0,
-  organizacao: 1,
-  projeto: 2,
-  pacote: 3,
+  core: 0,
+  organization: 1,
+  project: 2,
+  package: 3,
 };
 
 function celulaImpoe(c: CelulaDeCapacidade, hoje: string): boolean {
   return (
-    c.nivel === 'nativo' &&
+    c.level === 'nativo' &&
     c.ressalva === undefined &&
     c.revalidarAte >= hoje &&
     c.falhaFechadoTestado &&
@@ -126,7 +126,9 @@ export function garantiaEmExecucao(
   const impoe =
     sistemas.length > 0 &&
     sistemas.every((so) =>
-      celulas.some((c) => c.ambiente === ambiente && c.so === so && c.categoria === categoria && celulaImpoe(c, hoje)),
+      celulas.some(
+        (c) => c.environment === ambiente && c.so === so && c.category === categoria && celulaImpoe(c, hoje),
+      ),
     );
   if (impoe) return 'imposta-pelo-ambiente';
   return validadores.includes(categoria) ? 'imposta-por-validador' : 'so-aviso';
@@ -134,63 +136,63 @@ export function garantiaEmExecucao(
 
 function aplicada(nivel: NivelDePolicy, fonte: string, regra: Regra, opcoes: OpcoesDeAvaliacao): RegraAplicada {
   const execucao = Object.fromEntries(
-    (opcoes.ambientes ?? []).map((a) => [a, garantiaEmExecucao(regra.categoria, a, opcoes.capacidades)]),
+    (opcoes.environments ?? []).map((a) => [a, garantiaEmExecucao(regra.category, a, opcoes.capacidades)]),
   );
   return {
-    nivel,
-    fonte,
-    regra: regra.id,
-    efeito: regra.efeito,
-    motivo: regra.motivo,
-    critica: regra.critica,
+    level: nivel,
+    source: fonte,
+    rule: regra.id,
+    effect: regra.effect,
+    reason: regra.reason,
+    critical: regra.critical,
     garantia: { instalacao: 'conferida-na-instalacao', execucao },
   };
 }
 
 interface RegraComOrigem {
-  readonly nivel: NivelDePolicy;
-  readonly fonte: string;
-  readonly regra: Regra;
+  readonly level: NivelDePolicy;
+  readonly source: string;
+  readonly rule: Regra;
 }
 
 function regrasQueValem(nome: string, fontes: FontesDePolicy): RegraComOrigem[] {
   const porNivel: [NivelDePolicy, readonly FonteDePolicy[]][] = [
-    ['nucleo', [{ fonte: 'núcleo do harness', policy: POLICY_DO_NUCLEO }]],
-    ['organizacao', fontes.organizacao ?? []],
-    ['projeto', fontes.projeto ? [fontes.projeto] : []],
+    ['core', [{ source: 'núcleo do harness', policy: POLICY_DO_NUCLEO }]],
+    ['organization', fontes.organization ?? []],
+    ['project', fontes.project ? [fontes.project] : []],
     // Policy de pacote vale só para o próprio pacote: o filtro `pacotes` é ignorado mesmo se vier (D5).
-    ['pacote', fontes.pacote ?? []],
+    ['package', fontes.package ?? []],
   ];
   return porNivel.flatMap(([nivel, lista]) =>
-    lista.flatMap(({ fonte, policy }) =>
-      policy.regras
-        .filter((regra) => nivel === 'pacote' || regraValeParaPacote(regra, nome))
-        .map((regra) => ({ nivel, fonte, regra })),
+    lista.flatMap(({ source: fonte, policy }) =>
+      policy.rules
+        .filter((regra) => nivel === 'package' || regraValeParaPacote(regra, nome))
+        .map((regra) => ({ level: nivel, source: fonte, rule: regra })),
     ),
   );
 }
 
 /** Mais restritivo primeiro; no empate, o nível mais alto; depois a ordem no arquivo. */
 function compararAplicadas(a: RegraAplicada, b: RegraAplicada): number {
-  return FORCA[b.efeito] - FORCA[a.efeito] || ORDEM_DO_NIVEL[a.nivel] - ORDEM_DO_NIVEL[b.nivel];
+  return FORCA[b.effect] - FORCA[a.effect] || ORDEM_DO_NIVEL[a.level] - ORDEM_DO_NIVEL[b.level];
 }
 
 function decidirItem(item: ItemDeclarado, regras: readonly RegraAplicadaComRegra[]): ItemDecidido | undefined {
-  const casaram = regras.filter(({ regra }) => regraCasa(regra, item)).map(({ aplicada }) => aplicada);
+  const casaram = regras.filter(({ rule: regra }) => regraCasa(regra, item)).map(({ aplicada }) => aplicada);
   const [decididoPor, ...tambemCasaram] = [...casaram].sort(compararAplicadas);
   if (!decididoPor) return undefined;
   return {
     componente: item.componente,
-    categoria: item.categoria,
+    category: item.category,
     item: item.item,
-    efeito: decididoPor.efeito,
+    effect: decididoPor.effect,
     decididoPor,
     tambemCasaram,
   };
 }
 
 interface RegraAplicadaComRegra {
-  readonly regra: Regra;
+  readonly rule: Regra;
   readonly aplicada: RegraAplicada;
 }
 
@@ -199,28 +201,34 @@ interface RegraAplicadaComRegra {
  * Nenhum efeito libera (D2): o resultado só pode ser mais restritivo que o fluxo normal de aprovação do `plan`.
  */
 export function avaliarPacote(
-  pacote: { readonly nome: string; readonly componentes: readonly Componente[] },
+  pacote: { readonly name: string; readonly components: readonly Componente[] },
   fontes: FontesDePolicy = {},
   opcoes: OpcoesDeAvaliacao = {},
 ): DecisaoDoPacote {
-  const regras = regrasQueValem(pacote.nome, fontes).map(({ nivel, fonte, regra }) => ({
-    regra,
+  const regras = regrasQueValem(pacote.name, fontes).map(({ level: nivel, source: fonte, rule: regra }) => ({
+    rule: regra,
     aplicada: aplicada(nivel, fonte, regra, opcoes),
   }));
-  const itens = pacote.componentes
+  const itens = pacote.components
     .flatMap(itensDoComponente)
     .map((item) => decidirItem(item, regras))
     .filter((d): d is ItemDecidido => d !== undefined);
-  const efeito = itens.reduce<Efeito | 'livre'>(
-    (pior, d) => (pior === 'livre' || FORCA[d.efeito] > FORCA[pior] ? d.efeito : pior),
-    'livre',
+  const efeito = itens.reduce<Efeito | 'free'>(
+    (pior, d) => (pior === 'free' || FORCA[d.effect] > FORCA[pior] ? d.effect : pior),
+    'free',
   );
   const regrasNaoImpostas = regras
     .map(({ aplicada: a }) => a)
     .filter((a) => {
       // Sem ambiente informado, nada prova a garantia: crítica conta como não imposta (fail-closed).
       const garantias = Object.values(a.garantia.execucao);
-      return a.critica && (garantias.length === 0 || garantias.includes('so-aviso'));
+      return a.critical && (garantias.length === 0 || garantias.includes('so-aviso'));
     });
-  return { pacote: pacote.nome, efeito, itens, regrasNaoImpostas, falhaFechada: regrasNaoImpostas.length > 0 };
+  return {
+    package: pacote.name,
+    effect: efeito,
+    items: itens,
+    regrasNaoImpostas,
+    falhaFechada: regrasNaoImpostas.length > 0,
+  };
 }

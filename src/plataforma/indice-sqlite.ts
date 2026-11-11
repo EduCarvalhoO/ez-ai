@@ -5,7 +5,7 @@ import { isAbsolute, join, relative } from 'node:path';
 import type { Chunk } from '../core/conhecimento/chunks.js';
 import type { IndiceDeBusca, TrechoDoIndice } from '../core/portas/index.js';
 
-const PASTA = ['.harness', 'cache', 'conhecimento'];
+const PASTA = ['.harness', 'cache', 'knowledge'];
 const ARQUIVO = 'indice.db';
 
 interface Banco {
@@ -59,7 +59,7 @@ export async function criarIndiceSqlite(raiz: string): Promise<IndiceDeBusca | u
   }
 
   const criarTabela =
-    "CREATE VIRTUAL TABLE IF NOT EXISTS chunks USING fts5(texto, contexto, fonte UNINDEXED, arquivo UNINDEXED, ini UNINDEXED, fim UNINDEXED, tokenize = 'unicode61 remove_diacritics 2')";
+    "CREATE VIRTUAL TABLE IF NOT EXISTS chunks USING fts5(texto, contexto, source UNINDEXED, file UNINDEXED, ini UNINDEXED, fim UNINDEXED, tokenize = 'unicode61 remove_diacritics 2')";
 
   return {
     reconstruir: (chunks: readonly Chunk[]) =>
@@ -67,11 +67,11 @@ export async function criarIndiceSqlite(raiz: string): Promise<IndiceDeBusca | u
         b.exec('DROP TABLE IF EXISTS chunks');
         b.exec(criarTabela);
         const inserir = b.prepare(
-          'INSERT INTO chunks (texto, contexto, fonte, arquivo, ini, fim) VALUES (?, ?, ?, ?, ?, ?)',
+          'INSERT INTO chunks (texto, contexto, source, file, ini, fim) VALUES (?, ?, ?, ?, ?, ?)',
         );
         b.exec('BEGIN');
         try {
-          for (const c of chunks) inserir.run(c.texto, c.contexto, c.fonte, c.arquivo, c.linhaInicio, c.linhaFim);
+          for (const c of chunks) inserir.run(c.texto, c.contexto, c.source, c.file, c.linhaInicio, c.linhaFim);
           b.exec('COMMIT');
         } catch (erro) {
           b.exec('ROLLBACK');
@@ -83,21 +83,21 @@ export async function criarIndiceSqlite(raiz: string): Promise<IndiceDeBusca | u
         b.exec(criarTabela);
         const linhas = b
           .prepare(
-            'SELECT fonte, arquivo, ini, fim, texto, bm25(chunks, 1.0, 2.0) AS p FROM chunks WHERE chunks MATCH ? ORDER BY p LIMIT ?',
+            'SELECT source, file, ini, fim, texto, bm25(chunks, 1.0, 2.0) AS p FROM chunks WHERE chunks MATCH ? ORDER BY p LIMIT ?',
           )
           .all(consulta, limite) as {
-          fonte: string;
-          arquivo: string;
+          source: string;
+          file: string;
           ini: number;
-          fim: number;
+          end: number;
           texto: string;
           p: number;
         }[];
         return linhas.map((l) => ({
-          fonte: l.fonte,
-          arquivo: l.arquivo,
+          source: l.source,
+          file: l.file,
           linhaInicio: Number(l.ini),
-          linhaFim: Number(l.fim),
+          linhaFim: Number(l.end),
           pontuacao: -l.p,
           texto: l.texto,
         }));

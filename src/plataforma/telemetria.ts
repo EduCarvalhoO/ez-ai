@@ -7,25 +7,25 @@ import { problemaNoEndpoint } from '../core/telemetria/endpoint.js';
 type Buscar = (url: string, init: RequestInit) => Promise<{ readonly status: number }>;
 
 export interface OpcoesDoEnviador {
-  readonly ambiente?: NodeJS.ProcessEnv;
+  readonly environment?: NodeJS.ProcessEnv;
   readonly buscar?: Buscar;
   readonly limiteMs?: number;
 }
 
 export function criarEnviadorOtlp(o: OpcoesDoEnviador = {}): EnviadorDeTelemetria {
-  const ambiente = o.ambiente ?? process.env;
+  const ambiente = o.environment ?? process.env;
   const buscar: Buscar = o.buscar ?? ((url, init) => fetch(url, init));
   return {
     async enviar(pedido) {
       const problema = problemaNoEndpoint(pedido.endpoint);
       if (problema) throw new Error(`endpoint recusado: ${problema}`);
       const cabecalhos: Record<string, string> = { 'content-type': 'application/json' };
-      if (pedido.variavelDoToken !== undefined) {
-        const valor = ambiente[pedido.variavelDoToken];
+      if (pedido.tokenVariable !== undefined) {
+        const valor = ambiente[pedido.tokenVariable];
         if (valor === undefined || valor === '') {
-          throw new Error(`a variável de ambiente ${pedido.variavelDoToken} não está definida`);
+          throw new Error(`a variável de ambiente ${pedido.tokenVariable} não está definida`);
         }
-        if (/[\r\n]/.test(valor)) throw new Error(`o valor de ${pedido.variavelDoToken} tem quebra de linha`);
+        if (/[\r\n]/.test(valor)) throw new Error(`o valor de ${pedido.tokenVariable} tem quebra de linha`);
         cabecalhos.authorization = valor;
       }
       const url = new URL(pedido.endpoint).toString();

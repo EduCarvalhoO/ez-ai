@@ -57,7 +57,7 @@ const agregadoras = new Set([
 function converter(unidade: OutputUnit): ErroDeContrato {
   const caminho = unidade.instanceLocation.replace(/^#/, '');
   const base = mensagens[unidade.keyword] ?? `regra "${unidade.keyword}" do schema não atendida`;
-  return { caminho, regra: unidade.keyword, mensagem: `${base} (${unidade.error})` };
+  return { caminho, rule: unidade.keyword, mensagem: `${base} (${unidade.error})` };
 }
 
 /**

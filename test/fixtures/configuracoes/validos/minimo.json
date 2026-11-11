@@ -1,6 +1,6 @@
 {
-  "versaoConfig": 0,
-  "ambientes": [
+  "configVersion": 0,
+  "environments": [
     "claude-code"
   ]
 }

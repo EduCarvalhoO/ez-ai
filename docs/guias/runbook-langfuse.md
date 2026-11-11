@@ -16,9 +16,9 @@ Tudo escuta só em `127.0.0.1`. Para acessar de outra máquina, use túnel SSH o
 ## Ligar o harness
 1. No Langfuse: Settings → API Keys → crie um par de chaves.
 2. No ambiente (não no repositório): `LANGFUSE_AUTH="Basic <base64 de chavePublica:chaveSecreta>"`. O nome da variável precisa começar com `LANGFUSE_` ou `HARNESS_TELEMETRIA_`.
-3. Em `.harness/config.json`: `"telemetria": { "endpoint": "http://localhost:3000/api/public/otel/v1/traces", "variavelDoToken": "LANGFUSE_AUTH" }` (`http` só vale em localhost).
+3. Em `.harness/config.json`: `"telemetria": { "endpoint": "http://localhost:3000/api/public/otel/v1/traces", "tokenVariable": "LANGFUSE_AUTH" }` (`http` só vale em localhost).
 4. `ez-ai export --dry-run` mostra quantos eventos iriam, para onde e qual variável seria usada. Depois `ez-ai export`.
-5. Custo por agente sem o painel: `ez-ai custo`.
+5. Custo por agente sem o painel: `ez-ai cost`.
 
 ## Operação
 | Tarefa | Comando |
@@ -32,5 +32,5 @@ Tudo escuta só em `127.0.0.1`. Para acessar de outra máquina, use túnel SSH o
 ## Problemas comuns
 - *Não sobe, pede variável*: falta um valor no `.env`.
 - *Export responde 401*: base64 errado ou chaves de outro projeto.
-- *Export recusa o marcador*: o log foi recriado; apague `.harness/auditoria/.exportado.json` (reenvia tudo; o `spanId` é determinístico).
+- *Export recusa o marcador*: o log foi recriado; apague `.harness/audit/.exportado.json` (reenvia tudo; o `spanId` é determinístico).
 - *Perdi a `LANGFUSE_ENCRYPTION_KEY`*: chaves guardadas no Langfuse deixam de abrir; gere outra e recrie as chaves de API.

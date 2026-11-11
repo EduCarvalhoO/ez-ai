@@ -5,9 +5,9 @@ import type { Etapa, ResultadoDaEtapa } from './motor.js';
 
 /** Teto opcional de consumo. Vale por janela (desde a última decisão humana), não por vida do item. */
 export interface OrcamentoDoWorkflow {
-  readonly tokensPorItem?: number;
+  readonly tokensPerItem?: number;
   /** Minutos ativos: o tempo de espera por gate humano (G1, G3) não conta. */
-  readonly minutosPorItem?: number;
+  readonly minutesPerItem?: number;
 }
 
 export interface ProtecaoContraLaco {
@@ -23,10 +23,10 @@ export const PROTECAO_PADRAO: ProtecaoContraLaco = { passosPorItem: 60, passosPo
 
 /** Saída que o comando confere antes de aceitar a etapa (regras por etapa, opcionais no `.harness/workflow.json`). */
 export interface SaidaExigida {
-  /** Documento que precisa passar no verificador de completude (`--documento`). */
-  readonly documento?: boolean;
-  /** Arquivo de evidência não vazio, por exemplo o relatório de testes (`--evidencia`). */
-  readonly evidencia?: boolean;
+  /** Documento que precisa passar no verificador de completude (`--document`). */
+  readonly document?: boolean;
+  /** Arquivo de evidência não vazio, por exemplo o relatório de testes (`--evidence`). */
+  readonly evidence?: boolean;
 }
 
 export interface JanelaDeControle {
@@ -50,7 +50,7 @@ export const JANELA_VAZIA: JanelaDeControle = {
 
 export interface Medida {
   readonly tokens: number;
-  readonly fim?: string;
+  readonly end?: string;
 }
 
 const TAMANHO_DA_TRILHA = 12;
@@ -87,8 +87,8 @@ export function somarNaJanela(
     passosPorEtapa: { ...j.passosPorEtapa, [etapa]: (j.passosPorEtapa[etapa] ?? 0) + 1 },
     trilha: [...j.trilha, `${etapa}:${resultado}`].slice(-TAMANHO_DA_TRILHA),
     tokens: j.tokens + medida.tokens,
-    minutosAtivos: j.minutosAtivos + (espera ? 0 : minutosEntre(j.ultimoEm, medida.fim)),
-    ...(medida.fim !== undefined ? { ultimoEm: medida.fim } : j.ultimoEm !== undefined ? { ultimoEm: j.ultimoEm } : {}),
+    minutosAtivos: j.minutosAtivos + (espera ? 0 : minutosEntre(j.ultimoEm, medida.end)),
+    ...(medida.end !== undefined ? { ultimoEm: medida.end } : j.ultimoEm !== undefined ? { ultimoEm: j.ultimoEm } : {}),
   };
 }
 
@@ -109,11 +109,11 @@ export function causaDeParada(
   if (padrao !== undefined) {
     return `laço: o padrão "${padrao}" se repetiu ${protecao.repeticoesSeguidas} vezes seguidas`;
   }
-  if (orcamento?.tokensPorItem !== undefined && j.tokens > orcamento.tokensPorItem) {
-    return `orçamento: ${j.tokens} tokens (teto ${orcamento.tokensPorItem})`;
+  if (orcamento?.tokensPerItem !== undefined && j.tokens > orcamento.tokensPerItem) {
+    return `orçamento: ${j.tokens} tokens (teto ${orcamento.tokensPerItem})`;
   }
-  if (orcamento?.minutosPorItem !== undefined && j.minutosAtivos > orcamento.minutosPorItem) {
-    return `orçamento: ${Math.round(j.minutosAtivos)} minutos ativos (teto ${orcamento.minutosPorItem})`;
+  if (orcamento?.minutesPerItem !== undefined && j.minutosAtivos > orcamento.minutesPerItem) {
+    return `orçamento: ${Math.round(j.minutosAtivos)} minutos ativos (teto ${orcamento.minutesPerItem})`;
   }
   return undefined;
 }

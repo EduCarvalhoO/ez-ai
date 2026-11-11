@@ -6,20 +6,20 @@
 Registrar o que a Sprint 16 achou ao (a) revisar a estrutura e a arquitetura do repositório e (b) usar a CLI (interface de linha de comando) `ez-ai` de ponta a ponta num projeto simples, fora do repositório. Lista o que já foi corrigido, o que corrigir e o que evoluir, com prioridade.
 
 ## Como a simulação foi feita
-Pasta `D:\WorkSpace\ez-ai-simulacao\app` (fora do repo, Git novo, um `soma.js`). Sequência: `init`, `add` do pacote `workflow-feature` (cópia local), `plan`, `apply`, `list`, `doctor`, `validate`, `validate --ci`, `workflow` (item `f-soma`, de E1 a G2), `conhecimento` (mapa, indexar, buscar), `custo`, `export`. Tudo funcionou; os atritos estão abaixo.
+Pasta `D:\WorkSpace\ez-ai-simulacao\app` (fora do repo, Git novo, um `soma.js`). Sequência: `init`, `add` do pacote `workflow-feature` (cópia local), `plan`, `apply`, `list`, `doctor`, `validate`, `validate --ci`, `workflow` (item `f-soma`, de E1 a G2), `knowledge` (mapa, indexar, buscar), `cost`, `export`. Tudo funcionou; os atritos estão abaixo.
 
 ## Atritos da simulação
 | # | Atrito | Prioridade | Situação |
 |---|---|---|---|
 | 1 | `ez-ai --help` era recusado como "argumento não reconhecido" (código 2) | Alta | Corrigido: `--help`, `-h` mostram o uso e saem com 0 |
 | 2 | `add local:/caminho/absoluto` e `local:../pasta` recusados sem dizer o formato aceito | Média | Corrigido: a mensagem agora mostra as duas formas de origem. Falta decidir se pacote local fora do projeto deve ser permitido (ver P2) |
-| 3 | `workflow etapa ... E4 executado` recusado; só `verificado`/`falhou` | Média | Mensagem corrigida (explica que E4 registra o veredito). Sprint 17: quickstart com sessão completa |
+| 3 | `workflow step ... E4 executado` recusado; só `verified`/`failed` | Média | Mensagem corrigida (explica que E4 registra o veredito). Sprint 17: quickstart com sessão completa |
 | 4 | Mensagem "só cabem as etapas E2" (plural com uma etapa) | Baixa | Corrigido |
-| 5 | Após E1, a E2 (opcional) precisa ser registrada como `ignorado`; não dá para ir direto ao G0/G1 | Média | Corrigido na Sprint 17: depois da E1 o G0 é aceito direto e a E2 fica ignorada |
-| 6 | `plan` e `apply` imprimem o texto inteiro de cada instrução do pacote (mais de 80 linhas para 6 componentes) | Alta | Corrigido na Sprint 17: resumo por componente; `--detalhes` mostra o texto |
+| 5 | Após E1, a E2 (opcional) precisa ser registrada como `skipped`; não dá para ir direto ao G0/G1 | Média | Corrigido na Sprint 17: depois da E1 o G0 é aceito direto e a E2 fica ignorada |
+| 6 | `plan` e `apply` imprimem o texto inteiro de cada instrução do pacote (mais de 80 linhas para 6 componentes) | Alta | Corrigido na Sprint 17: resumo por componente; `--details` mostra o texto |
 | 7 | `export` com telemetria desligada sai com código 1 (erro) embora seja estado normal | Baixa | Corrigido na Sprint 17: sai com 0 e avisa (ADR-0029 ajustado) |
-| 8 | `conhecimento mapa`/`indexar` só enxergam Markdown: num projeto só com código devolve "nenhum arquivo" | Média | Aberto (P2) |
-| 9 | `custo` mostra US$ 0,0000 com "sem medida"; fica ambíguo para quem lê rápido | Baixa | Corrigido na Sprint 17: mostra "indisponível" |
+| 8 | `knowledge map`/`indexar` só enxergam Markdown: num projeto só com código devolve "nenhum arquivo" | Média | Aberto (P2) |
+| 9 | `cost` mostra US$ 0,0000 com "sem medida"; fica ambíguo para quem lê rápido | Baixa | Corrigido na Sprint 17: mostra "indisponível" |
 | 10 | O nome do dono do pacote local vem do login do Git (`educarvalhoo/...`), sem aviso | Baixa | Corrigido na Sprint 17: o `add local:` avisa que o dono vem do manifesto |
 | 11 | O quickstart cita o pacote oficial só em termos genéricos; não existe repositório publicado para `add https://github.com/...` do `workflow-feature` | Alta | Sprint 17: pacote 0.4.0 pronto para publicar (README, estrutura); falta o Eduardo criar o repositório e a tag |
 
@@ -29,13 +29,13 @@ Pasta `D:\WorkSpace\ez-ai-simulacao\app` (fora do repo, Git novo, um `soma.js`).
 - Maiores arquivos: `src/core/comandos/escrita.ts` (587 linhas) e `src/cli/main.ts` (435). Ainda administráveis, mas `main.ts` mistura parsing de argumentos, uso e despacho; `args.ts` separado na Sprint 17.
 - `.github/pull_request_template.md` ainda diz "harness-ai"; ADRs 0028 a 0034 usam o nome antigo no texto (registro histórico, tolerável). O modelo de PR exige autorização escrita para mexer em `.github/`. **P1 (trivial, depende de autorização).**
 - `release-npm.yml` foi ativado em `.github/workflows/` (autorizado em 2026-11-05). `release-assinada.yml` é para repositórios de pacote e segue como modelo.
-- Cobertura do benchmark (`conhecimento avaliar`) exige `conhecimento/perguntas.json`; num projeto novo a mensagem de erro não diz como criar. **P3.**
+- Cobertura do benchmark (`knowledge evaluate`) exige `knowledge/questions.json`; num projeto novo a mensagem de erro não diz como criar. **P3.**
 
 ## Próximos passos propostos
-1. **P1 (antes do beta):** enxugar a saída de `plan`/`apply` (resumo por componente, conteúdo só com `--detalhes`); publicar o pacote `workflow-feature` num repositório próprio e atualizar o quickstart; corrigir o modelo de PR; autorizar os workflows de release.
+1. **P1 (antes do beta):** enxugar a saída de `plan`/`apply` (resumo por componente, conteúdo só com `--details`); publicar o pacote `workflow-feature` num repositório próprio e atualizar o quickstart; corrigir o modelo de PR; autorizar os workflows de release.
 2. **P2:** atualizar o mapa de módulos; indexar também código-fonte na camada C0/C1 (ou avisar claramente que só Markdown entra); decidir se `local:` aceita pasta fora do projeto (hoje recusa de propósito, por segurança).
 3. **P3:** uma sessão-exemplo completa de `workflow` no quickstart; E2 opcional realmente opcional; dividir `main.ts`.
-4. **P4:** `export` desligado sair com 0; `custo` com "indisponível"; avisar sobre o dono inferido do pacote local.
+4. **P4:** `export` desligado sair com 0; `cost` com "indisponível"; avisar sobre o dono inferido do pacote local.
 
 Decisões maiores (P1 e a questão do `local:`) pedem um G1 curto com o Eduardo.
 
@@ -49,9 +49,9 @@ Feita na pasta de simulação com o pacote `workflow-feature` e um pacote de tes
 **Resultados que passaram**
 - Claude Code: `apply` gera `.claude/agents/*.md` (4 agentes, com `name` e `description`), `.claude/rules/*.md` (a instrução do workflow), `.claude/skills/*/SKILL.md`, `.claude/settings.json` (hook `PreToolUse` com `onFailure: "block"`, `args` em forma exec e caminho com `${CLAUDE_PROJECT_DIR}`) e `.mcp.json` (servidor `stdio`). Não gera `CLAUDE.md`: as instruções vão para `.claude/rules/`, que o Claude Code carrega sozinho.
 - O script do hook, alimentado com o JSON que o Claude Code envia, sai com código 2 (bloqueia) para `git push --force` e 0 para `ls`.
-- O servidor `conhecimento servir`, falado por JSON-RPC em linhas (protocolo MCP), responde `initialize`, `tools/list` e `tools/call buscar` com trecho citado.
+- O servidor `knowledge serve`, falado por JSON-RPC em linhas (protocolo MCP), responde `initialize`, `tools/list` e `tools/call buscar` com trecho citado.
 - Copilot: `apply` gera `.github/agents/*.agent.md`, `.github/instructions/*.instructions.md` (com `applyTo: "**"`) e `.github/skills/*/SKILL.md`. Hooks e MCP **não** são gravados no Copilot (aviso claro no `plan`).
-- A aprovação própria de `configurarAmbiente` foi exigida e só passou com `--aprovar`, como o ADR-0027 manda.
+- A aprovação própria de `configureEnvironment` foi exigida e só passou com `--approve`, como o ADR-0027 manda.
 
 **O que não foi possível provar nesta sprint**
 - Não há o executável `claude` neste PC (fora do PATH), então a sessão headless (`claude -p`) não rodou: falta provar que o Claude Code carrega os agentes/skills/regras gerados, aprova o MCP e que o hook barra de fato dentro dele. Procedimento manual: na pasta de simulação, abrir `claude`, rodar `/agents`, `/mcp`, `/hooks` e pedir `git push --force`.
@@ -61,5 +61,5 @@ Feita na pasta de simulação com o pacote `workflow-feature` e um pacote de tes
 **Atritos novos**
 | # | Atrito | Prioridade |
 |---|---|---|
-| 12 | `plan` não mostra os ids para `--aprovar`; só o `apply` recusado os mostra (com `%2F` no id) | Corrigido na Sprint 17: o `plan` imprime os `--aprovar` |
+| 12 | `plan` não mostra os ids para `--approve`; só o `apply` recusado os mostra (com `%2F` no id) | Corrigido na Sprint 17: o `plan` imprime os `--approve` |
 | 13 | O MCP do pacote precisa de `ez-ai@<versão>` fixa; com a versão `0.0.0` não publicada, `npx` falharia no Claude Code | P1 (resolve com o release) |

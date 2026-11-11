@@ -6,7 +6,7 @@ import type { ErroDeContrato } from '../contratos/resultado.js';
 import { hashCanonico } from './canonico.js';
 import { type EventoDeAuditoria, type EventoSemCorrente, validarEvento } from './evento.js';
 
-type CorpoDoEvento = EventoSemCorrente & Pick<EventoDeAuditoria, 'seq' | 'anterior'>;
+type CorpoDoEvento = EventoSemCorrente & Pick<EventoDeAuditoria, 'seq' | 'previous'>;
 
 /** `sha256:<hex>` do JSON canônico do evento, sem o campo `hash`. */
 export function hashDoEvento(evento: CorpoDoEvento & { readonly hash?: string }): string {
@@ -19,7 +19,7 @@ export function encadear(anterior: EventoDeAuditoria | null, evento: EventoSemCo
   const corpo: CorpoDoEvento = {
     ...evento,
     seq: anterior ? anterior.seq + 1 : 1,
-    anterior: anterior ? anterior.hash : null,
+    previous: anterior ? anterior.hash : null,
   };
   return { ...corpo, hash: hashDoEvento(corpo) };
 }
@@ -54,7 +54,7 @@ export function verificarCadeia(linhas: readonly string[], continuacao?: CabecaD
       ok: false,
       seq: seqEsperado,
       linha,
-      erros: [{ caminho, regra, mensagem }],
+      erros: [{ caminho, rule: regra, mensagem }],
     });
     const lido = validarEvento(texto);
     if (!lido.ok) return { ok: false, seq: seqEsperado, linha, erros: lido.erros };
@@ -66,8 +66,8 @@ export function verificarCadeia(linhas: readonly string[], continuacao?: CabecaD
         `esperado seq ${seqEsperado}, veio ${e.seq} (linha removida, inserida ou fora de ordem)`,
       );
     }
-    if (e.anterior !== anterior) {
-      return falha('/anterior', 'anterior', 'o "anterior" não é o hash da linha anterior (corrente quebrada)');
+    if (e.previous !== anterior) {
+      return falha('/previous', 'previous', 'o "anterior" não é o hash da linha anterior (corrente quebrada)');
     }
     if (e.hash !== hashDoEvento(e)) {
       return falha('/hash', 'hash', 'o "hash" não bate com o conteúdo da linha (linha editada)');

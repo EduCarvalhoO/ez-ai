@@ -13,11 +13,11 @@ import {
 const raiz = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 const schemas = [
-  ['manifesto-pacote.v0.schema.json', SCHEMA_DO_MANIFESTO],
-  ['configuracao.v0.schema.json', SCHEMA_DA_CONFIGURACAO],
+  ['package-manifest.v0.schema.json', SCHEMA_DO_MANIFESTO],
+  ['config.v0.schema.json', SCHEMA_DA_CONFIGURACAO],
   ['lockfile.v0.schema.json', SCHEMA_DO_LOCKFILE],
   ['policy.v0.schema.json', SCHEMA_DA_POLICY],
-  ['evento-de-auditoria.v0.schema.json', SCHEMA_DO_EVENTO],
+  ['audit-event.v0.schema.json', SCHEMA_DO_EVENTO],
 ] as const;
 
 describe('schemas publicados', () => {

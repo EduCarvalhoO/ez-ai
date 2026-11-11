@@ -9,27 +9,27 @@ export const ID_DO_SCHEMA_DA_POLICY =
 /** Limites do arquivo de policy (D1 do modelo de ameaças). */
 export const LIMITES_DA_POLICY = {
   bytes: 64 * 1024,
-  regras: 200,
+  rules: 200,
   itensPorLista: 50,
-  motivo: 200,
+  reason: 200,
 } as const;
 
 /** Só efeitos que restringem (D2): nenhum nível consegue afrouxar outro (E5). Em ordem de força. */
-export const EFEITOS = ['avisar', 'exigir-aprovacao', 'negar'] as const;
+export const EFEITOS = ['warn', 'require-approval', 'deny'] as const;
 /** As seis categorias de permissão do manifesto e o tipo de componente. */
 export const CATEGORIAS_DE_POLICY = [
-  'ler',
-  'escrever',
-  'executar',
-  'rede',
-  'segredos',
-  'configurarAmbiente',
-  'tipo',
+  'read',
+  'write',
+  'execute',
+  'network',
+  'secrets',
+  'configureEnvironment',
+  'type',
   // Piso do scan de conteúdo (ADR-0038/0040): `negar` + `padroes: ["baixa"|"media"|"alta"]` tranca o pacote que tiver
   // achado dessa severidade ou pior. Não casa com item declarado; quem lê é o scan, e vale a regra mais rígida.
-  'conteudo',
+  'content',
 ] as const;
-export const MARCAS = ['amplo', 'sensivel', 'executavel'] as const;
+export const MARCAS = ['broad', 'sensitive', 'executable'] as const;
 
 // Glob, host com `*.`, nome de programa ou de variável: a forma de cada categoria fica na validação semântica.
 const padrao = { type: 'string', minLength: 1, maxLength: 253, pattern: '^[A-Za-z0-9._/*?-]+$' } as const;
@@ -47,48 +47,48 @@ export const SCHEMA_DA_POLICY = {
   title: 'Policy do ez-ai (v0)',
   type: 'object',
   additionalProperties: false,
-  required: ['versaoPolicy', 'regras'],
+  required: ['policyVersion', 'rules'],
   properties: {
     $schema: { type: 'string', maxLength: LIMITES.texto, pattern: '^https://' },
-    versaoPolicy: { const: 0 },
-    regras: {
+    policyVersion: { const: 0 },
+    rules: {
       type: 'array',
-      maxItems: LIMITES_DA_POLICY.regras,
-      items: { $ref: '#/$defs/regra' },
+      maxItems: LIMITES_DA_POLICY.rules,
+      items: { $ref: '#/$defs/rule' },
     },
   },
   $defs: {
-    regra: {
+    rule: {
       type: 'object',
       additionalProperties: false,
-      required: ['id', 'efeito', 'categoria', 'motivo'],
+      required: ['id', 'effect', 'category', 'reason'],
       properties: {
         id: { type: 'string', pattern: '^[a-z0-9][a-z0-9-]{0,63}$' },
-        efeito: { enum: EFEITOS },
-        categoria: { enum: CATEGORIAS_DE_POLICY },
-        padroes: listaDePadroes,
-        marca: { enum: MARCAS },
-        exceto: listaDePadroes,
-        pacotes: {
+        effect: { enum: EFEITOS },
+        category: { enum: CATEGORIAS_DE_POLICY },
+        patterns: listaDePadroes,
+        mark: { enum: MARCAS },
+        except: listaDePadroes,
+        packages: {
           type: 'array',
           items: { type: 'string', maxLength: 104, pattern: `^${PADRAO_LOGIN}/(?:\\*|${PADRAO_PACOTE})$` },
           minItems: 1,
           maxItems: LIMITES_DA_POLICY.itensPorLista,
           uniqueItems: true,
         },
-        critica: { type: 'boolean' },
-        motivo: { type: 'string', minLength: 1, maxLength: LIMITES_DA_POLICY.motivo },
+        critical: { type: 'boolean' },
+        reason: { type: 'string', minLength: 1, maxLength: LIMITES_DA_POLICY.reason },
       },
       allOf: [
         // Exatamente um entre `padroes` e `marca`; `exceto` só junto de `padroes`.
         {
           oneOf: [
-            { required: ['padroes'], not: { required: ['marca'] } },
-            { required: ['marca'], not: { anyOf: [{ required: ['padroes'] }, { required: ['exceto'] }] } },
+            { required: ['patterns'], not: { required: ['mark'] } },
+            { required: ['mark'], not: { anyOf: [{ required: ['patterns'] }, { required: ['except'] }] } },
           ],
         },
         // `critica` só faz sentido em `negar`: é a regra que o ambiente precisa bloquear em execução (D8).
-        { anyOf: [{ properties: { efeito: { const: 'negar' } } }, { not: { required: ['critica'] } }] },
+        { anyOf: [{ properties: { effect: { const: 'deny' } } }, { not: { required: ['critical'] } }] },
       ],
     },
   },

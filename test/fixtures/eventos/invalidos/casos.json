@@ -1,127 +1,127 @@
 [
   {
-    "arquivo": "tipo-fora-do-catalogo.jsonl",
-    "regra": "enum",
-    "caminho": "/tipo"
+    "file": "tipo-fora-do-catalogo.jsonl",
+    "rule": "enum",
+    "caminho": "/type"
   },
   {
-    "arquivo": "versao-1.jsonl",
-    "regra": "const",
-    "caminho": "/versaoEvento"
+    "file": "versao-1.jsonl",
+    "rule": "const",
+    "caminho": "/eventVersion"
   },
   {
-    "arquivo": "dados-com-campo-extra.jsonl",
-    "regra": "additionalProperties",
-    "caminho": "/dados"
+    "file": "dados-com-campo-extra.jsonl",
+    "rule": "additionalProperties",
+    "caminho": "/data"
   },
   {
-    "arquivo": "campo-extra-no-envelope.jsonl",
-    "regra": "additionalProperties",
+    "file": "campo-extra-no-envelope.jsonl",
+    "rule": "additionalProperties",
     "caminho": ""
   },
   {
-    "arquivo": "seq-zero.jsonl",
-    "regra": "minimum",
+    "file": "seq-zero.jsonl",
+    "rule": "minimum",
     "caminho": "/seq"
   },
   {
-    "arquivo": "anterior-nulo-fora-do-primeiro.jsonl",
-    "regra": "inicio-da-corrente",
-    "caminho": "/anterior"
+    "file": "anterior-nulo-fora-do-primeiro.jsonl",
+    "rule": "inicio-da-corrente",
+    "caminho": "/previous"
   },
   {
-    "arquivo": "instante-sem-milissegundos.jsonl",
-    "regra": "pattern",
-    "caminho": "/em"
+    "file": "instante-sem-milissegundos.jsonl",
+    "rule": "pattern",
+    "caminho": "/at"
   },
   {
-    "arquivo": "numero-decimal.jsonl",
-    "regra": "type",
-    "caminho": "/dados/duracaoMs"
+    "file": "numero-decimal.jsonl",
+    "rule": "type",
+    "caminho": "/data/durationMs"
   },
   {
-    "arquivo": "comando-fora-da-cli.jsonl",
-    "regra": "enum",
-    "caminho": "/dados/comando"
+    "file": "comando-fora-da-cli.jsonl",
+    "rule": "enum",
+    "caminho": "/data/command"
   },
   {
-    "arquivo": "verificado-sem-hash.jsonl",
-    "regra": "verificado-sem-prova",
-    "caminho": "/dados"
+    "file": "verificado-sem-hash.jsonl",
+    "rule": "verificado-sem-prova",
+    "caminho": "/data"
   },
   {
-    "arquivo": "verificado-com-codigo-1.jsonl",
-    "regra": "verificado-sem-prova",
-    "caminho": "/dados"
+    "file": "verificado-com-codigo-1.jsonl",
+    "rule": "verificado-sem-prova",
+    "caminho": "/data"
   },
   {
-    "arquivo": "falhou-sem-motivo.jsonl",
-    "regra": "motivo-obrigatorio",
-    "caminho": "/codigoDoMotivo"
+    "file": "falhou-sem-motivo.jsonl",
+    "rule": "motivo-obrigatorio",
+    "caminho": "/reasonCode"
   },
   {
-    "arquivo": "ignorado-sem-motivo.jsonl",
-    "regra": "motivo-obrigatorio",
-    "caminho": "/codigoDoMotivo"
+    "file": "ignorado-sem-motivo.jsonl",
+    "rule": "motivo-obrigatorio",
+    "caminho": "/reasonCode"
   },
   {
-    "arquivo": "validador-externo-sem-ci.jsonl",
-    "regra": "validador-sem-ci",
-    "caminho": "/dados/nivel"
+    "file": "validador-externo-sem-ci.jsonl",
+    "rule": "validador-sem-ci",
+    "caminho": "/data/level"
   },
   {
-    "arquivo": "consumo-indisponivel-com-numeros.jsonl",
-    "regra": "indisponivel-com-numeros",
-    "caminho": "/dados/consumo"
+    "file": "consumo-indisponivel-com-numeros.jsonl",
+    "rule": "indisponivel-com-numeros",
+    "caminho": "/data/usage"
   },
   {
-    "arquivo": "consumo-negativo.jsonl",
-    "regra": "minimum",
-    "caminho": "/dados/consumo/tokensSaida"
+    "file": "consumo-negativo.jsonl",
+    "rule": "minimum",
+    "caminho": "/data/usage/outputTokens"
   },
   {
-    "arquivo": "modelo-fora-da-regex.jsonl",
-    "regra": "pattern",
-    "caminho": "/dados/consumo/modelo"
+    "file": "modelo-fora-da-regex.jsonl",
+    "rule": "pattern",
+    "caminho": "/data/usage/model"
   },
   {
-    "arquivo": "argumento-com-atribuicao.jsonl",
-    "regra": "argumento-com-segredo",
-    "caminho": "/dados/comando/argumentos/0"
+    "file": "argumento-com-atribuicao.jsonl",
+    "rule": "argumento-com-segredo",
+    "caminho": "/data/command/arguments/0"
   },
   {
-    "arquivo": "segredo-no-detalhe.jsonl",
-    "regra": "parece-segredo",
-    "caminho": "/detalhe"
+    "file": "segredo-no-detalhe.jsonl",
+    "rule": "parece-segredo",
+    "caminho": "/detail"
   },
   {
-    "arquivo": "url-com-credencial.jsonl",
-    "regra": "pattern",
-    "caminho": "/dados/origemNova"
+    "file": "url-com-credencial.jsonl",
+    "rule": "pattern",
+    "caminho": "/data/newSource"
   },
   {
-    "arquivo": "id-de-item-com-curinga.jsonl",
-    "regra": "id-de-item",
-    "caminho": "/dados/entradas/0/id"
+    "file": "id-de-item-com-curinga.jsonl",
+    "rule": "id-de-item",
+    "caminho": "/data/entries/0/id"
   },
   {
-    "arquivo": "fim-antes-do-inicio.jsonl",
-    "regra": "fim-antes-do-inicio",
-    "caminho": "/dados/fim"
+    "file": "fim-antes-do-inicio.jsonl",
+    "rule": "fim-antes-do-inicio",
+    "caminho": "/data/end"
   },
   {
-    "arquivo": "linha-acima-de-16-kib.jsonl",
-    "regra": "tamanho",
+    "file": "linha-acima-de-16-kib.jsonl",
+    "rule": "tamanho",
     "caminho": ""
   },
   {
-    "arquivo": "chave-duplicada.jsonl",
-    "regra": "chave-duplicada",
+    "file": "chave-duplicada.jsonl",
+    "rule": "chave-duplicada",
     "caminho": "/seq"
   },
   {
-    "arquivo": "invisivel-no-detalhe.jsonl",
-    "regra": "caractere-invisivel",
-    "caminho": "/detalhe"
+    "file": "invisivel-no-detalhe.jsonl",
+    "rule": "caractere-invisivel",
+    "caminho": "/detail"
   }
 ]

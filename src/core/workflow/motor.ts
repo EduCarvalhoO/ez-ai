@@ -22,22 +22,22 @@ export type EtapaDesligavel = 'E0' | 'E2' | 'E5';
 export const ETAPAS_DESLIGAVEIS: readonly EtapaDesligavel[] = ['E0', 'E2', 'E5'];
 
 export interface ConfiguracaoDoWorkflow {
-  readonly etapasDesligadas: readonly EtapaDesligavel[];
+  readonly disabledSteps: readonly EtapaDesligavel[];
   /** Revisões permitidas antes de escalar ao humano: documentação (G0) e código (G2/E4). */
-  readonly limiteDeCiclos: { readonly documentacao: number; readonly codigo: number };
+  readonly cycleLimit: { readonly documentation: number; readonly code: number };
   /** Teto de tokens e de minutos ativos por janela (ADR-0033). Sem ele, só os limites de laço valem. */
-  readonly orcamento?: OrcamentoDoWorkflow;
+  readonly budget?: OrcamentoDoWorkflow;
   /** Limites contra laço infinito; sem ele valem os padrões de `PROTECAO_PADRAO`. */
-  readonly protecao?: ProtecaoContraLaco;
+  readonly protection?: ProtecaoContraLaco;
   /** Saída que cada etapa precisa entregar para o comando aceitar o evento (documento completo, evidência). */
-  readonly saidas?: Readonly<Partial<Record<Etapa, SaidaExigida>>>;
-  /** Item sem evento há mais que isto aparece como parado em `workflow retomar` (padrão 120). */
-  readonly minutosParado?: number;
+  readonly outputs?: Readonly<Partial<Record<Etapa, SaidaExigida>>>;
+  /** Item sem evento há mais que isto aparece como parado em `workflow resume` (padrão 120). */
+  readonly stalledMinutes?: number;
 }
 
 export const WORKFLOW_PADRAO: ConfiguracaoDoWorkflow = {
-  etapasDesligadas: [],
-  limiteDeCiclos: { documentacao: 2, codigo: 2 },
+  disabledSteps: [],
+  cycleLimit: { documentation: 2, code: 2 },
 };
 
 export type Situacao = 'em-andamento' | 'aguarda-decisao-humana' | 'concluido';
@@ -50,7 +50,7 @@ export interface EstadoDoWorkflow {
   readonly ciclosDeDocumentacao: number;
   readonly ciclosDeCodigo: number;
   /** Rodadas de revisão humana (G3 reprovado). */
-  readonly rodada: number;
+  readonly round: number;
   /** Pedidos de ajuste no G1. */
   readonly ajustesDoG1: number;
   /** Etapas ou gates registrados como `ignorado`: nunca contam como aprovados. */
@@ -67,7 +67,7 @@ export interface EstadoDoWorkflow {
 
 export type Transicao =
   | { readonly ok: true; readonly estado: EstadoDoWorkflow }
-  | { readonly ok: false; readonly motivo: string };
+  | { readonly ok: false; readonly reason: string };
 
 const GATES: readonly Etapa[] = ['G0', 'G1', 'G2', 'G3'];
 /** Passam só com `verificado`: a revisão (E4) e os gates. */
@@ -77,10 +77,10 @@ export function estadoInicial(item: string, cfg: ConfiguracaoDoWorkflow = WORKFL
   return {
     item,
     situacao: 'em-andamento',
-    permitidas: cfg.etapasDesligadas.includes('E0') ? ['E1'] : ['E0', 'E1'],
+    permitidas: cfg.disabledSteps.includes('E0') ? ['E1'] : ['E0', 'E1'],
     ciclosDeDocumentacao: 0,
     ciclosDeCodigo: 0,
-    rodada: 0,
+    round: 0,
     ajustesDoG1: 0,
     ignorados: [],
     propoeReplanejar: false,
@@ -93,7 +93,7 @@ export function estadoInicial(item: string, cfg: ConfiguracaoDoWorkflow = WORKFL
 function seguinte(de: Etapa, cfg: ConfiguracaoDoWorkflow): Etapa | 'concluido' {
   const ordem: readonly Etapa[] = ['E0', 'E1', 'E2', 'G0', 'G1', 'E3', 'G2', 'E4', 'E5', 'G3'];
   const desligada = (e: Etapa): boolean =>
-    cfg.etapasDesligadas.includes(e as EtapaDesligavel) || (e === 'G0' && cfg.etapasDesligadas.includes('E2'));
+    cfg.disabledSteps.includes(e as EtapaDesligavel) || (e === 'G0' && cfg.disabledSteps.includes('E2'));
   for (let i = ordem.indexOf(de) + 1; i < ordem.length; i++) {
     const e = ordem[i];
     if (e !== undefined && !desligada(e)) return e;
@@ -112,7 +112,7 @@ function escalar(base: EstadoDoWorkflow, mudancas: Partial<EstadoDoWorkflow>): E
 function falhar(base: EstadoDoWorkflow, etapa: Etapa, cfg: ConfiguracaoDoWorkflow): EstadoDoWorkflow {
   if (etapa === 'G0') {
     const ciclos = base.ciclosDeDocumentacao + 1;
-    return ciclos >= cfg.limiteDeCiclos.documentacao
+    return ciclos >= cfg.cycleLimit.documentation
       ? escalar(base, { ciclosDeDocumentacao: ciclos })
       : com(base, { ciclosDeDocumentacao: ciclos, permitidas: ['E1'] });
   }
@@ -122,14 +122,14 @@ function falhar(base: EstadoDoWorkflow, etapa: Etapa, cfg: ConfiguracaoDoWorkflo
   }
   if (etapa === 'G2' || etapa === 'E4') {
     const ciclos = base.ciclosDeCodigo + 1;
-    return ciclos >= cfg.limiteDeCiclos.codigo
+    return ciclos >= cfg.cycleLimit.code
       ? escalar(base, { ciclosDeCodigo: ciclos })
       : com(base, { ciclosDeCodigo: ciclos, permitidas: ['E3'] });
   }
   if (etapa === 'G3') {
-    const rodada = base.rodada + 1;
+    const rodada = base.round + 1;
     // A rodada humana zera os contadores; quem classifica (dentro do plano → E3, muda escopo → E1) é o próximo evento.
-    return escalar(base, { rodada, ciclosDeDocumentacao: 0, ciclosDeCodigo: 0, propoeReplanejar: rodada >= 3 });
+    return escalar(base, { round: rodada, ciclosDeDocumentacao: 0, ciclosDeCodigo: 0, propoeReplanejar: rodada >= 3 });
   }
   // Falha numa etapa comum (E0, E1, E2, E3, E5): a etapa pode ser refeita; não conta ciclo.
   return base;
@@ -145,11 +145,11 @@ export function avancar(
   resultado: ResultadoDaEtapa,
   cfg: ConfiguracaoDoWorkflow = WORKFLOW_PADRAO,
 ): Transicao {
-  if (estado.situacao === 'concluido') return { ok: false, motivo: `o item "${estado.item}" já está concluído` };
+  if (estado.situacao === 'concluido') return { ok: false, reason: `o item "${estado.item}" já está concluído` };
   if (!estado.permitidas.includes(etapa)) {
     return {
       ok: false,
-      motivo: `agora ${estado.permitidas.length > 1 ? 'só cabem as etapas' : 'só cabe a etapa'} ${estado.permitidas.join(' ou ')}; "${etapa}" fica fora da ordem do workflow`,
+      reason: `agora ${estado.permitidas.length > 1 ? 'só cabem as etapas' : 'só cabe a etapa'} ${estado.permitidas.join(' ou ')}; "${etapa}" fica fora da ordem do workflow`,
     };
   }
   // Decisão humana depois de uma escala ou de um G3 reprovado: o destino (E1 ou E3) zera os laços de agentes.
@@ -158,25 +158,25 @@ export function avancar(
       ? com(estado, { situacao: 'em-andamento', ciclosDeDocumentacao: 0, ciclosDeCodigo: 0 })
       : estado;
 
-  if (resultado === 'solicitado') return { ok: true, estado: base };
+  if (resultado === 'requested') return { ok: true, estado: base };
 
   // E2 é opcional: depois da E1 o G0 também é aceito, e a E2 fica registrada como ignorada (nunca como feita).
   const pulouE2 = etapa === 'G0' && estado.permitidas.includes('E2');
   const saltos = pulouE2 ? [...base.ignorados, 'E2' as Etapa] : base.ignorados;
 
-  if (resultado === 'ignorado') {
+  if (resultado === 'skipped') {
     const ignorados = [...base.ignorados, etapa];
     if (etapa !== 'E0' && etapa !== 'E2' && etapa !== 'E5') return { ok: true, estado: com(base, { ignorados }) };
     const prox = seguinte(etapa, cfg);
     return { ok: true, estado: com(base, { ignorados, permitidas: prox === 'concluido' ? [] : [prox] }) };
   }
 
-  if (resultado === 'falhou') return { ok: true, estado: falhar(com(base, { ignorados: saltos }), etapa, cfg) };
+  if (resultado === 'failed') return { ok: true, estado: falhar(com(base, { ignorados: saltos }), etapa, cfg) };
 
-  if (EXIGE_VERIFICADO.includes(etapa) && resultado !== 'verificado') {
+  if (EXIGE_VERIFICADO.includes(etapa) && resultado !== 'verified') {
     const dica =
       etapa === 'E4' ? ' (E4 registra o veredito do revisor: "verificado" se aprovou, "falhou" se reprovou)' : '';
-    return { ok: false, motivo: `"${etapa}" só passa com resultado "verificado", não com "${resultado}"${dica}` };
+    return { ok: false, reason: `"${etapa}" só passa com resultado "verificado", não com "${resultado}"${dica}` };
   }
   const prox = seguinte(etapa, cfg);
   if (prox === 'concluido')
@@ -196,13 +196,13 @@ export function estadoDoItem(
 ): EstadoDoWorkflow {
   let estado = estadoInicial(item, cfg);
   for (const e of eventos) {
-    if (e.tipo !== 'etapa') continue;
-    const d = e.dados as Json;
+    if (e.type !== 'step') continue;
+    const d = e.data as Json;
     if (d.item !== item) continue;
-    const t = aplicarEvento(estado, d.etapa as Etapa, e.resultado, medidaDoEvento(d), cfg);
+    const t = aplicarEvento(estado, d.step as Etapa, e.result, medidaDoEvento(d), cfg);
     estado = t.ok
       ? t.estado
-      : { ...estado, desvios: [...estado.desvios, `seq ${e.seq}: ${d.etapa as string} ${e.resultado}: ${t.motivo}`] };
+      : { ...estado, desvios: [...estado.desvios, `seq ${e.seq}: ${d.step as string} ${e.result}: ${t.reason}`] };
   }
   return estado;
 }
@@ -228,15 +228,15 @@ export function aplicarEvento(
     ...(reinicia ? { motivoDaEscala: undefined } : {}),
   };
   if (novo.situacao === 'em-andamento') {
-    const causa = causaDeParada(janela, cfg.orcamento, cfg.protecao);
+    const causa = causaDeParada(janela, cfg.budget, cfg.protection);
     if (causa !== undefined) novo = { ...escalar(novo, {}), motivoDaEscala: causa };
   }
   return { ok: true, estado: novo };
 }
 
 function medidaDoEvento(d: Json): Medida {
-  const c = d.consumo as { fonte?: unknown; tokensEntrada?: unknown; tokensSaida?: unknown } | undefined;
+  const c = d.usage as { source?: unknown; inputTokens?: unknown; outputTokens?: unknown } | undefined;
   const n = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
-  const tokens = c && c.fonte !== 'indisponivel' ? n(c.tokensEntrada) + n(c.tokensSaida) : 0;
-  return { tokens, ...(typeof d.fim === 'string' ? { fim: d.fim } : {}) };
+  const tokens = c && c.source !== 'unavailable' ? n(c.inputTokens) + n(c.outputTokens) : 0;
+  return { tokens, ...(typeof d.end === 'string' ? { end: d.end } : {}) };
 }

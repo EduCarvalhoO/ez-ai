@@ -4,7 +4,7 @@
 import { canonizarRepositorio, ORIGENS_OFICIAIS, type Origem } from './origem.js';
 
 /** Do menos para o mais confiável. `local` é a pasta do próprio projeto e fica fora desta escala. */
-export const NIVEIS_DE_CONFIANCA = ['comunidade', 'verificado', 'oficial'] as const;
+export const NIVEIS_DE_CONFIANCA = ['community', 'verified', 'official'] as const;
 export type NivelDeConfianca = (typeof NIVEIS_DE_CONFIANCA)[number] | 'local';
 
 export interface FatosDeConfianca {
@@ -14,11 +14,11 @@ export interface FatosDeConfianca {
 }
 
 export function nivelDeConfianca(origem: Origem, fatos: FatosDeConfianca = {}): NivelDeConfianca {
-  if (origem.tipo === 'local') return 'local';
+  if (origem.type === 'local') return 'local';
   const oficiais = fatos.oficiais ?? ORIGENS_OFICIAIS;
-  if (fatos.assinaturaVerificada !== true) return 'comunidade';
+  if (fatos.assinaturaVerificada !== true) return 'community';
   // Oficial = origem da lista E assinatura conferida: só estar na lista não basta (repositório sequestrado, ADR-0035).
-  return oficiais.some((o) => canonizarRepositorio(o) === origem.url) ? 'oficial' : 'verificado';
+  return oficiais.some((o) => canonizarRepositorio(o) === origem.url) ? 'official' : 'verified';
 }
 
 /** `local` sempre passa (é código do próprio projeto); os demais precisam estar no mínimo exigido. */

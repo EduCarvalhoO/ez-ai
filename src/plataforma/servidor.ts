@@ -26,7 +26,7 @@ export function criarLeitorDaBase(ref: string, cwd: string, executar: ExecutorDe
     return resolvido;
   };
   return {
-    async ler(caminho) {
+    async read(caminho) {
       if (!CAMINHO.test(caminho) || caminho.includes('..')) throw new Error(`caminho "${caminho}" recusado.`);
       const sha = await commit();
       const lista = await executar(['ls-tree', '--name-only', sha, '--', caminho], cwd);
@@ -46,7 +46,7 @@ export type Buscar = (
 }>;
 
 export interface OpcoesDoProvedor {
-  readonly repositorio: string;
+  readonly repository: string;
   /** Número do PR; sem ele, procura o PR do commit `sha`. */
   readonly pr?: number;
   readonly sha?: string;
@@ -59,7 +59,7 @@ const obj = (v: unknown): Record<string, unknown> =>
 const texto = (v: unknown): string => (typeof v === 'string' ? v : '');
 
 export function criarProvedorDoPr(o: OpcoesDoProvedor): ProvedorDoPr {
-  if (!REPOSITORIO.test(o.repositorio)) throw new Error(`repositório "${o.repositorio}" recusado.`);
+  if (!REPOSITORIO.test(o.repository)) throw new Error(`repositório "${o.repository}" recusado.`);
   if (o.token === '') throw new Error('falta o token do GitHub (GITHUB_TOKEN) para o job de servidor.');
   const buscar: Buscar = o.buscar ?? ((url, init) => fetch(url, init));
   const cabecalhos = {
@@ -84,11 +84,11 @@ export function criarProvedorDoPr(o: OpcoesDoProvedor): ProvedorDoPr {
     throw new Error(`mais de ${PAGINAS * 100} itens em ${caminho.split('?')[0]}; o job recusa (falha fechada).`);
   };
   return {
-    async dados(times = []): Promise<DadosDoPr | undefined> {
+    async data(times = []): Promise<DadosDoPr | undefined> {
       let numero = o.pr;
       if (numero === undefined) {
         if (!o.sha || !SHA.test(o.sha)) return undefined;
-        const lista = await pegar(`/repos/${o.repositorio}/commits/${o.sha}/pulls`);
+        const lista = await pegar(`/repos/${o.repository}/commits/${o.sha}/pulls`);
         // Só o PR cujo commit de merge é este push; PR aberto que apenas contém o commit não vale.
         const achado = (Array.isArray(lista) ? lista : [])
           .map(obj)
@@ -96,7 +96,7 @@ export function criarProvedorDoPr(o: OpcoesDoProvedor): ProvedorDoPr {
         if (!achado || typeof achado.number !== 'number') return undefined;
         numero = achado.number;
       }
-      const base = `/repos/${o.repositorio}/pulls/${numero}`;
+      const base = `/repos/${o.repository}/pulls/${numero}`;
       const pr = obj(await pegar(base));
       const head = obj(pr.head);
       const shaDaHead = texto(head.sha);
@@ -140,14 +140,14 @@ export function criarProvedorDoPr(o: OpcoesDoProvedor): ProvedorDoPr {
     },
     async checkRuns(sha): Promise<readonly CheckRun[]> {
       if (!SHA.test(sha)) throw new Error('SHA da head inválido.');
-      const lista = await paginas(`/repos/${o.repositorio}/commits/${sha}/check-runs`, 'check_runs');
+      const lista = await paginas(`/repos/${o.repository}/commits/${sha}/check-runs`, 'check_runs');
       return lista.flatMap((c) => {
         const x = obj(c);
         // Só o GitHub Actions vale: outro app poderia publicar um check com o mesmo nome.
         if (texto(obj(x.app).slug) !== 'github-actions' || texto(x.head_sha) !== sha) return [];
         return [
           {
-            nome: texto(x.name),
+            name: texto(x.name),
             conclusao: typeof x.conclusion === 'string' ? x.conclusion : null,
             sha: texto(x.head_sha),
           },

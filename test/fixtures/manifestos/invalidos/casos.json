@@ -1,697 +1,697 @@
 [
   {
-    "arquivo": "nome-maiusculo.json",
-    "regra": "pattern",
-    "caminho": "/nome"
+    "file": "nome-maiusculo.json",
+    "rule": "pattern",
+    "caminho": "/name"
   },
   {
-    "arquivo": "nome-homografo.json",
-    "regra": "pattern",
-    "caminho": "/nome"
+    "file": "nome-homografo.json",
+    "rule": "pattern",
+    "caminho": "/name"
   },
   {
-    "arquivo": "nome-login-hifen-duplo.json",
-    "regra": "pattern",
-    "caminho": "/nome"
+    "file": "nome-login-hifen-duplo.json",
+    "rule": "pattern",
+    "caminho": "/name"
   },
   {
-    "arquivo": "nome-pacote-reservado.json",
-    "regra": "nome-de-pasta",
-    "caminho": "/nome"
+    "file": "nome-pacote-reservado.json",
+    "rule": "nome-de-pasta",
+    "caminho": "/name"
   },
   {
-    "arquivo": "nome-pacote-git.json",
-    "regra": "nome-de-pasta",
-    "caminho": "/nome"
+    "file": "nome-pacote-git.json",
+    "rule": "nome-de-pasta",
+    "caminho": "/name"
   },
   {
-    "arquivo": "repositorio-de-outro-dono.json",
-    "regra": "mesmo-dono",
-    "caminho": "/repositorio"
+    "file": "repositorio-de-outro-dono.json",
+    "rule": "mesmo-dono",
+    "caminho": "/repository"
   },
   {
-    "arquivo": "repositorio-com-credencial.json",
-    "regra": "pattern",
-    "caminho": "/repositorio"
+    "file": "repositorio-com-credencial.json",
+    "rule": "pattern",
+    "caminho": "/repository"
   },
   {
-    "arquivo": "repositorio-com-query.json",
-    "regra": "pattern",
-    "caminho": "/repositorio"
+    "file": "repositorio-com-query.json",
+    "rule": "pattern",
+    "caminho": "/repository"
   },
   {
-    "arquivo": "repositorio-sufixo-git.json",
-    "regra": "url-canonica",
-    "caminho": "/repositorio"
+    "file": "repositorio-sufixo-git.json",
+    "rule": "url-canonica",
+    "caminho": "/repository"
   },
   {
-    "arquivo": "assinatura-de-outro-repositorio.json",
-    "regra": "mesmo-repositorio",
-    "caminho": "/assinatura/identidade"
+    "file": "assinatura-de-outro-repositorio.json",
+    "rule": "mesmo-repositorio",
+    "caminho": "/signature/identity"
   },
   {
-    "arquivo": "assinatura-emissor-errado.json",
-    "regra": "const",
-    "caminho": "/assinatura/emissor"
+    "file": "assinatura-emissor-errado.json",
+    "rule": "const",
+    "caminho": "/signature/issuer"
   },
   {
-    "arquivo": "campo-desconhecido.json",
-    "regra": "additionalProperties",
+    "file": "campo-desconhecido.json",
+    "rule": "additionalProperties",
     "caminho": ""
   },
   {
-    "arquivo": "proto.json",
-    "regra": "additionalProperties",
+    "file": "proto.json",
+    "rule": "additionalProperties",
     "caminho": ""
   },
   {
-    "arquivo": "constructor-em-componente.json",
-    "regra": "additionalProperties",
-    "caminho": "/componentes/0"
+    "file": "constructor-em-componente.json",
+    "rule": "additionalProperties",
+    "caminho": "/components/0"
   },
   {
-    "arquivo": "chave-duplicada.json",
-    "regra": "chave-duplicada",
-    "caminho": "/componentes/0/permissoes"
+    "file": "chave-duplicada.json",
+    "rule": "chave-duplicada",
+    "caminho": "/components/0/permissions"
   },
   {
-    "arquivo": "profundo.json",
-    "regra": "profundidade",
+    "file": "profundo.json",
+    "rule": "profundidade",
     "caminho": "/x/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
   },
   {
-    "arquivo": "json-invalido.json",
-    "regra": "json",
+    "file": "json-invalido.json",
+    "rule": "json",
     "caminho": ""
   },
   {
-    "arquivo": "versao-manifesto-1.json",
-    "regra": "const",
-    "caminho": "/versaoManifesto"
+    "file": "versao-manifesto-1.json",
+    "rule": "const",
+    "caminho": "/manifestVersion"
   },
   {
-    "arquivo": "versao-com-intervalo.json",
-    "regra": "pattern",
-    "caminho": "/versao"
+    "file": "versao-com-intervalo.json",
+    "rule": "pattern",
+    "caminho": "/version"
   },
   {
-    "arquivo": "sem-componentes.json",
-    "regra": "minItems",
-    "caminho": "/componentes"
+    "file": "sem-componentes.json",
+    "rule": "minItems",
+    "caminho": "/components"
   },
   {
-    "arquivo": "id-duplicado.json",
-    "regra": "id-unico",
-    "caminho": "/componentes/1/id"
+    "file": "id-duplicado.json",
+    "rule": "id-unico",
+    "caminho": "/components/1/id"
   },
   {
-    "arquivo": "componentes-demais.json",
-    "regra": "maxItems",
-    "caminho": "/componentes"
+    "file": "componentes-demais.json",
+    "rule": "maxItems",
+    "caminho": "/components"
   },
   {
-    "arquivo": "arquivo-ponto-ponto.json",
-    "regra": "caminho",
-    "caminho": "/componentes/0/arquivo"
+    "file": "arquivo-ponto-ponto.json",
+    "rule": "caminho",
+    "caminho": "/components/0/file"
   },
   {
-    "arquivo": "arquivo-absoluto.json",
-    "regra": "caminho",
-    "caminho": "/componentes/0/arquivo"
+    "file": "arquivo-absoluto.json",
+    "rule": "caminho",
+    "caminho": "/components/0/file"
   },
   {
-    "arquivo": "arquivo-barra-invertida.json",
-    "regra": "pattern",
-    "caminho": "/componentes/0/arquivo"
+    "file": "arquivo-barra-invertida.json",
+    "rule": "pattern",
+    "caminho": "/components/0/file"
   },
   {
-    "arquivo": "arquivo-reservado-windows.json",
-    "regra": "caminho",
-    "caminho": "/componentes/0/arquivo"
+    "file": "arquivo-reservado-windows.json",
+    "rule": "caminho",
+    "caminho": "/components/0/file"
   },
   {
-    "arquivo": "ler-ponto-ponto.json",
-    "regra": "caminho",
-    "caminho": "/componentes/0/permissoes/ler/0"
+    "file": "ler-ponto-ponto.json",
+    "rule": "caminho",
+    "caminho": "/components/0/permissions/read/0"
   },
   {
-    "arquivo": "ler-com-chaves.json",
-    "regra": "pattern",
-    "caminho": "/componentes/0/permissoes/ler/0"
+    "file": "ler-com-chaves.json",
+    "rule": "pattern",
+    "caminho": "/components/0/permissions/read/0"
   },
   {
-    "arquivo": "escrever-claude.json",
-    "regra": "destino-protegido",
-    "caminho": "/componentes/0/permissoes/escrever/0"
+    "file": "escrever-claude.json",
+    "rule": "destino-protegido",
+    "caminho": "/components/0/permissions/write/0"
   },
   {
-    "arquivo": "escrever-git.json",
-    "regra": "destino-protegido",
-    "caminho": "/componentes/0/permissoes/escrever/0"
+    "file": "escrever-git.json",
+    "rule": "destino-protegido",
+    "caminho": "/components/0/permissions/write/0"
   },
   {
-    "arquivo": "escrever-tudo.json",
-    "regra": "destino-protegido",
-    "caminho": "/componentes/0/permissoes/escrever/0"
+    "file": "escrever-tudo.json",
+    "rule": "destino-protegido",
+    "caminho": "/components/0/permissions/write/0"
   },
   {
-    "arquivo": "escrever-maiusculas.json",
-    "regra": "destino-protegido",
-    "caminho": "/componentes/0/permissoes/escrever/0"
+    "file": "escrever-maiusculas.json",
+    "rule": "destino-protegido",
+    "caminho": "/components/0/permissions/write/0"
   },
   {
-    "arquivo": "escrever-curinga-raiz.json",
-    "regra": "destino-protegido",
-    "caminho": "/componentes/0/permissoes/escrever/0"
+    "file": "escrever-curinga-raiz.json",
+    "rule": "destino-protegido",
+    "caminho": "/components/0/permissions/write/0"
   },
   {
-    "arquivo": "hook-sem-configurar-ambiente.json",
-    "regra": "required",
-    "caminho": "/componentes/1/permissoes"
+    "file": "hook-sem-configurar-ambiente.json",
+    "rule": "required",
+    "caminho": "/components/1/permissions"
   },
   {
-    "arquivo": "evento-em-agente.json",
-    "regra": "not",
-    "caminho": "/componentes/0"
+    "file": "evento-em-agente.json",
+    "rule": "not",
+    "caminho": "/components/0"
   },
   {
-    "arquivo": "mcp-latest.json",
-    "regra": "comando",
-    "caminho": "/componentes/2/comando"
+    "file": "mcp-latest.json",
+    "rule": "command",
+    "caminho": "/components/2/command"
   },
   {
-    "arquivo": "mcp-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/2/comando"
+    "file": "mcp-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/2/command"
   },
   {
-    "arquivo": "mcp-intervalo.json",
-    "regra": "comando",
-    "caminho": "/componentes/2/comando"
+    "file": "mcp-intervalo.json",
+    "rule": "command",
+    "caminho": "/components/2/command"
   },
   {
-    "arquivo": "executar-curl.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-curl.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-bin-sh.json",
-    "regra": "pattern",
-    "caminho": "/componentes/0/permissoes/executar/0/programa"
+    "file": "executar-bin-sh.json",
+    "rule": "pattern",
+    "caminho": "/components/0/permissions/execute/0/program"
   },
   {
-    "arquivo": "executar-bash-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-bash-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-bash-lc.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-bash-lc.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-bash-exe-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-bash-exe-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-env.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-env.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-node-e.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-node-e.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-node-eval-igual.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-node-eval-igual.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-python-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pwsh-encoded.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pwsh-encoded.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-powershell-abreviado.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-powershell-abreviado.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-cmd-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-cmd-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npx-latest.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npx-latest.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npx-package-solto.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npx-package-solto.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npm-exec-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npm-exec-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pnpm-dlx-intervalo.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pnpm-dlx-intervalo.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-uvx-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-uvx-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-docker.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-docker.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "rede-ip.json",
-    "regra": "pattern",
-    "caminho": "/componentes/2/permissoes/rede/0"
+    "file": "rede-ip.json",
+    "rule": "pattern",
+    "caminho": "/components/2/permissions/network/0"
   },
   {
-    "arquivo": "rede-localhost.json",
-    "regra": "pattern",
-    "caminho": "/componentes/2/permissoes/rede/0"
+    "file": "rede-localhost.json",
+    "rule": "pattern",
+    "caminho": "/components/2/permissions/network/0"
   },
   {
-    "arquivo": "rede-interno.json",
-    "regra": "host-interno",
-    "caminho": "/componentes/2/permissoes/rede/0"
+    "file": "rede-interno.json",
+    "rule": "host-interno",
+    "caminho": "/components/2/permissions/network/0"
   },
   {
-    "arquivo": "rede-curinga.json",
-    "regra": "pattern",
-    "caminho": "/componentes/2/permissoes/rede/0"
+    "file": "rede-curinga.json",
+    "rule": "pattern",
+    "caminho": "/components/2/permissions/network/0"
   },
   {
-    "arquivo": "rede-porta.json",
-    "regra": "pattern",
-    "caminho": "/componentes/2/permissoes/rede/0"
+    "file": "rede-porta.json",
+    "rule": "pattern",
+    "caminho": "/components/2/permissions/network/0"
   },
   {
-    "arquivo": "rede-demais.json",
-    "regra": "maxItems",
-    "caminho": "/componentes/2/permissoes/rede"
+    "file": "rede-demais.json",
+    "rule": "maxItems",
+    "caminho": "/components/2/permissions/network"
   },
   {
-    "arquivo": "segredos-path.json",
-    "regra": "variavel-de-execucao",
-    "caminho": "/componentes/2/permissoes/segredos/0"
+    "file": "segredos-path.json",
+    "rule": "variavel-de-execucao",
+    "caminho": "/components/2/permissions/secrets/0"
   },
   {
-    "arquivo": "segredos-node-options.json",
-    "regra": "variavel-de-execucao",
-    "caminho": "/componentes/2/permissoes/segredos/0"
+    "file": "segredos-node-options.json",
+    "rule": "variavel-de-execucao",
+    "caminho": "/components/2/permissions/secrets/0"
   },
   {
-    "arquivo": "segredos-dyld.json",
-    "regra": "variavel-de-execucao",
-    "caminho": "/componentes/2/permissoes/segredos/0"
+    "file": "segredos-dyld.json",
+    "rule": "variavel-de-execucao",
+    "caminho": "/components/2/permissions/secrets/0"
   },
   {
-    "arquivo": "segredos-minusculo.json",
-    "regra": "pattern",
-    "caminho": "/componentes/2/permissoes/segredos/0"
+    "file": "segredos-minusculo.json",
+    "rule": "pattern",
+    "caminho": "/components/2/permissions/secrets/0"
   },
   {
-    "arquivo": "texto-bidi.json",
-    "regra": "caractere-invisivel",
-    "caminho": "/descricao"
+    "file": "texto-bidi.json",
+    "rule": "caractere-invisivel",
+    "caminho": "/description"
   },
   {
-    "arquivo": "texto-largura-zero.json",
-    "regra": "caractere-invisivel",
-    "caminho": "/componentes/0/descricao"
+    "file": "texto-largura-zero.json",
+    "rule": "caractere-invisivel",
+    "caminho": "/components/0/description"
   },
   {
-    "arquivo": "texto-tag-unicode.json",
-    "regra": "caractere-invisivel",
-    "caminho": "/descricao"
+    "file": "texto-tag-unicode.json",
+    "rule": "caractere-invisivel",
+    "caminho": "/description"
   },
   {
-    "arquivo": "argumento-ansi.json",
-    "regra": "caractere-invisivel",
-    "caminho": "/componentes/0/permissoes/executar/0/argumentos/0"
+    "file": "argumento-ansi.json",
+    "rule": "caractere-invisivel",
+    "caminho": "/components/0/permissions/execute/0/arguments/0"
   },
   {
-    "arquivo": "descricao-longa.json",
-    "regra": "maxLength",
-    "caminho": "/descricao"
+    "file": "descricao-longa.json",
+    "rule": "maxLength",
+    "caminho": "/description"
   },
   {
-    "arquivo": "grande.json",
-    "regra": "tamanho",
+    "file": "grande.json",
+    "rule": "tamanho",
     "caminho": ""
   },
   {
-    "arquivo": "executar-npm-opcao-antes-do-exec.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npm-opcao-antes-do-exec.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npm-x-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npm-x-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pnpm-opcao-antes-do-dlx.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pnpm-opcao-antes-do-dlx.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npm-init-pacote.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npm-init-pacote.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-bun-x-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-bun-x-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-uv-tool-run-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-uv-tool-run-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-uvx-from.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-uvx-from.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npx-registry.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npx-registry.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-node-pe-combinado.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-node-pe-combinado.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-nodejs-e.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-nodejs-e.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-python-ic-combinado.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-ic-combinado.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-python-versao-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-versao-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-perl-we-combinado.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-perl-we-combinado.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-cmd-c-colado.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-cmd-c-colado.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-deno-run-remoto.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-deno-run-remoto.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npx-p-com-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npx-p-com-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npx-p-binario-sh.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npx-p-binario-sh.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npm-exec-p-com-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npm-exec-p-com-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pnpm-exec-sh.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pnpm-exec-sh.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-node-import-data.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-node-import-data.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-node-import-igual-https.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-node-import-igual-https.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-py-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-py-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-fish-command-igual.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-fish-command-igual.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-wsl.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-wsl.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-git-c-alias.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-git-c-alias.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-find-exec.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-find-exec.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-awk.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-awk.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-mshta.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-mshta.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "escrever-harness.json",
-    "regra": "destino-protegido",
-    "caminho": "/componentes/0/permissoes/escrever/0"
+    "file": "escrever-harness.json",
+    "rule": "destino-protegido",
+    "caminho": "/components/0/permissions/write/0"
   },
   {
-    "arquivo": "escrever-claude-md-aninhado.json",
-    "regra": "destino-protegido",
-    "caminho": "/componentes/0/permissoes/escrever/0"
+    "file": "escrever-claude-md-aninhado.json",
+    "rule": "destino-protegido",
+    "caminho": "/components/0/permissions/write/0"
   },
   {
-    "arquivo": "escrever-envrc.json",
-    "regra": "destino-protegido",
-    "caminho": "/componentes/0/permissoes/escrever/0"
+    "file": "escrever-envrc.json",
+    "rule": "destino-protegido",
+    "caminho": "/components/0/permissions/write/0"
   },
   {
-    "arquivo": "texto-seletor-de-variacao.json",
-    "regra": "caractere-invisivel",
-    "caminho": "/descricao"
+    "file": "texto-seletor-de-variacao.json",
+    "rule": "caractere-invisivel",
+    "caminho": "/description"
   },
   {
-    "arquivo": "texto-hangul-filler.json",
-    "regra": "caractere-invisivel",
-    "caminho": "/componentes/0/descricao"
+    "file": "texto-hangul-filler.json",
+    "rule": "caractere-invisivel",
+    "caminho": "/components/0/description"
   },
   {
-    "arquivo": "repositorio-ponto-ponto.json",
-    "regra": "url-canonica",
-    "caminho": "/repositorio"
+    "file": "repositorio-ponto-ponto.json",
+    "rule": "url-canonica",
+    "caminho": "/repository"
   },
   {
-    "arquivo": "assinatura-ref-curinga.json",
-    "regra": "pattern",
-    "caminho": "/assinatura/identidade"
+    "file": "assinatura-ref-curinga.json",
+    "rule": "pattern",
+    "caminho": "/signature/identity"
   },
   {
-    "arquivo": "executar-npx-p-opcao-com-valor.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npx-p-opcao-com-valor.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npm-exec-prefix.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npm-exec-prefix.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pnpm-exec-dir.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pnpm-exec-dir.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-yarn-exec-cwd.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-yarn-exec-cwd.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-git-config-alias.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-git-config-alias.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-npm-install-latest.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-npm-install-latest.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pip-install-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pip-install-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-python-m-pip.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-m-pip.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-uv-run-with.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-uv-run-with.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-tar-to-command.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-tar-to-command.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-vim-c.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-vim-c.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pwsh-command-duplo-hifen.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pwsh-command-duplo-hifen.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "segredos-java-tool-options.json",
-    "regra": "variavel-de-execucao",
-    "caminho": "/componentes/2/permissoes/segredos/0"
+    "file": "segredos-java-tool-options.json",
+    "rule": "variavel-de-execucao",
+    "caminho": "/components/2/permissions/secrets/0"
   },
   {
-    "arquivo": "executar-go-run-latest.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-go-run-latest.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-cargo-install-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-cargo-install-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-git-submodule-foreach.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-git-submodule-foreach.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-git-rebase-exec.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-git-rebase-exec.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-deno-x.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-deno-x.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pnpm-exec-aninhado.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pnpm-exec-aninhado.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "policy-com-permissoes.json",
-    "regra": "policy-sem-permissoes",
-    "caminho": "/componentes/0/permissoes"
+    "file": "policy-com-permissoes.json",
+    "rule": "policy-sem-permissoes",
+    "caminho": "/components/0/permissions"
   },
   {
-    "arquivo": "policy-com-comando.json",
-    "regra": "not",
-    "caminho": "/componentes/0"
+    "file": "policy-com-comando.json",
+    "rule": "not",
+    "caminho": "/components/0"
   },
   {
-    "arquivo": "executar-python-mpip-grudado.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-mpip-grudado.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-python-im-pip.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-im-pip.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-pip3-12-sem-versao.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-pip3-12-sem-versao.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-corepack-pnpm-dlx.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-corepack-pnpm-dlx.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-python-w-grudado-m-pip.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-w-grudado-m-pip.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-python-x-dev-m-pip.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-x-dev-m-pip.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-python-opcao-desconhecida.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-python-opcao-desconhecida.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-corepack-opcao-antes.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-corepack-opcao-antes.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-corepack-install.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-corepack-install.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-uv-run-python-mpip.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-uv-run-python-mpip.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   },
   {
-    "arquivo": "executar-uv-run-pip3.json",
-    "regra": "comando",
-    "caminho": "/componentes/0/permissoes/executar/0"
+    "file": "executar-uv-run-pip3.json",
+    "rule": "command",
+    "caminho": "/components/0/permissions/execute/0"
   }
 ]

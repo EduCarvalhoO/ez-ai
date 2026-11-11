@@ -12,7 +12,7 @@ export function problemaNoEndpoint(endpoint: string): string | undefined {
   } catch {
     return 'não é uma URL válida';
   }
-  if (url.username !== '' || url.password !== '') return 'a URL não pode levar usuário ou senha (use variavelDoToken)';
+  if (url.username !== '' || url.password !== '') return 'a URL não pode levar usuário ou senha (use tokenVariable)';
   if (url.search !== '' || url.hash !== '') return 'a URL não pode levar query nem fragmento';
   if (url.protocol === 'https:') return undefined;
   if (url.protocol === 'http:' && LOOPBACK.has(url.hostname)) return undefined;

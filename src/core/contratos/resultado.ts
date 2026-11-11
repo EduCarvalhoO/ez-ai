@@ -5,7 +5,7 @@ export interface ErroDeContrato {
   /** JSON Pointer do valor com problema (`/componentes/2/permissoes/rede/0`); vazio = o arquivo inteiro. */
   readonly caminho: string;
   /** Regra que falhou: palavra-chave do JSON Schema (`pattern`, `required`) ou regra semântica (`versao-fixa`). */
-  readonly regra: string;
+  readonly rule: string;
   /** O que está errado e o que fazer, em português. */
   readonly mensagem: string;
 }

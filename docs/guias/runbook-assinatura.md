@@ -5,11 +5,11 @@
 Três rotinas: publicar um pacote assinado, gerar o SBOM do harness e renovar a raiz de confiança do Sigstore.
 
 ## 1. Publicar um pacote assinado (autor do pacote)
-1. No `harness-pacote.json`, declare o workflow que assina: `"assinatura": { "identidade": "https://github.com/<dono>/<repo>/.github/workflows/<arquivo>.yml@refs/tags/v<versao>", "emissor": "https://token.actions.githubusercontent.com" }`. A identidade precisa ser do **mesmo repositório** do pacote.
-2. No repositório do pacote, use o modelo [`docs/modelos/release-assinada.yml`](../modelos/release-assinada.yml): ele extrai a árvore do commit numa pasta, calcula `ez-ai hash-pacote <pasta>` (texto sem quebra de linha), assina esse texto com `cosign sign-blob --bundle harness-pacote.sigstore.json` (assinatura keyless: sem chave guardada, o certificado nasce do login do workflow) e faz commit do bundle na tag.
-3. O bundle `harness-pacote.sigstore.json` fica na raiz do pacote e **fora** do hash. Quem instala vê `confiança: verificado` no `ez-ai list`.
+1. No `harness-package.json`, declare o workflow que assina: `"assinatura": { "identidade": "https://github.com/<owner>/<repo>/.github/workflows/<arquivo>.yml@refs/tags/v<versao>", "emissor": "https://token.actions.githubusercontent.com" }`. A identidade precisa ser do **mesmo repositório** do pacote.
+2. No repositório do pacote, use o modelo [`docs/modelos/release-assinada.yml`](../modelos/release-assinada.yml): ele extrai a árvore do commit numa pasta, calcula `ez-ai hash-package <pasta>` (texto sem quebra de linha), assina esse texto com `cosign sign-blob --bundle harness-package.sigstore.json` (assinatura keyless: sem chave guardada, o certificado nasce do login do workflow) e faz commit do bundle na tag.
+3. O bundle `harness-package.sigstore.json` fica na raiz do pacote e **fora** do hash. Quem instala vê `confiança: verificado` no `ez-ai list`.
 4. O workflow roda na tag, grava o bundle num commit filho e **move a tag** para esse commit (`git push --force` da tag, feito pelo próprio workflow com `contents: write`). A identidade do manifesto cita a tag; o certificado guarda o commit anterior ao bundle. Por isso, num ruleset de tags `v*`, libere o app GitHub Actions a atualizar tag (ninguém mais).
-5. `hash-pacote` só aceita caminho relativo; o modelo falha se o hash não sair, para nunca assinar texto vazio (o primeiro teste real assinou vazio por causa disso).
+5. `hash-package` só aceita caminho relativo; o modelo falha se o hash não sair, para nunca assinar texto vazio (o primeiro teste real assinou vazio por causa disso).
 6. O dono e o repositório da identidade não diferenciam maiúsculas de minúsculas (o certificado traz a grafia real, ex. `EduCarvalhoO`); o arquivo do workflow e a tag diferenciam.
 
 ## 2. SBOM do harness (mantenedor)
@@ -23,4 +23,6 @@ A raiz está em `src/plataforma/raiz-de-confianca.ts` (cópia do `trusted_root.j
 3. PR separado, revisado pelo Eduardo; confira que `certificateAuthorities`, `tlogs` e `timestampAuthorities` têm entradas vigentes (o teste `test/plataforma/assinatura.test.ts` confere o formato).
 
 ## Primeira assinatura real (feita em 2026-11-11)
-O pacote `educarvalhoo/workflow-feature` v0.5.0 e o catálogo `educarvalhoo/ez-ai-catalogo` v1.0.0 foram assinados de verdade pelo GitHub Actions e instalados com `confiancaMinima: "verificado"` (`ez-ai list` mostra `confiança: verificado`; `ez-ai search` mostra `assinatura verificada`). O teste achou três defeitos, já corrigidos com teste (o bundle real está em `test/plataforma/fixtures/`): a raiz de confiança precisa ser convertida com `TrustedRoot.fromJSON`; a identidade ignora a caixa do dono/repositório; o scan não varre o bundle. No catálogo, o commit conferido é o pai do commit da tag (a tag se move para o commit do bundle).
+O pacote `educarvalhoo/workflow-feature` v0.5.0 e o catálogo `educarvalhoo/ez-ai-catalogo` v1.0.0 foram assinados de verdade pelo GitHub Actions e instalados com `minTrust: "verified"` (`ez-ai list` mostrou `confiança: verified`; `ez-ai search` mostrou `assinatura verificada`). O teste achou três defeitos, já corrigidos com teste (o bundle real está em `test/plataforma/fixtures/`): a raiz de confiança precisa ser convertida com `TrustedRoot.fromJSON`; a identidade ignora a caixa do dono/repositório; o scan não varre o bundle. No catálogo, o commit conferido é o pai do commit da tag (a tag se move para o commit do bundle).
+
+**Pendência do ADR-0042:** as duas publicações acima usam os nomes antigos (manifesto `harness-pacote.json`, bundle `harness-pacote.sigstore.json`, campos em português). Precisam ser republicadas (pacote v0.5.1 e catálogo v1.0.1) com os nomes novos antes de a CLI nova instalá-las.

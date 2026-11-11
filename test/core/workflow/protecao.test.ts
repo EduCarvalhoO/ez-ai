@@ -22,11 +22,11 @@ function aplicar(
   estado: EstadoDoWorkflow,
   etapa: Etapa,
   resultado: (typeof RESULTADOS)[number],
-  medida: { tokens: number; fim?: string } = SEM_MEDIDA,
+  medida: { tokens: number; end?: string } = SEM_MEDIDA,
   cfg: ConfiguracaoDoWorkflow = WORKFLOW_PADRAO,
 ): EstadoDoWorkflow {
   const t = aplicarEvento(estado, etapa, resultado, medida, cfg);
-  if (!t.ok) throw new Error(t.motivo);
+  if (!t.ok) throw new Error(t.reason);
   return t.estado;
 }
 
@@ -44,7 +44,7 @@ function aleatorio(semente: number): () => number {
 
 describe('repetição na trilha', () => {
   it('acha padrões de 1, 2 e 3 passos repetidos', () => {
-    expect(repeticaoNaTrilha(['E1:solicitado', 'E1:solicitado', 'E1:solicitado'], 3)).toBe('E1:solicitado');
+    expect(repeticaoNaTrilha(['E1:requested', 'E1:requested', 'E1:requested'], 3)).toBe('E1:requested');
     expect(repeticaoNaTrilha(['x', 'A', 'B', 'A', 'B', 'A', 'B'], 3)).toBe('A → B');
     expect(repeticaoNaTrilha(['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'], 3)).toBe('A → B → C');
   });
@@ -58,26 +58,26 @@ describe('repetição na trilha', () => {
 describe('disjuntor do workflow', () => {
   it('repetir o mesmo passo abre o disjuntor e escala ao humano', () => {
     let e = estadoInicial('feat');
-    e = aplicar(e, 'E1', 'solicitado');
-    e = aplicar(e, 'E1', 'solicitado');
+    e = aplicar(e, 'E1', 'requested');
+    e = aplicar(e, 'E1', 'requested');
     expect(e.situacao).toBe('em-andamento');
-    e = aplicar(e, 'E1', 'solicitado');
+    e = aplicar(e, 'E1', 'requested');
     expect(e.situacao).toBe('aguarda-decisao-humana');
-    expect(e.motivoDaEscala).toMatch(/laço: o padrão "E1:solicitado"/);
+    expect(e.motivoDaEscala).toMatch(/laço: o padrão "E1:requested"/);
     expect(e.permitidas).toEqual(['E1', 'E3']);
   });
 
   it('com o disjuntor aberto, etapa de agente fora de E1/E3 é recusada', () => {
     let e = estadoInicial('feat');
-    for (let i = 0; i < 3; i++) e = aplicar(e, 'E1', 'solicitado');
-    const t = aplicarEvento(e, 'E2', 'executado', SEM_MEDIDA);
+    for (let i = 0; i < 3; i++) e = aplicar(e, 'E1', 'requested');
+    const t = aplicarEvento(e, 'E2', 'executed', SEM_MEDIDA);
     expect(t.ok).toBe(false);
   });
 
   it('a decisão humana zera a janela e o fluxo continua', () => {
     let e = estadoInicial('feat');
-    for (let i = 0; i < 3; i++) e = aplicar(e, 'E1', 'solicitado');
-    e = aplicar(e, 'E1', 'executado');
+    for (let i = 0; i < 3; i++) e = aplicar(e, 'E1', 'requested');
+    e = aplicar(e, 'E1', 'executed');
     expect(e.situacao).toBe('em-andamento');
     expect(e.motivoDaEscala).toBeUndefined();
     expect(e.janela.passos).toBe(1);
@@ -85,67 +85,67 @@ describe('disjuntor do workflow', () => {
   });
 
   it('o limite de passos por etapa vale mesmo sem repetição seguida', () => {
-    const cfg: ConfiguracaoDoWorkflow = { ...WORKFLOW_PADRAO, protecao: { ...PROTECAO_PADRAO, passosPorEtapa: 3 } };
+    const cfg: ConfiguracaoDoWorkflow = { ...WORKFLOW_PADRAO, protection: { ...PROTECAO_PADRAO, passosPorEtapa: 3 } };
     let e = estadoInicial('feat', cfg);
     // E1 falha e é refeita, intercalada com E0 solicitado: o padrão não se repete 3 vezes seguidas,
     // mas a etapa E1 ultrapassa 3 eventos.
-    e = aplicar(e, 'E1', 'solicitado', SEM_MEDIDA, cfg);
-    e = aplicar(e, 'E1', 'falhou', SEM_MEDIDA, cfg);
-    e = aplicar(e, 'E1', 'executado', SEM_MEDIDA, cfg);
+    e = aplicar(e, 'E1', 'requested', SEM_MEDIDA, cfg);
+    e = aplicar(e, 'E1', 'failed', SEM_MEDIDA, cfg);
+    e = aplicar(e, 'E1', 'executed', SEM_MEDIDA, cfg);
     expect(e.situacao).toBe('em-andamento');
-    e = aplicar(e, 'E2', 'falhou', SEM_MEDIDA, cfg);
-    e = aplicar(e, 'E2', 'solicitado', SEM_MEDIDA, cfg);
-    e = aplicar(e, 'E2', 'falhou', SEM_MEDIDA, cfg);
-    e = aplicar(e, 'E2', 'solicitado', SEM_MEDIDA, cfg);
+    e = aplicar(e, 'E2', 'failed', SEM_MEDIDA, cfg);
+    e = aplicar(e, 'E2', 'requested', SEM_MEDIDA, cfg);
+    e = aplicar(e, 'E2', 'failed', SEM_MEDIDA, cfg);
+    e = aplicar(e, 'E2', 'requested', SEM_MEDIDA, cfg);
     expect(e.situacao).toBe('aguarda-decisao-humana');
     expect(e.motivoDaEscala).toMatch(/a etapa E2 aparece 4 vezes/);
   });
 
   it('estourar o orçamento de tokens escala ao humano', () => {
-    const cfg: ConfiguracaoDoWorkflow = { ...WORKFLOW_PADRAO, orcamento: { tokensPorItem: 1000 } };
+    const cfg: ConfiguracaoDoWorkflow = { ...WORKFLOW_PADRAO, budget: { tokensPerItem: 1000 } };
     let e = estadoInicial('feat', cfg);
-    e = aplicar(e, 'E1', 'executado', { tokens: 600 }, cfg);
+    e = aplicar(e, 'E1', 'executed', { tokens: 600 }, cfg);
     expect(e.situacao).toBe('em-andamento');
-    e = aplicar(e, 'E2', 'executado', { tokens: 600 }, cfg);
+    e = aplicar(e, 'E2', 'executed', { tokens: 600 }, cfg);
     expect(e.situacao).toBe('aguarda-decisao-humana');
     expect(e.motivoDaEscala).toMatch(/orçamento: 1200 tokens \(teto 1000\)/);
   });
 
   it('o orçamento de tempo conta só o tempo ativo, sem a espera por G1 e G3', () => {
     const cfg: ConfiguracaoDoWorkflow = {
-      etapasDesligadas: ['E0', 'E2', 'E5'],
-      limiteDeCiclos: { documentacao: 2, codigo: 2 },
-      orcamento: { minutosPorItem: 30 },
+      disabledSteps: ['E0', 'E2', 'E5'],
+      cycleLimit: { documentation: 2, code: 2 },
+      budget: { minutesPerItem: 30 },
     };
     let e = estadoInicial('feat', cfg);
-    e = aplicar(e, 'E1', 'executado', { tokens: 0, fim: '2026-11-04T10:00:00Z' }, cfg);
+    e = aplicar(e, 'E1', 'executed', { tokens: 0, end: '2026-11-04T10:00:00Z' }, cfg);
     // G1 só vem 8 horas depois (espera humana): não conta.
-    e = aplicar(e, 'G1', 'verificado', { tokens: 0, fim: '2026-11-04T18:00:00Z' }, cfg);
+    e = aplicar(e, 'G1', 'verified', { tokens: 0, end: '2026-11-04T18:00:00Z' }, cfg);
     expect(e.janela.minutosAtivos).toBe(0);
-    e = aplicar(e, 'E3', 'executado', { tokens: 0, fim: '2026-11-04T18:20:00Z' }, cfg);
+    e = aplicar(e, 'E3', 'executed', { tokens: 0, end: '2026-11-04T18:20:00Z' }, cfg);
     expect(e.situacao).toBe('em-andamento');
-    e = aplicar(e, 'G2', 'verificado', { tokens: 0, fim: '2026-11-04T18:40:00Z' }, cfg);
+    e = aplicar(e, 'G2', 'verified', { tokens: 0, end: '2026-11-04T18:40:00Z' }, cfg);
     expect(e.situacao).toBe('aguarda-decisao-humana');
     expect(e.motivoDaEscala).toMatch(/orçamento: 40 minutos ativos \(teto 30\)/);
   });
 
   it('item concluído não escala por orçamento', () => {
     const cfg: ConfiguracaoDoWorkflow = {
-      etapasDesligadas: ['E0', 'E2', 'E5'],
-      limiteDeCiclos: { documentacao: 2, codigo: 2 },
-      orcamento: { tokensPorItem: 1000 },
+      disabledSteps: ['E0', 'E2', 'E5'],
+      cycleLimit: { documentation: 2, code: 2 },
+      budget: { tokensPerItem: 1000 },
     };
     let e = estadoInicial('feat', cfg);
     for (const [etapa, resultado] of [
-      ['E1', 'executado'],
-      ['G1', 'verificado'],
-      ['E3', 'executado'],
-      ['G2', 'verificado'],
-      ['E4', 'verificado'],
+      ['E1', 'executed'],
+      ['G1', 'verified'],
+      ['E3', 'executed'],
+      ['G2', 'verified'],
+      ['E4', 'verified'],
     ] as const) {
       e = aplicar(e, etapa, resultado, { tokens: 190 }, cfg);
     }
-    e = aplicar(e, 'G3', 'verificado', { tokens: 190 }, cfg);
+    e = aplicar(e, 'G3', 'verified', { tokens: 190 }, cfg);
     expect(e.situacao).toBe('concluido');
   });
 
@@ -175,7 +175,7 @@ describe('o fluxo sempre termina (sem humano no meio)', () => {
   });
 
   it('um adversário que só escolhe a etapa permitida com falha ou pedido também é contido', () => {
-    for (const resultado of ['falhou', 'solicitado', 'ignorado', 'executado'] as const) {
+    for (const resultado of ['failed', 'requested', 'skipped', 'executed'] as const) {
       let estado = estadoInicial('feat');
       let aceitos = 0;
       while (estado.situacao === 'em-andamento' && aceitos < 1000) {
@@ -196,46 +196,46 @@ describe('o fluxo sempre termina (sem humano no meio)', () => {
       let passosNaJanela = 0;
       while (estado.situacao === 'em-andamento' && passosNaJanela < 500) {
         const etapa = estado.permitidas[0] as Etapa;
-        const t = aplicarEvento(estado, etapa, 'falhou', SEM_MEDIDA);
+        const t = aplicarEvento(estado, etapa, 'failed', SEM_MEDIDA);
         if (!t.ok) break;
         estado = t.estado;
         passosNaJanela++;
       }
       expect(passosNaJanela).toBeLessThanOrEqual(PROTECAO_PADRAO.passosPorItem + 1);
-      if (estado.situacao === 'aguarda-decisao-humana') estado = aplicar(estado, 'E3', 'solicitado');
+      if (estado.situacao === 'aguarda-decisao-humana') estado = aplicar(estado, 'E3', 'requested');
     }
   });
 });
 
 describe('configuração dos novos campos', () => {
-  it('aceita orçamento, proteção, saídas e minutosParado', () => {
+  it('aceita orçamento, proteção, saídas e stalledMinutes', () => {
     const r = validarConfiguracaoDoWorkflow(
       JSON.stringify({
-        orcamento: { tokensPorItem: 500000, minutosPorItem: 240 },
-        protecao: { passosPorItem: 30 },
-        saidas: { G1: { documento: true }, G2: { evidencia: true } },
-        minutosParado: 60,
+        budget: { tokensPerItem: 500000, minutesPerItem: 240 },
+        protection: { passosPorItem: 30 },
+        outputs: { G1: { document: true }, G2: { evidence: true } },
+        stalledMinutes: 60,
       }),
     );
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.valor.orcamento).toEqual({ tokensPorItem: 500000, minutosPorItem: 240 });
-      expect(r.valor.protecao).toEqual({ passosPorItem: 30, passosPorEtapa: 10, repeticoesSeguidas: 3 });
-      expect(r.valor.saidas).toEqual({ G1: { documento: true }, G2: { evidencia: true } });
-      expect(r.valor.minutosParado).toBe(60);
+      expect(r.valor.budget).toEqual({ tokensPerItem: 500000, minutesPerItem: 240 });
+      expect(r.valor.protection).toEqual({ passosPorItem: 30, passosPorEtapa: 10, repeticoesSeguidas: 3 });
+      expect(r.valor.outputs).toEqual({ G1: { document: true }, G2: { evidence: true } });
+      expect(r.valor.stalledMinutes).toBe(60);
     }
   });
 
   it('recusa valores fora da faixa, etapa inexistente e campo desconhecido', () => {
     for (const ruim of [
-      '{"orcamento":{"tokensPorItem":10}}',
-      '{"protecao":{"repeticoesSeguidas":1}}',
-      '{"protecao":{"passosPorItem":9999}}',
-      '{"saidas":{"G9":{"documento":true}}}',
-      '{"saidas":{"G1":{"documento":"sim"}}}',
-      '{"saidas":{"G1":{"outro":true}}}',
-      '{"orcamento":{"reais":3}}',
-      '{"minutosParado":1}',
+      '{"budget":{"tokensPerItem":10}}',
+      '{"protection":{"repeticoesSeguidas":1}}',
+      '{"protection":{"passosPorItem":9999}}',
+      '{"outputs":{"G9":{"document":true}}}',
+      '{"outputs":{"G1":{"document":"sim"}}}',
+      '{"outputs":{"G1":{"outro":true}}}',
+      '{"budget":{"reais":3}}',
+      '{"stalledMinutes":1}',
     ]) {
       expect(validarConfiguracaoDoWorkflow(ruim).ok, ruim).toBe(false);
     }

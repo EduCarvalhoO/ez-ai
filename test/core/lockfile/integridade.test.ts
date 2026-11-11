@@ -11,7 +11,7 @@ import {
 } from '../../../src/core/index.js';
 
 const arquivos = new Map([
-  ['harness-pacote.json', '{}'],
+  ['harness-package.json', '{}'],
   ['agentes/a.md', 'oi'],
 ]);
 const hash = (() => {
@@ -22,61 +22,61 @@ const hash = (() => {
 
 describe('verificarIntegridade', () => {
   it('aceita quando o hash bate', () => {
-    expect(verificarIntegridade({ nome: 'a/b', hash }, arquivos)).toEqual({ ok: true, hash });
+    expect(verificarIntegridade({ name: 'a/b', hash }, arquivos)).toEqual({ ok: true, hash });
   });
 
   it('recusa conteúdo adulterado e mostra os dois hashes', () => {
     const alterado = new Map(arquivos).set('agentes/a.md', 'oi!');
-    const r = verificarIntegridade({ nome: 'a/b', hash }, alterado);
+    const r = verificarIntegridade({ name: 'a/b', hash }, alterado);
     expect(r.ok).toBe(false);
-    expect(!r.ok && r.motivo).toMatch(/difere do lockfile/);
+    expect(!r.ok && r.reason).toMatch(/difere do lockfile/);
   });
 
   it('recusa conteúdo que o contrato do hash recusa (sem manifesto)', () => {
-    const r = verificarIntegridade({ nome: 'a/b', hash }, new Map([['x.md', 'y']]));
-    expect(!r.ok && r.motivo).toMatch(/conteúdo recusado/);
+    const r = verificarIntegridade({ name: 'a/b', hash }, new Map([['x.md', 'y']]));
+    expect(!r.ok && r.reason).toMatch(/conteúdo recusado/);
   });
 });
 
-const manifesto = { nome: 'a/b', repositorio: 'https://github.com/A/B' } as Manifesto;
-const gh = { tipo: 'github', url: 'https://github.com/a/b', login: 'a' } as const;
+const manifesto = { name: 'a/b', repository: 'https://github.com/A/B' } as Manifesto;
+const gh = { type: 'github', url: 'https://github.com/a/b', login: 'a' } as const;
 
 describe('conferirManifesto', () => {
   it('aceita nome igual e repositório igual sem diferenciar caixa', () => {
-    expect(conferirManifesto({ nome: 'a/b', origem: gh }, manifesto)).toEqual([]);
+    expect(conferirManifesto({ name: 'a/b', source: gh }, manifesto)).toEqual([]);
   });
 
   it('acusa nome e repositório divergentes', () => {
-    const p = conferirManifesto({ nome: 'a/c', origem: { ...gh, url: 'https://github.com/a/outro' } }, manifesto);
+    const p = conferirManifesto({ name: 'a/c', source: { ...gh, url: 'https://github.com/a/outro' } }, manifesto);
     expect(p).toHaveLength(2);
   });
 
   it('não confere repositório em origem local', () => {
-    expect(conferirManifesto({ nome: 'a/b', origem: { tipo: 'local', caminho: 'x' } }, manifesto)).toEqual([]);
+    expect(conferirManifesto({ name: 'a/b', source: { type: 'local', caminho: 'x' } }, manifesto)).toEqual([]);
   });
 });
 
 describe('diferencaDeConfiguracao', () => {
   it('classifica novo, em dia, origem trocada e removido', () => {
     const config = {
-      pacotes: [
-        { nome: 'a/novo', origem: gh },
-        { nome: 'a/dia', origem: gh },
-        { nome: 'a/troca', origem: { tipo: 'local', caminho: 'x' } },
+      packages: [
+        { name: 'a/novo', source: gh },
+        { name: 'a/dia', source: gh },
+        { name: 'a/troca', source: { type: 'local', caminho: 'x' } },
       ],
     } as unknown as Configuracao;
     const lock = {
-      pacotes: [
-        { nome: 'a/dia', origem: gh },
-        { nome: 'a/troca', origem: gh },
-        { nome: 'a/velho', origem: gh },
+      packages: [
+        { name: 'a/dia', source: gh },
+        { name: 'a/troca', source: gh },
+        { name: 'a/velho', source: gh },
       ],
     } as unknown as Lockfile;
     expect(diferencaDeConfiguracao(config, lock)).toEqual([
-      { nome: 'a/novo', estado: 'novo' },
-      { nome: 'a/dia', estado: 'em-dia' },
-      { nome: 'a/troca', estado: 'origem-trocada' },
-      { nome: 'a/velho', estado: 'removido' },
+      { name: 'a/novo', estado: 'novo' },
+      { name: 'a/dia', estado: 'em-dia' },
+      { name: 'a/troca', estado: 'origem-trocada' },
+      { name: 'a/velho', estado: 'removido' },
     ]);
   });
 });

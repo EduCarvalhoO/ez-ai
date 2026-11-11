@@ -13,37 +13,37 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 ### Arquivos
 - JSON em UTF-8, como o manifesto (mesma leitura segura: tamanho em bytes antes do parse, chave duplicada e profundidade acima de 32 recusadas, caracteres invisíveis recusados em todo texto, objeto montado campo a campo). Configuração até 64 KiB; lockfile até 8 MiB (100 pacotes, retrato menor que o manifesto).
 - Ficam em `.harness/`, que já é destino protegido do manifesto (nenhum pacote escreve ali). Os dois são arquivos de enforcement ([ADR-0016](../adr/0016-governanca-por-nivel-de-enforcement.md)): CODEOWNERS e ruleset na F4. O lockfile nunca é marcado como gerado (`linguist-generated`), para o diff aparecer no PR.
-- Schemas JSON Schema 2020-12: fonte em `src/core/configuracao/schema.ts` e `src/core/lockfile/schema.ts`; cópias publicadas em [`schemas/configuracao.v0.schema.json`](../../schemas/configuracao.v0.schema.json) e [`schemas/lockfile.v0.schema.json`](../../schemas/lockfile.v0.schema.json) (`npm run schemas`). Campo desconhecido é recusado.
+- Schemas JSON Schema 2020-12: fonte em `src/core/configuracao/schema.ts` e `src/core/lockfile/schema.ts`; cópias publicadas em [`schemas/config.v0.schema.json`](../../schemas/config.v0.schema.json) e [`schemas/lockfile.v0.schema.json`](../../schemas/lockfile.v0.schema.json) (`npm run schemas`). Campo desconhecido é recusado.
 
 ### Configuração
 ```json
 {
-  "versaoConfig": 0,
-  "ambientes": ["claude-code", "copilot"],
-  "origensPermitidas": ["https://github.com/eduardo/revisao-ts"],
-  "pacotes": {
-    "eduardo/revisao-ts": { "origem": "https://github.com/eduardo/revisao-ts", "versao": "^1.2.0" },
-    "eduardo/rascunho": { "origem": "local:pacotes-locais/rascunho" }
+  "configVersion": 0,
+  "environments": ["claude-code", "copilot"],
+  "allowedSources": ["https://github.com/eduardo/revisao-ts"],
+  "packages": {
+    "eduardo/revisao-ts": { "source": "https://github.com/eduardo/revisao-ts", "version": "^1.2.0" },
+    "eduardo/rascunho": { "source": "local:local-packages/rascunho" }
   },
-  "limites": { "bytesDoPacote": 1048576 }
+  "limits": { "packageBytes": 1048576 }
 }
 ```
 | Campo | Obrig. | Regra |
 |---|---|---|
-| `versaoConfig` | sim | `0` |
-| `ambientes` | sim | 1+ de `claude-code`, `copilot`, sem repetição |
-| `origensPermitidas` | não | Até 100 URLs `https://github.com/<login>/<repo>` (mesma regra do `repositorio` do manifesto); repetição sem diferenciar caixa é erro |
-| `pacotes` | não | Até 100; chave `<login>/<pacote>` com as regras do `nome` do manifesto |
+| `configVersion` | sim | `0` |
+| `environments` | sim | 1+ de `claude-code`, `copilot`, sem repetição |
+| `allowedSources` | não | Até 100 URLs `https://github.com/<login>/<repo>` (mesma regra do `repository` do manifesto); repetição sem diferenciar caixa é erro |
+| `packages` | não | Até 100; chave `<login>/<pacote>` com as regras do `name` do manifesto |
 | `pacotes.*.origem` | sim | URL do GitHub ou `local:<caminho>` |
 | `pacotes.*.versao` | GitHub: sim; local: proibido | Intervalo com até dois comparadores (`^1.2.0`, `>=0.3.0 <1.0.0`); o lockfile fixa a exata. Pacote local usa a versão do manifesto da pasta |
-| `aprovadores` | não | Logins do GitHub ou `@org/time` que aprovam a aprovação própria no PR (até 50, sem repetição). O job da F4 lê a lista da branch base ([spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores)) |
-| `policyDaOrganizacao` | não | Chave de `pacotes` com origem do GitHub (pasta `local:` é recusada) cujos componentes `policy` formam o nível organização ([spec da policy](policy.md#níveis)) |
-| `confiancaMinima` | não | Nível mínimo de confiança dos pacotes do GitHub: `comunidade`, `verificado` ou `oficial` ([ADR-0034](../adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)). O nível é derivado da origem (nunca declarado pelo pacote); pacote `local:` sempre passa; abaixo do mínimo a validação falha com `confianca-insuficiente`. O piso é conferido na instalação e na validação: `verificado` e `oficial` exigem assinatura conferida ([ADR-0035](../adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md)). Ausente = sem exigência. |
-| `telemetria` | não | Exportação opt-in ([ADR-0029](../adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md)): `endpoint` (`https`, ou `http` só em localhost/127.0.0.1/[::1]; sem usuário, query ou fragmento) e `variavelDoToken` (NOME da variável de ambiente com o cabeçalho `Authorization`, que precisa começar com `LANGFUSE_` ou `HARNESS_TELEMETRIA_` ([ADR-0030](../adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md)); o segredo nunca fica no arquivo). Ausente = nenhuma chamada de rede |
-| `limites` | não | Só `bytesDoManifesto`, `componentes`, `arquivosDoPacote`, `bytesDoPacote`, `bytesPorArquivo`; inteiro de 1 até o valor do núcleo |
+| `approvers` | não | Logins do GitHub ou `@org/time` que aprovam a aprovação própria no PR (até 50, sem repetição). O job da F4 lê a lista da branch base ([spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores)) |
+| `organizationPolicy` | não | Chave de `packages` com origem do GitHub (pasta `local:` é recusada) cujos componentes `policy` formam o nível organização ([spec da policy](policy.md#níveis)) |
+| `minTrust` | não | Nível mínimo de confiança dos pacotes do GitHub: `community`, `verified` ou `official` ([ADR-0034](../adr/0034-servidor-mcp-da-base-fontes-do-projeto-e-niveis-de-confianca.md)). O nível é derivado da origem (nunca declarado pelo pacote); pacote `local:` sempre passa; abaixo do mínimo a validação falha com `confianca-insuficiente`. O piso é conferido na instalação e na validação: `verified` e `official` exigem assinatura conferida ([ADR-0035](../adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md)). Ausente = sem exigência. |
+| `telemetry` | não | Exportação opt-in ([ADR-0029](../adr/0029-exportacao-opt-in-de-auditoria-como-spans-otlp.md)): `endpoint` (`https`, ou `http` só em localhost/127.0.0.1/[::1]; sem usuário, query ou fragmento) e `tokenVariable` (NOME da variável de ambiente com o cabeçalho `Authorization`, que precisa começar com `LANGFUSE_` ou `HARNESS_TELEMETRIA_` ([ADR-0030](../adr/0030-langfuse-self-host-consumo-por-agente-e-metricas-da-base.md)); o segredo nunca fica no arquivo). Ausente = nenhuma chamada de rede |
+| `limits` | não | Só `manifestBytes`, `components`, `packageFiles`, `packageBytes`, `bytesPerFile`; inteiro de 1 até o valor do núcleo |
 
 **Origens permitidas** ([ADR-0018](../adr/0018-invariantes-de-seguranca-da-instalacao.md) D2):
-- Pacote do GitHub só é aceito se a origem está em `origensPermitidas` ou em `ORIGENS_OFICIAIS` (constante do núcleo, vazia até a F3). Senão, erro `origem-nao-permitida` com a URL exata a acrescentar. A lista é separada de `pacotes` para que permitir uma origem seja um passo humano visível no PR, nunca efeito do `add`.
+- Pacote do GitHub só é aceito se a origem está em `allowedSources` ou em `ORIGENS_OFICIAIS` (constante do núcleo, vazia até a F3). Senão, erro `origem-nao-permitida` com a URL exata a acrescentar. A lista é separada de `packages` para que permitir uma origem seja um passo humano visível no PR, nunca efeito do `add`.
 - Granularidade de repositório: a URL é canonizada (minúsculas) e comparada por igualdade estrita, nunca prefixo (`revisao-ts-evil` não casa com `revisao-ts`; barra final, `.git`, credencial, porta e `http:` são recusados). `origemPermitida(config, origem)` faz essa conta para o `add` da F2.
 - O login da chave é igual ao login da origem (`mesmo-dono`, [ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-github.md)).
 
@@ -54,46 +54,46 @@ Inclui campos, regras semânticas, origens permitidas, limites ajustáveis, algo
 ### Lockfile
 ```json
 {
-  "versaoLockfile": 0,
-  "pacotes": {
+  "lockfileVersion": 0,
+  "packages": {
     "eduardo/revisao-ts": {
-      "versao": "1.2.0",
-      "origem": "https://github.com/eduardo/revisao-ts",
+      "version": "1.2.0",
+      "source": "https://github.com/eduardo/revisao-ts",
       "tag": "v1.2.0",
       "commit": "3f2a000000000000000000000000000000000000",
       "hash": "sha256:9b9b…",
-      "componentes": [{ "id": "revisor", "tipo": "agente", "arquivo": "agentes/revisor.md", "permissoes": { "ler": ["src/**"] } }]
+      "components": [{ "id": "revisor", "type": "agente", "file": "agentes/revisor.md", "permissions": { "read": ["src/**"] } }]
     }
   }
 }
 ```
 | Campo | Regra |
 |---|---|
-| `versao` | Semver exato |
-| `origem` | Como na configuração; login da chave = login da origem |
+| `version` | Semver exato |
+| `source` | Como na configuração; login da chave = login da origem |
 | `tag`, `commit` | Obrigatórios em origem GitHub e proibidos em local. `tag` é `<versao>` ou `v<versao>`; `commit` com 40 ou 64 hex minúsculos (SHA-1 ou SHA-256 do Git) |
 | `hash` | Só `sha256:` + 64 hex minúsculos; outro prefixo é erro, nunca pula a verificação |
-| `assinatura` | Opcional. `{identidade, emissor}` do assinante Sigstore conferido na instalação ([ADR-0035](../adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md)). Ausente = nunca verificado (nível `comunidade`). Mudar de assinante, ou perdê-la, é recusado: troca de dono exige `remove` + `add`. |
-| `aprovacoesProprias` | Opcional. Lista de `{id, impressao}` dos itens de aprovação própria aprovados nominalmente (sem repetir id); precisa ser igual à lista que a policy exige ([spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores)) |
-| `componentes` | Retrato do que foi aprovado (id, tipo, arquivo, evento, comando, permissões), com o schema e as regras semânticas do manifesto |
+| `signature` | Opcional. `{identidade, emissor}` do assinante Sigstore conferido na instalação ([ADR-0035](../adr/0035-assinatura-sigstore-papeis-sbom-e-confianca-verificada.md)). Ausente = nunca verificado (nível `community`). Mudar de assinante, ou perdê-la, é recusado: troca de dono exige `remove` + `add`. |
+| `ownApprovals` | Opcional. Lista de `{id, impressao}` dos itens de aprovação própria aprovados nominalmente (sem repetir id); precisa ser igual à lista que a policy exige ([spec de auditoria e evidências](auditoria-e-evidencias.md#aprovação-própria-e-aprovadores)) |
+| `components` | Retrato do que foi aprovado (id, tipo, arquivo, evento, comando, permissões), com o schema e as regras semânticas do manifesto |
 
 - Sem data, autor nem segredo: duas instalações iguais geram o mesmo arquivo e não brigam no merge; quem aprovou e quando vem do PR, e o log local de auditoria fica fora do repositório ([spec de auditoria e evidências](auditoria-e-evidencias.md#onde-fica)). A F2 grava as chaves em ordem alfabética.
 - O retrato é a base de `diferencaDePermissoes(retrato, manifestoNovo)` no `update` (E2), funciona mesmo se a versão antiga sumir da origem e mostra o aumento de permissão no diff do PR.
 
 ### Hash de conteúdo
 `hashDoConteudo(arquivos)` (`src/core/lockfile/hash.ts`, puro), no desenho do `dirhash` do Go:
-1. Entra **a árvore inteira do pacote no commit**, inclusive o `harness-pacote.json`. É exatamente o conjunto que a F2 copia para `.harness/pacotes/<login>/<pacote>/`: nada é instalado fora do hash. Exceção: `harness-pacote.sigstore.json` (o bundle da assinatura) fica fora, porque assina este hash.
+1. Entra **a árvore inteira do pacote no commit**, inclusive o `harness-package.json`. É exatamente o conjunto que a F2 copia para `.harness/packages/<login>/<pacote>/`: nada é instalado fora do hash. Exceção: `harness-package.sigstore.json` (o bundle da assinatura) fica fora, porque assina este hash.
 2. Para cada arquivo, a linha `<sha256 hex minúsculo dos bytes>  <caminho>\n` (dois espaços). Os bytes são os do blob do Git, sem conversão de fim de linha.
 3. Linhas em ordem de bytes do caminho; `sha256` do texto todo → `sha256:<hex>`.
 4. Caminho com `/`, só ASCII e com as regras de caminho do manifesto; repetido, inclusive só por caixa (`A.md` e `a.md`) ou arquivo com o nome de uma pasta (`Agentes` e `agentes/x.md`), é recusado. O modo do arquivo (bit de execução) fica fora do hash.
-5. Pacote sem `harness-pacote.json` na raiz e arquivo que casa com os padrões de segredo do manifesto (`.env`, `*.pem`, `id_rsa`, `.npmrc`…) são recusados: o segredo seria copiado para `.harness/pacotes/` e iria para o commit (I1). Vale para pacote do GitHub e pasta local. A lista é heurística e de nomes literais (`.env.qa` ou `config/secrets.json` passam); o controle continua sendo a revisão humana do `plan` (F2).
+5. Pacote sem `harness-package.json` na raiz e arquivo que casa com os padrões de segredo do manifesto (`.env`, `*.pem`, `id_rsa`, `.npmrc`…) são recusados: o segredo seria copiado para `.harness/packages/` e iria para o commit (I1). Vale para pacote do GitHub e pasta local. A lista é heurística e de nomes literais (`.env.qa` ou `config/secrets.json` passam); o controle continua sendo a revisão humana do `plan` (F2).
 
 Vetor de teste fixo em `test/core/lockfile/hash.test.ts`, conferido com `sha256sum`.
 
 ### Obrigações da F2
 - Ler os blobs do Git (não a cópia de trabalho), recusar symlink e submódulo no pacote e copiar só o conjunto hasheado.
 - `apply` e `validate --ci` recalculam o hash e o retrato a partir do commit travado e falham se o lockfile divergir; um retrato inflado à mão não fura o E2.
-- Conferir chave e origem do lockfile contra o `nome` e o `repositorio` do manifesto.
+- Conferir chave e origem do lockfile contra o `name` e o `repository` do manifesto.
 - Resolver o caminho real de `local:` e recusar symlink ou junction que saia do projeto.
 - Trocar a origem de um pacote entre GitHub e `local:` conta como troca de dono: bloqueada até aprovação explícita e auditada ([ADR-0017](../adr/0017-propriedade-de-pacotes-por-identidade-github.md) D2); o `plan` sempre mostra `local:`.
 
@@ -113,17 +113,17 @@ Vetor de teste fixo em `test/core/lockfile/hash.test.ts`, conferido com `sha256s
 | D1 | Tamanho, profundidade, 100 pacotes e 100 origens; limites só reduzíveis |
 
 ## Compatibilidade
-`versaoConfig` e `versaoLockfile` sobem quando um arquivo válido passa a ser recusado ou muda de sentido; campo opcional novo entra sem subir (harness antigo o recusa com mensagem clara). Política de semver dos schemas na F8.
+`configVersion` e `lockfileVersion` sobem quando um arquivo válido passa a ser recusado ou muda de sentido; campo opcional novo entra sem subir (harness antigo o recusa com mensagem clara). Política de semver dos schemas na F8.
 
 ## Em aberto
 - `ORIGENS_OFICIAIS`: onde mora o pacote starter (F3).
 - Origem por conta inteira (`https://github.com/<login>/*`): reavaliar na F7, quando a assinatura prova quem publicou.
 - Pacote local fora do projeto (`../`): recusado no v0; reavaliar se o uso pedir.
 
-## Campo opcional `catalogo` (Sprint 19, ADR-0039)
+## Campo opcional `catalog` (Sprint 19, ADR-0039)
 
-`"catalogo": { "repositorio": "https://github.com/<dono>/<repo>", "repositorioId": "<id numérico>", "workflow": "<arquivo>.yml", "versaoMinima": "1.0.0" }`. É a raiz de confiança do `ez-ai search`: o repositório do catálogo, o **ID numérico imutável** dele (`gh api repos/<dono>/<repo> --jq .id`, conferido no certificado Sigstore), o arquivo do workflow que o assina e, opcional, a menor versão aceita. A origem do catálogo vale por este campo e **não** precisa estar em `origensPermitidas` (que é só de pacotes). O `search` guarda a última tag aceita em `.harness/catalogo-visto.json` e recusa tag menor ou a mesma tag em outro commit (ADR-0040). `add` e `remove` preservam o campo. Campo aditivo: `versaoConfig` continua 0.
+`"catalogo": { "repositorio": "https://github.com/<owner>/<repo>", "repositoryId": "<id numérico>", "workflow": "<arquivo>.yml", "minVersion": "1.0.0" }`. É a raiz de confiança do `ez-ai search`: o repositório do catálogo, o **ID numérico imutável** dele (`gh api repos/<owner>/<repo> --jq .id`, conferido no certificado Sigstore), o arquivo do workflow que o assina e, opcional, a menor versão aceita. A origem do catálogo vale por este campo e **não** precisa estar em `allowedSources` (que é só de pacotes). O `search` guarda a última tag aceita em `.harness/catalog-seen.json` e recusa tag menor ou a mesma tag em outro commit (ADR-0040). `add` e `remove` preservam o campo. Campo aditivo: `configVersion` continua 0.
 
 ## Campo opcional `scan` (Sprint 18, ADR-0038)
 
-`"scan": { "bloquearAPartirDe": "nunca" | "baixa" | "media" | "alta" }`. Sem o campo (ou com `nunca`) o scan de conteúdo só avisa; com um nível, achado igual ou mais grave recusa `plan`, `apply`, `update` e `validate --ci`. Campo aditivo: `versaoConfig` continua 0. O ambiente `agents-md` também passa a ser aceito em `ambientes` (e em `compatibilidade.ambientes` do manifesto).
+`"scan": { "blockFrom": "nunca" | "baixa" | "media" | "alta" }`. Sem o campo (ou com `never`) o scan de conteúdo só avisa; com um nível, achado igual ou mais grave recusa `plan`, `apply`, `update` e `validate --ci`. Campo aditivo: `configVersion` continua 0. O ambiente `agents-md` também passa a ser aceito em `environments` (e em `compatibilidade.ambientes` do manifesto).

@@ -33,7 +33,7 @@ describe('índice C1 (node:sqlite)', async () => {
     expect(await indice?.buscar('"x"', 5)).toEqual([]);
     await indice?.reconstruir(chunks);
     const achados = await indice?.buscar(consultaParaIndice('seguranca instalacao') ?? '', 5);
-    expect(achados?.[0]).toMatchObject({ arquivo: 'docs/seg.md', linhaInicio: 1, fonte: 'projeto:docs' });
+    expect(achados?.[0]).toMatchObject({ file: 'docs/seg.md', linhaInicio: 1, source: 'projeto:docs' });
     expect(achados?.[0]?.pontuacao).toBeGreaterThan(0);
     await indice?.reconstruir([]);
     expect(await indice?.buscar(consultaParaIndice('licença') ?? '', 5)).toEqual([]);

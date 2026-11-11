@@ -11,10 +11,10 @@ function ajustarInstrucao(texto: string): string {
 }
 
 export const adapterCopilot: Adapter = criarAdapter({
-  ambiente: 'copilot',
+  environment: 'copilot',
   capacidades: {
-    instrucao: { suporte: 'nativo', projeta: true },
-    agente: { suporte: 'parcial', projeta: true },
+    instruction: { suporte: 'nativo', projeta: true },
+    agent: { suporte: 'parcial', projeta: true },
     skill: { suporte: 'nativo', projeta: true },
     hook: { suporte: 'parcial', projeta: false },
     mcp: { suporte: 'nativo', projeta: false },

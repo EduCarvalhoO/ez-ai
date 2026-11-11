@@ -3,8 +3,8 @@
 
 /** Programa e argumentos exatos que um componente roda ou pede para rodar. */
 export interface Comando {
-  readonly programa: string;
-  readonly argumentos: readonly string[];
+  readonly program: string;
+  readonly arguments: readonly string[];
 }
 
 // Programas que rodam outro comando, baixam algo da rede ou trocam de usuário.
@@ -146,7 +146,7 @@ function problemaEmQualquerJanela(argumentos: readonly string[]): string | undef
   for (let k = 0; k < argumentos.length; k++) {
     const programa = argumentos[k];
     if (programa === undefined || programa.startsWith('-') || !/^[A-Za-z0-9._-]+$/.test(programa)) continue;
-    const problema = problemaNoComando({ programa: programa.toLowerCase(), argumentos: argumentos.slice(k + 1) }, true);
+    const problema = problemaNoComando({ program: programa.toLowerCase(), arguments: argumentos.slice(k + 1) }, true);
     if (problema) return problema;
   }
   return undefined;
@@ -212,7 +212,7 @@ function problemaNoInstalador(programa: string, argumentos: readonly string[], a
   if (doPython) {
     const modulo = nomeCanonico(doPython.modulo.toLowerCase());
     if (modulo === 'pip' || modulo === 'pipx')
-      return problemaNoComando({ programa: modulo, argumentos: doPython.resto }, aninhado);
+      return problemaNoComando({ program: modulo, arguments: doPython.resto }, aninhado);
   }
   if (programa === 'uv' && argumentos.includes('run') && argumentos.some((a) => OPCOES_DE_ORIGEM.test(a))) {
     return '"uv run" com --with/--from baixa pacote sem passar pelas regras; não é permitido';
@@ -240,8 +240,8 @@ export function nomeCanonico(programa: string): string {
 
 /** Confere um comando. Devolve o motivo da recusa, se houver. */
 export function problemaNoComando(comando: Comando, aninhado = false): string | undefined {
-  const { argumentos } = comando;
-  const programa = nomeCanonico(comando.programa);
+  const { arguments: argumentos } = comando;
+  const programa = nomeCanonico(comando.program);
   // `corepack pnpm dlx x` roda o gerenciador indicado: confere o comando de dentro.
   if (programa === 'corepack') {
     const k = argumentos.findIndex((a) => !a.startsWith('-'));
@@ -253,7 +253,7 @@ export function problemaNoComando(comando: Comando, aninhado = false): string | 
       return '"corepack" só pode rodar um gerenciador direto (corepack pnpm ...); install/use/prepare baixam da rede';
     }
     if (aninhado) return EXECUTOR_ANINHADO;
-    return problemaNoComando({ programa: interno.replace(/@.*$/, ''), argumentos: argumentos.slice(k + 1) }, true);
+    return problemaNoComando({ program: interno.replace(/@.*$/, ''), arguments: argumentos.slice(k + 1) }, true);
   }
   if (PROGRAMAS_PROIBIDOS.has(programa)) {
     return `"${programa}" não é permitido: roda outro comando, baixa da rede ou troca de usuário`;

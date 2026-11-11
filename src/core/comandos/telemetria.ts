@@ -14,13 +14,13 @@ export interface OpcoesDeExportacao {
   readonly dryRun: boolean;
 }
 
-const falha = (...erros: string[]): ResultadoDoComando => ({ codigo: 1, saida: [], erros });
+const falha = (...erros: string[]): ResultadoDoComando => ({ code: 1, output: [], erros });
 
 /** Último `seq` já entregue; marcador ausente ou ilegível vale 0 (reenviar é seguro, perder não). */
 async function lerMarcador(ctx: Contexto): Promise<number> {
   // Sem checar antes e ler depois (mesmo caminho): ler direto e tratar a ausencia no catch.
   try {
-    const seq: unknown = (JSON.parse(await ctx.arquivos.ler(CAMINHO_DO_MARCADOR)) as { seq?: unknown }).seq;
+    const seq: unknown = (JSON.parse(await ctx.arquivos.read(CAMINHO_DO_MARCADOR)) as { seq?: unknown }).seq;
     return typeof seq === 'number' && Number.isInteger(seq) && seq >= 0 ? seq : 0;
   } catch {
     return 0;
@@ -30,12 +30,12 @@ async function lerMarcador(ctx: Contexto): Promise<number> {
 export async function exportarTelemetria(ctx: Contexto, opcoes: OpcoesDeExportacao): Promise<ResultadoDoComando> {
   const config = await carregarConfiguracao(ctx.arquivos);
   if (!config.ok) return falha(...config.erros);
-  const destino = config.valor.telemetria;
+  const destino = config.valor.telemetry;
   if (!destino) {
     return {
-      codigo: 0,
-      saida: [
-        'telemetria desligada: nada foi enviado (estado normal). Para ligar, acrescente "telemetria": { "endpoint": "https://..." } em .harness/config.json (ADR-0029).',
+      code: 0,
+      output: [
+        'telemetria desligada: nada foi enviado (estado normal). Para ligar, acrescente "telemetry": { "endpoint": "https://..." } em .harness/config.json (ADR-0029).',
       ],
       erros: [],
     };
@@ -50,7 +50,7 @@ export async function exportarTelemetria(ctx: Contexto, opcoes: OpcoesDeExportac
     );
   }
   const pendentes = lido.eventos.filter((e) => e.seq > marcador);
-  if (pendentes.length === 0) return { codigo: 0, saida: ['nada novo para exportar.'], erros: [] };
+  if (pendentes.length === 0) return { code: 0, output: ['nada novo para exportar.'], erros: [] };
 
   const lotes: (typeof pendentes)[] = [];
   for (let i = 0; i < pendentes.length; i += SPANS_POR_REQUISICAO) {
@@ -67,8 +67,8 @@ export async function exportarTelemetria(ctx: Contexto, opcoes: OpcoesDeExportac
       );
     }
   }
-  const resumo = `${pendentes.length} evento(s) em ${lotes.length} requisição(ões) para ${destino.endpoint} (token na variavel ${destino.variavelDoToken ?? 'nenhuma'})`;
-  if (opcoes.dryRun) return { codigo: 0, saida: [`dry-run: enviaria ${resumo}; nada foi enviado.`], erros: [] };
+  const resumo = `${pendentes.length} evento(s) em ${lotes.length} requisição(ões) para ${destino.endpoint} (token na variavel ${destino.tokenVariable ?? 'nenhuma'})`;
+  if (opcoes.dryRun) return { code: 0, output: [`dry-run: enviaria ${resumo}; nada foi enviado.`], erros: [] };
   const enviador = ctx.enviador;
   if (!enviador) return falha('esta instalação não tem enviador de telemetria; nada foi enviado.');
 
@@ -78,7 +78,7 @@ export async function exportarTelemetria(ctx: Contexto, opcoes: OpcoesDeExportac
     try {
       const { status } = await enviador.enviar({
         endpoint: destino.endpoint,
-        ...(destino.variavelDoToken ? { variavelDoToken: destino.variavelDoToken } : {}),
+        ...(destino.tokenVariable ? { tokenVariable: destino.tokenVariable } : {}),
         corpo,
       });
       if (status < 200 || status >= 300) {
@@ -92,5 +92,5 @@ export async function exportarTelemetria(ctx: Contexto, opcoes: OpcoesDeExportac
     const ultimo = lote.at(-1);
     if (ultimo) await ctx.arquivos.gravar(CAMINHO_DO_MARCADOR, `${JSON.stringify({ seq: ultimo.seq })}\n`);
   }
-  return { codigo: 0, saida: [`exportados ${resumo}.`], erros: [] };
+  return { code: 0, output: [`exportados ${resumo}.`], erros: [] };
 }

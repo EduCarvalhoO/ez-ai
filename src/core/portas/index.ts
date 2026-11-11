@@ -10,7 +10,7 @@ export interface SistemaDeArquivos {
   /** Raiz absoluta, já validada, sob a qual todo caminho é resolvido. */
   readonly raiz: string;
   /** Lê um arquivo de texto UTF-8. */
-  ler(caminho: string): Promise<string>;
+  read(caminho: string): Promise<string>;
   /**
    * Grava um arquivo de texto UTF-8, criando as pastas que faltarem. A gravação é atômica: quem lê vê o conteúdo
    * antigo inteiro ou o novo inteiro, nunca um arquivo pela metade (ADR-0041).
@@ -21,6 +21,20 @@ export interface SistemaDeArquivos {
    * do log de auditoria: dois processos nunca criam o mesmo arquivo ao mesmo tempo (ADR-0041).
    */
   criarExclusivo(caminho: string, conteudo: string): Promise<boolean>;
+  /**
+   * Copia um arquivo fielmente, byte a byte, sem decodificar e sem o limite de leitura de texto; devolve o tamanho e
+   * o sha256 (hex) do que foi copiado. Serve ao reparo da auditoria, que precisa selar até um arquivo ilegível
+   * (ADR-0042). Sobrescreve o destino de forma atômica.
+   */
+  copiar(de: string, para: string): Promise<{ readonly bytes: number; readonly sha256: string }>;
+  /**
+   * Troca a pasta `destino` pela pasta `preparada` (escrita antes, ao lado) de uma vez só: quem olha vê a pasta
+   * antiga inteira ou a nova inteira. Se `destino` não existe, só renomeia. Em falha, `destino` volta ao que era
+   * (ADR-0042).
+   */
+  trocarPasta(preparada: string, destino: string): Promise<void>;
+  /** Apaga uma pasta e tudo que há nela (nunca segue link). Caminho inexistente não é erro. */
+  removerPasta(caminho: string): Promise<void>;
   /** Lista os arquivos sob uma pasta, com caminhos relativos à raiz. */
   listar(pasta: string): Promise<readonly string[]>;
   /** Diz se o caminho existe. */
@@ -70,11 +84,11 @@ export interface Identidade {
 /** Evento de auditoria ou telemetria emitido pelo núcleo. */
 export interface Evento {
   /** Tipo do evento, como `pacote.aplicado`. */
-  readonly tipo: string;
+  readonly type: string;
   /** Instante do evento, vindo do Relogio. */
-  readonly em: Date;
+  readonly at: Date;
   /** Dados do evento. */
-  readonly dados: Readonly<Record<string, unknown>>;
+  readonly data: Readonly<Record<string, unknown>>;
 }
 
 /** Destino dos eventos: arquivo local sempre; exportadores opcionais na F5 (ADR-0004). */
@@ -85,10 +99,10 @@ export interface DestinoDeEventos {
 
 /** Janela de tempo e agente para ler o consumo de tokens (F3). */
 export interface JanelaDeConsumo {
-  readonly inicio: Date;
-  readonly fim: Date;
+  readonly start: Date;
+  readonly end: Date;
   /** Identificador do agente (`^[a-z0-9._/-]{1,64}$`); sem ele, todos os agentes da janela. */
-  readonly agente?: string;
+  readonly agent?: string;
 }
 
 /**
@@ -97,7 +111,7 @@ export interface JanelaDeConsumo {
  * e grava. Consumo é métrica, nunca evidência (spec de auditoria e evidências).
  */
 export interface LeitorDeConsumo {
-  ler(janela: JanelaDeConsumo): Promise<readonly Consumo[]>;
+  read(janela: JanelaDeConsumo): Promise<readonly Consumo[]>;
 }
 
 /** Um lote de spans OTLP/HTTP em JSON para enviar ao destino de telemetria escolhido pelo projeto (ADR-0029). */
@@ -105,7 +119,7 @@ export interface PedidoDeTelemetria {
   /** URL do coletor, já validada (https, ou http só em loopback). */
   readonly endpoint: string;
   /** Nome da variável de ambiente com o valor do cabeçalho `Authorization`; o núcleo nunca vê o valor. */
-  readonly variavelDoToken?: string;
+  readonly tokenVariable?: string;
   readonly corpo: string;
 }
 
@@ -116,20 +130,20 @@ export interface EnviadorDeTelemetria {
 
 /** Leitura de arquivos da branch base do PR, não da cópia de trabalho (ADR-0028). `undefined` = o arquivo não existe lá. */
 export interface LeitorDaBase {
-  ler(caminho: string): Promise<string | undefined>;
+  read(caminho: string): Promise<string | undefined>;
 }
 
 /** Fatos do PR e do CI vindos do provedor Git (GitHub). Só leitura; usado só pelo job de servidor (ADR-0028). */
 export interface ProvedorDoPr {
   /** `undefined` = o commit não pertence a nenhum PR (push direto). */
-  dados(times?: readonly string[]): Promise<DadosDoPr | undefined>;
+  data(times?: readonly string[]): Promise<DadosDoPr | undefined>;
   checkRuns(sha: string): Promise<readonly CheckRun[]>;
 }
 
 /** Um trecho devolvido pelo índice de busca (C1). `pontuacao` maior = mais relevante. */
 export interface TrechoDoIndice {
-  readonly fonte: string;
-  readonly arquivo: string;
+  readonly source: string;
+  readonly file: string;
   readonly linhaInicio: number;
   readonly linhaFim: number;
   readonly pontuacao: number;

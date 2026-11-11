@@ -1,14 +1,14 @@
 {
-  "versaoConfig": 0,
-  "ambientes": [
+  "configVersion": 0,
+  "environments": [
     "copilot"
   ],
-  "pacotes": {
+  "packages": {
     "eduardo/a": {
-      "origem": "local:pacotes/a"
+      "source": "local:pacotes/a"
     },
     "eduardo/b": {
-      "origem": "local:pacotes/b"
+      "source": "local:pacotes/b"
     }
   }
 }

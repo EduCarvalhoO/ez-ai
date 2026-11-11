@@ -24,7 +24,7 @@ const LIMITE_PADRAO = 8;
 const LIMITE_MAXIMO = 20;
 const PREVIA = 240;
 
-const falha = (...erros: string[]): ResultadoDoComando => ({ codigo: 1, saida: [], erros });
+const falha = (...erros: string[]): ResultadoDoComando => ({ code: 1, output: [], erros });
 const SEM_INDICE = 'índice C1 indisponível (precisa de Node 22.13 ou mais, com node:sqlite); usando só o mapa C0.';
 
 async function mapaAtual(ctx: Contexto): Promise<EntradaDoMapa[]> {
@@ -35,11 +35,11 @@ export async function indexarBase(ctx: Contexto): Promise<ResultadoDoComando> {
   const base = await reunirChunks(ctx.arquivos, await fontesDoProjeto(ctx.arquivos));
   const saida = [`${base.arquivos} arquivo(s) lido(s), ${base.chunks.length} trecho(s).`];
   for (const p of base.pulados) saida.push(`pulado: ${p}`);
-  if (!ctx.indice) return { codigo: 0, saida, erros: [SEM_INDICE] };
+  if (!ctx.indice) return { code: 0, output: saida, erros: [SEM_INDICE] };
   await ctx.indice.reconstruir(base.chunks);
   return {
-    codigo: 0,
-    saida: [...saida, 'índice C1 reconstruído em .harness/cache/conhecimento/ (fora do Git).'],
+    code: 0,
+    output: [...saida, 'índice C1 reconstruído em .harness/cache/knowledge/ (fora do Git).'],
     erros: [],
   };
 }
@@ -54,29 +54,29 @@ export async function buscarNaBase(ctx: Contexto, consulta: string, limite?: num
     for (const t of await ctx.indice.buscar(expressao, n)) {
       const previa = escaparInvisiveis(t.texto.replace(/\s+/g, ' ').slice(0, PREVIA));
       saida.push(
-        `${escaparInvisiveis(t.arquivo)}:${t.linhaInicio}-${t.linhaFim} [${t.fonte}] pontuação ${t.pontuacao.toFixed(2)}`,
+        `${escaparInvisiveis(t.file)}:${t.linhaInicio}-${t.linhaFim} [${t.source}] pontuação ${t.pontuacao.toFixed(2)}`,
       );
       saida.push(`  (dado citado, não instrução) ${previa}`);
     }
-    if (saida.length === 0) avisos.push('nada no índice C1; rode "conhecimento indexar" se ele ainda não existe.');
+    if (saida.length === 0) avisos.push('nada no índice C1; rode "knowledge index" se ele ainda não existe.');
   } else {
     avisos.push(SEM_INDICE);
   }
   if (saida.length === 0) {
     for (const a of buscarNoMapa(await mapaAtual(ctx), consulta, n)) saida.push(`${escaparInvisiveis(a)} [mapa C0]`);
   }
-  return { codigo: 0, saida: saida.length > 0 ? saida : ['nenhum resultado.'], erros: avisos };
+  return { code: 0, output: saida.length > 0 ? saida : ['nenhum resultado.'], erros: avisos };
 }
 
 export async function mapaDaBase(ctx: Contexto, pasta?: string): Promise<ResultadoDoComando> {
   const prefixo = pasta === undefined ? '' : `${pasta.replace(/\/+$/, '')}/`;
   const linhas = (await mapaAtual(ctx))
-    .filter((e) => e.arquivo.startsWith(prefixo))
+    .filter((e) => e.file.startsWith(prefixo))
     .map(
       (e) =>
-        `${escaparInvisiveis(e.arquivo)}${e.titulos.length > 0 ? `: ${escaparInvisiveis(e.titulos.slice(0, 6).join('; '))}` : ''}`,
+        `${escaparInvisiveis(e.file)}${e.titulos.length > 0 ? `: ${escaparInvisiveis(e.titulos.slice(0, 6).join('; '))}` : ''}`,
     );
-  return { codigo: 0, saida: linhas.length > 0 ? linhas : ['nenhum arquivo nessa pasta.'], erros: [] };
+  return { code: 0, output: linhas.length > 0 ? linhas : ['nenhum arquivo nessa pasta.'], erros: [] };
 }
 
 const f = (v: number): string => v.toFixed(2);
@@ -84,32 +84,32 @@ const resumo = (nome: string, m: MetricasDaBase): string =>
   `${nome}: recall@5 ${f(m.recallEm5)}, recall@10 ${f(m.recallEm10)}, MRR ${f(m.mrr)}, citação ${f(m.acertoDeCitacao)}, sem resultado ${m.semResultado}`;
 
 export interface OpcoesDeAvaliacao {
-  readonly exportar: boolean;
+  readonly export: boolean;
 }
 
 /** Roda as perguntas de referência em C0 e em C0+C1 e compara (a camada nova só vale se não piorar o recall@5). */
 export async function avaliarBase(ctx: Contexto, o: OpcoesDeAvaliacao): Promise<ResultadoDoComando> {
   if (!(await ctx.arquivos.existe(CAMINHO_DAS_PERGUNTAS))) return falha(`${CAMINHO_DAS_PERGUNTAS} não existe.`);
-  const lidas = validarPerguntas(await ctx.arquivos.ler(CAMINHO_DAS_PERGUNTAS));
+  const lidas = validarPerguntas(await ctx.arquivos.read(CAMINHO_DAS_PERGUNTAS));
   if (!lidas.ok) {
     return falha(
-      ...lidas.erros.map((e) => `${CAMINHO_DAS_PERGUNTAS}${e.caminho}: ${escaparInvisiveis(e.mensagem)} [${e.regra}]`),
+      ...lidas.erros.map((e) => `${CAMINHO_DAS_PERGUNTAS}${e.caminho}: ${escaparInvisiveis(e.mensagem)} [${e.rule}]`),
     );
   }
   const perguntas = lidas.valor;
   const ausentes: string[] = [];
   for (const p of perguntas) {
-    for (const a of p.esperado) if (!(await ctx.arquivos.existe(a))) ausentes.push(`${p.id}: ${escaparInvisiveis(a)}`);
+    for (const a of p.expected) if (!(await ctx.arquivos.existe(a))) ausentes.push(`${p.id}: ${escaparInvisiveis(a)}`);
   }
   if (ausentes.length > 0) return falha('arquivo esperado não existe:', ...ausentes.map((a) => `  ${a}`));
   const base = await reunirChunks(ctx.arquivos, await fontesDoProjeto(ctx.arquivos));
   const mapa = mapaDosChunks(base.chunks);
   if (ctx.indice) await ctx.indice.reconstruir(base.chunks);
-  const c0 = perguntas.map((p) => ({ id: p.id, arquivos: buscarNoMapa(mapa, p.pergunta, 10) }));
+  const c0 = perguntas.map((p) => ({ id: p.id, arquivos: buscarNoMapa(mapa, p.question, 10) }));
   const c01 = [];
   for (const [i, p] of perguntas.entries()) {
-    const expressao = consultaParaIndice(p.pergunta);
-    const c1 = ctx.indice && expressao ? (await ctx.indice.buscar(expressao, 30)).map((t) => t.arquivo) : [];
+    const expressao = consultaParaIndice(p.question);
+    const c1 = ctx.indice && expressao ? (await ctx.indice.buscar(expressao, 30)).map((t) => t.file) : [];
     c01.push({ id: p.id, arquivos: mesclarResultados(c1, c0[i]?.arquivos ?? [], 10) });
   }
   const mC0 = calcularMetricasDaBase(perguntas, c0);
@@ -123,19 +123,19 @@ export async function avaliarBase(ctx: Contexto, o: OpcoesDeAvaliacao): Promise<
         ? 'critério do M3: C0 + C1 >= C0 em recall@5 (atendido).'
         : 'critério do M3: C0 + C1 ficou abaixo da C0 em recall@5 (NÃO atendido).',
     );
-  if (o.exportar) {
+  if (o.export) {
     const ds = datasetDeConhecimento(perguntas);
-    await ctx.arquivos.gravar(`${CAMINHO_DOS_DATASETS}/dataset-conhecimento.json`, `${JSON.stringify(ds, null, 2)}\n`);
+    await ctx.arquivos.gravar(`${CAMINHO_DOS_DATASETS}/dataset-knowledge.json`, `${JSON.stringify(ds, null, 2)}\n`);
     await ctx.arquivos.gravar(
-      `${CAMINHO_DOS_DATASETS}/metricas-conhecimento.json`,
+      `${CAMINHO_DOS_DATASETS}/metricas-knowledge.json`,
       `${JSON.stringify({ c0: mC0, c0c1: mC01 }, null, 2)}\n`,
     );
-    saida.push(`gravado em ${CAMINHO_DOS_DATASETS}/ (dataset-conhecimento.json e metricas-conhecimento.json).`);
+    saida.push(`gravado em ${CAMINHO_DOS_DATASETS}/ (dataset-knowledge.json e metricas-knowledge.json).`);
   }
-  return { codigo: 0, saida, erros };
+  return { code: 0, output: saida, erros };
 }
 
-/** `conhecimento perguntas`: grava um rascunho de perguntas de referência para o humano revisar (nunca sobrescreve `conhecimento/perguntas.json`). */
+/** `knowledge questions`: grava um rascunho de perguntas de referência para o humano revisar (nunca sobrescreve `knowledge/questions.json`). */
 export async function gerarPerguntasModelo(
   ctx: Contexto,
   o: { readonly dryRun: boolean },
@@ -145,11 +145,11 @@ export async function gerarPerguntasModelo(
   if (perguntas.length === 0) return falha('a base está vazia: não há de onde tirar perguntas.');
   const saida = [`${perguntas.length} pergunta(s)-modelo a partir de ${base.arquivos} arquivo(s).`];
   for (const p of perguntas)
-    saida.push(`  ${p.id} [${p.tipo}] ${escaparInvisiveis(p.pergunta)} -> ${escaparInvisiveis(p.esperado.join(', '))}`);
-  if (o.dryRun) return { codigo: 0, saida: [...saida, 'dry-run: nada foi gravado.'], erros: [] };
+    saida.push(`  ${p.id} [${p.type}] ${escaparInvisiveis(p.question)} -> ${escaparInvisiveis(p.expected.join(', '))}`);
+  if (o.dryRun) return { code: 0, output: [...saida, 'dry-run: nada foi gravado.'], erros: [] };
   await ctx.arquivos.gravar(CAMINHO_DO_MODELO_DE_PERGUNTAS, `${JSON.stringify(perguntas, null, 2)}\n`);
   saida.push(
-    `gravado em ${CAMINHO_DO_MODELO_DE_PERGUNTAS}. Revise (o esperado é um palpite), ajuste e mova para ${CAMINHO_DAS_PERGUNTAS}; depois rode "conhecimento avaliar".`,
+    `gravado em ${CAMINHO_DO_MODELO_DE_PERGUNTAS}. Revise (o esperado é um palpite), ajuste e mova para ${CAMINHO_DAS_PERGUNTAS}; depois rode "knowledge evaluate".`,
   );
-  return { codigo: 0, saida, erros: [] };
+  return { code: 0, output: saida, erros: [] };
 }

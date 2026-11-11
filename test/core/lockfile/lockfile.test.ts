@@ -9,8 +9,8 @@ const fixtures = join(raiz, 'lockfiles');
 const ler = (pasta: string, arquivo: string) => readFileSync(join(fixtures, pasta, arquivo), 'utf8');
 
 interface Caso {
-  readonly arquivo: string;
-  readonly regra: string;
+  readonly file: string;
+  readonly rule: string;
   readonly caminho: string;
 }
 const casos: Caso[] = JSON.parse(ler('invalidos', 'casos.json'));
@@ -23,62 +23,67 @@ function valido(arquivo: string): Lockfile {
 
 describe('lockfiles válidos', () => {
   it.each(readdirSync(join(fixtures, 'validos')))('%s é aceito', (arquivo) => {
-    expect(valido(arquivo).versaoLockfile).toBe(0);
+    expect(valido(arquivo).lockfileVersion).toBe(0);
   });
 
   it('monta pacotes em ordem de nome, com trava só no GitHub e componentes completos', () => {
-    const [local, github] = valido('completo.json').pacotes;
-    expect(local).toMatchObject({ nome: 'eduardo/rascunho', origem: { tipo: 'local' } });
+    const [local, github] = valido('completo.json').packages;
+    expect(local).toMatchObject({ name: 'eduardo/rascunho', source: { type: 'local' } });
     expect(local).not.toHaveProperty('commit');
-    expect(github).toMatchObject({ tag: 'v1.2.0', origem: { tipo: 'github', login: 'eduardo' } });
-    expect(github?.componentes[0]?.permissoes.escrever).toEqual([]);
+    expect(github).toMatchObject({ tag: 'v1.2.0', source: { type: 'github', login: 'eduardo' } });
+    expect(github?.components[0]?.permissions.write).toEqual([]);
   });
 });
 
 describe('lockfiles inválidos', () => {
   it('toda fixture inválida tem um caso esperado', () => {
     const arquivos = readdirSync(join(fixtures, 'invalidos')).filter((a) => a !== 'casos.json');
-    expect(arquivos.sort()).toEqual(casos.map((c) => c.arquivo).sort());
+    expect(arquivos.sort()).toEqual(casos.map((c) => c.file).sort());
   });
 
-  it.each(casos)('$arquivo é recusado por $regra em "$caminho"', ({ arquivo, regra, caminho }) => {
+  it.each(casos)('$arquivo é recusado por $regra em "$caminho"', ({ file: arquivo, rule: regra, caminho }) => {
     const resultado = validarLockfile(ler('invalidos', arquivo));
     expect(resultado.ok).toBe(false);
     if (resultado.ok) return;
-    expect(resultado.erros).toContainEqual(expect.objectContaining({ regra, caminho }));
+    expect(resultado.erros).toContainEqual(expect.objectContaining({ rule: regra, caminho }));
     for (const erro of resultado.erros) expect(erro.mensagem.length).toBeGreaterThan(10);
   });
 });
 
 describe('limites do lockfile', () => {
-  const pacote = { versao: '0.1.0', origem: 'local:p', hash: `sha256:${'0'.repeat(64)}` };
-  const componentes = [{ id: 'a', tipo: 'instrucao', arquivo: 'a.md' }];
+  const pacote = { version: '0.1.0', source: 'local:p', hash: `sha256:${'0'.repeat(64)}` };
+  const componentes = [{ id: 'a', type: 'instruction', file: 'a.md' }];
 
   it('recusa mais de 100 pacotes', () => {
     const pacotes = Object.fromEntries(
-      Array.from({ length: 101 }, (_, i) => [`eduardo/p${i}`, { ...pacote, origem: `local:p${i}`, componentes }]),
+      Array.from({ length: 101 }, (_, i) => [
+        `eduardo/p${i}`,
+        { ...pacote, source: `local:p${i}`, components: componentes },
+      ]),
     );
-    const resultado = validarLockfile(JSON.stringify({ versaoLockfile: 0, pacotes }));
-    expect(resultado.ok ? [] : resultado.erros).toContainEqual(expect.objectContaining({ regra: 'maxProperties' }));
+    const resultado = validarLockfile(JSON.stringify({ lockfileVersion: 0, packages: pacotes }));
+    expect(resultado.ok ? [] : resultado.erros).toContainEqual(expect.objectContaining({ rule: 'maxProperties' }));
   });
 
   it('recusa lockfile acima de 8 MiB e profundidade acima de 32', () => {
-    const grande = validarLockfile(JSON.stringify({ versaoLockfile: 0, pacotes: {}, x: 'a'.repeat(8 * 1024 * 1024) }));
-    expect(grande.ok ? '' : grande.erros[0]?.regra).toBe('tamanho');
+    const grande = validarLockfile(
+      JSON.stringify({ lockfileVersion: 0, packages: {}, x: 'a'.repeat(8 * 1024 * 1024) }),
+    );
+    expect(grande.ok ? '' : grande.erros[0]?.rule).toBe('tamanho');
     const fundo = validarLockfile(`${'['.repeat(33)}${']'.repeat(33)}`);
-    expect(fundo.ok ? '' : fundo.erros[0]?.regra).toBe('profundidade');
+    expect(fundo.ok ? '' : fundo.erros[0]?.rule).toBe('profundidade');
   });
 });
 
 describe('retrato de permissões', () => {
   it('diferencaDePermissoes compara o retrato do lockfile com o manifesto novo (E2)', () => {
-    const [, travado] = valido('completo.json').pacotes;
+    const [, travado] = valido('completo.json').packages;
     const novo = JSON.parse(readFileSync(join(raiz, 'manifestos', 'validos', 'completo.json'), 'utf8'));
-    novo.componentes[0].permissoes.escrever = ['src/**/*.ts'];
+    novo.components[0].permissions.write = ['src/**/*.ts'];
     const manifesto = validarManifesto(JSON.stringify(novo));
     if (!manifesto.ok || !travado) throw new Error('fixture base inválida');
     expect(diferencaDePermissoes(travado, manifesto.valor)).toContainEqual(
-      expect.objectContaining({ tipo: 'permissao-nova', categoria: 'escrever', item: 'src/**/*.ts' }),
+      expect.objectContaining({ type: 'permissao-nova', category: 'write', item: 'src/**/*.ts' }),
     );
     expect(diferencaDePermissoes(travado, travado)).toEqual([]);
   });

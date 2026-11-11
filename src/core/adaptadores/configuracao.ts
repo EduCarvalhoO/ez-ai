@@ -9,7 +9,7 @@ export interface ModeloDeConfiguracao {
   readonly arquivoDeHooks: string;
   readonly arquivoDeMcp: string;
   readonly eventos: Readonly<Record<EventoDeHook, string>>;
-  /** Pasta do pacote instalado vista pelo ambiente (ex.: `${CLAUDE_PROJECT_DIR}/.harness/pacotes`). */
+  /** Pasta do pacote instalado vista pelo ambiente (ex.: `${CLAUDE_PROJECT_DIR}/.harness/packages`). */
   readonly raizDosPacotes: string;
   /** Campos extras do handler de hook (ex.: `onFailure: "block"` para falhar fechado, ADR-0016). */
   readonly extrasDoHook: Readonly<Record<string, unknown>>;
@@ -38,30 +38,30 @@ function argumentosDoPacote(
       return `o argumento "${a}" parece um script que não está no pacote; só scripts do próprio pacote são aceitos`;
     }
     // Caminho de arquivo do próprio pacote vira o caminho do pacote instalado (somente leitura, ADR-0024).
-    saida.push(entrada.arquivos.has(a) ? `${modelo.raizDosPacotes}/${m.nome}/${a}` : a);
+    saida.push(entrada.arquivos.has(a) ? `${modelo.raizDosPacotes}/${m.name}/${a}` : a);
   }
   return saida;
 }
 
 function declara(c: Componente, arquivo: string): boolean {
-  return (c.permissoes.configurarAmbiente as readonly string[]).includes(arquivo);
+  return (c.permissions.configureEnvironment as readonly string[]).includes(arquivo);
 }
 
 export function fragmentoDeHook(modelo: ModeloDeConfiguracao, entrada: EntradaDeProjecao, c: Componente): Resultado {
-  if (c.evento === undefined || c.comando === undefined) return { aviso: 'sem "evento" ou "comando"; não projetado.' };
+  if (c.event === undefined || c.command === undefined) return { aviso: 'sem "evento" ou "comando"; não projetado.' };
   if (!declara(c, modelo.arquivoDeHooks)) {
-    return { aviso: `não declara configurarAmbiente "${modelo.arquivoDeHooks}"; não projetado (T2).` };
+    return { aviso: `não declara configureEnvironment "${modelo.arquivoDeHooks}"; não projetado (T2).` };
   }
-  const args = argumentosDoPacote(entrada.manifesto, entrada, modelo, c.comando.argumentos);
+  const args = argumentosDoPacote(entrada.manifesto, entrada, modelo, c.command.arguments);
   if (typeof args === 'string') return { aviso: `${args}; não projetado.` };
   return {
     fragmento: {
       caminho: modelo.arquivoDeHooks,
       componente: c.id,
-      tipo: 'hook',
-      chave: modelo.eventos[c.evento],
+      type: 'hook',
+      key: modelo.eventos[c.event],
       valor: {
-        hooks: [{ type: 'command', command: c.comando.programa, args, timeout: 30, ...modelo.extrasDoHook }],
+        hooks: [{ type: 'command', command: c.command.program, args, timeout: 30, ...modelo.extrasDoHook }],
       },
     },
   };
@@ -73,21 +73,21 @@ export function fragmentoDeMcp(
   c: Componente,
   nome: string,
 ): Resultado {
-  if (c.comando === undefined) return { aviso: 'sem "comando"; não projetado.' };
+  if (c.command === undefined) return { aviso: 'sem "comando"; não projetado.' };
   if (!declara(c, modelo.arquivoDeMcp)) {
-    return { aviso: `não declara configurarAmbiente "${modelo.arquivoDeMcp}"; não projetado (T2).` };
+    return { aviso: `não declara configureEnvironment "${modelo.arquivoDeMcp}"; não projetado (T2).` };
   }
-  const args = argumentosDoPacote(entrada.manifesto, entrada, modelo, c.comando.argumentos);
+  const args = argumentosDoPacote(entrada.manifesto, entrada, modelo, c.command.arguments);
   if (typeof args === 'string') return { aviso: `${args}; não projetado.` };
   // Só nomes de variáveis declaradas em `segredos`, nunca valores: o ambiente expande `${VAR}` na hora de usar.
-  const env = Object.fromEntries([...c.permissoes.segredos].sort().map((v) => [v, `\${${v}}`]));
+  const env = Object.fromEntries([...c.permissions.secrets].sort().map((v) => [v, `\${${v}}`]));
   return {
     fragmento: {
       caminho: modelo.arquivoDeMcp,
       componente: c.id,
-      tipo: 'mcp',
-      chave: nome,
-      valor: { type: 'stdio', command: c.comando.programa, args, ...(Object.keys(env).length > 0 ? { env } : {}) },
+      type: 'mcp',
+      key: nome,
+      valor: { type: 'stdio', command: c.command.program, args, ...(Object.keys(env).length > 0 ? { env } : {}) },
     },
   };
 }
@@ -95,7 +95,7 @@ export function fragmentoDeMcp(
 export function avisoDeEnforcement(c: Componente, arquivo: string): AvisoDeProjecao {
   return {
     componente: c.id,
-    mensagem: `enforcement: ${c.tipo} "${c.id}" altera ${arquivo}, arquivo que o agente também pode editar; só conta como imposto com CODEOWNERS e ruleset sobre ele (ADR-0016).`,
+    mensagem: `enforcement: ${c.type} "${c.id}" altera ${arquivo}, arquivo que o agente também pode editar; só conta como imposto com CODEOWNERS e ruleset sobre ele (ADR-0016).`,
   };
 }
 
@@ -118,9 +118,9 @@ const objeto = (v: unknown): v is Record<string, unknown> => v !== null && typeo
 const tem = (o: Record<string, unknown>, k: string): boolean => Object.hasOwn(o, k);
 
 export interface ResultadoDaMescla {
-  readonly conteudo: string;
+  readonly content: string;
   readonly mudou: boolean;
-  /** Trecho nosso editado à mão que foi sobrescrito ou apagado por causa de `--forcar`. */
+  /** Trecho nosso editado à mão que foi sobrescrito ou apagado por causa de `--force`. */
   readonly editadoAMao: boolean;
   readonly erros: readonly string[];
 }
@@ -137,7 +137,7 @@ export function mesclarFragmentos(
   forcar: boolean,
 ): ResultadoDaMescla {
   const recusa = (mensagem: string): ResultadoDaMescla => ({
-    conteudo: texto ?? '',
+    content: texto ?? '',
     mudou: false,
     editadoAMao: false,
     erros: [`${caminho}: ${mensagem}`],
@@ -167,41 +167,41 @@ export function mesclarFragmentos(
   const antes = canonico(raiz);
 
   for (const f of antigos) {
-    if (f.tipo === 'hook') {
-      const l = lista(f.chave);
-      if (l === undefined) return recusa(`"hooks.${f.chave}" precisa ser uma lista.`);
+    if (f.type === 'hook') {
+      const l = lista(f.key);
+      if (l === undefined) return recusa(`"hooks.${f.key}" precisa ser uma lista.`);
       const i = l.findIndex((x) => igual(x, f.valor));
       if (i >= 0) l.splice(i, 1);
-      if (tem(hooks, f.chave) && l.length === 0) {
-        delete hooks[f.chave];
+      if (tem(hooks, f.key) && l.length === 0) {
+        delete hooks[f.key];
         esvaziouHooks = true;
       }
-    } else if (tem(servidores, f.chave)) {
-      if (igual(servidores[f.chave], f.valor)) {
-        removidos.add(f.chave);
-        delete servidores[f.chave];
+    } else if (tem(servidores, f.key)) {
+      if (igual(servidores[f.key], f.valor)) {
+        removidos.add(f.key);
+        delete servidores[f.key];
         esvaziouServidores = true;
       } else if (forcar) {
         editadoAMao = true;
-        delete servidores[f.chave];
+        delete servidores[f.key];
         esvaziouServidores = true;
       } else {
         erros.push(
-          `${caminho}: o servidor "${f.chave}" foi editado à mão; use --forcar para guardar uma cópia do arquivo e seguir.`,
+          `${caminho}: o servidor "${f.key}" foi editado à mão; use --force para guardar uma cópia do arquivo e seguir.`,
         );
       }
     }
   }
   for (const f of novos) {
-    if (f.tipo === 'hook') {
-      const l = lista(f.chave);
-      if (l === undefined) return recusa(`"hooks.${f.chave}" precisa ser uma lista.`);
+    if (f.type === 'hook') {
+      const l = lista(f.key);
+      if (l === undefined) return recusa(`"hooks.${f.key}" precisa ser uma lista.`);
       // Sempre acrescenta: hook idêntico de outro dono continua existindo quando este pacote sai (cada remoção tira um).
       l.push(f.valor);
-      hooks[f.chave] = l;
-    } else if (!tem(servidores, f.chave)) servidores[f.chave] = f.valor;
+      hooks[f.key] = l;
+    } else if (!tem(servidores, f.key)) servidores[f.key] = f.valor;
     else {
-      erros.push(`${caminho}: o servidor "${f.chave}" já existe e não é deste pacote; renomeie ou apague a entrada.`);
+      erros.push(`${caminho}: o servidor "${f.key}" já existe e não é deste pacote; renomeie ou apague a entrada.`);
     }
   }
   // Contêiner que ficou vazio por nossa causa some; um vazio que o usuário já tinha não é mexido.
@@ -210,5 +210,5 @@ export function mesclarFragmentos(
   if (Object.keys(servidores).length > 0) raiz.mcpServers = servidores;
   else if (esvaziouServidores) delete raiz.mcpServers;
   const mudou = canonico(raiz) !== antes;
-  return { conteudo: mudou ? `${JSON.stringify(raiz, null, 2)}\n` : (texto ?? ''), mudou, editadoAMao, erros };
+  return { content: mudou ? `${JSON.stringify(raiz, null, 2)}\n` : (texto ?? ''), mudou, editadoAMao, erros };
 }

@@ -9,7 +9,7 @@ import type { CategoriaDePolicy, Marca, Regra } from './policy.js';
 /** Uma coisa que o componente pode fazer, na forma que a policy compara. */
 export interface ItemDeclarado {
   readonly componente: string;
-  readonly categoria: CategoriaDePolicy;
+  readonly category: CategoriaDePolicy;
   /** Texto mostrado na explicação: glob, host, nome, tipo ou o comando em JSON. */
   readonly item: string;
   /** Valores comparados com os padrões: o próprio item, ou os programas que o comando roda. */
@@ -41,14 +41,14 @@ function nomeDoPrograma(texto: string): string {
  * A regra vale sobre o declarado, não sobre o que um script faz por dentro (risco residual).
  */
 export function programasEfetivos(comando: Comando, profundidade = 0): readonly string[] {
-  const programa = nomeDoPrograma(comando.programa);
+  const programa = nomeDoPrograma(comando.program);
   const programas = new Set([programa]);
-  const { argumentos } = comando;
+  const { arguments: argumentos } = comando;
   if (programa === 'corepack') {
     // Todo posicional pode ser o gerenciador (uma opção com valor esconderia qual é): conservador.
     argumentos.forEach((a, k) => {
       if (a.startsWith('-')) return;
-      for (const p of programasEfetivos({ programa: a, argumentos: argumentos.slice(k + 1) }, profundidade + 1)) {
+      for (const p of programasEfetivos({ program: a, arguments: argumentos.slice(k + 1) }, profundidade + 1)) {
         programas.add(p);
       }
     });
@@ -73,7 +73,7 @@ export function programasEfetivos(comando: Comando, profundidade = 0): readonly 
       // O comando de dentro é analisado de novo (`pnpm exec python -mpip`); um nível só, para ficar linear (D1).
       if (profundidade === 0) {
         const resto = argumentos.slice(inicio + j + 1);
-        for (const p of programasEfetivos({ programa: valor, argumentos: resto }, 1)) programas.add(p);
+        for (const p of programasEfetivos({ program: valor, arguments: resto }, 1)) programas.add(p);
       }
     });
   }
@@ -93,21 +93,21 @@ export function programasEfetivos(comando: Comando, profundidade = 0): readonly 
 
 /** Tudo o que um componente declara, item a item, com as marcas do manifesto. */
 export function itensDoComponente(c: Componente): readonly ItemDeclarado[] {
-  const p = c.permissoes;
-  const itens: ItemDeclarado[] = [{ componente: c.id, categoria: 'tipo', item: c.tipo, valores: [c.tipo], marcas: [] }];
+  const p = c.permissions;
+  const itens: ItemDeclarado[] = [{ componente: c.id, category: 'type', item: c.type, valores: [c.type], marcas: [] }];
   const simples = (categoria: CategoriaDePolicy, valor: string, marcas: readonly Marca[] = []) =>
-    itens.push({ componente: c.id, categoria, item: valor, valores: [valor], marcas });
-  for (const g of p.ler) simples('ler', g, marcarLeitura(g));
-  for (const g of p.escrever) simples('escrever', g, marcarEscrita(g));
-  for (const h of p.rede) simples('rede', h);
-  for (const s of p.segredos) simples('segredos', s);
-  for (const a of p.configurarAmbiente) simples('configurarAmbiente', a);
+    itens.push({ componente: c.id, category: categoria, item: valor, valores: [valor], marcas });
+  for (const g of p.read) simples('read', g, marcarLeitura(g));
+  for (const g of p.write) simples('write', g, marcarEscrita(g));
+  for (const h of p.network) simples('network', h);
+  for (const s of p.secrets) simples('secrets', s);
+  for (const a of p.configureEnvironment) simples('configureEnvironment', a);
   // O que um hook ou MCP roda também é execução (`negar executar node` pega `comando: node x.js`).
-  for (const comando of c.comando ? [...p.executar, c.comando] : p.executar) {
+  for (const comando of c.command ? [...p.execute, c.command] : p.execute) {
     itens.push({
       componente: c.id,
-      categoria: 'executar',
-      item: JSON.stringify([comando.programa, ...comando.argumentos]),
+      category: 'execute',
+      item: JSON.stringify([comando.program, ...comando.arguments]),
       valores: programasEfetivos(comando),
       marcas: [],
     });
@@ -119,41 +119,41 @@ export function itensDoComponente(c: Componente): readonly ItemDeclarado[] {
 function valorCasa(categoria: CategoriaDePolicy, valor: string, padrao: string): boolean {
   if (padrao === '*') return true;
   switch (categoria) {
-    case 'rede': {
+    case 'network': {
       const host = valor.toLowerCase();
       if (!padrao.startsWith('*.')) return host === padrao;
       const dominio = padrao.slice(2);
       return host === dominio || host.endsWith(`.${dominio}`);
     }
-    case 'segredos':
+    case 'secrets':
       return valor.toUpperCase() === padrao.toUpperCase();
-    case 'executar':
+    case 'execute':
       return valor === nomeDoPrograma(padrao);
     default:
       return valor === padrao;
   }
 }
 
-const EH_GLOB = new Set<CategoriaDePolicy>(['ler', 'escrever', 'configurarAmbiente']);
+const EH_GLOB = new Set<CategoriaDePolicy>(['read', 'write', 'configureEnvironment']);
 
 /** A regra pega o item? Padrão por cruzamento (glob) ou por valor; exceção só se o item estiver inteiro dentro. */
 export function regraCasa(regra: Regra, item: ItemDeclarado): boolean {
-  if (regra.categoria !== item.categoria) return false;
-  if (regra.marca) return item.marcas.includes(regra.marca);
-  const padroes = regra.padroes ?? [];
-  if (EH_GLOB.has(item.categoria)) {
+  if (regra.category !== item.category) return false;
+  if (regra.mark) return item.marcas.includes(regra.mark);
+  const padroes = regra.patterns ?? [];
+  if (EH_GLOB.has(item.category)) {
     if (!padroes.some((p) => globsSeCruzam(item.item, p))) return false;
-    return !regra.exceto.some((e) => globContido(item.item, e));
+    return !regra.except.some((e) => globContido(item.item, e));
   }
-  const pegos = item.valores.filter((v) => padroes.some((p) => valorCasa(item.categoria, v, p)));
+  const pegos = item.valores.filter((v) => padroes.some((p) => valorCasa(item.category, v, p)));
   if (pegos.length === 0) return false;
   // Comando com vários programas pegos só escapa se todos eles estiverem na exceção.
-  return !pegos.every((v) => regra.exceto.some((e) => valorCasa(item.categoria, v, e)));
+  return !pegos.every((v) => regra.except.some((e) => valorCasa(item.category, v, e)));
 }
 
 /** A regra vale para este pacote? `pacotes` vazio = todos; `login/*` = toda a conta. */
 export function regraValeParaPacote(regra: Regra, nome: string): boolean {
-  if (regra.pacotes.length === 0) return true;
+  if (regra.packages.length === 0) return true;
   const login = nome.split('/')[0];
-  return regra.pacotes.some((p) => p === nome || p === `${login}/*`);
+  return regra.packages.some((p) => p === nome || p === `${login}/*`);
 }

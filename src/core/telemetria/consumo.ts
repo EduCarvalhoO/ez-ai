@@ -3,18 +3,18 @@
 import type { EventoDeAuditoria } from '../auditoria/evento.js';
 
 export interface ConsumoDoAgente {
-  readonly agente: string;
+  readonly agent: string;
   readonly etapas: number;
   /** Etapas que trouxeram números (medidos ou estimados). */
   readonly etapasComMedida: number;
   readonly etapasSemMedida: number;
   /** Quantas das etapas com medida foram só estimadas (o ambiente não informou). */
   readonly etapasEstimadas: number;
-  readonly tokensEntrada: number;
-  readonly tokensSaida: number;
-  readonly tokensCacheLeitura: number;
-  readonly tokensCacheEscrita: number;
-  readonly custoMicroUsd: number;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheWriteTokens: number;
+  readonly costMicroUsd: number;
   readonly modelos: readonly string[];
 }
 
@@ -22,11 +22,11 @@ interface Acumulador {
   etapas: number;
   etapasComMedida: number;
   etapasEstimadas: number;
-  tokensEntrada: number;
-  tokensSaida: number;
-  tokensCacheLeitura: number;
-  tokensCacheEscrita: number;
-  custoMicroUsd: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  costMicroUsd: number;
   modelos: Set<string>;
 }
 
@@ -37,48 +37,48 @@ const inteiro = (v: unknown): number => (typeof v === 'number' && Number.isFinit
 export function resumirConsumoPorAgente(eventos: readonly EventoDeAuditoria[]): readonly ConsumoDoAgente[] {
   const porAgente = new Map<string, Acumulador>();
   for (const e of eventos) {
-    if (e.tipo !== 'etapa') continue;
-    const d = e.dados as Json;
-    const c = (typeof d.consumo === 'object' && d.consumo !== null ? d.consumo : undefined) as Json | undefined;
-    const agente = typeof d.agente === 'string' ? d.agente : typeof c?.agente === 'string' ? c.agente : 'desconhecido';
+    if (e.type !== 'step') continue;
+    const d = e.data as Json;
+    const c = (typeof d.usage === 'object' && d.usage !== null ? d.usage : undefined) as Json | undefined;
+    const agente = typeof d.agent === 'string' ? d.agent : typeof c?.agent === 'string' ? c.agent : 'desconhecido';
     const acc: Acumulador = porAgente.get(agente) ?? {
       etapas: 0,
       etapasComMedida: 0,
       etapasEstimadas: 0,
-      tokensEntrada: 0,
-      tokensSaida: 0,
-      tokensCacheLeitura: 0,
-      tokensCacheEscrita: 0,
-      custoMicroUsd: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      costMicroUsd: 0,
       modelos: new Set<string>(),
     };
     porAgente.set(agente, acc);
     acc.etapas += 1;
-    if (!c || c.fonte === 'indisponivel') continue;
+    if (!c || c.source === 'unavailable') continue;
     acc.etapasComMedida += 1;
-    if (c.fonte === 'estimado') acc.etapasEstimadas += 1;
-    acc.tokensEntrada += inteiro(c.tokensEntrada);
-    acc.tokensSaida += inteiro(c.tokensSaida);
-    acc.tokensCacheLeitura += inteiro(c.tokensCacheLeitura);
-    acc.tokensCacheEscrita += inteiro(c.tokensCacheEscrita);
-    acc.custoMicroUsd += inteiro(c.custoMicroUsd);
-    if (typeof c.modelo === 'string') acc.modelos.add(c.modelo);
+    if (c.source === 'estimated') acc.etapasEstimadas += 1;
+    acc.inputTokens += inteiro(c.inputTokens);
+    acc.outputTokens += inteiro(c.outputTokens);
+    acc.cacheReadTokens += inteiro(c.cacheReadTokens);
+    acc.cacheWriteTokens += inteiro(c.cacheWriteTokens);
+    acc.costMicroUsd += inteiro(c.costMicroUsd);
+    if (typeof c.model === 'string') acc.modelos.add(c.model);
   }
   return [...porAgente.entries()]
     .map(([agente, a]) => ({
-      agente,
+      agent: agente,
       etapas: a.etapas,
       etapasComMedida: a.etapasComMedida,
       etapasSemMedida: a.etapas - a.etapasComMedida,
       etapasEstimadas: a.etapasEstimadas,
-      tokensEntrada: a.tokensEntrada,
-      tokensSaida: a.tokensSaida,
-      tokensCacheLeitura: a.tokensCacheLeitura,
-      tokensCacheEscrita: a.tokensCacheEscrita,
-      custoMicroUsd: a.custoMicroUsd,
+      inputTokens: a.inputTokens,
+      outputTokens: a.outputTokens,
+      cacheReadTokens: a.cacheReadTokens,
+      cacheWriteTokens: a.cacheWriteTokens,
+      costMicroUsd: a.costMicroUsd,
       modelos: [...a.modelos].sort(),
     }))
-    .sort((x, y) => y.custoMicroUsd - x.custoMicroUsd || x.agente.localeCompare(y.agente));
+    .sort((x, y) => y.costMicroUsd - x.costMicroUsd || x.agent.localeCompare(y.agent));
 }
 
 /** Micro-dólares em texto "US$ 0,0123" (1 US$ = 1.000.000 micro). */

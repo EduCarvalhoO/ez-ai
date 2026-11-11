@@ -1,49 +1,49 @@
 // Schema do manifesto de pacote v0 (docs/specs/manifesto-de-pacote.md). Fonte única: o arquivo
-// schemas/manifesto-pacote.v0.schema.json é gerado daqui (`npm run schemas`) e um teste confere os dois.
+// schemas/package-manifest.v0.schema.json é gerado daqui (`npm run schemas`) e um teste confere os dois.
 // Todo `pattern` roda sobre texto não confiável: só expressões lineares, sem quantificador aninhado ambíguo.
 
 /** Limites fixos do núcleo (D5). A configuração do projeto só pode reduzi-los (ficha de configuração). */
 export const LIMITES = {
   /** Tamanho do manifesto em bytes UTF-8. */
-  bytesDoManifesto: 64 * 1024,
+  manifestBytes: 64 * 1024,
   /** Aninhamento máximo de objetos e arrays no manifesto. */
   profundidadeDoJson: 32,
-  componentes: 100,
+  components: 100,
   itensPorPermissao: 50,
-  argumentos: 50,
+  arguments: 50,
   texto: 512,
-  descricao: 500,
+  description: 500,
   /** Caracteres de um caminho relativo (`arquivo` e globs). */
   caminho: 160,
   /** Segmentos de um caminho relativo. */
   segmentosDoCaminho: 8,
   // Contados pela F2 ao baixar o pacote; aqui só ficam registrados.
-  arquivosDoPacote: 500,
-  bytesDoPacote: 5 * 1024 * 1024,
-  bytesPorArquivo: 1024 * 1024,
+  packageFiles: 500,
+  packageBytes: 5 * 1024 * 1024,
+  bytesPerFile: 1024 * 1024,
   // Configuração do projeto e lockfile (docs/specs/configuracao-e-lockfile.md).
   bytesDaConfiguracao: 64 * 1024,
   /** 100 pacotes com retrato de permissões, cada um menor que o próprio manifesto. */
   bytesDoLockfile: 8 * 1024 * 1024,
   pacotesNoProjeto: 100,
-  origensPermitidas: 100,
+  allowedSources: 100,
 } as const;
 
 /** Limites que a configuração do projeto pode reduzir (D5 da ficha de configuração); os outros são formato. */
 export const LIMITES_AJUSTAVEIS = [
-  'bytesDoManifesto',
-  'componentes',
-  'arquivosDoPacote',
-  'bytesDoPacote',
-  'bytesPorArquivo',
+  'manifestBytes',
+  'components',
+  'packageFiles',
+  'packageBytes',
+  'bytesPerFile',
 ] as const;
 
 export const ID_DO_SCHEMA =
-  'https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/manifesto-pacote.v0.schema.json';
+  'https://raw.githubusercontent.com/EduCarvalhoO/ez-ai/main/schemas/package-manifest.v0.schema.json';
 
 /** Login do GitHub: ASCII minúsculo, hífen só entre caracteres, até 39 (D7). */
 export const PADRAO_LOGIN = '[a-z0-9](?:-?[a-z0-9]){0,38}';
-/** Nome do pacote: vira pasta em `.harness/pacotes/<login>/<pacote>/`. */
+/** Nome do pacote: vira pasta em `.harness/packages/<login>/<pacote>/`. */
 export const PADRAO_PACOTE = '[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?';
 export const PADRAO_REPO = '[A-Za-z0-9._-]{1,100}';
 export const SEMVER = '(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)';
@@ -77,14 +77,8 @@ export const ARQUIVOS_DE_AMBIENTE = [
   '.github/hooks/*.json',
 ] as const;
 
-export const TIPOS_DE_COMPONENTE = ['instrucao', 'agente', 'skill', 'hook', 'mcp', 'policy'] as const;
-export const EVENTOS_DE_HOOK = [
-  'antes-de-ferramenta',
-  'depois-de-ferramenta',
-  'envio-de-prompt',
-  'inicio-de-sessao',
-  'fim-de-sessao',
-] as const;
+export const TIPOS_DE_COMPONENTE = ['instruction', 'agent', 'skill', 'hook', 'mcp', 'policy'] as const;
+export const EVENTOS_DE_HOOK = ['before-tool', 'after-tool', 'prompt-submit', 'session-start', 'session-end'] as const;
 export const AMBIENTES = ['claude-code', 'copilot', 'agents-md'] as const;
 /** Ambientes que o `init` liga sozinho; `agents-md` (ADR-0038) é opt-in. */
 export const AMBIENTES_PADRAO = ['claude-code', 'copilot'] as const;
@@ -94,76 +88,79 @@ export const AMBIENTES_PADRAO = ['claude-code', 'copilot'] as const;
 export const ASSINATURA_DO_PACOTE = {
   type: 'object',
   additionalProperties: false,
-  required: ['identidade', 'emissor'],
+  required: ['identity', 'issuer'],
   properties: {
-    identidade: {
+    identity: {
       type: 'string',
       maxLength: LIMITES.texto,
       pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}/\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml@refs/(?:tags|heads)/[A-Za-z0-9._/-]+$`,
     },
-    emissor: { const: 'https://token.actions.githubusercontent.com' },
+    issuer: { const: 'https://token.actions.githubusercontent.com' },
   },
 } as const;
 
 export const DEFS_DO_COMPONENTE = {
-  comando: {
+  command: {
     type: 'object',
     additionalProperties: false,
-    required: ['programa'],
+    required: ['program'],
     properties: {
-      programa: { type: 'string', maxLength: 64, pattern: '^[a-z0-9][a-z0-9._-]*$' },
-      argumentos: { type: 'array', items: texto, maxItems: LIMITES.argumentos },
+      program: { type: 'string', maxLength: 64, pattern: '^[a-z0-9][a-z0-9._-]*$' },
+      arguments: { type: 'array', items: texto, maxItems: LIMITES.arguments },
     },
   },
-  permissoes: {
+  permissions: {
     type: 'object',
     additionalProperties: false,
     properties: {
-      ler: lista(glob),
-      escrever: lista(glob),
-      executar: lista({ $ref: '#/$defs/comando' }),
-      rede: lista({
+      read: lista(glob),
+      write: lista(glob),
+      execute: lista({ $ref: '#/$defs/command' }),
+      network: lista({
         type: 'string',
         maxLength: 253,
         pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$',
       }),
-      segredos: lista({ type: 'string', pattern: '^[A-Z_][A-Z0-9_]{0,63}$' }),
-      configurarAmbiente: lista({ enum: ARQUIVOS_DE_AMBIENTE }),
+      secrets: lista({ type: 'string', pattern: '^[A-Z_][A-Z0-9_]{0,63}$' }),
+      configureEnvironment: lista({ enum: ARQUIVOS_DE_AMBIENTE }),
     },
   },
   componente: {
     type: 'object',
     additionalProperties: false,
-    required: ['id', 'tipo', 'arquivo'],
+    required: ['id', 'type', 'file'],
     properties: {
       id: { type: 'string', pattern: '^[a-z0-9][a-z0-9-]{0,63}$' },
-      tipo: { enum: TIPOS_DE_COMPONENTE },
-      arquivo: caminho,
-      descricao: { type: 'string', minLength: 1, maxLength: LIMITES.descricao },
-      evento: { enum: EVENTOS_DE_HOOK },
-      comando: { $ref: '#/$defs/comando' },
-      permissoes: { $ref: '#/$defs/permissoes' },
+      type: { enum: TIPOS_DE_COMPONENTE },
+      file: caminho,
+      description: { type: 'string', minLength: 1, maxLength: LIMITES.description },
+      event: { enum: EVENTOS_DE_HOOK },
+      command: { $ref: '#/$defs/command' },
+      permissions: { $ref: '#/$defs/permissions' },
     },
     // Campos por tipo, com anyOf em vez de if/then (o Biome recusa propriedade `then` em objeto).
     allOf: [
       {
         anyOf: [
-          { properties: { tipo: { const: 'hook' } }, required: ['evento', 'comando'] },
-          { properties: { tipo: { not: { const: 'hook' } } }, not: { required: ['evento'] } },
+          { properties: { type: { const: 'hook' } }, required: ['event', 'command'] },
+          { properties: { type: { not: { const: 'hook' } } }, not: { required: ['event'] } },
         ],
       },
       {
         anyOf: [
           {
             properties: {
-              tipo: { enum: ['hook', 'mcp'] },
-              permissoes: { required: ['configurarAmbiente'], properties: { configurarAmbiente: { minItems: 1 } } },
+              type: { enum: ['hook', 'mcp'] },
+              permissions: {
+                required: ['configureEnvironment'],
+                properties: { configureEnvironment: { minItems: 1 } },
+              },
             },
-            required: ['comando', 'permissoes'],
+            required: ['command', 'permissions'],
           },
           {
-            properties: { tipo: { enum: ['instrucao', 'agente', 'skill', 'policy'] } },
-            not: { required: ['comando'] },
+            properties: { type: { enum: ['instruction', 'agent', 'skill', 'policy'] } },
+            not: { required: ['command'] },
           },
         ],
       },
@@ -177,36 +174,36 @@ export const SCHEMA_DO_MANIFESTO = {
   title: 'Manifesto de pacote do ez-ai (v0)',
   type: 'object',
   additionalProperties: false,
-  required: ['versaoManifesto', 'nome', 'versao', 'descricao', 'licenca', 'repositorio', 'componentes'],
+  required: ['manifestVersion', 'name', 'version', 'description', 'license', 'repository', 'components'],
   properties: {
     $schema: { type: 'string', maxLength: LIMITES.texto, pattern: '^https://' },
-    versaoManifesto: { const: 0 },
-    nome: { type: 'string', maxLength: 104, pattern: `^${PADRAO_LOGIN}/${PADRAO_PACOTE}$` },
-    versao: { type: 'string', maxLength: 64, pattern: `^${SEMVER}${PRERELEASE}$` },
-    descricao: { type: 'string', minLength: 1, maxLength: LIMITES.descricao },
-    licenca: {
+    manifestVersion: { const: 0 },
+    name: { type: 'string', maxLength: 104, pattern: `^${PADRAO_LOGIN}/${PADRAO_PACOTE}$` },
+    version: { type: 'string', maxLength: 64, pattern: `^${SEMVER}${PRERELEASE}$` },
+    description: { type: 'string', minLength: 1, maxLength: LIMITES.description },
+    license: {
       type: 'string',
       maxLength: 128,
       pattern: '^[A-Za-z0-9.+-]+(?: (?:AND|OR|WITH) [A-Za-z0-9.+-]+)*$',
     },
-    repositorio: {
+    repository: {
       type: 'string',
       maxLength: 160,
       pattern: `^https://github\\.com/${PADRAO_LOGIN}/${PADRAO_REPO}$`,
     },
-    assinatura: ASSINATURA_DO_PACOTE,
-    compatibilidade: {
+    signature: ASSINATURA_DO_PACOTE,
+    compatibility: {
       type: 'object',
       additionalProperties: false,
       properties: {
         harness: { type: 'string', maxLength: 64, pattern: `^${COMPARADOR}(?: ${COMPARADOR})?$` },
-        ambientes: { type: 'array', items: { enum: AMBIENTES }, minItems: 1, uniqueItems: true },
+        environments: { type: 'array', items: { enum: AMBIENTES }, minItems: 1, uniqueItems: true },
       },
     },
-    componentes: {
+    components: {
       type: 'array',
       minItems: 1,
-      maxItems: LIMITES.componentes,
+      maxItems: LIMITES.components,
       items: { $ref: '#/$defs/componente' },
     },
   },

@@ -28,11 +28,11 @@ describe('resolverVersao', () => {
     ['^0.2.0', '0.2.5', '0.2.5'],
     ['^0.0.4', '0.0.4', '0.0.4'],
   ])('%s escolhe %s', (intervalo, tag, versao) => {
-    expect(resolverVersao(intervalo, tags)).toEqual({ tag, versao });
+    expect(resolverVersao(intervalo, tags)).toEqual({ tag, version: versao });
   });
 
   it('ignora prerelease e tag que não é semver', () => {
-    expect(resolverVersao('>=2.0.0', tags)?.versao).toBe('2.0.0');
+    expect(resolverVersao('>=2.0.0', tags)?.version).toBe('2.0.0');
   });
 
   it('devolve undefined quando nada serve ou o intervalo é inválido', () => {

@@ -12,10 +12,10 @@ import { arquivosEmMemoria, gitEmMemoria, identidadeFixa, relogioFixo } from '..
 
 const tarefa = {
   id: 't1',
-  titulo: 'T',
-  pedido: 'faça',
-  criterios: ['ok'],
-  etapasEsperadas: ['E1', 'E2', 'G0', 'G1', 'E3', 'G2', 'E4', 'E5', 'G3'] as const,
+  title: 'T',
+  request: 'faça',
+  criteria: ['ok'],
+  expectedSteps: ['E1', 'E2', 'G0', 'G1', 'E3', 'G2', 'E4', 'E5', 'G3'] as const,
 };
 
 function ctx(inicial: Record<string, string> = {}) {
@@ -23,9 +23,9 @@ function ctx(inicial: Record<string, string> = {}) {
     arquivos: arquivosEmMemoria(inicial),
     git: gitEmMemoria({}),
     relogio: relogioFixo(),
-    identidade: identidadeFixa(),
+    identity: identidadeFixa(),
     harness: '0.0.0',
-    tipoDeAtor: 'agente' as const,
+    tipoDeAtor: 'agent' as const,
   };
 }
 
@@ -34,27 +34,27 @@ async function executar(passos: [string, string][], consumo?: object): Promise<r
   for (const [etapa, resultado] of passos) {
     const r = await registrarEtapa(c, {
       item: 'bench-t1-copilot',
-      etapa,
-      resultado,
-      agente: 'implementador',
+      step: etapa,
+      result: resultado,
+      agent: 'implementador',
       ...(consumo ? { consumoArquivo: 'c.json' } : {}),
     });
-    expect(r.codigo, r.erros.join()).toBe(0);
+    expect(r.code, r.erros.join()).toBe(0);
   }
   const lido = await lerAuditoria(c.arquivos);
   return lido.ok ? lido.eventos : [];
 }
 
 const caminhoFeliz: [string, string][] = [
-  ['E1', 'executado'],
-  ['E2', 'executado'],
-  ['G0', 'verificado'],
-  ['G1', 'verificado'],
-  ['E3', 'executado'],
-  ['G2', 'verificado'],
-  ['E4', 'verificado'],
-  ['E5', 'executado'],
-  ['G3', 'verificado'],
+  ['E1', 'executed'],
+  ['E2', 'executed'],
+  ['G0', 'verified'],
+  ['G1', 'verified'],
+  ['E3', 'executed'],
+  ['G2', 'verified'],
+  ['E4', 'verified'],
+  ['E5', 'executed'],
+  ['G3', 'verified'],
 ];
 
 describe('validarTarefas', () => {
@@ -65,10 +65,10 @@ describe('validarTarefas', () => {
   it.each([
     ['campo desconhecido', [{ ...tarefa, x: 1 }]],
     ['id repetido', [tarefa, tarefa]],
-    ['etapa inexistente', [{ ...tarefa, etapasEsperadas: ['E9'] }]],
-    ['sem critérios', [{ ...tarefa, criterios: [] }]],
-    ['pedido vazio', [{ ...tarefa, pedido: ' ' }]],
-    ['título longo', [{ ...tarefa, titulo: 'x'.repeat(200) }]],
+    ['etapa inexistente', [{ ...tarefa, expectedSteps: ['E9'] }]],
+    ['sem critérios', [{ ...tarefa, criteria: [] }]],
+    ['pedido vazio', [{ ...tarefa, request: ' ' }]],
+    ['título longo', [{ ...tarefa, title: 'x'.repeat(200) }]],
     ['não é objeto', [1]],
     ['lista vazia', []],
   ])('recusa %s', (_n, v) => {
@@ -80,20 +80,20 @@ describe('pontuarExecucao', () => {
   it('execução completa e sem consumo medido: conforme, custo indisponível (não zero)', async () => {
     const p = pontuarExecucao(await executar(caminhoFeliz), tarefa, 'copilot');
     expect(p).toMatchObject({ executada: true, conformidade: 1, conforme: true, tokens: 0, etapasSemMedida: 9 });
-    expect(p.custoMicroUsd).toBeUndefined();
+    expect(p.costMicroUsd).toBeUndefined();
   });
 
   it('soma tokens e custo medidos', async () => {
     const consumo = {
-      fonte: 'medido-pelo-ambiente',
-      modelo: 'm',
-      tokensEntrada: 10,
-      tokensSaida: 5,
-      custoMicroUsd: 100,
-      fonteDoCusto: 'informado-pelo-ambiente',
+      source: 'measured-by-environment',
+      model: 'm',
+      inputTokens: 10,
+      outputTokens: 5,
+      costMicroUsd: 100,
+      costSource: 'reported-by-environment',
     };
     const p = pontuarExecucao(await executar(caminhoFeliz.slice(0, 2), consumo), tarefa, 'copilot');
-    expect(p).toMatchObject({ tokens: 30, custoMicroUsd: 200, etapasSemMedida: 0 });
+    expect(p).toMatchObject({ tokens: 30, costMicroUsd: 200, etapasSemMedida: 0 });
   });
 
   it('etapa faltando derruba a conformidade; ignorada não conta como cumprida', async () => {
@@ -124,7 +124,7 @@ describe('relatorioComparativo e dataset', () => {
 
   it('dataset leva pedido e critérios no formato do Langfuse', () => {
     const ds = datasetDoBenchmark([tarefa]);
-    expect(ds.itens[0]).toMatchObject({ id: 'benchmark-t1', input: { pedido: 'faça' } });
-    expect(ds.itens[0]?.expectedOutput.criterios).toEqual(['ok']);
+    expect(ds.items[0]).toMatchObject({ id: 'benchmark-t1', input: { request: 'faça' } });
+    expect(ds.items[0]?.expectedOutput.criteria).toEqual(['ok']);
   });
 });

@@ -1,0 +1,23 @@
+{
+  "manifestVersion": 0,
+  "name": "educarvalhoo/workflow-feature",
+  "version": "0.5.0",
+  "description": "Workflow de feature com gates: ficha, revisão da documentação, execução, revisão de código e entrega",
+  "license": "FSL-1.1-ALv2",
+  "repository": "https://github.com/educarvalhoo/workflow-feature",
+  "signature": {
+    "identity": "https://github.com/educarvalhoo/workflow-feature/.github/workflows/release-assinada.yml@refs/tags/v0.5.0",
+    "issuer": "https://token.actions.githubusercontent.com"
+  },
+  "components": [
+    { "id": "workflow", "type": "instruction", "file": "instrucoes/workflow.md" },
+    { "id": "registrar-etapa", "type": "skill", "file": "skills/registrar-etapa/SKILL.md" },
+    { "id": "revisao-de-pr", "type": "skill", "file": "skills/revisao-de-pr/SKILL.md" },
+    { "id": "depuracao-estruturada", "type": "skill", "file": "skills/depuracao-estruturada/SKILL.md" },
+    { "id": "gotchas-do-projeto", "type": "skill", "file": "skills/gotchas-do-projeto/SKILL.md" },
+    { "id": "cartografo", "type": "agent", "file": "agentes/cartografo.md" },
+    { "id": "arquiteto", "type": "agent", "file": "agentes/arquiteto.md" },
+    { "id": "implementador", "type": "agent", "file": "agentes/implementador.md" },
+    { "id": "revisor", "type": "agent", "file": "agentes/revisor.md" }
+  ]
+}
