@@ -16,6 +16,11 @@ export function arquivosEmMemoria(inicial: Record<string, string> = {}): Sistema
     async gravar(caminho, conteudo) {
       mapa.set(caminho, conteudo);
     },
+    async criarExclusivo(caminho, conteudo) {
+      if (mapa.has(caminho)) return false;
+      mapa.set(caminho, conteudo);
+      return true;
+    },
     async listar(pasta) {
       const prefixo = pasta === '' ? '' : `${pasta}/`;
       return [...mapa.keys()].filter((c) => c.startsWith(prefixo)).sort();

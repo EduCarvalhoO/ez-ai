@@ -31,6 +31,7 @@ import {
   relatarBenchmark,
   relatarCusto,
   remover,
+  repararLog,
   retomarWorkflow,
   servirMcp,
   statusDoWorkflow,
@@ -256,6 +257,10 @@ function executar(a: Argumentos, ctx: Contexto): Promise<ResultadoDoComando> {
         estrito: a.estrito,
         json: a.json,
       });
+    case 'auditoria':
+      return a.posicionais[0] === 'reparar' && a.posicionais.length === 1
+        ? repararLog(ctx, { dryRun: a.dryRun })
+        : Promise.resolve({ codigo: 1, saida: [], erros: ['uso: ez-ai auditoria reparar [--dry-run]'] });
     case 'import':
       return importar(ctx, {
         dryRun: a.dryRun,

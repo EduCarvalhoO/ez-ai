@@ -1,13 +1,33 @@
 // Porta de arquivos com Node (ADR-0015): única via de escrita do harness. Presa a uma raiz real; recusa caminho fora
 // do escopo, symlink e junction em qualquer segmento (T1, T2). Reconfere o caminho real depois de gravar.
+import { randomBytes } from 'node:crypto';
 import { constants } from 'node:fs';
-import { lstat, mkdir, open, readdir, realpath, unlink } from 'node:fs/promises';
+import { lstat, mkdir, open, readdir, realpath, rename, unlink } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import type { SistemaDeArquivos } from '../core/portas/index.js';
 import { escaparInvisiveis, exigirCaminhoDoProjeto } from '../core/seguranca/caminhos.js';
 
 /** Tamanho máximo de um arquivo lido ou gravado (D1); o limite do contrato que o lê é menor. */
 const BYTES_MAXIMOS = 8 * 1024 * 1024;
+
+/** Decodificador estrito: byte que não é UTF-8 válido lança `TypeError` em vez de virar U+FFFD. */
+const DECODIFICADOR = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+/** Marca dos temporários da gravação atômica; `listar` os ignora. */
+const SUFIXO_TEMPORARIO = '.ez-tmp-';
+
+/** `rename` por cima do destino. No Windows pode falhar por instantes se um antivírus segura o arquivo: tenta de novo. */
+async function renomearSobrepondo(de: string, para: string): Promise<void> {
+  for (let tentativa = 0; ; tentativa++) {
+    try {
+      await rename(de, para);
+      return;
+    } catch (erro: unknown) {
+      const transitorio = ehErroDe(erro, 'EPERM') || ehErroDe(erro, 'EACCES') || ehErroDe(erro, 'EBUSY');
+      if (!transitorio || tentativa >= 5) throw erro;
+      await new Promise((resolver) => setTimeout(resolver, 20 * (tentativa + 1)));
+    }
+  }
+}
 
 function ehErroDe(erro: unknown, codigo: string): boolean {
   return typeof erro === 'object' && erro !== null && 'code' in erro && erro.code === codigo;
@@ -54,6 +74,7 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
     });
     for (const e of entradas) {
       const rel = prefixo === '' ? e.name : `${prefixo}/${e.name}`;
+      if (e.isFile() && e.name.includes(SUFIXO_TEMPORARIO)) continue; // sobra de gravação interrompida (A2)
       if (e.isSymbolicLink()) throw new Error(`"${escaparInvisiveis(rel)}" é link simbólico; o harness recusa.`);
       if (e.isDirectory()) await listarEm(join(pasta, e.name), rel, saida);
       else if (e.isFile()) saida.push(rel);
@@ -71,7 +92,14 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
       try {
         const info = await arquivo.stat();
         if (info.size > BYTES_MAXIMOS) throw new Error(`"${caminho}" passa de ${BYTES_MAXIMOS} bytes.`);
-        return await arquivo.readFile('utf8');
+        // Bytes que não são UTF-8 válido são recusados: decodificar "no chute" trocaria bytes por U+FFFD e o hash do
+        // pacote deixaria de ser o dos bytes que estão no disco (A3, ADR-0041).
+        try {
+          return DECODIFICADOR.decode(await arquivo.readFile());
+        } catch (erro: unknown) {
+          if (erro instanceof TypeError) throw new Error(`"${escaparInvisiveis(caminho)}" não é texto UTF-8 válido.`);
+          throw erro;
+        }
       } finally {
         await arquivo.close();
       }
@@ -84,16 +112,51 @@ export async function criarArquivos(raiz: string): Promise<SistemaDeArquivos> {
       await mkdir(dirname(destino), { recursive: true });
       // Reconfere depois de criar as pastas: um link criado entre a checagem e o mkdir não pode redirecionar a escrita.
       await resolver(caminho);
+      // Atômico (A2): grava num temporário ao lado, força para o disco e troca pelo nome final com `rename`. Uma queda
+      // no meio deixa o arquivo antigo intacto (e, no pior caso, um temporário que `listar` ignora). O `rename` troca o
+      // nome, não segue um link que esteja no destino.
+      const temporario = `${destino}${SUFIXO_TEMPORARIO}${randomBytes(6).toString('hex')}`;
       const arquivo = await open(
-        destino,
-        constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | (constants.O_NOFOLLOW ?? 0),
+        temporario,
+        constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0),
         0o644,
       );
       try {
+        try {
+          await arquivo.writeFile(conteudo, 'utf8');
+          await arquivo.sync();
+        } finally {
+          await arquivo.close();
+        }
+        await renomearSobrepondo(temporario, destino);
+      } catch (erro: unknown) {
+        await unlink(temporario).catch(() => undefined);
+        throw erro;
+      }
+    },
+    async criarExclusivo(caminho, conteudo) {
+      const destino = await resolver(caminho);
+      await mkdir(dirname(destino), { recursive: true });
+      await resolver(caminho);
+      let arquivo: Awaited<ReturnType<typeof open>>;
+      try {
+        // O_EXCL: o SO garante que só um criador vence, mesmo entre processos.
+        arquivo = await open(
+          destino,
+          constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0),
+          0o644,
+        );
+      } catch (erro: unknown) {
+        if (ehErroDe(erro, 'EEXIST')) return false;
+        throw erro;
+      }
+      try {
         await arquivo.writeFile(conteudo, 'utf8');
+        await arquivo.sync();
       } finally {
         await arquivo.close();
       }
+      return true;
     },
     async listar(pasta) {
       const raizDaBusca = pasta === '' || pasta === '.';

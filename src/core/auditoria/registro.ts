@@ -1,10 +1,20 @@
 // Gravação do log de auditoria local (ADR-0022, spec de auditoria): `.harness/auditoria/AAAA-MM.jsonl`, uma linha por
 // evento, encadeada por hash entre os arquivos mensais. Usa só as portas; o log nunca é versionado.
+// Duas execuções ao mesmo tempo não podem se atropelar: toda leitura-e-gravação da corrente acontece sob uma trava
+// por arquivo (`.trava`, criada de forma exclusiva), e cada gravação é atômica (ADR-0041).
 import type { Identidade, Relogio, SistemaDeArquivos } from '../portas/index.js';
 import { encadear, verificarCadeia } from './cadeia.js';
 import { type EventoDeAuditoria, type EventoSemCorrente, validarEvento } from './evento.js';
 
 export const PASTA_DA_AUDITORIA = '.harness/auditoria';
+export const CAMINHO_DA_TRAVA = `${PASTA_DA_AUDITORIA}/.trava`;
+/** Onde o reparo guarda, intactos, os arquivos da corrente quebrada. */
+export const PASTA_DOS_SELADOS = `${PASTA_DA_AUDITORIA}/selado`;
+
+/** Trava mais velha que isto é de um processo que morreu: pode ser tomada. */
+const TRAVA_VELHA_EM_MS = 60_000;
+const TENTATIVAS_DA_TRAVA = 200;
+const ESPERA_ENTRE_TENTATIVAS_MS = 50;
 
 export interface ContextoDeAuditoria {
   readonly arquivos: SistemaDeArquivos;
@@ -14,6 +24,8 @@ export interface ContextoDeAuditoria {
   readonly harness: string;
   /** Autodeclarado e nunca usado para autorizar (spec de auditoria). */
   readonly tipoDeAtor: 'humano' | 'agente' | 'ci';
+  /** Espera entre tentativas de pegar a trava; só os testes trocam. */
+  readonly esperar?: (ms: number) => Promise<void>;
 }
 
 export type PedidoDeEvento = Pick<EventoSemCorrente, 'tipo' | 'resultado' | 'codigoDoMotivo' | 'detalhe' | 'dados'>;
@@ -22,10 +34,14 @@ function arquivosDoLog(todos: readonly string[]): string[] {
   return todos.filter((c) => /^\.harness\/auditoria\/\d{4}-\d{2}\.jsonl$/.test(c)).sort();
 }
 
+function linhasDe(texto: string): string[] {
+  return texto.split('\n').filter((l) => l !== '');
+}
+
 async function linhasDoLog(arquivos: SistemaDeArquivos): Promise<string[]> {
   const linhas: string[] = [];
   for (const caminho of arquivosDoLog(await arquivos.listar(PASTA_DA_AUDITORIA))) {
-    linhas.push(...(await arquivos.ler(caminho)).split('\n').filter((l) => l !== ''));
+    linhas.push(...linhasDe(await arquivos.ler(caminho)));
   }
   return linhas;
 }
@@ -43,14 +59,54 @@ export async function lerAuditoria(
   };
 }
 
-/**
- * Acrescenta um evento ao log do mês. Recusa gravar sobre um log que não verifica (não esconde adulteração) e
- * sobre um evento que o próprio contrato recusa (por exemplo, com segredo).
- */
-export async function registrarEvento(ctx: ContextoDeAuditoria, pedido: PedidoDeEvento): Promise<EventoDeAuditoria> {
+async function travaVelha(ctx: ContextoDeAuditoria): Promise<boolean> {
+  try {
+    const lida: unknown = JSON.parse(await ctx.arquivos.ler(CAMINHO_DA_TRAVA));
+    const em = typeof lida === 'object' && lida !== null && 'em' in lida ? Date.parse(String(lida.em)) : Number.NaN;
+    // Conteúdo ilegível não é prova de morte: só conta como velha a trava com data legível e antiga.
+    return Number.isFinite(em) && ctx.relogio.agora().getTime() - em > TRAVA_VELHA_EM_MS;
+  } catch {
+    return false;
+  }
+}
+
+/** Roda `corpo` com a trava do log; solta a trava mesmo se `corpo` falhar. */
+async function comTrava<T>(ctx: ContextoDeAuditoria, corpo: () => Promise<T>): Promise<T> {
+  const { arquivos } = ctx;
+  const esperar = ctx.esperar ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const dono = (await ctx.identidade.atorAtual()).slice(0, 200);
+  let pegou = false;
+  for (let tentativa = 0; tentativa < TENTATIVAS_DA_TRAVA && !pegou; tentativa++) {
+    const marca = JSON.stringify({ em: ctx.relogio.agora().toISOString(), dono });
+    pegou = await arquivos.criarExclusivo(CAMINHO_DA_TRAVA, `${marca}\n`);
+    if (pegou) break;
+    if (await travaVelha(ctx)) {
+      // Dono morreu sem soltar: toma a trava. Se dois tomam ao mesmo tempo, o `criarExclusivo` seguinte desempata.
+      await arquivos.remover(CAMINHO_DA_TRAVA);
+      continue;
+    }
+    await esperar(ESPERA_ENTRE_TENTATIVAS_MS);
+  }
+  if (!pegou) {
+    throw new Error(
+      `o log de auditoria está em uso por outra execução (trava ${CAMINHO_DA_TRAVA}). Tente de novo; se nenhuma execução está rodando, apague a trava.`,
+    );
+  }
+  try {
+    return await corpo();
+  } finally {
+    await arquivos.remover(CAMINHO_DA_TRAVA);
+  }
+}
+
+async function acrescentar(ctx: ContextoDeAuditoria, pedido: PedidoDeEvento): Promise<EventoDeAuditoria> {
   const { arquivos } = ctx;
   const lido = await lerAuditoria(arquivos);
-  if (!lido.ok) throw new Error(`${lido.mensagem}. Investigue antes de continuar; o harness não grava sobre ele.`);
+  if (!lido.ok) {
+    throw new Error(
+      `${lido.mensagem}. Investigue antes de continuar; o harness não grava sobre ele (para selar a corrente quebrada e recomeçar: "ez-ai auditoria reparar").`,
+    );
+  }
   const agora = ctx.relogio.agora();
   const evento = encadear(lido.eventos.at(-1) ?? null, {
     versaoEvento: 0,
@@ -75,4 +131,76 @@ export async function registrarEvento(ctx: ContextoDeAuditoria, pedido: PedidoDe
   await arquivos.gravar(`${PASTA_DA_AUDITORIA}/.gitignore`, '*\n');
   await arquivos.gravar(caminho, `${existente}${linha}\n`);
   return evento;
+}
+
+/**
+ * Acrescenta um evento ao log do mês, sob a trava. Recusa gravar sobre um log que não verifica (não esconde
+ * adulteração) e sobre um evento que o próprio contrato recusa (por exemplo, com segredo).
+ */
+export function registrarEvento(ctx: ContextoDeAuditoria, pedido: PedidoDeEvento): Promise<EventoDeAuditoria> {
+  return comTrava(ctx, () => acrescentar(ctx, pedido));
+}
+
+export interface ResultadoDoReparo {
+  /** `true` quando a corrente já estava íntegra e nada foi mexido. */
+  readonly integra: boolean;
+  /** Linha (base 1) onde a corrente quebrou. */
+  readonly linhaQuebrada?: number;
+  /** Eventos íntegros mantidos antes da quebra. */
+  readonly mantidos: number;
+  /** Linhas seladas (da quebra até o fim), guardadas à parte e fora da corrente. */
+  readonly seladas: number;
+  readonly pastaDoSelo?: string;
+}
+
+/**
+ * Sela a corrente quebrada (A1, ADR-0041). Os arquivos originais são copiados, sem mudança, para `selado/<instante>/`
+ * (a prova do que havia); a corrente volta a ter só o trecho íntegro e recebe um evento `auditoria` que registra o
+ * reparo. Nada é apagado sem cópia, e o reparo é sempre um evento no próprio log. Não conserta o trecho adulterado:
+ * ele deixa de valer como evidência, e a quebra fica registrada.
+ */
+export function repararAuditoria(
+  ctx: ContextoDeAuditoria,
+  opcoes: { readonly dryRun: boolean },
+): Promise<ResultadoDoReparo> {
+  const { arquivos } = ctx;
+  return comTrava(ctx, async () => {
+    const caminhos = arquivosDoLog(await arquivos.listar(PASTA_DA_AUDITORIA));
+    const porArquivo = new Map<string, string>();
+    const todas: string[] = [];
+    for (const c of caminhos) {
+      const texto = await arquivos.ler(c);
+      porArquivo.set(c, texto);
+      todas.push(...linhasDe(texto));
+    }
+    const verificado = verificarCadeia(todas);
+    if (verificado.ok) return { integra: true, mantidos: todas.length, seladas: 0 };
+    const mantidos = verificado.linha;
+    const seladas = todas.length - mantidos;
+    const instante = ctx.relogio.agora().toISOString().replace(/[-:.]/g, '');
+    const pastaDoSelo = `${PASTA_DOS_SELADOS}/${instante}`;
+    const resultado: ResultadoDoReparo = { integra: false, linhaQuebrada: mantidos + 1, mantidos, seladas, pastaDoSelo };
+    if (opcoes.dryRun) return resultado;
+    // 1) Cópia fiel de tudo, antes de mexer em qualquer arquivo da corrente.
+    for (const [caminho, texto] of porArquivo) {
+      await arquivos.gravar(`${pastaDoSelo}/${caminho.slice(PASTA_DA_AUDITORIA.length + 1)}`, texto);
+    }
+    // 2) A corrente fica só com o trecho íntegro (arquivo que perdeu tudo sai).
+    let restante = mantidos;
+    for (const [caminho, texto] of porArquivo) {
+      const linhas = linhasDe(texto);
+      const fica = linhas.slice(0, Math.max(0, Math.min(restante, linhas.length)));
+      restante -= linhas.length;
+      if (fica.length === 0) await arquivos.remover(caminho);
+      else if (fica.length < linhas.length) await arquivos.gravar(caminho, `${fica.join('\n')}\n`);
+    }
+    // 3) O reparo vira evento da própria corrente.
+    await acrescentar(ctx, {
+      tipo: 'operacao',
+      resultado: 'executado',
+      detalhe: `corrente selada na linha ${mantidos + 1}; ${seladas} linha(s) guardadas em selado/${instante}`,
+      dados: { comando: 'auditoria', dryRun: false, pacotes: [] },
+    });
+    return resultado;
+  });
 }
