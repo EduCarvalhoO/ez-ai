@@ -200,7 +200,13 @@ export function repararAuditoria(
     const seladas = todas.length - mantidos;
     const instante = ctx.relogio.agora().toISOString().replace(/[-:.]/g, '');
     const pastaDoSelo = `${PASTA_DOS_SELADOS}/${instante}`;
-    const resultado: ResultadoDoReparo = { integra: false, linhaQuebrada: mantidos + 1, mantidos, seladas, pastaDoSelo };
+    const resultado: ResultadoDoReparo = {
+      integra: false,
+      linhaQuebrada: mantidos + 1,
+      mantidos,
+      seladas,
+      pastaDoSelo,
+    };
     if (opcoes.dryRun) return resultado;
     // 1) Cópia fiel de tudo, antes de mexer em qualquer arquivo da corrente.
     for (const [caminho, texto] of porArquivo) {

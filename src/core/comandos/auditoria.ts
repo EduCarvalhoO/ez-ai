@@ -18,7 +18,11 @@ export async function repararLog(ctx: Contexto, opcoes: OpcoesDeReparo): Promise
   if (ctx.tipoDeAtor === 'agente') return { codigo: 1, saida: [], erros: [RECUSA_DE_AGENTE] };
   const r = await repararAuditoria(ctx, { dryRun: opcoes.dryRun });
   if (r.integra) {
-    return { codigo: 0, saida: [`A corrente de auditoria está íntegra (${r.mantidos} evento(s)); nada a reparar.`], erros: [] };
+    return {
+      codigo: 0,
+      saida: [`A corrente de auditoria está íntegra (${r.mantidos} evento(s)); nada a reparar.`],
+      erros: [],
+    };
   }
   const selo = escaparInvisiveis(r.pastaDoSelo ?? '');
   const resumo = `corrente quebrada na linha ${r.linhaQuebrada}; ${r.mantidos} evento(s) íntegro(s) mantido(s), ${r.seladas} linha(s) seladas em ${selo}/.`;

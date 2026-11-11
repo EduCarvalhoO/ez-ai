@@ -74,7 +74,8 @@ describe('trava do log (A1)', () => {
 describe('reparo da corrente (A1)', () => {
   async function logComTresEventosEUmAdulterado() {
     const arquivos = arquivosEmMemoria();
-    for (const dia of ['02', '03', '04']) await registrarEvento(contexto(`2026-11-${dia}T10:00:00.000Z`, arquivos), operacao);
+    for (const dia of ['02', '03', '04'])
+      await registrarEvento(contexto(`2026-11-${dia}T10:00:00.000Z`, arquivos), operacao);
     const caminho = '.harness/auditoria/2026-11.jsonl';
     const linhas = (arquivos.mapa.get(caminho) ?? '').split('\n').filter(Boolean);
     linhas[1] = (linhas[1] ?? '').replace('"executado"', '"falhou"'); // edita o evento 2

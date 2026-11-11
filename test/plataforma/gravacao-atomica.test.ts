@@ -37,7 +37,9 @@ describe('gravação atômica (A2)', () => {
 
   it('criarExclusivo: só o primeiro vence', async () => {
     const arquivos = await criarArquivos(pasta);
-    const tentativas = await Promise.all(Array.from({ length: 8 }, (_, i) => arquivos.criarExclusivo('t/trava', `${i}`)));
+    const tentativas = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => arquivos.criarExclusivo('t/trava', `${i}`)),
+    );
     expect(tentativas.filter(Boolean)).toHaveLength(1);
     expect(await arquivos.criarExclusivo('t/trava', 'outro')).toBe(false);
   });
